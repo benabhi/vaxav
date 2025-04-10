@@ -1,164 +1,227 @@
 ---
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import CelestialBodyCard from "../../components/admin/CelestialBodyCard.astro";
 
-// Aquí podrías incluir lógica para obtener datos del dashboard
+// Datos de ejemplo para el dashboard
 const stats = {
     universes: 5,
     users: 120,
     items: 450,
+    celestialBodies: 278,
 };
+
+// Actividad reciente (simulada)
+const recentActivity = [
+    {
+        action: "create",
+        item: "Nueva galaxia 'Nebulosa de Andrómeda'",
+        timestamp: "Hace 10 minutos",
+        user: "admin",
+    },
+    {
+        action: "update",
+        item: "Sistema Solar modificado",
+        timestamp: "Hace 32 minutos",
+        user: "cosmicEditor",
+    },
+    {
+        action: "delete",
+        item: "Estrella 'Alpha Centauri B' eliminada",
+        timestamp: "Hace 1 hora",
+        user: "admin",
+    },
+    {
+        action: "create",
+        item: "Nuevo planeta 'Kepler-186f'",
+        timestamp: "Hace 3 horas",
+        user: "universeBuild3r",
+    },
+];
+
+// Celestial bodies destacados
+const featuredBodies = [
+    {
+        id: 1,
+        name: "Tierra",
+        type: "planet",
+        description:
+            "Nuestro hogar, el tercer planeta desde el Sol y el único conocido que alberga vida. Su atmósfera rica en nitrógeno y oxígeno permite la vida como la conocemos.",
+        details: {
+            size: "12,742 km",
+            orbit: "365.25 días",
+            temperature: "15°C",
+            moons: 1,
+        },
+    },
+    {
+        id: 2,
+        name: "Via Láctea",
+        type: "galaxy",
+        description:
+            "Nuestra galaxia hogar, una estructura espiral barrada que contiene entre 100 y 400 mil millones de estrellas, incluyendo nuestro Sistema Solar.",
+        details: {
+            size: "100,000 años luz",
+            stars: "~200 mil millones",
+            age: "13.6 mil millones de años",
+        },
+    },
+    {
+        id: 3,
+        name: "Sol",
+        type: "star",
+        description:
+            "La estrella central de nuestro sistema solar, una esfera de plasma caliente que genera energía mediante fusión nuclear de hidrógeno en helio.",
+        details: {
+            size: "1,391,000 km",
+            temperature: "5,500°C",
+            age: "4.6 mil millones de años",
+        },
+    },
+];
 ---
 
 <AdminLayout title="Dashboard" activeSection="dashboard">
-    <div class="dashboard">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Universes</h3>
-                <div class="stat-value">{stats.universes}</div>
+    <!-- Sección de estadísticas -->
+    <div
+        class="stats-overview grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+    >
+        <div
+            class="stat-card bg-space-dark/80 rounded-lg border border-cosmic-600/30 p-5 backdrop-blur-sm relative overflow-hidden group hover:border-space-neon-blue/50 transition-all duration-300"
+        >
+            <div
+                class="absolute top-0 right-0 w-20 h-20 bg-gradient-radial from-space-neon-blue/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"
+            >
             </div>
-            <div class="stat-card">
-                <h3>Users</h3>
-                <div class="stat-value">{stats.users}</div>
+
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-cosmic-400 text-xs uppercase tracking-wider">
+                        Universos
+                    </p>
+                    <h4 class="text-2xl font-bold text-white mt-1">
+                        {stats.universes}
+                    </h4>
+                </div>
+
+                <div class="text-3xl opacity-75 text-space-neon-blue">🌌</div>
             </div>
-            <div class="stat-card">
-                <h3>Items</h3>
-                <div class="stat-value">{stats.items}</div>
+
+            <div class="mt-3 pt-3 border-t border-cosmic-700/50">
+                <div class="flex items-center text-xs text-space-neon-blue">
+                    <span class="mr-1">↗</span>
+                    <span>+2 esta semana</span>
+                </div>
             </div>
         </div>
 
-        <section class="recent-activity">
-            <h2>Recent Activity</h2>
-            <div class="activity-list">
-                <div class="activity-item">
-                    <span class="activity-date">2025-04-08</span>
-                    <span class="activity-description"
-                        >New universe "Cosmic Odyssey" created</span
-                    >
-                </div>
-                <div class="activity-item">
-                    <span class="activity-date">2025-04-07</span>
-                    <span class="activity-description"
-                        >User "john_doe" registered</span
-                    >
-                </div>
-                <div class="activity-item">
-                    <span class="activity-date">2025-04-07</span>
-                    <span class="activity-description"
-                        >10 new items added to "Fantasy World"</span
-                    >
-                </div>
+        <div
+            class="stat-card bg-space-dark/80 rounded-lg border border-cosmic-600/30 p-5 backdrop-blur-sm relative overflow-hidden group hover:border-space-neon-purple/50 transition-all duration-300"
+        >
+            <div
+                class="absolute top-0 right-0 w-20 h-20 bg-gradient-radial from-space-neon-purple/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"
+            >
             </div>
-        </section>
 
-        <section class="quick-actions">
-            <h2>Quick Actions</h2>
-            <div class="actions-grid">
-                <a href="/admin/universe/create" class="action-button">
-                    Create Universe
-                </a>
-                <a href="/admin/users/create" class="action-button">
-                    Add User
-                </a>
-                <a href="/admin/items/create" class="action-button">
-                    Create Item
-                </a>
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-cosmic-400 text-xs uppercase tracking-wider">
+                        Usuarios
+                    </p>
+                    <h4 class="text-2xl font-bold text-white mt-1">
+                        {stats.users}
+                    </h4>
+                </div>
+
+                <div class="text-3xl opacity-75 text-space-neon-purple">👥</div>
             </div>
-        </section>
+
+            <div class="mt-3 pt-3 border-t border-cosmic-700/50">
+                <div class="flex items-center text-xs text-space-neon-purple">
+                    <span class="mr-1">↗</span>
+                    <span>+15 esta semana</span>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="stat-card bg-space-dark/80 rounded-lg border border-cosmic-600/30 p-5 backdrop-blur-sm relative overflow-hidden group hover:border-space-neon-green/50 transition-all duration-300"
+        >
+            <div
+                class="absolute top-0 right-0 w-20 h-20 bg-gradient-radial from-space-neon-green/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"
+            >
+            </div>
+
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-cosmic-400 text-xs uppercase tracking-wider">
+                        Items
+                    </p>
+                    <h4 class="text-2xl font-bold text-white mt-1">
+                        {stats.items}
+                    </h4>
+                </div>
+
+                <div class="text-3xl opacity-75 text-space-neon-green">🛸</div>
+            </div>
+
+            <div class="mt-3 pt-3 border-t border-cosmic-700/50">
+                <div class="flex items-center text-xs text-space-neon-green">
+                    <span class="mr-1">↗</span>
+                    <span>+67 esta semana</span>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="stat-card bg-space-dark/80 rounded-lg border border-cosmic-600/30 p-5 backdrop-blur-sm relative overflow-hidden group hover:border-space-neon-yellow/50 transition-all duration-300"
+        >
+            <div
+                class="absolute top-0 right-0 w-20 h-20 bg-gradient-radial from-space-neon-yellow/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"
+            >
+            </div>
+
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-cosmic-400 text-xs uppercase tracking-wider">
+                        Cuerpos Celestes
+                    </p>
+                    <h4 class="text-2xl font-bold text-white mt-1">
+                        {stats.celestialBodies}
+                    </h4>
+                </div>
+
+                <div class="text-3xl opacity-75 text-space-neon-yellow">✨</div>
+            </div>
+
+            <div class="mt-3 pt-3 border-t border-cosmic-700/50">
+                <div class="flex items-center text-xs text-space-neon-yellow">
+                    <span class="mr-1">↗</span>
+                    <span>+31 esta semana</span>
+                </div>
+            </div>
+        </div>
     </div>
-</AdminLayout>
 
-<style>
-    .dashboard {
-        display: flex;
-        flex-direction: column;
-        gap: 30px;
-    }
+    <!-- Sección de contenido principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Cuerpos celestes destacados -->
+        <div class="lg:col-span-2">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <span class="text-space-neon-blue mr-2">◈</span>
+                    Cuerpos Celestes Destacados
+                </h2>
+                <a
+                    href="/admin/universe"
+                    class="text-sm text-space-neon-blue hover:text-space-neon-purple transition-colors"
+                >
+                    Ver todos →
+                </a>
+            </div>
 
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-    }
-
-    .stat-card {
-        background: linear-gradient(145deg, #f0f0f0, #ffffff);
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        text-align: center;
-    }
-
-    .stat-card h3 {
-        margin: 0;
-        font-size: 1rem;
-        color: #666;
-    }
-
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-top: 10px;
-        color: #333;
-    }
-
-    .recent-activity,
-    .quick-actions {
-        background-color: #fff;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    h2 {
-        margin-top: 0;
-        margin-bottom: 15px;
-        color: #333;
-        font-size: 1.2rem;
-    }
-
-    .activity-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .activity-item {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        align-items: center;
-    }
-
-    .activity-date {
-        font-size: 0.9rem;
-        color: #888;
-        width: 100px;
-    }
-
-    .activity-description {
-        flex: 1;
-    }
-
-    .actions-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 15px;
-    }
-
-    .action-button {
-        display: block;
-        background-color: #3751ff;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 5px;
-        text-align: center;
-        text-decoration: none;
-        font-weight: 500;
-        transition: background-color 0.2s;
-    }
-
-    .action-button:hover {
-        background-color: #2a3eb1;
-    }
-</style>
+            <div class="space-y-4">
+                {featuredBodies.map((body) => <CelestialBodyCard {...body} />)}
+            </div>
+        </div>
+    </div></AdminLayout
+>

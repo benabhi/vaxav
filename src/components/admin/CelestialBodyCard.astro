@@ -1,0 +1,287 @@
+---
+// Definir la interfaz para las propiedades que recibe el componente
+interface Props {
+    id: string | number;
+    name: string;
+    type: string;
+    description: string;
+    imageSrc?: string;
+    details?: {
+        size?: string;
+        orbit?: string;
+        temperature?: string;
+        moons?: number;
+        stars?: number;
+        age?: string;
+        distance?: string;
+    };
+}
+
+// Destructurar las propiedades
+const { id, name, type, description, imageSrc, details } = Astro.props;
+
+// Objeto para mapear tipos a íconos, colores y gradientes
+const typeConfig = {
+    star: {
+        icon: "⭐",
+        color: "text-space-neon-yellow",
+        bgGradient: "from-space-dark via-space-dark to-yellow-900/20",
+        accentColor: "space-neon-yellow",
+    },
+    planet: {
+        icon: "🪐",
+        color: "text-space-neon-blue",
+        bgGradient: "from-space-dark via-space-dark to-blue-900/20",
+        accentColor: "space-neon-blue",
+    },
+    moon: {
+        icon: "🌙",
+        color: "text-cosmic-100",
+        bgGradient: "from-space-dark via-space-dark to-gray-800/20",
+        accentColor: "cosmic-200",
+    },
+    galaxy: {
+        icon: "🌌",
+        color: "text-space-neon-purple",
+        bgGradient: "from-space-dark via-space-dark to-purple-900/20",
+        accentColor: "space-neon-purple",
+    },
+    constellation: {
+        icon: "✨",
+        color: "text-space-neon-blue",
+        bgGradient: "from-space-dark via-space-dark to-indigo-900/20",
+        accentColor: "space-neon-blue",
+    },
+    solarSystem: {
+        icon: "☀️",
+        color: "text-space-neon-pink",
+        bgGradient: "from-space-dark via-space-dark to-orange-900/20",
+        accentColor: "space-neon-pink",
+    },
+};
+
+// Obtener configuración según el tipo
+const typeInfo = typeConfig[type] || {
+    icon: "🌠",
+    color: "text-cosmic-100",
+    bgGradient: "from-space-dark via-space-dark to-space-dark",
+    accentColor: "cosmic-300",
+};
+---
+
+<div
+    class={`celestial-body-card group relative overflow-hidden rounded-lg border border-cosmic-600/30 bg-gradient-to-br ${typeInfo.bgGradient} backdrop-blur-sm transition-all duration-300 hover:border-${typeInfo.accentColor}/60 hover:shadow-lg hover:-translate-y-1`}
+>
+    <!-- Glowing edge effect -->
+    <div
+        class={`absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-${typeInfo.accentColor}/40 to-transparent`}
+    >
+    </div>
+    <div
+        class={`absolute top-0 right-0 h-full w-[1px] bg-gradient-to-b from-${typeInfo.accentColor}/40 via-transparent to-transparent`}
+    >
+    </div>
+
+    <div class="flex p-1">
+        <!-- Icon Container with glowing effect -->
+        <div
+            class={`flex h-24 w-24 items-center justify-center rounded-l-lg ${typeInfo.color} p-3 text-4xl relative overflow-hidden`}
+        >
+            {
+                imageSrc ? (
+                    <img
+                        src={imageSrc}
+                        alt={name}
+                        class="w-full h-auto rounded-md"
+                    />
+                ) : (
+                    <span class="celestial-icon relative z-10">
+                        {typeInfo.icon}
+                    </span>
+                )
+            }
+            <div
+                class={`absolute inset-0 bg-gradient-radial from-${typeInfo.accentColor}/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+            >
+            </div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="flex-1 p-3">
+            <div class="flex items-start justify-between">
+                <h3
+                    class={`text-xl font-bold tracking-wider text-white group-hover:${typeInfo.color} transition-colors duration-300`}
+                >
+                    {name}
+                </h3>
+                <span
+                    class={`rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-${typeInfo.accentColor} bg-${typeInfo.accentColor}/10 border border-${typeInfo.accentColor}/20`}
+                >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                </span>
+            </div>
+
+            <p class="my-2 text-sm text-cosmic-300 line-clamp-2">
+                {description}
+            </p>
+
+            {
+                details && Object.keys(details).length > 0 && (
+                    <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 rounded-md bg-cosmic-800/40 p-2 text-xs">
+                        {details.size && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Tamaño:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.size}
+                                </span>
+                            </div>
+                        )}
+                        {details.orbit && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Órbita:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.orbit}
+                                </span>
+                            </div>
+                        )}
+                        {details.temperature && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Temp:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.temperature}
+                                </span>
+                            </div>
+                        )}
+                        {details.moons !== undefined && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Lunas:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.moons}
+                                </span>
+                            </div>
+                        )}
+                        {details.stars !== undefined && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Estrellas:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.stars}
+                                </span>
+                            </div>
+                        )}
+                        {details.age && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Edad:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.age}
+                                </span>
+                            </div>
+                        )}
+                        {details.distance && (
+                            <div class="flex items-center">
+                                <span class="text-cosmic-400">Distancia:</span>
+                                <span class="ml-2 font-mono text-cosmic-100">
+                                    {details.distance}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+        </div>
+    </div>
+
+    <!-- Actions Container with slight transparency -->
+    <div
+        class="grid grid-cols-3 border-t border-cosmic-700/50 bg-space-blue/30 text-center"
+    >
+        <a
+            href={`/admin/universe/${type}s/${id}`}
+            class={`flex items-center justify-center space-x-1 py-3 px-2 text-xs font-medium text-cosmic-200 transition-colors hover:text-${typeInfo.accentColor} hover:bg-cosmic-800/30`}
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                ></path>
+            </svg>
+            <span>Ver Detalles</span>
+        </a>
+
+        <a
+            href={`/admin/universe/${type}s/${id}/edit`}
+            class="flex items-center justify-center space-x-1 py-3 px-2 text-xs font-medium text-cosmic-200 transition-colors hover:text-space-neon-green hover:bg-cosmic-800/30 border-x border-cosmic-700/30"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                ></path>
+            </svg>
+            <span>Editar</span>
+        </a>
+
+        <button
+            class="flex items-center justify-center space-x-1 py-3 px-2 text-xs font-medium text-cosmic-200 transition-colors hover:text-space-neon-pink hover:bg-cosmic-800/30"
+            data-id={id}
+            data-name={name}
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                ></path>
+            </svg>
+            <span>Eliminar</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Script para el botón de eliminar
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("[data-id]").forEach((button) => {
+            button.addEventListener("click", (e) => {
+                const id = e.currentTarget.getAttribute("data-id");
+                const name = e.currentTarget.getAttribute("data-name");
+
+                if (
+                    confirm(
+                        `¿Estás seguro de que quieres eliminar "${name}"? Esta acción no se puede deshacer.`,
+                    )
+                ) {
+                    console.log(`Eliminar elemento ${id}: ${name}`);
+                    // Aquí iría la lógica de eliminación
+                }
+            });
+        });
+    });
+</script>

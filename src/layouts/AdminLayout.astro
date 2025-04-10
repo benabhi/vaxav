@@ -1,189 +1,228 @@
 ---
-// Importa el layout base si lo necesitas
+// Importar el layout base si lo necesitas
 import Layout from "./Layout.astro";
+import "../styles/global.css"; // Importamos los estilos
 
 interface Props {
     title: string;
-    activeSection?: "dashboard" | "universe" | "users" | "items";
+    activeSection?:
+        | "dashboard"
+        | "universe"
+        | "users"
+        | "items"
+        | "galaxies"
+        | "constellations"
+        | "solar-systems"
+        | "stars"
+        | "planets"
+        | "moons";
 }
 
 const { title, activeSection = "dashboard" } = Astro.props;
+
+// Estructura del menú de navegación
+const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: "🔭", href: "/admin" },
+    {
+        id: "universe",
+        label: "Universo",
+        icon: "🌌",
+        href: "/admin/universe",
+        subItems: [
+            {
+                id: "galaxies",
+                label: "Galaxias",
+                href: "/admin/universe/galaxies",
+            },
+            {
+                id: "constellations",
+                label: "Constelaciones",
+                href: "/admin/universe/constellations",
+            },
+            {
+                id: "solar-systems",
+                label: "Sistemas Solares",
+                href: "/admin/universe/solar-systems",
+            },
+            { id: "stars", label: "Estrellas", href: "/admin/universe/stars" },
+            {
+                id: "planets",
+                label: "Planetas",
+                href: "/admin/universe/planets",
+            },
+            { id: "moons", label: "Lunas", href: "/admin/universe/moons" },
+        ],
+    },
+    { id: "users", label: "Usuarios", icon: "👨‍🚀", href: "/admin/users" },
+    { id: "items", label: "Items", icon: "🛸", href: "/admin/items" },
+];
 ---
 
 <Layout>
-    <div class="admin-container">
-        <aside class="sidebar">
-            <div class="logo">
-                <h2>Admin Panel</h2>
+    <div
+        class="admin-container flex min-h-screen bg-space-dark text-cosmic-100 font-sci"
+    >
+        <aside
+            class="sidebar w-64 bg-space-blue/90 backdrop-blur-sm border-r border-cosmic-600/30 shadow-inner-glow overflow-y-auto fixed h-full z-10"
+        >
+            <div
+                class="logo flex items-center justify-center h-16 border-b border-cosmic-600/50 px-4"
+            >
+                <h2
+                    class="text-xl font-bold text-white flex items-center gap-2"
+                >
+                    <span class="text-space-neon-blue">◉</span>
+                    <span class="tracking-wider">COSMOS ADMIN</span>
+                </h2>
             </div>
-            <nav>
-                <ul>
-                    <li class={activeSection === "dashboard" ? "active" : ""}>
-                        <a href="/admin">Dashboard</a>
-                    </li>
-                    <li class={activeSection === "universe" ? "active" : ""}>
-                        <a href="/admin/universe">Universo</a>
-                        <ul class="submenu">
-                            <li
-                                class={activeSection === "galaxies"
-                                    ? "active"
-                                    : ""}
-                            >
-                                <a href="/admin/universe/galaxies">Galaxias</a>
-                            </li>
-                            <li
-                                class={activeSection === "constellations"
-                                    ? "active"
-                                    : ""}
-                            >
-                                <a href="/admin/universe/constellations"
-                                    >Constelaciones</a
+
+            <nav class="mt-6 px-2">
+                <ul class="space-y-1">
+                    {
+                        menuItems.map((item) => (
+                            <li class="mb-2">
+                                <a
+                                    href={item.href}
+                                    class={`flex items-center px-4 py-2.5 rounded transition-colors duration-200 ${
+                                        activeSection === item.id
+                                            ? "bg-space-purple/50 text-white border-l-2 border-space-neon-purple"
+                                            : "text-cosmic-200 hover:bg-space-blue/50 hover:text-cosmic-100"
+                                    }`}
                                 >
+                                    <span class="inline-flex items-center justify-center w-5 h-5 mr-3">
+                                        {item.icon}
+                                    </span>
+                                    <span class="text-sm font-medium">
+                                        {item.label}
+                                    </span>
+                                </a>
+
+                                {item.subItems &&
+                                    (activeSection === item.id ||
+                                        item.subItems.some(
+                                            (sub) => sub.id === activeSection,
+                                        )) && (
+                                        <ul class="ml-12 mt-2 space-y-1">
+                                            {item.subItems.map((subItem) => (
+                                                <li>
+                                                    <a
+                                                        href={subItem.href}
+                                                        class={`block px-3 py-1.5 text-sm rounded transition-colors duration-200 ${
+                                                            activeSection ===
+                                                            subItem.id
+                                                                ? "text-space-neon-blue"
+                                                                : "text-cosmic-300 hover:text-cosmic-100"
+                                                        }`}
+                                                    >
+                                                        {subItem.label}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                             </li>
-                            <li
-                                class={activeSection === "solar-systems"
-                                    ? "active"
-                                    : ""}
-                            >
-                                <a href="/admin/universe/solar-systems"
-                                    >Sistemas Solares</a
-                                >
-                            </li>
-                            <li
-                                class={activeSection === "stars"
-                                    ? "active"
-                                    : ""}
-                            >
-                                <a href="/admin/universe/stars">Estrellas</a>
-                            </li>
-                            <li
-                                class={activeSection === "planets"
-                                    ? "active"
-                                    : ""}
-                            >
-                                <a href="/admin/universe/planets">Planetas</a>
-                            </li>
-                            <li
-                                class={activeSection === "moons"
-                                    ? "active"
-                                    : ""}
-                            >
-                                <a href="/admin/universe/moons">Lunas</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class={activeSection === "users" ? "active" : ""}>
-                        <a href="/admin/users">Usuarios</a>
-                    </li>
-                    <li class={activeSection === "items" ? "active" : ""}>
-                        <a href="/admin/items">Items</a>
-                    </li>
+                        ))
+                    }
                 </ul>
             </nav>
+
+            <div
+                class="absolute bottom-0 w-full p-4 border-t border-cosmic-600/30"
+            >
+                <div class="text-xs text-cosmic-400 mb-2">System Status</div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs">Uptime</span>
+                    <span class="text-xs text-space-neon-green">99.8%</span>
+                </div>
+                <div class="w-full bg-cosmic-700 rounded-full h-1.5">
+                    <div
+                        class="bg-gradient-to-r from-space-neon-blue to-space-neon-purple h-1.5 rounded-full w-[99.8%]"
+                    >
+                    </div>
+                </div>
+            </div>
         </aside>
 
-        <main class="content">
-            <header>
-                <h1>{title}</h1>
+        <main class="content flex-1 ml-64">
+            <header
+                class="bg-space-blue/80 backdrop-blur-md border-b border-cosmic-600/30 sticky top-0 z-[5] shadow-md"
+            >
+                <div class="flex items-center justify-between h-16 px-6">
+                    <h1 class="text-xl font-semibold text-white">
+                        {title}
+                        <div
+                            class="absolute bottom-0 left-0 h-[2px] w-24 bg-gradient-to-r from-space-neon-blue to-space-neon-purple rounded"
+                        >
+                        </div>
+                    </h1>
+
+                    <div class="flex items-center space-x-4">
+                        <button class="text-cosmic-300 hover:text-cosmic-100">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                ></path>
+                            </svg>
+                        </button>
+
+                        <div
+                            class="relative h-8 w-8 rounded-full bg-space-accent flex items-center justify-center text-white font-medium"
+                        >
+                            A
+                            <div
+                                class="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-space-neon-green"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </header>
-            <div class="content-body">
-                <slot />
+
+            <div class="container mx-auto p-6 grid-bg">
+                <div class="panel-sci-fi p-6">
+                    <slot />
+                </div>
             </div>
         </main>
     </div>
 </Layout>
 
 <style>
-    .admin-container {
-        display: flex;
-        min-height: 100vh;
+    /* Scan line effect */
+    main::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(77, 238, 234, 0.03) 50%,
+            transparent
+        );
+        background-size: 100% 4px;
+        animation: scanLine 6s linear infinite;
+        z-index: -1;
+        pointer-events: none;
     }
 
-    .sidebar {
-        width: 250px;
-        background-color: #1a1a2e;
-        color: white;
-        padding: 20px;
-    }
-
-    .logo {
-        margin-bottom: 30px;
-    }
-
-    .logo h2 {
-        margin: 0;
-    }
-
-    nav ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    nav li {
-        padding: 10px 0;
-        border-radius: 5px;
-        margin-bottom: 5px;
-        position: relative;
-    }
-
-    nav li a {
-        color: white;
-        text-decoration: none;
-        display: block;
-        padding: 0 15px;
-    }
-
-    nav li.active {
-        background-color: rgba(255, 255, 255, 0.1);
-        font-weight: bold;
-    }
-
-    nav li.active > a {
-        font-weight: bold;
-    }
-
-    .submenu {
-        list-style: none;
-        padding: 0;
-        margin: 5px 0 0 20px;
-    }
-
-    .submenu li {
-        padding: 8px 0;
-        margin-bottom: 2px;
-        font-size: 0.9rem;
-    }
-
-    .submenu li.active {
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    .submenu li a {
-        padding-left: 10px;
-        opacity: 0.8;
-    }
-
-    .submenu li:hover a {
-        opacity: 1;
-    }
-
-    .content {
-        flex: 1;
-        padding: 20px;
-        background-color: #f5f5f5;
-    }
-
-    header {
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #ddd;
-    }
-
-    .content-body {
-        background-color: white;
-        border-radius: 5px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    @keyframes scanLine {
+        0% {
+            background-position: 0 0%;
+        }
+        100% {
+            background-position: 0 100%;
+        }
     }
 </style>

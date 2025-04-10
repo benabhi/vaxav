@@ -1,29 +1,241 @@
 ---
-import AdminLayout from "../../../../layouts/AdminLayout.astro";
-import CelestialBodyForm from "../../../../components/admin/CelestialBodyForm.astro";
-
-// En una aplicación real, estos datos se obtendrían de la base de datos
-// Simulación de datos para sistemas solares disponibles como padres
-const potentialParents = [
-    { id: 1, name: "Sistema Solar", type: "solarSystem" },
-    { id: 2, name: "Alpha Centauri", type: "solarSystem" },
-    { id: 3, name: "Tau Ceti", type: "solarSystem" },
-    { id: 4, name: "TRAPPIST-1", type: "solarSystem" },
-];
+// Este componente proporciona elementos de formulario con estilo sci-fi
+// Puedes usarlo para crear formularios consistentes en todo el panel de administración
 ---
 
-<AdminLayout title="Crear Planeta" activeSection="planets">
-    <div class="planet-create-container">
-        <CelestialBodyForm
-            type="planet"
-            parentOptions={potentialParents}
-            action="/api/celestial-bodies"
-        />
+<div class="sci-fi-form-container">
+    <!-- Contenedor de formulario -->
+    <div
+        class="form-section bg-space-dark/80 backdrop-blur-sm border border-cosmic-600/30 rounded-lg p-6 mb-6"
+    >
+        <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+            <span class="text-space-neon-blue mr-2">◈</span>
+            <slot name="section-title">Sección del Formulario</slot>
+        </h3>
+
+        <p class="text-cosmic-300 text-sm mb-6">
+            <slot name="section-description"
+                >Descripción de esta sección del formulario.</slot
+            >
+        </p>
+
+        <div class="space-y-5">
+            <slot name="form-fields" />
+        </div>
     </div>
-</AdminLayout>
+</div>
+
+<!-- Input de texto con estilo sci-fi -->
+<div class="form-group mb-5">
+    <label
+        for={Astro.props.id || "input-field"}
+        class="block text-sm font-medium text-cosmic-200 mb-1.5"
+    >
+        <slot name="label">Etiqueta</slot>
+        {Astro.props.required && <span class="text-space-neon-pink">*</span>}
+    </label>
+
+    <div class="relative group">
+        <div
+            class="absolute -inset-0.5 bg-gradient-to-r from-space-neon-blue/10 to-space-neon-purple/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"
+        >
+        </div>
+        <input
+            type={Astro.props.type || "text"}
+            id={Astro.props.id || "input-field"}
+            name={Astro.props.name || "input-field"}
+            placeholder={Astro.props.placeholder || ""}
+            required={Astro.props.required}
+            value={Astro.props.value || ""}
+            class="relative block w-full bg-space-dark border border-cosmic-600/50 text-cosmic-100 rounded-md px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-space-neon-blue/50 focus:border-space-neon-blue/50 placeholder-cosmic-500"
+        />
+
+        <div
+            class="absolute top-1/2 right-4 transform -translate-y-1/2 text-cosmic-500 pointer-events-none"
+        >
+            <slot name="icon" />
+        </div>
+    </div>
+
+    <p class="mt-1.5 text-xs text-cosmic-400">
+        <slot name="help-text">Texto de ayuda para este campo.</slot>
+    </p>
+</div>
+
+<!-- Textarea con estilo sci-fi -->
+<div class="form-group mb-5">
+    <label
+        for={Astro.props.id || "textarea-field"}
+        class="block text-sm font-medium text-cosmic-200 mb-1.5"
+    >
+        <slot name="textarea-label">Texto Multilínea</slot>
+        {Astro.props.required && <span class="text-space-neon-pink">*</span>}
+    </label>
+
+    <div class="relative group">
+        <div
+            class="absolute -inset-0.5 bg-gradient-to-r from-space-neon-blue/10 to-space-neon-purple/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"
+        >
+        </div>
+        <textarea
+            id={Astro.props.id || "textarea-field"}
+            name={Astro.props.name || "textarea-field"}
+            rows={Astro.props.rows || 4}
+            placeholder={Astro.props.placeholder || ""}
+            required={Astro.props.required}
+            class="relative block w-full bg-space-dark border border-cosmic-600/50 text-cosmic-100 rounded-md px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-space-neon-blue/50 focus:border-space-neon-blue/50 placeholder-cosmic-500"
+            >{Astro.props.value || ""}</textarea
+        >
+    </div>
+
+    <p class="mt-1.5 text-xs text-cosmic-400">
+        <slot name="textarea-help">Texto de ayuda para este campo.</slot>
+    </p>
+</div>
+
+<!-- Select con estilo sci-fi -->
+<div class="form-group mb-5">
+    <label
+        for={Astro.props.id || "select-field"}
+        class="block text-sm font-medium text-cosmic-200 mb-1.5"
+    >
+        <slot name="select-label">Selecciona una opción</slot>
+        {Astro.props.required && <span class="text-space-neon-pink">*</span>}
+    </label>
+
+    <div class="relative group">
+        <div
+            class="absolute -inset-0.5 bg-gradient-to-r from-space-neon-blue/10 to-space-neon-purple/10 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300"
+        >
+        </div>
+        <select
+            id={Astro.props.id || "select-field"}
+            name={Astro.props.name || "select-field"}
+            required={Astro.props.required}
+            class="relative block w-full bg-space-dark border border-cosmic-600/50 text-cosmic-100 rounded-md px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-space-neon-blue/50 focus:border-space-neon-blue/50 appearance-none"
+        >
+            <slot name="select-options" />
+        </select>
+
+        <div
+            class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none"
+        >
+            <svg
+                class="w-5 h-5 text-cosmic-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </div>
+    </div>
+
+    <p class="mt-1.5 text-xs text-cosmic-400">
+        <slot name="select-help">Texto de ayuda para este campo.</slot>
+    </p>
+</div>
+
+<!-- Checkbox con estilo sci-fi -->
+<div class="form-group mb-5">
+    <div class="flex items-start">
+        <div class="flex items-center h-5">
+            <input
+                type="checkbox"
+                id={Astro.props.id || "checkbox-field"}
+                name={Astro.props.name || "checkbox-field"}
+                class="sci-fi-checkbox w-4 h-4 text-space-neon-blue bg-space-dark border-cosmic-500 focus:ring-space-neon-blue/50 rounded"
+            />
+        </div>
+        <div class="ml-3 text-sm">
+            <label
+                for={Astro.props.id || "checkbox-field"}
+                class="font-medium text-cosmic-200"
+            >
+                <slot name="checkbox-label">Opción de Checkbox</slot>
+            </label>
+            <p class="text-cosmic-400 text-xs mt-0.5">
+                <slot name="checkbox-help"
+                    >Texto de ayuda para esta opción.</slot
+                >
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Radio buttons con estilo sci-fi -->
+<div class="form-group mb-5">
+    <label class="block text-sm font-medium text-cosmic-200 mb-2">
+        <slot name="radio-group-label">Grupo de Opciones</slot>
+    </label>
+
+    <div class="space-y-2">
+        <slot name="radio-options" />
+    </div>
+</div>
+
+<!-- Botones de acción con estilo sci-fi -->
+<div
+    class="flex flex-wrap justify-end gap-4 mt-8 border-t border-cosmic-700/50 pt-6"
+>
+    <button
+        type="button"
+        class="sci-fi-button-secondary px-5 py-2.5 bg-cosmic-800/50 border border-cosmic-600/50 text-cosmic-200 rounded-md hover:bg-cosmic-700/50 hover:text-cosmic-100 transition-colors"
+    >
+        <slot name="cancel-button">Cancelar</slot>
+    </button>
+
+    <button
+        type="submit"
+        class="sci-fi-button-primary px-5 py-2.5 bg-space-blue/50 border border-space-neon-blue/50 text-space-neon-blue rounded-md hover:bg-space-blue/70 hover:border-space-neon-blue transition-all relative group"
+    >
+        <div
+            class="absolute -inset-0.5 bg-gradient-to-r from-space-neon-blue/20 to-space-neon-purple/20 rounded-md blur opacity-0 group-hover:opacity-100 transition duration-300"
+        >
+        </div>
+        <span class="relative">
+            <slot name="submit-button">Guardar</slot>
+        </span>
+    </button>
+</div>
 
 <style>
-    .planet-create-container {
-        max-width: 100%;
+    /* Estilo personalizado para checkbox */
+    .sci-fi-checkbox {
+        position: relative;
+        appearance: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 1px solid rgba(140, 150, 180, 0.4);
+        border-radius: 4px;
+        background-color: rgba(20, 24, 40, 0.8);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sci-fi-checkbox:checked {
+        border-color: rgba(77, 238, 234, 0.6);
+        background-color: rgba(77, 238, 234, 0.1);
+    }
+
+    .sci-fi-checkbox:checked::after {
+        content: "";
+        position: absolute;
+        width: 0.5rem;
+        height: 0.5rem;
+        background-color: rgb(77, 238, 234);
+        border-radius: 2px;
+    }
+
+    .sci-fi-checkbox:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(77, 238, 234, 0.2);
     }
 </style>
