@@ -1,0 +1,29 @@
+---
+import AdminLayout from "../../../../layouts/AdminLayout.astro";
+import CelestialBodyForm from "../../../../components/admin/forms/CelestialBodyForm.astro";
+
+// En una aplicación real, estos datos se obtendrían de la base de datos
+// Simulación de datos para sistemas solares disponibles como padres
+const potentialParents = [
+    { id: 1, name: "Sistema Solar", type: "solarSystem" },
+    { id: 2, name: "Alpha Centauri", type: "solarSystem" },
+    { id: 3, name: "Tau Ceti", type: "solarSystem" },
+    { id: 4, name: "TRAPPIST-1", type: "solarSystem" },
+];
+---
+
+<AdminLayout title="Crear Planeta" activeSection="planets">
+    <div class="planet-create-container">
+        <CelestialBodyForm
+            type="planet"
+            parentOptions={potentialParents}
+            action="/api/celestial-bodies"
+        />
+    </div>
+</AdminLayout>
+
+<style>
+    .planet-create-container {
+        max-width: 100%;
+    }
+</style>

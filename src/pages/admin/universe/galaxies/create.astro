@@ -1,0 +1,448 @@
+---
+import AdminLayout from "../../../../layouts/AdminLayout.astro";
+
+// Opciones para los tipos de galaxias
+const galaxyTypes = [
+    { value: "spiral", label: "Espiral" },
+    { value: "elliptical", label: "Elíptica" },
+    { value: "irregular", label: "Irregular" },
+    { value: "lenticular", label: "Lenticular" },
+];
+---
+
+<AdminLayout title="Crear Nueva Galaxia" activeSection="galaxies">
+    <div class="galaxy-form-container">
+        <header class="form-header">
+            <h1>Crear Nueva Galaxia</h1>
+            <p>
+                Completa el formulario para añadir una nueva galaxia al
+                universo.
+            </p>
+        </header>
+
+        <div class="form-card">
+            <form id="galaxyForm" method="POST">
+                <div class="form-section">
+                    <h2>Información Básica</h2>
+
+                    <div class="form-group">
+                        <label for="name"
+                            >Nombre <span class="required">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            placeholder="Ej: Vía Láctea"
+                            autocomplete="off"
+                        />
+                        <small>Nombre único para identificar esta galaxia</small
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description"
+                            >Descripción <span class="required">*</span></label
+                        >
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            required
+                            placeholder="Describe esta galaxia y sus características principales..."
+                        ></textarea>
+                        <small>Una descripción detallada de la galaxia</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type"
+                            >Tipo de Galaxia <span class="required">*</span
+                            ></label
+                        >
+                        <select id="type" name="type" required>
+                            <option value="">Seleccionar tipo...</option>
+                            {
+                                galaxyTypes.map((type) => (
+                                    <option value={type.value}>
+                                        {type.label}
+                                    </option>
+                                ))
+                            }
+                        </select>
+                        <small
+                            >Categoría morfológica principal de la galaxia</small
+                        >
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Características</h2>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="diameter">Diámetro</label>
+                            <div class="input-with-unit">
+                                <input
+                                    type="text"
+                                    id="diameter"
+                                    name="diameter"
+                                    placeholder="100,000"
+                                />
+                                <span class="unit">años luz</span>
+                            </div>
+                            <small>Diámetro aproximado de la galaxia</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stars">Estrellas</label>
+                            <input
+                                type="text"
+                                id="stars"
+                                name="stars"
+                                placeholder="100-400 mil millones"
+                            />
+                            <small>Número estimado de estrellas</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Edad</label>
+                            <div class="input-with-unit">
+                                <input
+                                    type="number"
+                                    id="age"
+                                    name="age"
+                                    min="0"
+                                    step="0.1"
+                                    placeholder="13.6"
+                                />
+                                <span class="unit">mil millones de años</span>
+                            </div>
+                            <small>Edad estimada de la galaxia</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="distance"
+                                >Distancia desde la Tierra</label
+                            >
+                            <div class="input-with-unit">
+                                <input
+                                    type="number"
+                                    id="distance"
+                                    name="distance"
+                                    min="0"
+                                    placeholder="0"
+                                />
+                                <span class="unit">millones de años luz</span>
+                            </div>
+                            <small
+                                >Distancia desde nuestro planeta (0 para la Vía
+                                Láctea)</small
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Detalles Adicionales</h2>
+
+                    <div class="form-group">
+                        <label for="features">Características Especiales</label>
+                        <textarea
+                            id="features"
+                            name="features"
+                            rows="3"
+                            placeholder="Agujero negro central, brazos espirales prominentes, etc..."
+                        ></textarea>
+                        <small
+                            >Características distintivas de esta galaxia</small
+                        >
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="imageUrl">URL de Imagen</label>
+                            <input
+                                type="url"
+                                id="imageUrl"
+                                name="imageUrl"
+                                placeholder="https://ejemplo.com/imagen.jpg"
+                            />
+                            <small>Enlace a una imagen representativa</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="visibility">Visibilidad</label>
+                            <select id="visibility" name="visibility">
+                                <option value="public">Pública</option>
+                                <option value="private">Privada</option>
+                                <option value="shared">Compartida</option>
+                            </select>
+                            <small>Quién puede ver esta galaxia</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/admin/universe/galaxies" class="cancel-button"
+                        >Cancelar</a
+                    >
+                    <button type="submit" class="submit-button"
+                        >Crear Galaxia</button
+                    >
+                </div>
+            </form>
+        </div>
+    </div>
+</AdminLayout>
+
+<style>
+    /* Contenedor principal */
+    .galaxy-form-container {
+        max-width: 100%;
+    }
+
+    /* Encabezado */
+    .form-header {
+        margin-bottom: 20px;
+    }
+
+    .form-header h1 {
+        font-size: 1.8rem;
+        margin: 0 0 10px 0;
+        color: #1f2937;
+    }
+
+    .form-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    /* Tarjeta del formulario */
+    .form-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+    }
+
+    /* Secciones del formulario */
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-section:last-of-type {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .form-section h2 {
+        font-size: 1.2rem;
+        color: #1f2937;
+        margin: 0 0 20px 0;
+    }
+
+    /* Grupos de formulario */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #374151;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="url"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    small {
+        display: block;
+        margin-top: 5px;
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    /* Input con unidades */
+    .input-with-unit {
+        display: flex;
+        align-items: center;
+    }
+
+    .input-with-unit input {
+        flex: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .unit {
+        background-color: #f3f4f6;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-left: none;
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
+        color: #4b5563;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    /* Botones de acción */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .cancel-button,
+    .submit-button {
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .cancel-button {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #d1d5db;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .cancel-button:hover {
+        background-color: #e5e7eb;
+    }
+
+    .submit-button {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+    }
+
+    .submit-button:hover {
+        background-color: #2563eb;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+    }
+</style>
+
+<script>
+    // Validación y manejo del formulario
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("galaxyForm");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Validar los campos obligatorios
+            const requiredFields = form.querySelectorAll("[required]");
+            let isValid = true;
+
+            requiredFields.forEach((field) => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add("error");
+
+                    // Añadir mensaje de error si no existe
+                    let errorMsg =
+                        field.parentNode.querySelector(".error-message");
+                    if (!errorMsg) {
+                        errorMsg = document.createElement("p");
+                        errorMsg.className = "error-message";
+                        errorMsg.textContent = "Este campo es obligatorio";
+                        errorMsg.style.color = "#EF4444";
+                        errorMsg.style.fontSize = "0.85rem";
+                        errorMsg.style.marginTop = "5px";
+                        field.parentNode.insertBefore(
+                            errorMsg,
+                            field.nextSibling,
+                        );
+                    }
+                } else {
+                    field.classList.remove("error");
+                    const errorMsg =
+                        field.parentNode.querySelector(".error-message");
+                    if (errorMsg) errorMsg.remove();
+                }
+            });
+
+            if (!isValid) {
+                return;
+            }
+
+            // Recoger los datos del formulario
+            const formData = new FormData(form);
+            const formValues = Object.fromEntries(formData.entries());
+
+            console.log("Datos de la galaxia a crear:", formValues);
+
+            try {
+                // Simulación de envío al servidor
+                // En un caso real, aquí iría una petición fetch o axios
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                // Redirigir a la lista de galaxias con mensaje de éxito
+                window.location.href = "/admin/universe/galaxies?created=true";
+            } catch (error) {
+                console.error("Error al crear la galaxia:", error);
+                alert(
+                    "Ha ocurrido un error al crear la galaxia. Por favor, inténtalo de nuevo.",
+                );
+            }
+        });
+
+        // Limpiar estados de error al escribir
+        form.querySelectorAll("input, textarea, select").forEach((field) => {
+            field.addEventListener("input", () => {
+                field.classList.remove("error");
+                const errorMsg =
+                    field.parentNode.querySelector(".error-message");
+                if (errorMsg) errorMsg.remove();
+            });
+        });
+    });
+</script>

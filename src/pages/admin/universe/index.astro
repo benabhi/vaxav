@@ -1,0 +1,623 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+
+// Estructura de datos para mostrar los distintos componentes de un universo
+const components = [
+    {
+        id: "galaxies",
+        name: "Galaxias",
+        icon: "🌌",
+        description:
+            "Enormes colecciones de estrellas, gas, polvo y materia oscura unidas por la gravedad.",
+        count: 2,
+        color: "#8B5CF6",
+    },
+    {
+        id: "constellations",
+        name: "Constelaciones",
+        icon: "✨",
+        description:
+            "Grupos de estrellas que forman patrones reconocibles en el cielo nocturno.",
+        count: 1,
+        color: "#60A5FA",
+    },
+    {
+        id: "solar-systems",
+        name: "Sistemas Solares",
+        icon: "☀️",
+        description:
+            "Conjuntos de planetas, lunas y otros objetos que orbitan alrededor de una estrella central.",
+        count: 1,
+        color: "#F59E0B",
+    },
+    {
+        id: "stars",
+        name: "Estrellas",
+        icon: "⭐",
+        description:
+            "Enormes esferas de gas caliente que producen luz y calor mediante reacciones nucleares.",
+        count: 1,
+        color: "#FBBF24",
+    },
+    {
+        id: "planets",
+        name: "Planetas",
+        icon: "🪐",
+        description:
+            "Cuerpos celestes que orbitan alrededor de una estrella y tienen suficiente masa para ser casi esféricos.",
+        count: 2,
+        color: "#10B981",
+    },
+    {
+        id: "moons",
+        name: "Lunas",
+        icon: "🌙",
+        description: "Satélites naturales que orbitan alrededor de planetas.",
+        count: 1,
+        color: "#6B7280",
+    },
+];
+
+// Datos recientes - simulados
+const recentItems = [
+    {
+        name: "Vía Láctea",
+        type: "galaxy",
+        icon: "🌌",
+        action: "created",
+        date: "Hace 10 minutos",
+        user: "admin",
+    },
+    {
+        name: "Sistema Solar",
+        type: "solarSystem",
+        icon: "☀️",
+        action: "updated",
+        date: "Hace 30 minutos",
+        user: "admin",
+    },
+    {
+        name: "Tierra",
+        type: "planet",
+        icon: "🪐",
+        action: "created",
+        date: "Hace 1 hora",
+        user: "admin",
+    },
+];
+---
+
+<AdminLayout title="Gestión del Universo" activeSection="universe">
+    <div class="universe-management">
+        <header class="page-header">
+            <h1>Panel de Universo</h1>
+            <p>
+                Administra todos los componentes del universo desde este panel
+                central.
+            </p>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Panel de componentes -->
+            <div class="component-panel">
+                <h2>Componentes del Universo</h2>
+                <div class="components-grid">
+                    {
+                        components.map((component) => (
+                            <a
+                                href={`/admin/universe/${component.id}`}
+                                class="component-card"
+                                style={`--card-color: ${component.color}`}
+                            >
+                                <div class="card-icon">{component.icon}</div>
+                                <div class="card-content">
+                                    <h3>{component.name}</h3>
+                                    <p>{component.description}</p>
+                                    <div class="card-footer">
+                                        <span class="count-badge">
+                                            {component.count}
+                                        </span>
+                                        <span class="view-link">
+                                            Ver todos →
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        ))
+                    }
+                </div>
+            </div>
+
+            <!-- Panel de actividad reciente y acciones rápidas -->
+            <div class="sidebar">
+                <div class="quick-actions">
+                    <h2>Acciones Rápidas</h2>
+                    <div class="action-buttons">
+                        <button class="create-btn">
+                            <span class="btn-icon">+</span>
+                            Crear Nuevo Componente
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="/admin/universe/galaxies/create">Galaxia</a
+                            >
+                            <a href="/admin/universe/constellations/create"
+                                >Constelación</a
+                            >
+                            <a href="/admin/universe/solar-systems/create"
+                                >Sistema Solar</a
+                            >
+                            <a href="/admin/universe/stars/create">Estrella</a>
+                            <a href="/admin/universe/planets/create">Planeta</a>
+                            <a href="/admin/universe/moons/create">Luna</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h2>Actividad Reciente</h2>
+                    <ul class="activity-list">
+                        {
+                            recentItems.map((item) => (
+                                <li class="activity-item">
+                                    <div
+                                        class="activity-icon"
+                                        style={`--item-color: ${components.find((c) => c.id === item.type + "s")?.color || "#333"}`}
+                                    >
+                                        {item.icon}
+                                    </div>
+                                    <div class="activity-content">
+                                        <p class="activity-text">
+                                            <span class="activity-action">
+                                                {item.action === "created"
+                                                    ? "Creado"
+                                                    : "Actualizado"}
+                                            </span>
+                                            <strong>{item.name}</strong>
+                                        </p>
+                                        <p class="activity-meta">
+                                            {item.date} por {item.user}
+                                        </p>
+                                    </div>
+                                </li>
+                            ))
+                        }
+                    </ul>
+                    <a href="#" class="view-all-link">Ver todo el historial</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagrama de relaciones -->
+        <div class="relationships-section">
+            <h2>Estructura del Universo</h2>
+            <p>Diagrama de relaciones entre componentes del universo:</p>
+
+            <div class="universe-diagram">
+                <div class="diagram-node level-1">
+                    <div class="node-icon">🌌</div>
+                    <div class="node-label">Galaxias</div>
+                    <div class="node-count">2</div>
+                </div>
+
+                <div class="diagram-connection"></div>
+
+                <div class="level-2-container">
+                    <div class="diagram-node level-2">
+                        <div class="node-icon">✨</div>
+                        <div class="node-label">Constelaciones</div>
+                        <div class="node-count">1</div>
+                    </div>
+
+                    <div class="diagram-node level-2">
+                        <div class="node-icon">☀️</div>
+                        <div class="node-label">Sistemas Solares</div>
+                        <div class="node-count">1</div>
+                    </div>
+                </div>
+
+                <div class="diagram-connection"></div>
+
+                <div class="level-3-container">
+                    <div class="diagram-node level-3">
+                        <div class="node-icon">⭐</div>
+                        <div class="node-label">Estrellas</div>
+                        <div class="node-count">1</div>
+                    </div>
+                </div>
+
+                <div class="diagram-connection"></div>
+
+                <div class="level-4-container">
+                    <div class="diagram-node level-4">
+                        <div class="node-icon">🪐</div>
+                        <div class="node-label">Planetas</div>
+                        <div class="node-count">2</div>
+                    </div>
+                </div>
+
+                <div class="diagram-connection"></div>
+
+                <div class="level-5-container">
+                    <div class="diagram-node level-5">
+                        <div class="node-icon">🌙</div>
+                        <div class="node-label">Lunas</div>
+                        <div class="node-count">1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+<style>
+    /* Estilos generales de la página */
+    .universe-management {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .page-header {
+        margin-bottom: 10px;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        margin: 0 0 5px 0;
+        color: #111827;
+    }
+
+    .page-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+        margin: 0 0 15px 0;
+        color: #1f2937;
+    }
+
+    /* Dashboard grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    /* Componentes */
+    .component-panel {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .components-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+
+    .component-card {
+        display: flex;
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        text-decoration: none;
+        color: inherit;
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s;
+        height: 100%;
+    }
+
+    .component-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        background-color: var(--card-color);
+        color: white;
+        font-size: 24px;
+    }
+
+    .card-content {
+        flex: 1;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-content h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.1rem;
+        color: #111827;
+    }
+
+    .card-content p {
+        margin: 0 0 12px 0;
+        font-size: 0.9rem;
+        color: #6b7280;
+        flex: 1;
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .count-badge {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .view-link {
+        color: var(--card-color);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .quick-actions,
+    .recent-activity {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Acciones rápidas */
+    .action-buttons {
+        position: relative;
+    }
+
+    .create-btn {
+        width: 100%;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .create-btn:hover + .dropdown-menu,
+    .dropdown-menu:hover {
+        display: block;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 8px 0;
+        margin-top: 5px;
+        z-index: 10;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 8px 16px;
+        color: #1f2937;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f3f4f6;
+    }
+
+    /* Actividad reciente */
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: start;
+        padding: 10px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        background-color: var(--item-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-text {
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .activity-action {
+        color: #6b7280;
+    }
+
+    .activity-meta {
+        margin: 3px 0 0 0;
+        font-size: 0.8rem;
+        color: #9ca3af;
+    }
+
+    .view-all-link {
+        display: inline-block;
+        margin-top: 12px;
+        color: #3b82f6;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+
+    /* Diagrama de relaciones */
+    .relationships-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .universe-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+        margin-top: 20px;
+    }
+
+    .diagram-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        border-radius: 8px;
+        min-width: 120px;
+        text-align: center;
+    }
+
+    .node-icon {
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+
+    .node-label {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .node-count {
+        background-color: #f3f4f6;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        color: #4b5563;
+    }
+
+    .diagram-connection {
+        width: 2px;
+        height: 20px;
+        background-color: #d1d5db;
+        margin: 5px 0;
+    }
+
+    .level-1 {
+        background-color: #ede9fe;
+        border: 1px solid #ddd6fe;
+    }
+
+    .level-2-container,
+    .level-3-container,
+    .level-4-container,
+    .level-5-container {
+        display: flex;
+        gap: 20px;
+    }
+
+    .level-2 {
+        background-color: #dbeafe;
+        border: 1px solid #bfdbfe;
+    }
+
+    .level-3 {
+        background-color: #fef3c7;
+        border: 1px solid #fde68a;
+    }
+
+    .level-4 {
+        background-color: #d1fae5;
+        border: 1px solid #a7f3d0;
+    }
+
+    .level-5 {
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .level-2-container,
+        .level-3-container,
+        .level-4-container,
+        .level-5-container {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    // Añadimos un pequeño script para manejar el dropdown
+    document.addEventListener("DOMContentLoaded", () => {
+        const createBtn = document.querySelector(".create-btn");
+        const dropdownMenu = document.querySelector(".dropdown-menu");
+
+        createBtn.addEventListener("click", () => {
+            dropdownMenu.style.display =
+                dropdownMenu.style.display === "block" ? "none" : "block";
+        });
+
+        // Cerrar el dropdown cuando se hace clic fuera
+        document.addEventListener("click", (e) => {
+            if (
+                !createBtn.contains(e.target) &&
+                !dropdownMenu.contains(e.target)
+            ) {
+                dropdownMenu.style.display = "none";
+            }
+        });
+    });
+</script>

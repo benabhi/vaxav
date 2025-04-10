@@ -1,0 +1,648 @@
+---
+import AdminLayout from "../../../../layouts/AdminLayout.astro";
+
+// Datos simulados de planetas
+const planets = [
+    {
+        id: 1,
+        name: "Tierra",
+        description:
+            "El tercer planeta desde el Sol y el único conocido que alberga vida.",
+        classification: "terrestrial",
+        parentName: "Sistema Solar",
+        radius: 1.0,
+        moons: 1,
+        createdAt: "2025-04-06",
+    },
+    {
+        id: 2,
+        name: "Marte",
+        description:
+            "El cuarto planeta desde el Sol, conocido como el planeta rojo.",
+        classification: "terrestrial",
+        parentName: "Sistema Solar",
+        radius: 0.53,
+        moons: 2,
+        createdAt: "2025-04-08",
+    },
+    {
+        id: 3,
+        name: "Júpiter",
+        description:
+            "El planeta más grande del Sistema Solar, un gigante gaseoso con anillos tenues.",
+        classification: "gas_giant",
+        parentName: "Sistema Solar",
+        radius: 11.2,
+        moons: 79,
+        createdAt: "2025-04-09",
+    },
+    {
+        id: 4,
+        name: "Kepler-186f",
+        description:
+            "Un exoplaneta similar a la Tierra que orbita alrededor de la estrella Kepler-186.",
+        classification: "exoplanet",
+        parentName: "Kepler-186",
+        radius: 1.17,
+        moons: 0,
+        createdAt: "2025-04-10",
+    },
+    {
+        id: 5,
+        name: "Saturno",
+        description:
+            "El sexto planeta desde el Sol, conocido por su impresionante sistema de anillos.",
+        classification: "gas_giant",
+        parentName: "Sistema Solar",
+        radius: 9.45,
+        moons: 82,
+        createdAt: "2025-04-11",
+    },
+];
+
+// Textos para los tipos de planetas
+const planetTypeLabels = {
+    terrestrial: "Terrestre",
+    gas_giant: "Gigante Gaseoso",
+    ice_giant: "Gigante Helado",
+    super_earth: "Súper-Tierra",
+    dwarf: "Planeta Enano",
+    exoplanet: "Exoplaneta",
+};
+
+// Color para el badge según el tipo
+const planetTypeColors = {
+    terrestrial: "#D1FAE5", // Verde claro
+    gas_giant: "#DBEAFE", // Azul claro
+    ice_giant: "#EFF6FF", // Azul muy claro
+    super_earth: "#ECFDF5", // Verde muy claro
+    dwarf: "#FEF3C7", // Amarillo claro
+    exoplanet: "#FCE7F3", // Rosa claro
+};
+
+// Color del texto para el badge según el tipo
+const planetTypeTextColors = {
+    terrestrial: "#047857", // Verde oscuro
+    gas_giant: "#1E40AF", // Azul oscuro
+    ice_giant: "#1D4ED8", // Azul medio
+    super_earth: "#065F46", // Verde oscuro
+    dwarf: "#92400E", // Marrón
+    exoplanet: "#9D174D", // Rosa oscuro
+};
+---
+
+<AdminLayout title="Planetas" activeSection="planets">
+    <div class="planets-management">
+        <header class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1>Planetas</h1>
+                    <p>Gestión de planetas del universo</p>
+                </div>
+                <a href="/admin/universe/planets/create" class="create-button">
+                    <span class="create-icon">+</span>
+                    Nuevo Planeta
+                </a>
+            </div>
+
+            <div class="info-banner">
+                <div class="info-icon">🪐</div>
+                <div class="info-text">
+                    <p>
+                        Los planetas son cuerpos celestes que orbitan alrededor
+                        de una estrella y tienen suficiente masa para ser casi
+                        esféricos.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters-bar">
+            <div class="search-container">
+                <input
+                    type="text"
+                    placeholder="Buscar planetas..."
+                    class="search-input"
+                />
+                <button class="search-button">Buscar</button>
+            </div>
+
+            <div class="filter-options">
+                <select class="filter-select" id="type-filter">
+                    <option value="">Todos los tipos</option>
+                    <option value="terrestrial">Terrestres</option>
+                    <option value="gas_giant">Gigantes Gaseosos</option>
+                    <option value="ice_giant">Gigantes Helados</option>
+                    <option value="super_earth">Súper-Tierras</option>
+                    <option value="dwarf">Planetas Enanos</option>
+                    <option value="exoplanet">Exoplanetas</option>
+                </select>
+
+                <select class="filter-select" id="parent-filter">
+                    <option value="">Todos los sistemas</option>
+                    <option value="Sistema Solar">Sistema Solar</option>
+                    <option value="Kepler-186">Kepler-186</option>
+                    <option value="Alpha Centauri">Alpha Centauri</option>
+                </select>
+
+                <select class="filter-select">
+                    <option value="">Ordenar por</option>
+                    <option value="name-asc">Nombre (A-Z)</option>
+                    <option value="name-desc">Nombre (Z-A)</option>
+                    <option value="date-desc">Más reciente</option>
+                    <option value="radius-desc">Radio (mayor primero)</option>
+                    <option value="moons-desc">Lunas (mayor primero)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="planets-container">
+            {
+                planets.map((planet) => (
+                    <div
+                        class="planet-card"
+                        data-type={planet.classification}
+                        data-parent={planet.parentName}
+                    >
+                        <div class="planet-header">
+                            <div class="planet-icon">🪐</div>
+                            <div
+                                class="planet-type-badge"
+                                style={`background-color: ${planetTypeColors[planet.classification]}; color: ${planetTypeTextColors[planet.classification]}`}
+                            >
+                                {planetTypeLabels[planet.classification]}
+                            </div>
+                        </div>
+
+                        <div class="planet-content">
+                            <h2 class="planet-name">{planet.name}</h2>
+                            <div class="planet-parent">
+                                En: {planet.parentName}
+                            </div>
+                            <p class="planet-description">
+                                {planet.description}
+                            </p>
+
+                            <div class="planet-properties">
+                                <div class="property">
+                                    <div class="property-label">Radio</div>
+                                    <div class="property-value">
+                                        {planet.radius} R⊕
+                                    </div>
+                                </div>
+
+                                <div class="property">
+                                    <div class="property-label">Lunas</div>
+                                    <div class="property-value">
+                                        {planet.moons}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="planet-footer">
+                            <div class="planet-date">
+                                Creado: {planet.createdAt}
+                            </div>
+                            <div class="planet-actions">
+                                <a
+                                    href={`/admin/universe/planets/${planet.id}`}
+                                    class="view-button"
+                                    title="Ver detalles"
+                                >
+                                    Ver
+                                </a>
+                                <a
+                                    href={`/admin/universe/planets/${planet.id}/edit`}
+                                    class="edit-button"
+                                    title="Editar"
+                                >
+                                    Editar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                ))
+            }
+        </div>
+
+        {
+            planets.length === 0 && (
+                <div class="empty-state">
+                    <div class="empty-icon">🔭</div>
+                    <h3>No se encontraron planetas</h3>
+                    <p>
+                        No hay planetas en la base de datos o no coinciden con
+                        los filtros aplicados.
+                    </p>
+                    <a
+                        href="/admin/universe/planets/create"
+                        class="create-empty-btn"
+                    >
+                        Crear Planeta
+                    </a>
+                </div>
+            )
+        }
+    </div>
+</AdminLayout>
+
+<style>
+    /* Estilos generales */
+    .planets-management {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* Encabezado */
+    .page-header {
+        margin-bottom: 5px;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+        margin: 0 0 5px 0;
+        color: #1f2937;
+    }
+
+    .page-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .create-button {
+        background-color: #3b82f6;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        gap: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .create-button:hover {
+        background-color: #2563eb;
+    }
+
+    .create-icon {
+        font-size: 1.2rem;
+    }
+
+    .info-banner {
+        display: flex;
+        align-items: center;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-top: 10px;
+    }
+
+    .info-icon {
+        font-size: 1.5rem;
+        margin-right: 12px;
+    }
+
+    .info-text p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 0.95rem;
+    }
+
+    /* Barra de filtros */
+    .filters-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-container {
+        display: flex;
+        gap: 8px;
+    }
+
+    .search-input {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        width: 250px;
+        font-size: 0.95rem;
+    }
+
+    .search-button {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0 12px;
+        color: #4b5563;
+        cursor: pointer;
+    }
+
+    .filter-options {
+        display: flex;
+        gap: 12px;
+    }
+
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: #4b5563;
+        font-size: 0.95rem;
+    }
+
+    /* Contenedor de planetas */
+    .planets-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    /* Tarjeta de planeta */
+    .planet-card {
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s;
+    }
+
+    .planet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .planet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background-color: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .planet-icon {
+        font-size: 1.5rem;
+    }
+
+    .planet-type-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .planet-content {
+        padding: 15px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .planet-name {
+        margin: 0 0 5px 0;
+        font-size: 1.3rem;
+        color: #1f2937;
+    }
+
+    .planet-parent {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 10px;
+    }
+
+    .planet-description {
+        margin: 0 0 15px 0;
+        color: #4b5563;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    .planet-properties {
+        display: flex;
+        gap: 20px;
+        margin-top: auto;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 12px;
+    }
+
+    .property {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .property-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .property-value {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .planet-footer {
+        padding: 12px 15px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f9fafb;
+    }
+
+    .planet-date {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .planet-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .view-button,
+    .edit-button {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .view-button {
+        background-color: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .view-button:hover {
+        background-color: #dbeafe;
+    }
+
+    .edit-button {
+        background-color: #f0fdf4;
+        color: #10b981;
+    }
+
+    .edit-button:hover {
+        background-color: #dcfce7;
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 10px 0;
+        color: #1f2937;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    .create-empty-btn {
+        display: inline-block;
+        background-color: #3b82f6;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .filters-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-container {
+            width: 100%;
+        }
+
+        .search-input {
+            flex: 1;
+        }
+
+        .filter-options {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .planets-container {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+    }
+</style>
+
+<script>
+    // Script para filtrado y búsqueda
+    document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.querySelector(".search-input");
+        const searchButton = document.querySelector(".search-button");
+        const typeFilter = document.getElementById("type-filter");
+        const parentFilter = document.getElementById("parent-filter");
+        const planetCards = document.querySelectorAll(".planet-card");
+
+        // Función para aplicar filtros
+        const applyFilters = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedType = typeFilter.value;
+            const selectedParent = parentFilter.value;
+
+            planetCards.forEach((card) => {
+                const planetName = card
+                    .querySelector(".planet-name")
+                    .textContent.toLowerCase();
+                const planetDesc = card
+                    .querySelector(".planet-description")
+                    .textContent.toLowerCase();
+                const planetType = card.getAttribute("data-type");
+                const planetParent = card.getAttribute("data-parent");
+
+                const matchesSearch =
+                    planetName.includes(searchTerm) ||
+                    planetDesc.includes(searchTerm);
+                const matchesType =
+                    !selectedType || planetType === selectedType;
+                const matchesParent =
+                    !selectedParent || planetParent === selectedParent;
+
+                if (matchesSearch && matchesType && matchesParent) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+
+            // Mostrar estado vacío si no hay resultados
+            const visibleCards = [...planetCards].filter(
+                (card) => card.style.display !== "none",
+            );
+            const emptyState = document.querySelector(".empty-state");
+
+            if (visibleCards.length === 0 && emptyState) {
+                emptyState.style.display = "";
+            } else if (emptyState) {
+                emptyState.style.display = "none";
+            }
+        };
+
+        // Event listeners
+        searchButton.addEventListener("click", applyFilters);
+        searchInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") {
+                applyFilters();
+            }
+        });
+
+        typeFilter.addEventListener("change", applyFilters);
+        parentFilter.addEventListener("change", applyFilters);
+    });
+</script>

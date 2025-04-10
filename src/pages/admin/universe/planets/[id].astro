@@ -1,0 +1,776 @@
+---
+import AdminLayout from "../../../../layouts/AdminLayout.astro";
+
+// Esta función es necesaria para las rutas dinámicas en Astro
+// Define qué rutas se generarán estáticamente
+export async function getStaticPaths() {
+    // En una aplicación real, estos IDs vendrían de una base de datos
+    // Por ahora, generamos las rutas para los planetas de ejemplo
+    return [
+        { params: { id: "1" } },
+        { params: { id: "2" } },
+        { params: { id: "3" } },
+    ];
+}
+
+// En una aplicación real, el ID se obtendría de params y se usaría para consultar la BD
+// Por ahora, usamos un planeta de ejemplo
+const { id } = Astro.params;
+
+// Datos simulados de un planeta
+const planet = {
+    id: id,
+    name: "Tierra",
+    type: "planet",
+    description:
+        "El tercer planeta desde el Sol y el único conocido que alberga vida. Tiene una atmósfera rica en nitrógeno y oxígeno, y su superficie está cubierta en su mayoría por agua.",
+    classification: "terrestrial",
+    parentId: 1,
+    parentName: "Sistema Solar",
+    radius: 1.0, // En radios terrestres
+    mass: 1.0, // En masas terrestres
+    orbitalPeriod: 365.25, // En días
+    rotationPeriod: 24, // En horas
+    averageTemperature: 15, // En grados Celsius
+    moons: 1,
+    atmosphere:
+        "Principalmente nitrógeno (78%) y oxígeno (21%), con trazas de otros gases",
+    composition:
+        "Manto de silicatos y un núcleo de hierro y níquel. La superficie está compuesta principalmente de rocas y agua.",
+    features:
+        "Tiene una Luna relativamente grande, una atmósfera que protege la superficie de la radiación y un campo magnético que desvía el viento solar.",
+    imageUrl: "https://ejemplo.com/tierra.jpg",
+    createdAt: "2025-04-06",
+    updatedAt: "2025-04-08",
+};
+
+// Datos relacionados (lunas del planeta)
+const relatedBodies = [
+    {
+        id: 7,
+        name: "Luna",
+        type: "moon",
+        description: "El único satélite natural de la Tierra.",
+        classification: "regular",
+        radius: 0.27, // En radios terrestres
+        orbitalPeriod: 27.3, // En días
+        createdAt: "2025-04-07",
+    },
+];
+
+// Funciones auxiliares
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    });
+};
+---
+
+<AdminLayout title={`Planeta: ${planet.name}`} activeSection="planets">
+    <div class="planet-details">
+        <div class="header-actions">
+            <a href="/admin/universe/planets" class="back-button">
+                ← Volver a Planetas
+            </a>
+            <div class="action-buttons">
+                <a
+                    href={`/admin/universe/planets/${planet.id}/edit`}
+                    class="edit-button"
+                >
+                    Editar
+                </a>
+                <button
+                    class="delete-button"
+                    data-id={planet.id}
+                    data-name={planet.name}
+                >
+                    Eliminar
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="details-card">
+                <div class="planet-header">
+                    <div class="planet-icon">🪐</div>
+                    <h1>{planet.name}</h1>
+                </div>
+
+                <div class="planet-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Tipo:</span>
+                        <span
+                            class="meta-value type-badge"
+                            data-type={planet.classification}
+                        >
+                            {
+                                planet.classification === "terrestrial"
+                                    ? "Terrestre"
+                                    : planet.classification === "gas_giant"
+                                      ? "Gigante Gaseoso"
+                                      : planet.classification === "ice_giant"
+                                        ? "Gigante Helado"
+                                        : planet.classification ===
+                                            "super_earth"
+                                          ? "Súper-Tierra"
+                                          : planet.classification === "dwarf"
+                                            ? "Planeta Enano"
+                                            : planet.classification ===
+                                                "exoplanet"
+                                              ? "Exoplaneta"
+                                              : planet.classification
+                            }
+                        </span>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Pertenece a:</span>
+                        <a
+                            href={`/admin/universe/solar-systems/${planet.parentId}`}
+                            class="parent-link"
+                        >
+                            {planet.parentName}
+                        </a>
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Fecha de creación:</span>
+                        <span class="meta-value"
+                            >{formatDate(planet.createdAt)}</span
+                        >
+                    </div>
+
+                    <div class="meta-item">
+                        <span class="meta-label">Última actualización:</span>
+                        <span class="meta-value"
+                            >{formatDate(planet.updatedAt)}</span
+                        >
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h2>Descripción</h2>
+                    <p class="description">{planet.description}</p>
+                </div>
+
+                <div class="content-section">
+                    <h2>Características Físicas</h2>
+                    <div class="properties-grid">
+                        <div class="property-item">
+                            <div class="property-label">Radio</div>
+                            <div class="property-value">{planet.radius} R⊕</div>
+                            <div class="property-desc">Radios terrestres</div>
+                        </div>
+
+                        <div class="property-item">
+                            <div class="property-label">Masa</div>
+                            <div class="property-value">{planet.mass} M⊕</div>
+                            <div class="property-desc">Masas terrestres</div>
+                        </div>
+
+                        <div class="property-item">
+                            <div class="property-label">Periodo Orbital</div>
+                            <div class="property-value">
+                                {planet.orbitalPeriod} días
+                            </div>
+                            <div class="property-desc">
+                                Tiempo para completar una órbita
+                            </div>
+                        </div>
+
+                        <div class="property-item">
+                            <div class="property-label">
+                                Periodo de Rotación
+                            </div>
+                            <div class="property-value">
+                                {planet.rotationPeriod} horas
+                            </div>
+                            <div class="property-desc">
+                                Tiempo para completar una rotación
+                            </div>
+                        </div>
+
+                        <div class="property-item">
+                            <div class="property-label">Temperatura Media</div>
+                            <div class="property-value">
+                                {planet.averageTemperature}°C
+                            </div>
+                            <div class="property-desc">En la superficie</div>
+                        </div>
+
+                        <div class="property-item">
+                            <div class="property-label">Lunas</div>
+                            <div class="property-value">{planet.moons}</div>
+                            <div class="property-desc">Satélites naturales</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h2>Composición</h2>
+                    <p>{planet.composition}</p>
+
+                    <h3>Atmósfera</h3>
+                    <p>{planet.atmosphere}</p>
+                </div>
+
+                <div class="content-section">
+                    <h2>Características Especiales</h2>
+                    <p>{planet.features}</p>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <h2>Cuerpos Relacionados</h2>
+                    {
+                        relatedBodies.length > 0 ? (
+                            <ul class="related-list">
+                                {relatedBodies.map((body) => (
+                                    <li class="related-item">
+                                        <a
+                                            href={`/admin/universe/${body.type}s/${body.id}`}
+                                            class="related-link"
+                                        >
+                                            <div class="related-icon">
+                                                {body.type === "moon"
+                                                    ? "🌙"
+                                                    : body.type === "star"
+                                                      ? "⭐"
+                                                      : body.type === "planet"
+                                                        ? "🪐"
+                                                        : "✨"}
+                                            </div>
+                                            <div class="related-info">
+                                                <div class="related-name">
+                                                    {body.name}
+                                                </div>
+                                                <div class="related-type">
+                                                    {body.type === "moon"
+                                                        ? "Luna"
+                                                        : body.type === "star"
+                                                          ? "Estrella"
+                                                          : body.type ===
+                                                              "planet"
+                                                            ? "Planeta"
+                                                            : body.type ===
+                                                                "solarSystem"
+                                                              ? "Sistema Solar"
+                                                              : body.type}
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p class="empty-message">
+                                No hay cuerpos celestes relacionados.
+                            </p>
+                        )
+                    }
+
+                    <div class="sidebar-actions">
+                        <a
+                            href={`/admin/universe/moons/create?planetId=${planet.id}`}
+                            class="add-related-button"
+                        >
+                            Añadir Luna
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <h2>Acciones</h2>
+                    <div class="action-list">
+                        <a
+                            href={`/admin/universe/planets/${planet.id}/edit`}
+                            class="sidebar-action-button edit"
+                        >
+                            <span class="action-icon">✏️</span>
+                            <span>Editar Planeta</span>
+                        </a>
+                        <button
+                            class="sidebar-action-button delete"
+                            data-id={planet.id}
+                            data-name={planet.name}
+                        >
+                            <span class="action-icon">🗑️</span>
+                            <span>Eliminar Planeta</span>
+                        </button>
+                        <a
+                            href={`/admin/universe/planets/${planet.id}/export`}
+                            class="sidebar-action-button export"
+                        >
+                            <span class="action-icon">📤</span>
+                            <span>Exportar Datos</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</AdminLayout>
+
+<style>
+    /* Estilos generales */
+    .planet-details {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* Barra de acciones superior */
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        color: #4b5563;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .back-button:hover {
+        color: #1f2937;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+    }
+
+    .edit-button,
+    .delete-button {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .edit-button {
+        background-color: #f0fdf4;
+        color: #10b981;
+        border: 1px solid #d1fae5;
+        text-decoration: none;
+    }
+
+    .edit-button:hover {
+        background-color: #dcfce7;
+    }
+
+    .delete-button {
+        background-color: #fef2f2;
+        color: #ef4444;
+        border: 1px solid #fee2e2;
+    }
+
+    .delete-button:hover {
+        background-color: #fee2e2;
+    }
+
+    /* Contenido principal */
+    .main-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    /* Tarjeta de detalles */
+    .details-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .planet-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .planet-icon {
+        font-size: 2.5rem;
+        background-color: #d1fae5;
+        color: #047857;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .planet-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: #1f2937;
+    }
+
+    /* Metadatos del planeta */
+    .planet-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .meta-label {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .meta-value {
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        background-color: #d1fae5;
+        color: #047857;
+    }
+
+    .type-badge[data-type="gas_giant"] {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .type-badge[data-type="ice_giant"] {
+        background-color: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .type-badge[data-type="super_earth"] {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .type-badge[data-type="dwarf"] {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .type-badge[data-type="exoplanet"] {
+        background-color: #fce7f3;
+        color: #9d174d;
+    }
+
+    .parent-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .parent-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Secciones de contenido */
+    .content-section {
+        margin-bottom: 28px;
+    }
+
+    .content-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .content-section h2 {
+        font-size: 1.2rem;
+        color: #1f2937;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .content-section h3 {
+        font-size: 1.1rem;
+        color: #374151;
+        margin: 16px 0 10px 0;
+    }
+
+    .content-section p {
+        margin: 0;
+        color: #4b5563;
+        line-height: 1.6;
+    }
+
+    .description {
+        font-style: italic;
+    }
+
+    /* Propiedades en cuadrícula */
+    .properties-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .property-item {
+        background-color: #f9fafb;
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .property-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+
+    .property-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+
+    .property-desc {
+        font-size: 0.8rem;
+        color: #9ca3af;
+    }
+
+    /* Barra lateral */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .sidebar-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-card h2 {
+        font-size: 1.1rem;
+        color: #1f2937;
+        margin: 0 0 16px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Lista de cuerpos relacionados */
+    .related-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .related-item {
+        margin-bottom: 12px;
+    }
+
+    .related-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .related-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+    }
+
+    .related-link:hover {
+        background-color: #f3f4f6;
+    }
+
+    .related-icon {
+        width: 32px;
+        height: 32px;
+        background-color: #f3f4f6;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-size: 1.2rem;
+    }
+
+    .related-info {
+        flex: 1;
+    }
+
+    .related-name {
+        font-weight: 500;
+        color: #1f2937;
+        margin-bottom: 2px;
+    }
+
+    .related-type {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .empty-message {
+        color: #9ca3af;
+        font-style: italic;
+        margin: 0;
+    }
+
+    .sidebar-actions {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .add-related-button {
+        display: block;
+        text-align: center;
+        padding: 8px 16px;
+        background-color: #eff6ff;
+        color: #3b82f6;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+    .add-related-button:hover {
+        background-color: #dbeafe;
+    }
+
+    /* Acciones en la barra lateral */
+    .action-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sidebar-action-button {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        width: 100%;
+        text-align: left;
+        transition: background-color 0.2s;
+    }
+
+    .action-icon {
+        margin-right: 12px;
+    }
+
+    .sidebar-action-button.edit {
+        background-color: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .sidebar-action-button.edit:hover {
+        background-color: #e5e7eb;
+    }
+
+    .sidebar-action-button.delete {
+        background-color: #fef2f2;
+        color: #ef4444;
+    }
+
+    .sidebar-action-button.delete:hover {
+        background-color: #fee2e2;
+    }
+
+    .sidebar-action-button.export {
+        background-color: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .sidebar-action-button.export:hover {
+        background-color: #dbeafe;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .main-content {
+            grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .planet-meta {
+            grid-template-columns: 1fr;
+        }
+
+        .properties-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .header-actions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .action-buttons {
+            width: 100%;
+            justify-content: space-between;
+        }
+    }
+</style>
+
+<script>
+    // Script para la confirmación de eliminación
+    document.addEventListener("DOMContentLoaded", () => {
+        const deleteButtons = document.querySelectorAll(".delete-button");
+
+        deleteButtons.forEach((button) => {
+            button.addEventListener("click", (e) => {
+                const planetId = e.currentTarget.getAttribute("data-id");
+                const planetName = e.currentTarget.getAttribute("data-name");
+
+                if (
+                    confirm(
+                        `¿Estás seguro de que quieres eliminar el planeta "${planetName}"? Esta acción no se puede deshacer.`,
+                    )
+                ) {
+                    // Aquí iría la lógica para eliminar el planeta
+                    console.log(`Eliminar planeta ${planetId}: ${planetName}`);
+                    // Después de eliminar, redirigir a la lista de planetas
+                    window.location.href =
+                        "/admin/universe/planets?deleted=true";
+                }
+            });
+        });
+    });
+</script>

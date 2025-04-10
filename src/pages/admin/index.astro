@@ -1,0 +1,164 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+// Aquí podrías incluir lógica para obtener datos del dashboard
+const stats = {
+    universes: 5,
+    users: 120,
+    items: 450,
+};
+---
+
+<AdminLayout title="Dashboard" activeSection="dashboard">
+    <div class="dashboard">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Universes</h3>
+                <div class="stat-value">{stats.universes}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Users</h3>
+                <div class="stat-value">{stats.users}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Items</h3>
+                <div class="stat-value">{stats.items}</div>
+            </div>
+        </div>
+
+        <section class="recent-activity">
+            <h2>Recent Activity</h2>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <span class="activity-date">2025-04-08</span>
+                    <span class="activity-description"
+                        >New universe "Cosmic Odyssey" created</span
+                    >
+                </div>
+                <div class="activity-item">
+                    <span class="activity-date">2025-04-07</span>
+                    <span class="activity-description"
+                        >User "john_doe" registered</span
+                    >
+                </div>
+                <div class="activity-item">
+                    <span class="activity-date">2025-04-07</span>
+                    <span class="activity-description"
+                        >10 new items added to "Fantasy World"</span
+                    >
+                </div>
+            </div>
+        </section>
+
+        <section class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+                <a href="/admin/universe/create" class="action-button">
+                    Create Universe
+                </a>
+                <a href="/admin/users/create" class="action-button">
+                    Add User
+                </a>
+                <a href="/admin/items/create" class="action-button">
+                    Create Item
+                </a>
+            </div>
+        </section>
+    </div>
+</AdminLayout>
+
+<style>
+    .dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: linear-gradient(145deg, #f0f0f0, #ffffff);
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+
+    .stat-card h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #666;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-top: 10px;
+        color: #333;
+    }
+
+    .recent-activity,
+    .quick-actions {
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 1.2rem;
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .activity-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+
+    .activity-date {
+        font-size: 0.9rem;
+        color: #888;
+        width: 100px;
+    }
+
+    .activity-description {
+        flex: 1;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    .action-button {
+        display: block;
+        background-color: #3751ff;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 5px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+
+    .action-button:hover {
+        background-color: #2a3eb1;
+    }
+</style>

@@ -1,0 +1,593 @@
+---
+import AdminLayout from "../../../../layouts/AdminLayout.astro";
+
+// Datos simulados de galaxias
+const galaxies = [
+    {
+        id: 1,
+        name: "Vía Láctea",
+        description:
+            "Nuestra galaxia, hogar del Sistema Solar y miles de millones de estrellas.",
+        type: "spiral",
+        diameter: "100,000 años luz",
+        stars: "100-400 mil millones",
+        createdAt: "2025-04-01",
+    },
+    {
+        id: 2,
+        name: "Andrómeda",
+        description:
+            "La galaxia espiral más cercana a la Vía Láctea. Es la más grande del Grupo Local.",
+        type: "spiral",
+        diameter: "220,000 años luz",
+        stars: "1 billón",
+        createdAt: "2025-04-02",
+    },
+    {
+        id: 3,
+        name: "Triangulum",
+        description:
+            "La tercera galaxia más grande del Grupo Local, después de Andrómeda y la Vía Láctea.",
+        type: "spiral",
+        diameter: "60,000 años luz",
+        stars: "40 mil millones",
+        createdAt: "2025-04-03",
+    },
+    {
+        id: 4,
+        name: "Messier 87",
+        description:
+            "Una galaxia elíptica gigante en el cúmulo de Virgo, famosa por su agujero negro supermasivo.",
+        type: "elliptical",
+        diameter: "120,000 años luz",
+        stars: "1 billón",
+        createdAt: "2025-04-04",
+    },
+    {
+        id: 5,
+        name: "Gran Nube de Magallanes",
+        description:
+            "Una galaxia satélite de la Vía Láctea, visible a simple vista desde el hemisferio sur.",
+        type: "irregular",
+        diameter: "14,000 años luz",
+        stars: "30 mil millones",
+        createdAt: "2025-04-05",
+    },
+];
+
+// Textos para los tipos de galaxias
+const galaxyTypeLabels = {
+    spiral: "Espiral",
+    elliptical: "Elíptica",
+    irregular: "Irregular",
+    lenticular: "Lenticular",
+};
+---
+
+<AdminLayout title="Galaxias" activeSection="galaxies">
+    <div class="galaxies-management">
+        <header class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1>Galaxias</h1>
+                    <p>Gestión de galaxias del universo</p>
+                </div>
+                <a href="/admin/universe/galaxies/create" class="create-button">
+                    <span class="create-icon">+</span>
+                    Nueva Galaxia
+                </a>
+            </div>
+
+            <div class="info-banner">
+                <div class="info-icon">🌌</div>
+                <div class="info-text">
+                    <p>
+                        Las galaxias son enormes colecciones de estrellas, gas,
+                        polvo y materia oscura unidas por la gravedad. Son los
+                        bloques fundamentales del cosmos.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters-bar">
+            <div class="search-container">
+                <input
+                    type="text"
+                    placeholder="Buscar galaxias..."
+                    class="search-input"
+                />
+                <button class="search-button">Buscar</button>
+            </div>
+
+            <div class="filter-options">
+                <select class="filter-select">
+                    <option value="">Todos los tipos</option>
+                    <option value="spiral">Espiral</option>
+                    <option value="elliptical">Elíptica</option>
+                    <option value="irregular">Irregular</option>
+                    <option value="lenticular">Lenticular</option>
+                </select>
+
+                <select class="filter-select">
+                    <option value="">Ordenar por</option>
+                    <option value="name-asc">Nombre (A-Z)</option>
+                    <option value="name-desc">Nombre (Z-A)</option>
+                    <option value="date-desc">Más reciente</option>
+                    <option value="date-asc">Más antiguo</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="galaxies-list">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Tipo</th>
+                        <th>Diámetro</th>
+                        <th>Estrellas</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        galaxies.map((galaxy) => (
+                            <tr>
+                                <td>
+                                    <div class="galaxy-name-cell">
+                                        <span class="galaxy-icon">🌌</span>
+                                        <span class="galaxy-name">
+                                            {galaxy.name}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="galaxy-type-badge"
+                                        data-type={galaxy.type}
+                                    >
+                                        {galaxyTypeLabels[galaxy.type]}
+                                    </span>
+                                </td>
+                                <td>{galaxy.diameter}</td>
+                                <td>{galaxy.stars}</td>
+                                <td>{galaxy.createdAt}</td>
+                                <td class="actions-cell">
+                                    <div class="action-buttons">
+                                        <a
+                                            href={`/admin/universe/galaxies/${galaxy.id}`}
+                                            class="view-button"
+                                            title="Ver detalles"
+                                        >
+                                            <span class="action-icon">👁️</span>
+                                        </a>
+                                        <a
+                                            href={`/admin/universe/galaxies/${galaxy.id}/edit`}
+                                            class="edit-button"
+                                            title="Editar"
+                                        >
+                                            <span class="action-icon">✏️</span>
+                                        </a>
+                                        <button
+                                            class="delete-button"
+                                            title="Eliminar"
+                                            data-id={galaxy.id}
+                                        >
+                                            <span class="action-icon">🗑️</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button class="pagination-button prev" disabled>
+                &laquo; Anterior
+            </button>
+            <span class="pagination-info">Página 1 de 1</span>
+            <button class="pagination-button next" disabled>
+                Siguiente &raquo;
+            </button>
+        </div>
+    </div>
+</AdminLayout>
+
+<style>
+    /* Estilos generales */
+    .galaxies-management {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* Encabezado */
+    .page-header {
+        margin-bottom: 5px;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+        margin: 0 0 5px 0;
+        color: #1f2937;
+    }
+
+    .page-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .create-button {
+        background-color: #3b82f6;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        gap: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .create-button:hover {
+        background-color: #2563eb;
+    }
+
+    .create-icon {
+        font-size: 1.2rem;
+    }
+
+    .info-banner {
+        display: flex;
+        align-items: center;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-top: 10px;
+    }
+
+    .info-icon {
+        font-size: 1.5rem;
+        margin-right: 12px;
+    }
+
+    .info-text p {
+        margin: 0;
+        color: #1e40af;
+        font-size: 0.95rem;
+    }
+
+    /* Barra de filtros */
+    .filters-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-container {
+        display: flex;
+        gap: 8px;
+    }
+
+    .search-input {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        width: 250px;
+        font-size: 0.95rem;
+    }
+
+    .search-button {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0 12px;
+        color: #4b5563;
+        cursor: pointer;
+    }
+
+    .filter-options {
+        display: flex;
+        gap: 12px;
+    }
+
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: #4b5563;
+        font-size: 0.95rem;
+    }
+
+    /* Tabla de datos */
+    .galaxies-list {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+        background-color: #f9fafb;
+        font-weight: 600;
+        color: #4b5563;
+        font-size: 0.9rem;
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .galaxy-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .galaxy-icon {
+        font-size: 1.2rem;
+    }
+
+    .galaxy-name {
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .galaxy-type-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .galaxy-type-badge[data-type="spiral"] {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .galaxy-type-badge[data-type="elliptical"] {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .galaxy-type-badge[data-type="irregular"] {
+        background-color: #fce7f3;
+        color: #9d174d;
+    }
+
+    .galaxy-type-badge[data-type="lenticular"] {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .actions-cell {
+        width: 120px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .view-button,
+    .edit-button,
+    .delete-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .view-button {
+        background-color: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .view-button:hover {
+        background-color: #dbeafe;
+    }
+
+    .edit-button {
+        background-color: #f0fdf4;
+        color: #10b981;
+    }
+
+    .edit-button:hover {
+        background-color: #dcfce7;
+    }
+
+    .delete-button {
+        background-color: #fef2f2;
+        color: #ef4444;
+    }
+
+    .delete-button:hover {
+        background-color: #fee2e2;
+    }
+
+    .action-icon {
+        font-size: 1rem;
+    }
+
+    /* Paginación */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .pagination-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: #4b5563;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pagination-button:hover:not(:disabled) {
+        background-color: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination-info {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .filters-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-container {
+            width: 100%;
+        }
+
+        .search-input {
+            flex: 1;
+        }
+
+        .filter-options {
+            width: 100%;
+        }
+
+        .filter-select {
+            flex: 1;
+        }
+
+        .data-table th:nth-child(3),
+        .data-table td:nth-child(3),
+        .data-table th:nth-child(4),
+        .data-table td:nth-child(4) {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    // Lógica para filtrado y búsqueda
+    document.addEventListener("DOMContentLoaded", () => {
+        // Referencias a elementos DOM
+        const searchInput = document.querySelector(".search-input");
+        const searchButton = document.querySelector(".search-button");
+        const typeFilter = document.querySelector(".filter-select");
+        const rows = document.querySelectorAll(".data-table tbody tr");
+
+        // Función para filtrar la tabla
+        const filterTable = () => {
+            const searchText = searchInput.value.toLowerCase();
+            const selectedType = typeFilter.value;
+
+            rows.forEach((row) => {
+                const nameCell = row
+                    .querySelector(".galaxy-name")
+                    .textContent.toLowerCase();
+                const typeCell = row
+                    .querySelector(".galaxy-type-badge")
+                    .getAttribute("data-type");
+
+                const matchesSearch = nameCell.includes(searchText);
+                const matchesType = !selectedType || typeCell === selectedType;
+
+                if (matchesSearch && matchesType) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        };
+
+        // Event listeners
+        searchButton.addEventListener("click", filterTable);
+        searchInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") {
+                filterTable();
+            }
+        });
+
+        typeFilter.addEventListener("change", filterTable);
+
+        // Confirmación de eliminación
+        document.querySelectorAll(".delete-button").forEach((button) => {
+            button.addEventListener("click", (e) => {
+                const id = e.currentTarget.getAttribute("data-id");
+                const galaxyName = e.currentTarget
+                    .closest("tr")
+                    .querySelector(".galaxy-name").textContent;
+
+                if (
+                    confirm(
+                        `¿Estás seguro de que quieres eliminar la galaxia "${galaxyName}"? Esta acción no se puede deshacer.`,
+                    )
+                ) {
+                    // Aquí iría la lógica para eliminar la galaxia
+                    console.log(`Eliminar galaxia ${id}: ${galaxyName}`);
+                    // En un caso real, se haría una petición al servidor
+                }
+            });
+        });
+    });
+</script>
