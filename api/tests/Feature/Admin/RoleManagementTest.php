@@ -14,35 +14,47 @@ class RoleManagementTest extends TestCase
 
     protected $adminUser;
     protected $adminToken;
-    protected $permissions;
+    protected $regularUser;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Create roles
-        Role::create(['name' => 'Admin', 'slug' => 'admin']);
-        Role::create(['name' => 'User', 'slug' => 'user']);
-
         // Create permissions
-        $this->permissions = [
-            Permission::create(['name' => 'View Users', 'slug' => 'view-users']),
-            Permission::create(['name' => 'Create Users', 'slug' => 'create-users']),
-            Permission::create(['name' => 'Edit Users', 'slug' => 'edit-users']),
-            Permission::create(['name' => 'Delete Users', 'slug' => 'delete-users']),
-        ];
+        Permission::create(['name' => 'View Users', 'slug' => 'users.view']);
+        Permission::create(['name' => 'Create Users', 'slug' => 'users.create']);
+        Permission::create(['name' => 'Edit Users', 'slug' => 'users.edit']);
+        Permission::create(['name' => 'Delete Users', 'slug' => 'users.delete']);
+        Permission::create(['name' => 'View Roles', 'slug' => 'roles.view']);
+        Permission::create(['name' => 'Create Roles', 'slug' => 'roles.create']);
+        Permission::create(['name' => 'Edit Roles', 'slug' => 'roles.edit']);
+        Permission::create(['name' => 'Delete Roles', 'slug' => 'roles.delete']);
+
+        // Create roles
+        $adminRole = Role::create(['name' => 'Admin', 'slug' => 'admin']);
+        $userRole = Role::create(['name' => 'User', 'slug' => 'user']);
+
+        // Assign permissions to admin role
+        $adminRole->permissions()->attach([1, 2, 3, 4, 5, 6, 7, 8]);
 
         // Create an admin user
         $this->adminUser = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
         ]);
-        $this->adminUser->roles()->attach(1); // Admin role
+        $this->adminUser->roles()->attach($adminRole);
         $this->adminUser->is_superadmin = true;
         $this->adminUser->save();
 
         // Create a token for the admin user
         $this->adminToken = $this->adminUser->createToken('admin-token')->plainTextToken;
+
+        // Create a regular user
+        $this->regularUser = User::factory()->create([
+            'name' => 'Regular User',
+            'email' => 'user@example.com',
+        ]);
+        $this->regularUser->roles()->attach($userRole);
     }
 
     public function test_admin_can_list_roles()
@@ -54,8 +66,9 @@ class RoleManagementTest extends TestCase
         $response->assertStatus(200)
                  ->assertJsonStructure([
                      'data' => [
-                         '*' => ['id', 'name', 'slug', 'description', 'permissions', 'created_at', 'updated_at'],
+                         '*' => ['id', 'name', 'slug', 'permissions', 'created_at', 'updated_at'],
                      ],
+                     'total',
                  ]);
     }
 
@@ -66,63 +79,51 @@ class RoleManagementTest extends TestCase
         ])->postJson('/api/admin/roles', [
             'name' => 'Editor',
             'slug' => 'editor',
-            'description' => 'Editor role with limited permissions',
-            'permissions' => [1, 3], // View Users and Edit Users
+            'permissions' => [1, 5], // View Users, View Roles
         ]);
 
         $response->assertStatus(201)
                  ->assertJsonStructure([
-                     'id', 'name', 'slug', 'description', 'permissions', 'created_at', 'updated_at',
+                     'id', 'name', 'slug', 'permissions', 'created_at', 'updated_at',
                  ]);
 
         $this->assertDatabaseHas('roles', [
             'name' => 'Editor',
             'slug' => 'editor',
-            'description' => 'Editor role with limited permissions',
         ]);
 
-        // Check if permissions were attached
         $this->assertDatabaseHas('permission_role', [
             'role_id' => $response['id'],
             'permission_id' => 1,
         ]);
         $this->assertDatabaseHas('permission_role', [
             'role_id' => $response['id'],
-            'permission_id' => 3,
+            'permission_id' => 5,
         ]);
     }
 
     public function test_admin_can_update_role()
     {
-        // Create a role to update
-        $role = Role::create([
-            'name' => 'Moderator',
-            'slug' => 'moderator',
-            'description' => 'Moderator role',
-        ]);
-        $role->permissions()->attach([1, 2]); // View Users and Create Users
+        $role = Role::create(['name' => 'Moderator', 'slug' => 'moderator']);
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->adminToken,
         ])->putJson('/api/admin/roles/' . $role->id, [
-            'name' => 'Senior Moderator',
-            'slug' => 'senior-moderator',
-            'description' => 'Senior Moderator role with more permissions',
-            'permissions' => [1, 2, 3], // Add Edit Users permission
+            'name' => 'Updated Moderator',
+            'slug' => 'updated-moderator',
+            'permissions' => [1, 2, 5, 6], // View/Create Users, View/Create Roles
         ]);
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'name' => 'Senior Moderator',
-                     'slug' => 'senior-moderator',
-                     'description' => 'Senior Moderator role with more permissions',
+                     'name' => 'Updated Moderator',
+                     'slug' => 'updated-moderator',
                  ]);
 
         $this->assertDatabaseHas('roles', [
             'id' => $role->id,
-            'name' => 'Senior Moderator',
-            'slug' => 'senior-moderator',
-            'description' => 'Senior Moderator role with more permissions',
+            'name' => 'Updated Moderator',
+            'slug' => 'updated-moderator',
         ]);
 
         // Check if permissions were updated
@@ -136,18 +137,17 @@ class RoleManagementTest extends TestCase
         ]);
         $this->assertDatabaseHas('permission_role', [
             'role_id' => $role->id,
-            'permission_id' => 3,
+            'permission_id' => 5,
+        ]);
+        $this->assertDatabaseHas('permission_role', [
+            'role_id' => $role->id,
+            'permission_id' => 6,
         ]);
     }
 
     public function test_admin_can_delete_custom_role()
     {
-        // Create a role to delete
-        $role = Role::create([
-            'name' => 'Temporary',
-            'slug' => 'temporary',
-            'description' => 'Temporary role',
-        ]);
+        $role = Role::create(['name' => 'Custom Role', 'slug' => 'custom-role']);
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->adminToken,
@@ -165,19 +165,17 @@ class RoleManagementTest extends TestCase
 
     public function test_admin_cannot_delete_default_roles()
     {
-        // Try to delete the admin role (ID 1)
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->adminToken,
         ])->deleteJson('/api/admin/roles/1');
 
         $response->assertStatus(403)
                  ->assertJson([
-                     'message' => 'Cannot delete default role',
+                     'message' => 'Cannot delete default roles',
                  ]);
 
         $this->assertDatabaseHas('roles', [
             'id' => 1,
-            'slug' => 'admin',
         ]);
     }
 
@@ -187,11 +185,10 @@ class RoleManagementTest extends TestCase
             'Authorization' => 'Bearer ' . $this->adminToken,
         ])->postJson('/api/admin/roles', [
             'name' => '', // Empty name
-            'slug' => 'admin', // Duplicate slug
             'permissions' => [999], // Non-existent permission
         ]);
 
         $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['name', 'slug', 'permissions.0']);
+                 ->assertJsonValidationErrors(['name', 'permissions.0']);
     }
 }

@@ -18,10 +18,12 @@ use App\Http\Controllers\Admin\UserController;
 */
 
 // Rutas de autenticación
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+});
 
 // Ruta temporal para verificar roles
 Route::get('/debug/user-roles', function() {

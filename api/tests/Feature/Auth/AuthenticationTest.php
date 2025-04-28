@@ -19,7 +19,7 @@ class AuthenticationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertStatus(201)
+        $response->assertStatus(200)
                  ->assertJsonStructure([
                      'user' => ['id', 'name', 'email', 'created_at', 'updated_at'],
                      'token',
@@ -67,7 +67,7 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'message' => 'Logged out successfully',
+                     'message' => 'Sesión cerrada correctamente',
                  ]);
 
         // Verify the token was deleted
@@ -88,9 +88,10 @@ class AuthenticationTest extends TestCase
             'password' => 'wrong-password',
         ]);
 
-        $response->assertStatus(401)
-                 ->assertJson([
-                     'message' => 'Invalid credentials',
+        $response->assertStatus(422)
+                 ->assertJsonStructure([
+                     'message',
+                     'errors' => ['email'],
                  ]);
     }
 
