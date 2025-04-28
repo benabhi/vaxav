@@ -52,15 +52,19 @@
           </div>
 
           <div>
-            <label for="role-filter" class="block text-sm font-medium text-white">Rol</label>
-            <select id="role-filter" v-model="filters.role"
-              class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-              <option value="">Todos los roles</option>
-              <option value="superadmin">Super Admin</option>
-              <option value="admin">Administrador</option>
-              <option value="moderator">Moderador</option>
-              <option value="user">Usuario</option>
-            </select>
+            <BaseSelect
+              id="role-filter"
+              v-model="filters.role"
+              label="Rol"
+              labelClass="text-sm font-medium text-white"
+              :options="[
+                { value: '', label: 'Todos los roles' },
+                { value: 'superadmin', label: 'Super Admin' },
+                { value: 'admin', label: 'Administrador' },
+                { value: 'moderator', label: 'Moderador' },
+                { value: 'user', label: 'Usuario' }
+              ]"
+            />
           </div>
 
           <div class="flex items-end space-x-2">
@@ -221,34 +225,53 @@
       <form @submit.prevent="saveUser">
         <!-- Name -->
         <div class="mb-4">
-          <label for="name" class="block text-lg font-bold text-white mb-2">Nombre</label>
-          <input id="name" v-model="userForm.name" type="text"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required />
-          <p v-if="formErrors.name" class="mt-1 text-sm text-red-500">{{ formErrors.name }}</p>
+          <BaseInput
+            id="name"
+            v-model="userForm.name"
+            label="Nombre"
+            type="text"
+            required
+            :error="formErrors.name"
+            labelClass="text-lg font-bold text-white"
+          />
         </div>
 
         <!-- Email -->
         <div class="mb-4">
-          <label for="email" class="block text-lg font-bold text-white mb-2">Correo electrónico</label>
-          <input id="email" v-model="userForm.email" type="email"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required />
-          <p v-if="formErrors.email" class="mt-1 text-sm text-red-500">{{ formErrors.email }}</p>
+          <BaseInput
+            id="email"
+            v-model="userForm.email"
+            label="Correo electrónico"
+            type="email"
+            required
+            :error="formErrors.email"
+            labelClass="text-lg font-bold text-white"
+          />
         </div>
 
         <!-- Password (only for new users) -->
         <div v-if="!editingUser" class="mb-4">
-          <label for="password" class="block text-lg font-bold text-white mb-2">Contraseña</label>
-          <input id="password" v-model="userForm.password" type="password"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required />
-          <p v-if="formErrors.password" class="mt-1 text-sm text-red-500">{{ formErrors.password }}</p>
+          <BaseInput
+            id="password"
+            v-model="userForm.password"
+            label="Contraseña"
+            type="password"
+            required
+            :error="formErrors.password"
+            labelClass="text-lg font-bold text-white"
+          />
         </div>
 
         <!-- Password Confirmation (only for new users) -->
         <div v-if="!editingUser" class="mb-4">
-          <label for="password_confirmation" class="block text-lg font-bold text-white mb-2">Confirmar
-            contraseña</label>
-          <input id="password_confirmation" v-model="userForm.password_confirmation" type="password"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required />
+          <BaseInput
+            id="password_confirmation"
+            v-model="userForm.password_confirmation"
+            label="Confirmar contraseña"
+            type="password"
+            required
+            labelClass="text-lg font-bold text-white"
+          />
         </div>
 
         <!-- Roles -->
@@ -310,6 +333,7 @@ import { ref, reactive, onMounted } from 'vue';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
+import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';

@@ -9,30 +9,29 @@
 
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
-          <label for="name" class="block text-gray-300 mb-1">Nombre del Piloto</label>
-          <input
+          <BaseInput
             id="name"
             v-model="form.name"
+            label="Nombre del Piloto"
             type="text"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
             required
           />
         </div>
 
         <div class="mb-6">
-          <label for="race" class="block text-gray-300 mb-1">Raza</label>
-          <select
+          <BaseSelect
             id="race"
             v-model="form.race"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
+            label="Raza"
             required
-          >
-            <option value="" disabled>Selecciona una raza</option>
-            <option value="Humano">Humano</option>
-            <option value="Cyborg">Cyborg</option>
-            <option value="Alienígena">Alienígena</option>
-            <option value="Sintético">Sintético</option>
-          </select>
+            placeholder="Selecciona una raza"
+            :options="[
+              { value: 'Humano', label: 'Humano' },
+              { value: 'Cyborg', label: 'Cyborg' },
+              { value: 'Alienígena', label: 'Alienígena' },
+              { value: 'Sintético', label: 'Sintético' }
+            ]"
+          />
         </div>
 
         <div class="mb-6">
@@ -79,6 +78,8 @@ import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePilotStore } from '@/stores/pilot';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseInput from '@/components/ui/forms/BaseInput.vue';
+import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 
 const router = useRouter();
 const pilotStore = usePilotStore();

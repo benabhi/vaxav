@@ -126,26 +126,36 @@
       <form @submit.prevent="saveRole">
         <!-- Name -->
         <div class="mb-4">
-          <label for="name" class="block text-lg font-bold text-white mb-2">Nombre</label>
-          <input id="name" v-model="roleForm.name" type="text"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required />
-          <p v-if="formErrors.name" class="mt-1 text-sm text-red-500">{{ formErrors.name }}</p>
+          <BaseInput
+            id="name"
+            v-model="roleForm.name"
+            label="Nombre"
+            type="text"
+            required
+            :error="formErrors.name"
+            labelClass="text-lg font-bold text-white"
+          />
         </div>
 
         <!-- Slug -->
         <div class="mb-4">
-          <label for="slug" class="block text-lg font-bold text-white mb-2">Slug</label>
-          <input id="slug" v-model="roleForm.slug" type="text"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required
-            :disabled="editingRole && ['superadmin', 'admin', 'moderator', 'user'].includes(editingRole.slug)" />
-          <p v-if="formErrors.slug" class="mt-1 text-sm text-red-500">{{ formErrors.slug }}</p>
+          <BaseInput
+            id="slug"
+            v-model="roleForm.slug"
+            label="Slug"
+            type="text"
+            required
+            :error="formErrors.slug"
+            labelClass="text-lg font-bold text-white"
+            :disabled="editingRole && ['superadmin', 'admin', 'moderator', 'user'].includes(editingRole.slug)"
+          />
         </div>
 
         <!-- Description -->
         <div class="mb-4">
           <label for="description" class="block text-lg font-bold text-white mb-2">Descripción</label>
           <textarea id="description" v-model="roleForm.description" rows="3"
-            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white"></textarea>
+            class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"></textarea>
           <p v-if="formErrors.description" class="mt-1 text-sm text-red-500">{{ formErrors.description }}</p>
         </div>
 
@@ -212,6 +222,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';

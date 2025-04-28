@@ -9,23 +9,21 @@
 
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
-          <label for="email" class="block text-gray-300 mb-1">Email</label>
-          <input
+          <BaseInput
             id="email"
             v-model="form.email"
+            label="Email"
             type="email"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
             required
           />
         </div>
 
         <div class="mb-6">
-          <label for="password" class="block text-gray-300 mb-1">Contraseña</label>
-          <input
+          <BaseInput
             id="password"
             v-model="form.password"
+            label="Contraseña"
             type="password"
-            class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"
             required
           />
         </div>
@@ -55,6 +53,7 @@ import { reactive } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseInput from '@/components/ui/forms/BaseInput.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

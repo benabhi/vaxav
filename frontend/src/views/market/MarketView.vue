@@ -30,12 +30,14 @@
               <input type="range" min="0" max="1000000" class="w-full" />
             </div>
             <div>
-              <label class="block text-gray-300 mb-1">Ubicación</label>
-              <select class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2">
-                <option>Cualquier ubicación</option>
-                <option>Sistema actual</option>
-                <option>Región actual</option>
-              </select>
+              <BaseSelect
+                label="Ubicación"
+                :options="[
+                  'Cualquier ubicación',
+                  'Sistema actual',
+                  'Región actual'
+                ]"
+              />
             </div>
           </div>
         </div>
@@ -105,5 +107,6 @@
 
 <script setup lang="ts">
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 // Lógica para cargar datos del mercado
 </script>

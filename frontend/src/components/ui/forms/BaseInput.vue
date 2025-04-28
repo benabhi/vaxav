@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <!-- Label -->
-    <label v-if="label" :for="inputId" :class="['block text-sm font-medium mb-1', labelClass || 'text-gray-700']">
+    <label v-if="label" :for="inputId" :class="['block mb-1', labelClass || 'text-gray-300']">
       <slot name="label">{{ label }}</slot>
       <span v-if="required" class="text-red-500 ml-1">*</span>
     </label>
@@ -17,12 +17,12 @@
       <!-- Input element -->
       <input :id="inputId" :type="type" :value="modelValue" :name="name" :placeholder="placeholder" :disabled="disabled"
         :readonly="readonly" :required="required" :autocomplete="autocomplete" :class="[
-          'block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm',
-          error ? 'border-red-300' : (inputClass ? '' : 'border-gray-300'),
-          disabled ? 'bg-gray-100 cursor-not-allowed' : '',
-          readonly ? 'bg-gray-50' : '',
-          prefixIcon ? 'pl-10' : '',
-          suffixIcon ? 'pr-10' : '',
+          'w-full bg-gray-700 text-white border border-gray-600 rounded-md focus:outline-none focus:border-blue-500',
+          error ? 'border-red-500' : '',
+          disabled ? 'bg-gray-800 cursor-not-allowed opacity-70' : '',
+          readonly ? 'bg-gray-800 opacity-70' : '',
+          prefixIcon ? 'pl-10' : 'px-3',
+          suffixIcon ? 'pr-10' : 'px-3',
           sizeClasses[size],
           inputClass || ''
         ]" @input="$emit('update:modelValue', $event.target.value)" @focus="$emit('focus', $event)"
@@ -36,12 +36,12 @@
     </div>
 
     <!-- Error message -->
-    <div v-if="error" class="mt-1 text-sm text-red-600">
+    <div v-if="error" class="mt-1 text-sm text-red-500">
       <slot name="error">{{ error }}</slot>
     </div>
 
     <!-- Hint text -->
-    <div v-else-if="hint" class="mt-1 text-sm text-gray-500">
+    <div v-else-if="hint" class="mt-1 text-sm text-gray-400">
       <slot name="hint">{{ hint }}</slot>
     </div>
   </div>
@@ -131,8 +131,8 @@ const inputId = computed(() => props.id || `input-${Math.random().toString(36).s
 
 // Size classes
 const sizeClasses = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2',
-  lg: 'px-4 py-3 text-lg'
+  sm: 'py-1.5 text-sm',
+  md: 'py-2 text-base',
+  lg: 'py-3 text-lg'
 };
 </script>
