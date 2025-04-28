@@ -324,9 +324,11 @@ import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import Modal from '@/components/ui/Modal.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
 
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 
 // Users data
 const users = ref([]);
@@ -475,6 +477,12 @@ const saveUser = async () => {
         const response = await api.put(`/admin/users/${editingUser.value.id}`, userForm);
         console.log('User updated successfully:', response.data);
 
+        // Show success notification
+        notificationStore.success(
+          `El usuario ${userForm.name} ha sido actualizado correctamente.`,
+          'Usuario actualizado'
+        );
+
         // Refresh the user list
         await fetchUsers();
       } catch (error) {
@@ -486,6 +494,12 @@ const saveUser = async () => {
       try {
         const response = await api.post('/admin/users', userForm);
         console.log('User created successfully:', response.data);
+
+        // Show success notification
+        notificationStore.success(
+          `El usuario ${userForm.name} ha sido creado correctamente.`,
+          'Usuario creado'
+        );
 
         // Refresh the user list
         await fetchUsers();
@@ -535,12 +549,24 @@ const deleteUser = async () => {
     await api.delete(`/admin/users/${userToDelete.value.id}`);
     console.log('User deleted successfully');
 
+    // Show success notification
+    notificationStore.success(
+      `El usuario ${userToDelete.value.name} ha sido eliminado correctamente.`,
+      'Usuario eliminado'
+    );
+
     // Refresh the user list
     await fetchUsers();
 
     closeDeleteModal();
   } catch (error) {
     console.error('Error deleting user:', error);
+
+    // Show error notification
+    notificationStore.error(
+      'Ha ocurrido un error al eliminar el usuario. Por favor, inténtelo de nuevo.',
+      'Error al eliminar'
+    );
   } finally {
     deleting.value = false;
   }

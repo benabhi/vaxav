@@ -140,9 +140,11 @@ import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import RoleModal from '@/components/admin/RoleModal.vue';
 import DeleteRoleModal from '@/components/admin/DeleteRoleModal.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
 
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 
 // Check if user is superadmin
 const isSuperAdmin = computed(() => {
@@ -269,12 +271,24 @@ const saveRole = async (formData) => {
       const response = await api.put(`/admin/roles/${editingRole.value.id}`, formData);
       console.log('Role updated successfully:', response.data);
 
+      // Show success notification
+      notificationStore.success(
+        `El rol ${formData.name} ha sido actualizado correctamente.`,
+        'Rol actualizado'
+      );
+
       // Refresh the roles list
       await fetchRoles();
     } else {
       // Create new role
       const response = await api.post('/admin/roles', formData);
       console.log('Role created successfully:', response.data);
+
+      // Show success notification
+      notificationStore.success(
+        `El rol ${formData.name} ha sido creado correctamente.`,
+        'Rol creado'
+      );
 
       // Refresh the roles list
       await fetchRoles();
@@ -320,12 +334,24 @@ const deleteRole = async () => {
     await api.delete(`/admin/roles/${roleToDelete.value.id}`);
     console.log('Role deleted successfully');
 
+    // Show success notification
+    notificationStore.success(
+      `El rol ${roleToDelete.value.name} ha sido eliminado correctamente.`,
+      'Rol eliminado'
+    );
+
     // Refresh the roles list
     await fetchRoles();
 
     closeDeleteModal();
   } catch (error) {
     console.error('Error deleting role:', error);
+
+    // Show error notification
+    notificationStore.error(
+      'Ha ocurrido un error al eliminar el rol. Por favor, inténtelo de nuevo.',
+      'Error al eliminar'
+    );
   } finally {
     deleting.value = false;
   }

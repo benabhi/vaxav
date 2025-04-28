@@ -3,6 +3,7 @@ import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
+import Notification from './components/ui/feedback/Notification.vue'
 import { useAuthStore } from './stores/auth'
 import authService from './services/authService'
 
@@ -34,5 +35,8 @@ onMounted(async () => {
     </main>
 
     <AppFooter />
+
+    <!-- Sistema de notificaciones -->
+    <Notification />
   </div>
 </template>
