@@ -6,8 +6,14 @@ import api from '@/services/api'
 // Mock the API service
 vi.mock('@/services/api', () => ({
   default: {
+    defaults: {
+      headers: {
+        common: {}
+      }
+    },
     post: vi.fn(),
     get: vi.fn(),
+    put: vi.fn(),
     delete: vi.fn()
   }
 }))
@@ -50,6 +56,9 @@ describe('Auth Store', () => {
 
       const authStore = useAuthStore()
       const credentials = { email: 'wrong@example.com', password: 'wrong' }
+      
+      // Set token to null initially
+      authStore.$patch({ token: null })
       
       // Call login method and expect it to throw
       await expect(authStore.login(credentials)).rejects.toThrow()

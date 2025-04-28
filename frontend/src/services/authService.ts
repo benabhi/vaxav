@@ -43,7 +43,7 @@ const authService = {
    */
   login: async (credentials: LoginCredentials) => {
     // Hacemos login directamente sin necesidad de CSRF token
-    const response = await api.post('/login', credentials);
+    const response = await api.post('/auth/login', credentials);
 
     // Guardamos el token en localStorage
     if (response.data.token) {
@@ -59,7 +59,7 @@ const authService = {
    * Registrar un nuevo usuario
    */
   register: async (data: RegisterData) => {
-    const response = await api.post('/register', data);
+    const response = await api.post('/auth/register', data);
 
     // Guardamos el token en localStorage si se devuelve
     if (response.data.token) {
@@ -76,7 +76,7 @@ const authService = {
    */
   logout: async () => {
     try {
-      const response = await api.post('/logout');
+      const response = await api.delete('/auth/logout');
 
       // Eliminamos el token del localStorage
       localStorage.removeItem('auth_token');
@@ -96,7 +96,7 @@ const authService = {
    * Obtener el usuario autenticado
    */
   getUser: async () => {
-    const response = await api.get('/user');
+    const response = await api.get('/auth/user');
     return response.data;
   },
 

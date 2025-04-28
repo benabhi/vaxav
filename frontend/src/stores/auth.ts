@@ -4,6 +4,7 @@ import type { User, LoginCredentials, RegisterData } from '@/services/authServic
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -12,6 +13,7 @@ interface AuthState {
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
+    token: localStorage.getItem('auth_token'),
     isAuthenticated: false,
     loading: false,
     error: null,
@@ -70,12 +72,14 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
 
       try {
-        await authService.login(credentials);
-        await this.fetchUser();
+        const response = await authService.login(credentials);
+        this.user = response.user;
+        this.token = response.token;
         this.isAuthenticated = true;
       } catch (error: any) {
         this.error = error.response?.data?.message || 'Error al iniciar sesión';
         this.isAuthenticated = false;
+        throw error;
       } finally {
         this.loading = false;
       }
@@ -86,12 +90,14 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
 
       try {
-        await authService.register(data);
-        await this.fetchUser();
+        const response = await authService.register(data);
+        this.user = response.user;
+        this.token = response.token;
         this.isAuthenticated = true;
       } catch (error: any) {
         this.error = error.response?.data?.message || 'Error al registrarse';
         this.isAuthenticated = false;
+        throw error;
       } finally {
         this.loading = false;
       }
@@ -103,9 +109,11 @@ export const useAuthStore = defineStore('auth', {
       try {
         await authService.logout();
         this.user = null;
+        this.token = null;
         this.isAuthenticated = false;
       } catch (error: any) {
         this.error = error.response?.data?.message || 'Error al cerrar sesión';
+        throw error;
       } finally {
         this.loading = false;
       }
@@ -164,6 +172,10 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.loading = false;
       }
+    },
+
+    async fetchCurrentUser() {
+      return this.fetchUser();
     },
 
     clearError() {

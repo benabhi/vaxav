@@ -3,6 +3,7 @@ import { onMounted, computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
+import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 
 const authStore = useAuthStore();
 const pilotStore = usePilotStore();
@@ -29,8 +30,10 @@ onMounted(async () => {
     <div v-if="!hasPilot && isLoggedIn" class="card max-w-md mx-auto p-6">
       <h2 class="text-2xl font-bold mb-4">Crea tu Piloto</h2>
       <p class="mb-4 text-gray-300">Para comenzar tu aventura en la galaxia, necesitas crear un piloto.</p>
-      <RouterLink to="/create-pilot" class="btn btn-primary block text-center">
-        Crear Piloto
+      <RouterLink to="/create-pilot" custom v-slot="{ navigate }">
+        <BaseButton variant="primary" :full-width="true" @click="navigate">
+          Crear Piloto
+        </BaseButton>
       </RouterLink>
     </div>
 
@@ -53,14 +56,20 @@ onMounted(async () => {
       <div class="card">
         <h2 class="text-xl font-bold mb-3 text-blue-400">Acciones Rápidas</h2>
         <div class="space-y-2">
-          <RouterLink to="/universe" class="btn btn-secondary block text-center">
-            Explorar Universo
+          <RouterLink to="/universe" custom v-slot="{ navigate }">
+            <BaseButton variant="secondary" :full-width="true" @click="navigate">
+              Explorar Universo
+            </BaseButton>
           </RouterLink>
-          <RouterLink to="/market" class="btn btn-secondary block text-center">
-            Visitar Mercado
+          <RouterLink to="/market" custom v-slot="{ navigate }">
+            <BaseButton variant="secondary" :full-width="true" @click="navigate">
+              Visitar Mercado
+            </BaseButton>
           </RouterLink>
-          <RouterLink to="/ships" class="btn btn-secondary block text-center">
-            Gestionar Naves
+          <RouterLink to="/ships" custom v-slot="{ navigate }">
+            <BaseButton variant="secondary" :full-width="true" @click="navigate">
+              Gestionar Naves
+            </BaseButton>
           </RouterLink>
         </div>
       </div>
@@ -69,11 +78,15 @@ onMounted(async () => {
     <div v-else-if="!isLoggedIn" class="text-center mt-8">
       <p class="text-xl mb-4">Para comenzar tu aventura, inicia sesión o regístrate.</p>
       <div class="flex justify-center space-x-4">
-        <RouterLink to="/login" class="btn btn-secondary">
-          Iniciar Sesión
+        <RouterLink to="/login" custom v-slot="{ navigate }">
+          <BaseButton variant="secondary" @click="navigate">
+            Iniciar Sesión
+          </BaseButton>
         </RouterLink>
-        <RouterLink to="/register" class="btn btn-primary">
-          Registrarse
+        <RouterLink to="/register" custom v-slot="{ navigate }">
+          <BaseButton variant="primary" @click="navigate">
+            Registrarse
+          </BaseButton>
         </RouterLink>
       </div>
     </div>

@@ -1,15 +1,17 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6 text-blue-400">Mis Naves</h1>
-    
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
         <div class="card mb-6">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-blue-400">Hangar Personal</h2>
-            <button class="btn btn-primary text-sm">Comprar Nueva Nave</button>
+            <BaseButton variant="primary" size="sm">
+              Comprar Nueva Nave
+            </BaseButton>
           </div>
-          
+
           <div class="space-y-4">
             <div class="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 cursor-pointer">
               <div class="flex justify-between">
@@ -31,7 +33,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 cursor-pointer">
               <div class="flex justify-between">
                 <h3 class="font-bold">Minero Industrial</h3>
@@ -55,7 +57,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="lg:col-span-1">
         <div class="card mb-6">
           <h2 class="text-xl font-bold mb-3 text-blue-400">Nave Activa</h2>
@@ -94,7 +96,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="card">
           <h2 class="text-xl font-bold mb-3 text-blue-400">Módulos Instalados</h2>
           <ul class="space-y-2">
@@ -118,5 +120,6 @@
 </template>
 
 <script setup lang="ts">
+import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 // Lógica para cargar datos de naves
 </script>
