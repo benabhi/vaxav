@@ -24,15 +24,33 @@ class UserController extends Controller
     /**
      * Display a listing of the users.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $users = User::with('roles')->get();
+        $query = User::with('roles');
+
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply role filter
+        if ($request->has('role') && !empty($request->role)) {
+            $role = $request->role;
+            $query->whereHas('roles', function ($q) use ($role) {
+                $q->where('slug', $role);
+            });
+        }
+
+        // Apply pagination
+        $perPage = $request->input('per_page', 10);
+        $users = $query->paginate($perPage);
 
         // Devolver los datos en el formato esperado por el frontend
-        return response()->json([
-            'data' => $users,
-            'total' => $users->count()
-        ]);
+        return response()->json($users);
     }
 
     /**
@@ -41,17 +59,17 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::defaults()],
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+            'roles'    => 'nullable|array',
+            'roles.*'  => 'exists:roles,id',
         ]);
 
         // Create user
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -92,8 +110,8 @@ class UserController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
+            'name'     => 'required|string|max:255',
+            'email'    => [
                 'required',
                 'string',
                 'email',
@@ -101,13 +119,13 @@ class UserController extends Controller
                 Rule::unique('users')->ignore($user->id),
             ],
             'password' => ['nullable', 'confirmed', Password::defaults()],
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+            'roles'    => 'nullable|array',
+            'roles.*'  => 'exists:roles,id',
         ]);
 
         // Update user
         $user->update([
-            'name' => $validated['name'],
+            'name'  => $validated['name'],
             'email' => $validated['email'],
         ]);
 
@@ -121,11 +139,13 @@ class UserController extends Controller
         // Sync roles if provided
         if (isset($validated['roles'])) {
             // Prevent removing superadmin role from the only superadmin
-            if ($user->isSuperAdmin() &&
+            if (
+                $user->isSuperAdmin() &&
                 !in_array(Role::where('slug', 'superadmin')->first()->id, $validated['roles']) &&
-                User::whereHas('roles', function($query) {
+                User::whereHas('roles', function ($query) {
                     $query->where('slug', 'superadmin');
-                })->count() <= 1) {
+                })->count() <= 1
+            ) {
                 return response()->json(['message' => 'Cannot remove the only superadmin role'], 403);
             }
 
@@ -143,10 +163,12 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         // Prevent deleting superadmin if it's the only one
-        if ($user->isSuperAdmin() &&
-            User::whereHas('roles', function($query) {
+        if (
+            $user->isSuperAdmin() &&
+            User::whereHas('roles', function ($query) {
                 $query->where('slug', 'superadmin');
-            })->count() <= 1) {
+            })->count() <= 1
+        ) {
             return response()->json(['message' => 'Cannot delete the only superadmin user'], 403);
         }
 

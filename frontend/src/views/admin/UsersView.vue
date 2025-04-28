@@ -65,6 +65,7 @@
                   { value: 'user', label: 'Usuario' }
                 ]"
                 class="block w-full"
+                @update:modelValue="handleRoleChange"
               />
             </div>
           </div>
@@ -358,6 +359,13 @@ const handleFilterChange = (newFilters) => {
   });
 
   // Reset to first page when filters change
+  pagination.currentPage = 1;
+  fetchUsers();
+};
+
+// Handle role change
+const handleRoleChange = (value) => {
+  filters.role = value;
   pagination.currentPage = 1;
   fetchUsers();
 };

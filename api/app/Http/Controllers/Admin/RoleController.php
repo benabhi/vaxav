@@ -23,15 +23,26 @@ class RoleController extends Controller
     /**
      * Display a listing of the roles.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $roles = Role::with('permissions')->get();
+        $query = Role::with('permissions');
+
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply pagination
+        $perPage = $request->input('per_page', 10);
+        $roles = $query->paginate($perPage);
 
         // Devolver los datos en el formato esperado por el frontend
-        return response()->json([
-            'data' => $roles,
-            'total' => $roles->count()
-        ]);
+        return response()->json($roles);
     }
 
     /**
@@ -40,9 +51,9 @@ class RoleController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles',
-            'description' => 'nullable|string',
-            'permissions' => 'nullable|array',
+            'name'          => 'required|string|max:255|unique:roles',
+            'description'   => 'nullable|string',
+            'permissions'   => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
@@ -51,8 +62,8 @@ class RoleController extends Controller
 
         // Create role
         $role = Role::create([
-            'name' => $validated['name'],
-            'slug' => $validated['slug'],
+            'name'        => $validated['name'],
+            'slug'        => $validated['slug'],
             'description' => $validated['description'] ?? null,
         ]);
 
@@ -87,14 +98,14 @@ class RoleController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => [
+            'name'          => [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('roles')->ignore($role->id),
             ],
-            'description' => 'nullable|string',
-            'permissions' => 'nullable|array',
+            'description'   => 'nullable|string',
+            'permissions'   => 'nullable|array',
             'permissions.*' => 'exists:permissions,id',
         ]);
 
@@ -103,8 +114,8 @@ class RoleController extends Controller
 
         // Update role
         $role->update([
-            'name' => $validated['name'],
-            'slug' => $validated['slug'],
+            'name'        => $validated['name'],
+            'slug'        => $validated['slug'],
             'description' => $validated['description'] ?? null,
         ]);
 

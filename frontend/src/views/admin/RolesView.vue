@@ -47,6 +47,7 @@
         @page-change="changePage"
         @per-page-change="handlePerPageChange"
         @filter-change="handleFilterChange"
+        @update:filters="handleFilterChange"
       >
         <template #cell(name)="{ item }">
           <div class="text-sm font-medium text-white">{{ item.name }}</div>
