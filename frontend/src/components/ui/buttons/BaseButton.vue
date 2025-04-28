@@ -15,15 +15,19 @@
     <!-- Button content with conditional opacity for loading state -->
     <div :class="{ 'opacity-0': loading }" class="flex items-center justify-center">
       <!-- Left icon -->
-      <slot name="icon-left"></slot>
+      <div v-if="$slots['icon-left']" class="button-icon">
+        <slot name="icon-left"></slot>
+      </div>
 
       <!-- Main content -->
-      <span v-if="$slots.default" :class="{ 'ml-2': $slots['icon-left'], 'mr-2': $slots['icon-right'] }">
+      <span v-if="$slots.default" class="button-text">
         <slot></slot>
       </span>
 
       <!-- Right icon -->
-      <slot name="icon-right"></slot>
+      <div v-if="$slots['icon-right']" class="button-icon">
+        <slot name="icon-right"></slot>
+      </div>
     </div>
   </button>
 </template>
@@ -126,3 +130,34 @@ const buttonClasses = computed(() => {
   ];
 });
 </script>
+
+<style scoped>
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  margin: 0 0.375rem;
+}
+
+.button-icon:first-child {
+  margin-left: 0;
+}
+
+.button-icon:last-child {
+  margin-right: 0;
+}
+
+.button-text {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* Ensure SVG icons are properly aligned */
+.button-icon svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+</style>

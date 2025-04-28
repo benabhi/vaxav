@@ -33,12 +33,6 @@
         <h1 class="text-2xl font-semibold text-white">Roles</h1>
         <BaseButton @click="openCreateRoleModal">
           Nuevo Rol
-          <template #icon-left>
-            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </template>
         </BaseButton>
       </div>
 
@@ -124,21 +118,104 @@
     </div>
 
     <!-- Role form modal (create/edit) -->
-    <RoleModal :show="showRoleModal" :role="editingRole" :permissions="availablePermissions" :loading="saving"
-      :errors="formErrors" @close="closeRoleModal" @submit="saveRole" />
+    <BaseModal :show="showRoleModal" :title="editingRole ? 'Editar Rol' : 'Crear Rol'" color="blue"
+      @close="closeRoleModal">
+      <form @submit.prevent="saveRole">
+        <!-- Name -->
+        <div class="mb-4">
+          <label for="name" class="block text-lg font-bold text-white mb-2">Nombre</label>
+          <input id="name" v-model="roleForm.name" type="text"
+            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required />
+          <p v-if="formErrors.name" class="mt-1 text-sm text-red-500">{{ formErrors.name }}</p>
+        </div>
+
+        <!-- Slug -->
+        <div class="mb-4">
+          <label for="slug" class="block text-lg font-bold text-white mb-2">Slug</label>
+          <input id="slug" v-model="roleForm.slug" type="text"
+            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white" required
+            :disabled="editingRole && ['superadmin', 'admin', 'moderator', 'user'].includes(editingRole.slug)" />
+          <p v-if="formErrors.slug" class="mt-1 text-sm text-red-500">{{ formErrors.slug }}</p>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-4">
+          <label for="description" class="block text-lg font-bold text-white mb-2">Descripción</label>
+          <textarea id="description" v-model="roleForm.description" rows="3"
+            class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white"></textarea>
+          <p v-if="formErrors.description" class="mt-1 text-sm text-red-500">{{ formErrors.description }}</p>
+        </div>
+
+        <!-- Permissions -->
+        <div class="mb-6">
+          <label class="block text-lg font-bold text-white mb-2">Permisos</label>
+          <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-60 overflow-y-auto">
+            <div class="space-y-2">
+              <div v-for="permission in availablePermissions" :key="permission.id" class="flex items-center">
+                <input :id="`permission-${permission.id}`" type="checkbox" :value="permission.id"
+                  v-model="roleForm.permissions"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-500 rounded" />
+                <label :for="`permission-${permission.id}`" class="ml-2 block text-sm text-gray-200">
+                  {{ permission.name }}
+                </label>
+              </div>
+            </div>
+          </div>
+          <p v-if="formErrors.permissions" class="mt-1 text-sm text-red-500">{{ formErrors.permissions }}</p>
+        </div>
+
+        <div class="flex space-x-3">
+          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
+            :disabled="saving">
+            <span v-if="saving">Procesando...</span>
+            <span v-else>{{ editingRole ? 'Guardar cambios' : 'Crear rol' }}</span>
+          </button>
+          <button type="button" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md"
+            @click="closeRoleModal">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </BaseModal>
 
     <!-- Delete confirmation modal -->
-    <DeleteRoleModal :show="showDeleteModal" :role="roleToDelete" :loading="deleting" @close="closeDeleteModal"
-      @confirm="deleteRole" />
+    <BaseModal :show="showDeleteModal" title="Eliminar rol" color="red" @close="closeDeleteModal">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+          <svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+
+        <p class="text-gray-300 mb-6">
+          ¿Estás seguro de que deseas eliminar el rol <span class="font-semibold">{{ roleToDelete?.name }}</span>?
+          Esta
+          acción no se puede deshacer.
+        </p>
+      </div>
+
+      <div class="flex space-x-3">
+        <button type="button" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md"
+          :disabled="deleting" @click="deleteRole">
+          <span v-if="deleting">Procesando...</span>
+          <span v-else>Eliminar</span>
+        </button>
+        <button type="button" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md"
+          @click="closeDeleteModal">
+          Cancelar
+        </button>
+      </div>
+    </BaseModal>
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import RoleModal from '@/components/admin/RoleModal.vue';
-import DeleteRoleModal from '@/components/admin/DeleteRoleModal.vue';
+import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
@@ -158,6 +235,12 @@ const loading = ref(true);
 // Role form
 const showRoleModal = ref(false);
 const editingRole = ref(null);
+const roleForm = reactive({
+  name: '',
+  slug: '',
+  description: '',
+  permissions: []
+});
 const formErrors = reactive({
   name: '',
   slug: '',
@@ -165,6 +248,20 @@ const formErrors = reactive({
   permissions: ''
 });
 const saving = ref(false);
+
+// Generate slug from name
+const generateSlug = (name) => {
+  return name.toLowerCase()
+    .replace(/[^\w ]+/g, '')
+    .replace(/ +/g, '-');
+};
+
+// Watch for name changes to auto-generate slug
+watch(() => roleForm.name, (newName) => {
+  if (!editingRole.value) {
+    roleForm.slug = generateSlug(newName);
+  }
+});
 
 // Delete confirmation
 const showDeleteModal = ref(false);
@@ -215,6 +312,10 @@ const fetchRoles = async () => {
 // Open create role modal
 const openCreateRoleModal = () => {
   editingRole.value = null;
+  roleForm.name = '';
+  roleForm.slug = '';
+  roleForm.description = '';
+  roleForm.permissions = [];
   clearFormErrors();
   showRoleModal.value = true;
 };
@@ -222,6 +323,10 @@ const openCreateRoleModal = () => {
 // Edit role
 const editRole = (role) => {
   editingRole.value = role;
+  roleForm.name = role.name;
+  roleForm.slug = role.slug;
+  roleForm.description = role.description || '';
+  roleForm.permissions = role.permissions ? role.permissions.map(p => p.id) : [];
   clearFormErrors();
   showRoleModal.value = true;
 };
@@ -240,22 +345,22 @@ const clearFormErrors = () => {
 };
 
 // Save role
-const saveRole = async (formData) => {
+const saveRole = async () => {
   saving.value = true;
   clearFormErrors();
 
   // Validate form
   let isValid = true;
 
-  if (!formData.name) {
+  if (!roleForm.name) {
     formErrors.name = 'El nombre es obligatorio';
     isValid = false;
   }
 
-  if (!formData.slug) {
+  if (!roleForm.slug) {
     formErrors.slug = 'El slug es obligatorio';
     isValid = false;
-  } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
+  } else if (!/^[a-z0-9-]+$/.test(roleForm.slug)) {
     formErrors.slug = 'El slug solo puede contener letras minúsculas, números y guiones';
     isValid = false;
   }
@@ -268,12 +373,12 @@ const saveRole = async (formData) => {
   try {
     if (editingRole.value) {
       // Update existing role
-      const response = await api.put(`/admin/roles/${editingRole.value.id}`, formData);
+      const response = await api.put(`/admin/roles/${editingRole.value.id}`, roleForm);
       console.log('Role updated successfully:', response.data);
 
       // Show success notification
       notificationStore.success(
-        `El rol ${formData.name} ha sido actualizado correctamente.`,
+        `El rol ${roleForm.name} ha sido actualizado correctamente.`,
         'Rol actualizado'
       );
 
@@ -281,12 +386,12 @@ const saveRole = async (formData) => {
       await fetchRoles();
     } else {
       // Create new role
-      const response = await api.post('/admin/roles', formData);
+      const response = await api.post('/admin/roles', roleForm);
       console.log('Role created successfully:', response.data);
 
       // Show success notification
       notificationStore.success(
-        `El rol ${formData.name} ha sido creado correctamente.`,
+        `El rol ${roleForm.name} ha sido creado correctamente.`,
         'Rol creado'
       );
 
@@ -327,6 +432,15 @@ const closeDeleteModal = () => {
 const deleteRole = async () => {
   if (!roleToDelete.value) return;
 
+  // Check if role is a default role
+  if (['superadmin', 'admin', 'moderator', 'user'].includes(roleToDelete.value.slug)) {
+    notificationStore.error(
+      `No se puede eliminar el rol ${roleToDelete.value.name} porque es un rol predeterminado del sistema.`,
+      'Error al eliminar'
+    );
+    return;
+  }
+
   deleting.value = true;
 
   try {
@@ -348,8 +462,14 @@ const deleteRole = async () => {
     console.error('Error deleting role:', error);
 
     // Show error notification
+    let errorMessage = 'Ha ocurrido un error al eliminar el rol. Por favor, inténtelo de nuevo.';
+
+    if (error.response && error.response.status === 403) {
+      errorMessage = 'No tienes permiso para eliminar este rol o es un rol predeterminado del sistema.';
+    }
+
     notificationStore.error(
-      'Ha ocurrido un error al eliminar el rol. Por favor, inténtelo de nuevo.',
+      errorMessage,
       'Error al eliminar'
     );
   } finally {

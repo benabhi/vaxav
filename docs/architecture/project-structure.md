@@ -129,13 +129,12 @@ frontend/
 
 Los componentes se encuentran en `frontend/src/components/` y están organizados por funcionalidad:
 
-- `ui/`: Componentes de interfaz de usuario básicos (botones, formularios, etc.)
+- `ui/`: Componentes de interfaz de usuario básicos
+  - `buttons/`: Botones y controles de acción
+  - `forms/`: Campos de formulario y controles relacionados
+  - `modals/`: Componentes de ventanas modales
+    - `BaseModal.vue`: Componente base para todos los modales
 - `layout/`: Componentes de estructura (header, sidebar, etc.)
-- `admin/`: Componentes específicos para el panel de administración
-  - `UserModal.vue`: Modal para crear/editar usuarios
-  - `DeleteUserModal.vue`: Modal para confirmar eliminación de usuarios
-  - `RoleModal.vue`: Modal para crear/editar roles
-  - `DeleteRoleModal.vue`: Modal para confirmar eliminación de roles
 
 #### Servicios
 

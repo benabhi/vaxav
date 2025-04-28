@@ -15,13 +15,14 @@ Este documento describe cómo se implementa la autenticación y autorización en
 frontend/
 ├── src/
 │   ├── components/
-│   │   ├── admin/
-│   │   │   ├── DeleteRoleModal.vue
-│   │   │   ├── DeleteUserModal.vue
-│   │   │   ├── RoleModal.vue
-│   │   │   └── UserModal.vue
-│   │   └── ui/
-│   │       ├── Modal.vue
+│   │   ├── ui/
+│   │   │   ├── buttons/
+│   │   │   │   └── BaseButton.vue
+│   │   │   ├── forms/
+│   │   │   │   └── ...
+│   │   │   └── modals/
+│   │   │       └── BaseModal.vue
+│   │   └── layout/
 │   │       └── ...
 │   ├── router/
 │   │   └── index.ts
@@ -96,13 +97,13 @@ router.beforeEach(async (to, from, next) => {
 
 - Muestra la lista de usuarios.
 - Permite crear, editar y eliminar usuarios.
-- Utiliza los componentes `UserModal.vue` y `DeleteUserModal.vue`.
+- Utiliza el componente `BaseModal.vue` para implementar formularios y confirmaciones.
 
 #### RolesView.vue
 
 - Muestra la lista de roles.
 - Permite crear, editar y eliminar roles.
-- Utiliza los componentes `RoleModal.vue` y `DeleteRoleModal.vue`.
+- Utiliza el componente `BaseModal.vue` para implementar formularios y confirmaciones.
 
 ## Verificación de Permisos
 
@@ -114,8 +115,8 @@ La verificación de permisos en el frontend se realiza a través de funciones au
 const hasPermission = (permission) => {
   const authStore = useAuthStore();
   if (!authStore.user || !authStore.user.roles) return false;
-  
-  return authStore.user.roles.some(role => 
+
+  return authStore.user.roles.some(role =>
     role.permissions.some(p => p.slug === permission)
   );
 };

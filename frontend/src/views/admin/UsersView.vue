@@ -33,12 +33,6 @@
         <h1 class="text-2xl font-semibold text-white">Usuarios</h1>
         <BaseButton @click="openCreateUserModal">
           Nuevo Usuario
-          <template #icon-left>
-            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </template>
         </BaseButton>
       </div>
 
@@ -222,7 +216,7 @@
     </div>
 
     <!-- User form modal (create/edit) -->
-    <Modal :show="showUserModal" :title="editingUser ? 'Editar Usuario' : 'Crear Usuario'" color="blue"
+    <BaseModal :show="showUserModal" :title="editingUser ? 'Editar Usuario' : 'Crear Usuario'" color="blue"
       @close="closeUserModal">
       <form @submit.prevent="saveUser">
         <!-- Name -->
@@ -284,10 +278,10 @@
           </button>
         </div>
       </form>
-    </Modal>
+    </BaseModal>
 
     <!-- Delete confirmation modal -->
-    <Modal :show="showDeleteModal" title="Eliminar usuario" color="red" @close="closeDeleteModal">
+    <BaseModal :show="showDeleteModal" title="Eliminar usuario" color="red" @close="closeDeleteModal">
       <div class="text-center">
         <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
           <svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -313,7 +307,7 @@
           Cancelar
         </button>
       </div>
-    </Modal>
+    </BaseModal>
   </AdminLayout>
 </template>
 
@@ -322,7 +316,7 @@ import { ref, reactive, onMounted } from 'vue';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import Modal from '@/components/ui/Modal.vue';
+import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';

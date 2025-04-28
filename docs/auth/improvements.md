@@ -91,11 +91,7 @@ public function index(): JsonResponse
 
 Se crearon componentes reutilizables para mejorar la mantenibilidad y consistencia del código:
 
-- `Modal.vue`: Componente base para todos los modales.
-- `UserModal.vue`: Componente para crear y editar usuarios.
-- `DeleteUserModal.vue`: Componente para confirmar la eliminación de usuarios.
-- `RoleModal.vue`: Componente para crear y editar roles.
-- `DeleteRoleModal.vue`: Componente para confirmar la eliminación de roles.
+- `BaseModal.vue`: Componente base para todos los modales, utilizado directamente en las vistas para crear, editar y eliminar recursos.
 
 ### 2. Integración con la API Real
 
@@ -127,7 +123,7 @@ try {
   // Call the API to get roles
   const response = await api.get('/admin/roles');
   console.log('Roles fetched successfully:', response.data);
-  
+
   if (response.data && response.data.data) {
     roles.value = response.data.data;
   } else {
