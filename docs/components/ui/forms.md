@@ -240,7 +240,7 @@ El componente `BaseSelect` sigue la guía de estilo de Vaxav, con un diseño osc
 
 ### BaseCheckbox
 
-`BaseCheckbox` es un componente para selecciones booleanas o múltiples.
+`BaseCheckbox` es un componente para casillas de verificación, diseñado con la estética sci-fi retro de Vaxav.
 
 **Archivo**: `/components/ui/forms/BaseCheckbox.vue`
 
@@ -248,31 +248,76 @@ El componente `BaseSelect` sigue la guía de estilo de Vaxav, con un diseño osc
 
 | Nombre | Tipo | Valor por defecto | Descripción |
 |--------|------|------------------|-------------|
-| `modelValue` | `[Boolean, Array]` | `false` | Valor del checkbox |
+| `modelValue` | `[Boolean, Array]` | `false` | Valor del checkbox (v-model) |
+| `value` | `[String, Number, Boolean, Object]` | `true` | Valor cuando se usa en grupo |
 | `label` | `String` | `''` | Etiqueta del checkbox |
-| `value` | `[String, Number, Boolean, Object]` | `true` | Valor cuando se usa en un grupo |
-| `id` | `String` | `null` | ID del campo |
-| `name` | `String` | `''` | Nombre del campo |
-| `disabled` | `Boolean` | `false` | Si está deshabilitado |
-| `required` | `Boolean` | `false` | Si es requerido |
+| `name` | `String` | `''` | Nombre del checkbox para formularios |
+| `id` | `String` | Generado automáticamente | ID del checkbox |
+| `disabled` | `Boolean` | `false` | Si el checkbox está deshabilitado |
+| `required` | `Boolean` | `false` | Si el checkbox es requerido |
 | `error` | `String` | `''` | Mensaje de error |
-| `indeterminate` | `Boolean` | `false` | Estado indeterminado |
+| `checkboxClass` | `String` | `''` | Clases CSS adicionales para el checkbox |
+| `labelClass` | `String` | `''` | Clases CSS adicionales para la etiqueta |
+| `indeterminate` | `Boolean` | `false` | Si el checkbox está en estado indeterminado |
 
 #### Slots
 
 | Nombre | Descripción |
 |--------|-------------|
 | `default` | Personalización de la etiqueta |
+| `error` | Personalización del mensaje de error |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `update:modelValue` | Se emite cuando cambia el valor |
+| `change` | Se emite cuando cambia el estado |
+
+#### Estilo
+
+El componente `BaseCheckbox` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
+
+- Checkbox con bordes redondeados
+- Texto blanco para las etiquetas
+- Mensajes de error en rojo
+- Estilo deshabilitado con opacidad reducida
 
 #### Ejemplos de Uso
 
+**Checkbox Básico**:
 ```vue
-<BaseCheckbox v-model="acceptTerms" label="Acepto los términos y condiciones" />
+<BaseCheckbox v-model="rememberMe" label="Recordarme" />
+```
 
-<!-- Grupo de checkboxes -->
-<BaseCheckbox v-model="selectedFruits" value="apple" label="Manzana" />
-<BaseCheckbox v-model="selectedFruits" value="banana" label="Banana" />
-<BaseCheckbox v-model="selectedFruits" value="orange" label="Naranja" />
+**Checkbox en Grupo**:
+```vue
+<BaseCheckbox
+  v-model="selectedOptions"
+  :value="option.id"
+  v-for="option in options"
+  :key="option.id"
+  :label="option.name"
+/>
+```
+
+**Checkbox con Estilo Personalizado**:
+```vue
+<BaseCheckbox
+  v-model="acceptTerms"
+  labelClass="text-blue-300 font-bold"
+>
+  Acepto los <a href="#" class="text-blue-400 underline">términos y condiciones</a>
+</BaseCheckbox>
+```
+
+**Checkbox con Error**:
+```vue
+<BaseCheckbox
+  v-model="acceptTerms"
+  :error="!acceptTerms ? 'Debes aceptar los términos para continuar' : ''"
+  label="Acepto los términos y condiciones"
+/>
 ```
 
 ### BaseRadio
@@ -396,6 +441,111 @@ Todos los componentes de formulario siguen las mejores prácticas de accesibilid
 3. Mensajes de error anunciados por lectores de pantalla
 4. Navegación por teclado
 5. Contraste de color suficiente
+
+### BaseRange
+
+`BaseRange` es un componente para seleccionar valores numéricos dentro de un rango, diseñado con la estética sci-fi retro de Vaxav.
+
+**Archivo**: `/components/ui/forms/BaseRange.vue`
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `modelValue` | `[Number, String]` | `0` | Valor del range (v-model) |
+| `label` | `String` | `''` | Etiqueta del range |
+| `min` | `[Number, String]` | `0` | Valor mínimo |
+| `max` | `[Number, String]` | `100` | Valor máximo |
+| `step` | `[Number, String]` | `1` | Incremento del range |
+| `id` | `String` | Generado automáticamente | ID del range |
+| `disabled` | `Boolean` | `false` | Si el range está deshabilitado |
+| `required` | `Boolean` | `false` | Si el range es requerido |
+| `error` | `String` | `''` | Mensaje de error |
+| `hint` | `String` | `''` | Texto de ayuda |
+| `rangeClass` | `String` | `''` | Clases CSS adicionales para el range |
+| `labelClass` | `String` | `''` | Clases CSS adicionales para la etiqueta |
+| `showMinMax` | `Boolean` | `false` | Si se muestran los valores mínimo y máximo |
+| `showValue` | `Boolean` | `true` | Si se muestra el valor actual |
+| `showTooltip` | `Boolean` | `false` | Si se muestra un tooltip con el valor actual |
+| `formatValue` | `Function` | `null` | Función para formatear el valor actual |
+| `formatMin` | `Function` | `null` | Función para formatear el valor mínimo |
+| `formatMax` | `Function` | `null` | Función para formatear el valor máximo |
+
+#### Slots
+
+| Nombre | Descripción |
+|--------|-------------|
+| `label` | Personalización de la etiqueta |
+| `error` | Personalización del mensaje de error |
+| `hint` | Personalización del texto de ayuda |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `update:modelValue` | Se emite cuando cambia el valor |
+| `change` | Se emite cuando se completa un cambio |
+
+#### Estilo
+
+El componente `BaseRange` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
+
+- Track (barra) en gris oscuro
+- Thumb (control deslizante) en azul con borde y brillo
+- Efecto de brillo aumentado al enfocar
+- Estilo deshabilitado con opacidad reducida
+- Visualización opcional de valores mínimo, máximo y actual
+
+#### Ejemplos de Uso
+
+**Range Básico**:
+```vue
+<BaseRange
+  v-model="volume"
+  label="Volumen"
+  :min="0"
+  :max="100"
+/>
+```
+
+**Range con Valores Mínimo y Máximo**:
+```vue
+<BaseRange
+  v-model="price"
+  label="Precio"
+  :min="0"
+  :max="1000"
+  :step="10"
+  :show-min-max="true"
+/>
+```
+
+**Range con Formateo de Valores**:
+```vue
+<BaseRange
+  v-model="price"
+  label="Precio Máximo"
+  :min="0"
+  :max="1000000"
+  :step="10000"
+  :show-min-max="true"
+  :format-value="value => `${value.toLocaleString()} ISK`"
+  :format-min="value => `${value.toLocaleString()} ISK`"
+  :format-max="value => `${value.toLocaleString()} ISK`"
+/>
+```
+
+**Range con Tooltip**:
+```vue
+<BaseRange
+  v-model="distance"
+  label="Distancia"
+  :min="0"
+  :max="100"
+  :show-tooltip="true"
+  :format-value="value => `${value} km`"
+/>
+```
 
 ## Mejores Prácticas
 

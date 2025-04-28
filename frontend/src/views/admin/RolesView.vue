@@ -164,13 +164,14 @@
           <label class="block text-lg font-bold text-white mb-2">Permisos</label>
           <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-60 overflow-y-auto">
             <div class="space-y-2">
-              <div v-for="permission in availablePermissions" :key="permission.id" class="flex items-center">
-                <input :id="`permission-${permission.id}`" type="checkbox" :value="permission.id"
+              <div v-for="permission in availablePermissions" :key="permission.id" class="mb-1">
+                <BaseCheckbox
+                  :id="`permission-${permission.id}`"
+                  :value="permission.id"
                   v-model="roleForm.permissions"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-500 rounded" />
-                <label :for="`permission-${permission.id}`" class="ml-2 block text-sm text-gray-200">
-                  {{ permission.name }}
-                </label>
+                  :label="permission.name"
+                  labelClass="text-sm text-gray-200"
+                />
               </div>
             </div>
           </div>
@@ -223,6 +224,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
+import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';

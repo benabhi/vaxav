@@ -278,12 +278,13 @@
         <div class="mb-6">
           <label class="block text-lg font-bold text-white mb-2">Roles</label>
           <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-40 overflow-y-auto">
-            <div v-for="role in availableRoles" :key="role.id" class="flex items-center mb-2 last:mb-0">
-              <input :id="`role-${role.id}`" type="checkbox" :value="role.id" v-model="userForm.roles"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-500 rounded" />
-              <label :for="`role-${role.id}`" class="ml-2 text-white">
-                {{ role.name }}
-              </label>
+            <div v-for="role in availableRoles" :key="role.id" class="mb-2 last:mb-0">
+              <BaseCheckbox
+                :id="`role-${role.id}`"
+                :value="role.id"
+                v-model="userForm.roles"
+                :label="role.name"
+              />
             </div>
           </div>
           <p v-if="formErrors.roles" class="mt-1 text-sm text-red-500">{{ formErrors.roles }}</p>
@@ -334,6 +335,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
+import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';

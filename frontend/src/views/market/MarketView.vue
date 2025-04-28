@@ -26,8 +26,17 @@
           <h2 class="text-xl font-bold mb-3">Filtros</h2>
           <div class="space-y-3">
             <div>
-              <label class="block text-gray-300 mb-1">Precio Máximo</label>
-              <input type="range" min="0" max="1000000" class="w-full" />
+              <BaseRange
+                v-model="filters.maxPrice"
+                label="Precio Máximo"
+                :min="0"
+                :max="1000000"
+                :step="10000"
+                :show-min-max="true"
+                :format-value="formatPrice"
+                :format-min="formatPrice"
+                :format-max="formatPrice"
+              />
             </div>
             <div>
               <BaseSelect
@@ -106,7 +115,22 @@
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
+import BaseRange from '@/components/ui/forms/BaseRange.vue';
+
+// Filtros reactivos
+const filters = reactive({
+  maxPrice: 500000,
+  location: ''
+});
+
+// Formatear precio con separador de miles y símbolo de moneda
+const formatPrice = (value: number | string) => {
+  const numValue = Number(value);
+  return numValue.toLocaleString('es-ES') + ' ISK';
+};
+
 // Lógica para cargar datos del mercado
 </script>
