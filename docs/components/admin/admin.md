@@ -2,7 +2,151 @@
 
 Los componentes de administración son específicos para el panel de administración de Vaxav. Estos componentes proporcionan interfaces para gestionar usuarios, roles, configuraciones y otros aspectos del sistema.
 
-## Componentes Disponibles
+## Componentes de Gestión de Usuarios y Roles
+
+Estos componentes se utilizan para la gestión de usuarios y roles en el sistema de autenticación y autorización.
+
+### UserModal
+
+`UserModal` es un componente modal para crear y editar usuarios.
+
+**Archivo**: `/components/admin/UserModal.vue`
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `show` | `Boolean` | `false` | Controla la visibilidad del modal |
+| `user` | `Object` | `null` | Usuario a editar (null para creación) |
+| `roles` | `Array` | `[]` | Lista de roles disponibles |
+| `loading` | `Boolean` | `false` | Estado de carga |
+| `errors` | `Object` | `{}` | Errores de validación |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `close` | Emitido cuando se cierra el modal |
+| `submit` | Emitido cuando se envía el formulario, con los datos del usuario |
+
+#### Ejemplo de Uso
+
+```vue
+<UserModal
+  :show="showUserModal"
+  :user="editingUser"
+  :roles="availableRoles"
+  :loading="saving"
+  :errors="formErrors"
+  @close="closeUserModal"
+  @submit="saveUser"
+/>
+```
+
+### DeleteUserModal
+
+`DeleteUserModal` es un componente modal para confirmar la eliminación de usuarios.
+
+**Archivo**: `/components/admin/DeleteUserModal.vue`
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `show` | `Boolean` | `false` | Controla la visibilidad del modal |
+| `user` | `Object` | `null` | Usuario a eliminar |
+| `loading` | `Boolean` | `false` | Estado de carga |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `close` | Emitido cuando se cierra el modal |
+| `confirm` | Emitido cuando se confirma la eliminación |
+
+#### Ejemplo de Uso
+
+```vue
+<DeleteUserModal
+  :show="showDeleteModal"
+  :user="userToDelete"
+  :loading="deleting"
+  @close="closeDeleteModal"
+  @confirm="deleteUser"
+/>
+```
+
+### RoleModal
+
+`RoleModal` es un componente modal para crear y editar roles.
+
+**Archivo**: `/components/admin/RoleModal.vue`
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `show` | `Boolean` | `false` | Controla la visibilidad del modal |
+| `role` | `Object` | `null` | Rol a editar (null para creación) |
+| `permissions` | `Array` | `[]` | Lista de permisos disponibles |
+| `loading` | `Boolean` | `false` | Estado de carga |
+| `errors` | `Object` | `{}` | Errores de validación |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `close` | Emitido cuando se cierra el modal |
+| `submit` | Emitido cuando se envía el formulario, con los datos del rol |
+
+#### Ejemplo de Uso
+
+```vue
+<RoleModal
+  :show="showRoleModal"
+  :role="editingRole"
+  :permissions="availablePermissions"
+  :loading="saving"
+  :errors="formErrors"
+  @close="closeRoleModal"
+  @submit="saveRole"
+/>
+```
+
+### DeleteRoleModal
+
+`DeleteRoleModal` es un componente modal para confirmar la eliminación de roles.
+
+**Archivo**: `/components/admin/DeleteRoleModal.vue`
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `show` | `Boolean` | `false` | Controla la visibilidad del modal |
+| `role` | `Object` | `null` | Rol a eliminar |
+| `loading` | `Boolean` | `false` | Estado de carga |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `close` | Emitido cuando se cierra el modal |
+| `confirm` | Emitido cuando se confirma la eliminación |
+
+#### Ejemplo de Uso
+
+```vue
+<DeleteRoleModal
+  :show="showDeleteModal"
+  :role="roleToDelete"
+  :loading="deleting"
+  @close="closeDeleteModal"
+  @confirm="deleteRole"
+/>
+```
+
+## Componentes de Interfaz de Administración
 
 ### AdminSidebar
 
@@ -36,8 +180,8 @@ Los componentes de administración son específicos para el panel de administrac
 #### Ejemplos de Uso
 
 ```vue
-<AdminSidebar 
-  :items="sidebarItems" 
+<AdminSidebar
+  :items="sidebarItems"
   :collapsed="sidebarCollapsed"
   @toggle-collapse="toggleSidebar"
 />
@@ -106,8 +250,8 @@ const sidebarItems = [
 #### Ejemplos de Uso
 
 ```vue
-<AdminHeader 
-  title="Gestión de Usuarios" 
+<AdminHeader
+  title="Gestión de Usuarios"
   :breadcrumbs="[
     { label: 'Inicio', to: '/admin' },
     { label: 'Usuarios', to: '/admin/users' }
@@ -163,7 +307,7 @@ const sidebarItems = [
 #### Ejemplos de Uso
 
 ```vue
-<AdminTable 
+<AdminTable
   :columns="[
     { key: 'id', label: 'ID', sortable: true },
     { key: 'name', label: 'Nombre', sortable: true, filterable: true },
@@ -213,13 +357,13 @@ const sidebarItems = [
 #### Ejemplos de Uso
 
 ```vue
-<AdminCard 
-  title="Estadísticas de Usuarios" 
+<AdminCard
+  title="Estadísticas de Usuarios"
   icon="users"
   :loading="loading"
 >
   <UserStats :stats="userStats" />
-  
+
   <template #footer>
     <BaseButton variant="link" size="sm">Ver todos los usuarios</BaseButton>
   </template>
@@ -266,8 +410,8 @@ const sidebarItems = [
 #### Ejemplos de Uso
 
 ```vue
-<AdminForm 
-  title="Crear Usuario" 
+<AdminForm
+  title="Crear Usuario"
   description="Ingresa la información del nuevo usuario"
   :loading="isSubmitting"
   :error="error"
@@ -311,7 +455,7 @@ const sidebarItems = [
 #### Ejemplos de Uso
 
 ```vue
-<AdminTabs 
+<AdminTabs
   :tabs="[
     { id: 'general', label: 'Información General' },
     { id: 'security', label: 'Seguridad' },
@@ -322,11 +466,11 @@ const sidebarItems = [
   <template #tab-general>
     <UserGeneralForm :user="user" @save="saveGeneral" />
   </template>
-  
+
   <template #tab-security>
     <UserSecurityForm :user="user" @save="saveSecurity" />
   </template>
-  
+
   <template #tab-notifications>
     <UserNotificationsForm :user="user" @save="saveNotifications" />
   </template>
@@ -366,7 +510,7 @@ const sidebarItems = [
 #### Ejemplos de Uso
 
 ```vue
-<AdminFilter 
+<AdminFilter
   :filters="[
     { key: 'name', label: 'Nombre', type: 'text' },
     { key: 'role', label: 'Rol', type: 'select', options: roles },
@@ -392,10 +536,10 @@ const sidebarItems = [
         </BaseButton>
       </template>
     </AdminHeader>
-    
+
     <AdminFilter :filters="filters" v-model="filterValues" @apply="fetchUsers" />
-    
-    <AdminTable 
+
+    <AdminTable
       :columns="columns"
       :data="users"
       :loading="loading"
@@ -420,14 +564,14 @@ const sidebarItems = [
         ]" />
       </template>
     </AdminHeader>
-    
+
     <AdminTabs :tabs="tabs" v-model:activeTab="activeTab">
       <template #tab-info>
         <AdminCard title="Información del Usuario">
           <UserInfo :user="user" />
         </AdminCard>
       </template>
-      
+
       <template #tab-activity>
         <AdminCard title="Actividad Reciente">
           <ActivityLog :activities="activities" />
@@ -452,8 +596,8 @@ const sidebarItems = [
         ]" />
       </template>
     </AdminHeader>
-    
-    <AdminForm 
+
+    <AdminForm
       :title="isEditing ? 'Editar Usuario' : 'Crear Usuario'"
       :loading="loading"
       :error="error"
@@ -463,12 +607,12 @@ const sidebarItems = [
       <BaseInput v-model="form.name" label="Nombre" required />
       <BaseInput v-model="form.email" label="Correo electrónico" type="email" required />
       <BaseSelect v-model="form.role" label="Rol" :options="roles" required />
-      <BaseInput 
-        v-if="!isEditing" 
-        v-model="form.password" 
-        label="Contraseña" 
-        type="password" 
-        required 
+      <BaseInput
+        v-if="!isEditing"
+        v-model="form.password"
+        label="Contraseña"
+        type="password"
+        required
       />
     </AdminForm>
   </AdminLayout>
@@ -476,6 +620,8 @@ const sidebarItems = [
 ```
 
 ## Mejores Prácticas
+
+### Estructura y Diseño
 
 1. Usa `AdminLayout` como contenedor principal para todas las páginas de administración
 2. Usa `AdminHeader` para proporcionar contexto y navegación consistente
@@ -485,5 +631,25 @@ const sidebarItems = [
 6. Usa `AdminTabs` para organizar contenido extenso
 7. Usa `AdminFilter` para proporcionar capacidades de filtrado avanzadas
 8. Mantén la jerarquía y estructura de componentes consistente en todo el panel de administración
-9. Implementa permisos y roles para controlar el acceso a diferentes secciones
-10. Proporciona retroalimentación clara para todas las acciones del usuario
+
+### Gestión de Usuarios y Roles
+
+9. Usa `UserModal` para crear y editar usuarios de forma consistente
+10. Usa `RoleModal` para crear y editar roles de forma consistente
+11. Usa `DeleteUserModal` y `DeleteRoleModal` para confirmar acciones destructivas
+12. Implementa validación tanto en el frontend como en el backend
+13. Proporciona mensajes de error específicos para cada campo del formulario
+14. No permitas la eliminación o modificación de roles predefinidos del sistema
+
+### Seguridad y Experiencia de Usuario
+
+15. Implementa permisos y roles para controlar el acceso a diferentes secciones
+16. Verifica los permisos del usuario antes de mostrar acciones o secciones restringidas
+17. Proporciona retroalimentación clara para todas las acciones del usuario
+18. Muestra estados de carga durante operaciones asíncronas
+19. Implementa protección contra ataques CSRF en todas las solicitudes POST, PUT y DELETE
+20. Registra todas las acciones administrativas para fines de auditoría
+
+## Integración con el Sistema de Autenticación
+
+Los componentes de administración están estrechamente integrados con el sistema de autenticación y autorización. Para más detalles sobre este sistema, consulte la [documentación de autenticación y autorización](../../auth/README.md).

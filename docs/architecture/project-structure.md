@@ -63,16 +63,26 @@ api/
 Los controladores se encuentran en `api/app/Http/Controllers/` y manejan las solicitudes HTTP. Los principales controladores son:
 
 - `AuthController.php`: Maneja la autenticación (login, registro, logout)
+- `Admin/UserController.php`: Gestiona los usuarios (CRUD)
+- `Admin/RoleController.php`: Gestiona los roles y permisos
 - `PilotController.php`: Gestiona los pilotos
 - `ShipController.php`: Gestiona las naves
 - `MarketController.php`: Gestiona el mercado
 - `UniverseController.php`: Gestiona el universo (regiones, constelaciones, sistemas)
+
+#### Middleware
+
+Los middleware se encuentran en `api/app/Http/Middleware/` y filtran las solicitudes HTTP:
+
+- `CheckPermission.php`: Verifica si el usuario tiene el permiso requerido para acceder a una ruta
 
 #### Modelos
 
 Los modelos se encuentran en `api/app/Models/` y representan las entidades de la base de datos:
 
 - `User.php`: Usuarios del sistema
+- `Role.php`: Roles de usuario
+- `Permission.php`: Permisos para acciones específicas
 - `Pilot.php`: Pilotos controlados por los usuarios
 - `Ship.php`: Naves espaciales
 - `Region.php`: Regiones del universo
@@ -115,26 +125,38 @@ frontend/
 
 ### Componentes Clave del Frontend
 
+#### Componentes
+
+Los componentes se encuentran en `frontend/src/components/` y están organizados por funcionalidad:
+
+- `ui/`: Componentes de interfaz de usuario básicos (botones, formularios, etc.)
+- `layout/`: Componentes de estructura (header, sidebar, etc.)
+- `admin/`: Componentes específicos para el panel de administración
+  - `UserModal.vue`: Modal para crear/editar usuarios
+  - `DeleteUserModal.vue`: Modal para confirmar eliminación de usuarios
+  - `RoleModal.vue`: Modal para crear/editar roles
+  - `DeleteRoleModal.vue`: Modal para confirmar eliminación de roles
+
 #### Servicios
 
 Los servicios se encuentran en `frontend/src/services/` y manejan la comunicación con la API:
 
-- `api.ts`: Configuración base de Axios
-- `authService.ts`: Servicios de autenticación
-- `pilotService.ts`: Servicios relacionados con pilotos
-- `shipService.ts`: Servicios relacionados con naves
-- `marketService.ts`: Servicios relacionados con el mercado
-- `universeService.ts`: Servicios relacionados con el universo
+- `api.js`: Configuración base de Axios
+- `authService.js`: Servicios de autenticación
+- `pilotService.js`: Servicios relacionados con pilotos
+- `shipService.js`: Servicios relacionados con naves
+- `marketService.js`: Servicios relacionados con el mercado
+- `universeService.js`: Servicios relacionados con el universo
 
 #### Stores
 
 Los stores se encuentran en `frontend/src/stores/` y gestionan el estado global de la aplicación:
 
-- `auth.ts`: Estado de autenticación
-- `pilot.ts`: Estado del piloto actual
-- `ships.ts`: Estado de las naves
-- `market.ts`: Estado del mercado
-- `universe.ts`: Estado del universo
+- `auth.js`: Estado de autenticación y usuario actual
+- `pilot.js`: Estado del piloto actual
+- `ships.js`: Estado de las naves
+- `market.js`: Estado del mercado
+- `universe.js`: Estado del universo
 
 #### Vistas
 
@@ -143,6 +165,8 @@ Las vistas se encuentran en `frontend/src/views/` y representan las páginas de 
 - `HomeView.vue`: Página principal
 - `auth/LoginView.vue`: Página de inicio de sesión
 - `auth/RegisterView.vue`: Página de registro
+- `admin/UsersView.vue`: Gestión de usuarios
+- `admin/RolesView.vue`: Gestión de roles y permisos
 - `pilot/CreatePilotView.vue`: Página de creación de piloto
 - `universe/UniverseView.vue`: Página del universo
 - `ships/ShipsView.vue`: Página de naves
@@ -164,5 +188,36 @@ Las vistas se encuentran en `frontend/src/views/` y representan las páginas de 
 - **Modelos**: Singular, primera letra mayúscula (ej. `Pilot`)
 - **Migraciones**: Plural, snake_case (ej. `create_pilots_table`)
 - **Componentes Vue**: PascalCase (ej. `PilotCard.vue`)
-- **Archivos de servicio**: camelCase, sufijo `Service` (ej. `pilotService.ts`)
-- **Stores**: camelCase (ej. `pilot.ts`)
+- **Archivos de servicio**: camelCase, sufijo `Service` (ej. `pilotService.js`)
+- **Stores**: camelCase (ej. `pilot.js`)
+
+## Sistema de Autenticación y Autorización
+
+El sistema de autenticación y autorización de Vaxav utiliza Laravel Sanctum para la autenticación basada en tokens y un sistema personalizado de roles y permisos para la autorización.
+
+### Componentes de Autenticación
+
+- **Backend**:
+  - `AuthController.php`: Maneja login, logout y obtención del usuario actual
+  - `User.php`: Modelo de usuario con relaciones a roles
+  - Middleware `auth:sanctum`: Protege rutas que requieren autenticación
+
+- **Frontend**:
+  - `auth.js`: Store que gestiona el estado de autenticación
+  - `api.js`: Configura Axios para incluir el token en las solicitudes
+  - `LoginView.vue`: Interfaz de inicio de sesión
+  - `RegisterView.vue`: Interfaz de registro
+
+### Componentes de Autorización
+
+- **Backend**:
+  - `Role.php`: Modelo que representa roles de usuario
+  - `Permission.php`: Modelo que representa permisos específicos
+  - `CheckPermission.php`: Middleware que verifica permisos
+  - `RoleController.php`: Gestiona roles y permisos
+
+- **Frontend**:
+  - `RolesView.vue`: Interfaz para gestionar roles
+  - `UsersView.vue`: Interfaz para asignar roles a usuarios
+
+Para más detalles sobre el sistema de autenticación y autorización, consulte la [documentación específica](../auth/README.md).

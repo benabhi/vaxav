@@ -1,5 +1,7 @@
 # Autenticación en Vaxav
 
+> **Nota**: Esta documentación ha sido reemplazada por una versión más completa y actualizada. Por favor, consulte la [nueva documentación de autenticación y autorización](../auth/README.md).
+
 Este documento describe el sistema de autenticación utilizado en Vaxav, incluyendo los endpoints disponibles y el flujo de autenticación.
 
 ## Tecnología
@@ -216,7 +218,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-  
+
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
     next({ name: 'login' });
   } else {

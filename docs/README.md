@@ -17,9 +17,13 @@ Bienvenido a la documentación de Vaxav, un MMO espacial en navegador web. Esta 
 - [Frontend (Vue.js)](./architecture/frontend.md) - Detalles sobre el frontend
 - [Base de Datos](./architecture/database.md) - Esquema y relaciones de la base de datos
 
-### API
+### API y Autenticación
 
-- [Autenticación](./api/authentication.md) - Endpoints y flujos de autenticación
+- [Autenticación y Autorización](./auth/README.md) - Sistema completo de autenticación y autorización
+  - [Roles y Permisos](./auth/roles-permissions.md) - Sistema de roles y permisos
+  - [Implementación Frontend](./auth/frontend-implementation.md) - Autenticación en el frontend
+  - [Implementación Backend](./auth/backend-implementation.md) - Autenticación en el backend
+  - [Mejoras Realizadas](./auth/improvements.md) - Mejoras en el sistema de autenticación
 - [Pilotos](./api/pilots.md) - Endpoints relacionados con pilotos
 - [Universo](./api/universe.md) - Endpoints relacionados con el universo
 - [Naves](./api/ships.md) - Endpoints relacionados con naves
