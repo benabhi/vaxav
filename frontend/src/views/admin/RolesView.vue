@@ -32,14 +32,21 @@
 
     <template #cell(permissions)="{ item }">
       <div class="flex flex-wrap gap-1">
-        <span v-for="permission in item.permissions.slice(0, 3)" :key="permission.id"
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+        <BaseBadge
+          v-for="permission in item.permissions.slice(0, 3)"
+          :key="permission.id"
+          variant="blue"
+          size="sm"
+        >
           {{ permission.name }}
-        </span>
-        <span v-if="item.permissions.length > 3"
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+        </BaseBadge>
+        <BaseBadge
+          v-if="item.permissions.length > 3"
+          variant="gray"
+          size="sm"
+        >
           +{{ item.permissions.length - 3 }} más
-        </span>
+        </BaseBadge>
       </div>
     </template>
 
@@ -167,6 +174,7 @@ import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
+import BaseBadge from '@/components/ui/feedback/BaseBadge.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import { useRoles } from '@/composables/useRoles';

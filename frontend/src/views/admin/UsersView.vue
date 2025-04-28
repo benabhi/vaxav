@@ -61,18 +61,22 @@
     </template>
 
     <template #cell(roles)="{ item }">
-      <div v-for="role in item.roles" :key="role.id"
-        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
-        :class="roleClasses[role.slug] || roleClasses.default">
-        {{ role.name }}
+      <div class="flex flex-wrap gap-1">
+        <BaseBadge
+          v-for="role in item.roles"
+          :key="role.id"
+          :variant="roleBadgeVariants[role.slug] || 'gray'"
+          class="mr-1"
+        >
+          {{ role.name }}
+        </BaseBadge>
       </div>
     </template>
 
     <template #cell(status)="{ item }">
-      <span
-        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+      <BaseBadge variant="success">
         Activo
-      </span>
+      </BaseBadge>
     </template>
 
     <template #cell(created_at)="{ item }">
@@ -206,6 +210,7 @@ import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
+import BaseBadge from '@/components/ui/feedback/BaseBadge.vue';
 import { useNotificationStore } from '@/stores/notification';
 import { useUsers } from '@/composables/useUsers';
 
@@ -268,13 +273,13 @@ const availableRoles = ref([
   { id: 4, name: 'Usuario', slug: 'user' }
 ]);
 
-// Role badge classes
-const roleClasses = {
-  superadmin: 'bg-purple-100 text-purple-800',
-  admin: 'bg-blue-100 text-blue-800',
-  moderator: 'bg-green-100 text-green-800',
-  user: 'bg-gray-100 text-gray-800',
-  default: 'bg-gray-100 text-gray-800'
+// Role badge variants
+const roleBadgeVariants = {
+  superadmin: 'purple',
+  admin: 'blue',
+  moderator: 'green',
+  user: 'gray',
+  default: 'gray'
 };
 
 // Handle role change

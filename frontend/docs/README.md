@@ -22,6 +22,7 @@ Esta carpeta contiene la documentación de los componentes, composables y otras 
 #### Feedback
 - [BaseAlert](./components/BaseAlert.md)
 - [BaseNotification](./components/BaseNotification.md)
+- [BaseBadge](./components/BaseBadge.md)
 
 #### Botones
 - [BaseButton](./components/BaseButton.md)
