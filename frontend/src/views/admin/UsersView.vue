@@ -140,61 +140,15 @@
       </div>
 
       <!-- Pagination -->
-      <div class="mt-4 flex items-center justify-between">
-        <div class="flex-1 flex justify-between sm:hidden">
-          <button
-            class="relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
-            Anterior
-          </button>
-          <button
-            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600">
-            Siguiente
-          </button>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-gray-300">
-              Mostrando <span class="font-medium">1</span> a <span class="font-medium">10</span> de <span
-                class="font-medium">{{ totalUsers }}</span> usuarios
-            </p>
-          </div>
-          <div>
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-              <button
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600">
-                <span class="sr-only">Anterior</span>
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                  aria-hidden="true">
-                  <path fill-rule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clip-rule="evenodd" />
-                </svg>
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600">
-                1
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600">
-                2
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600">
-                3
-              </button>
-              <button
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600">
-                <span class="sr-only">Siguiente</span>
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                  aria-hidden="true">
-                  <path fill-rule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clip-rule="evenodd" />
-                </svg>
-              </button>
-            </nav>
-          </div>
-        </div>
+      <div class="mt-4">
+        <BasePaginator
+          :current-page="pagination.currentPage"
+          :total-pages="pagination.totalPages"
+          :total="totalUsers"
+          :per-page="pagination.perPage"
+          item-name="usuarios"
+          @page-change="changePage"
+        />
       </div>
     </div>
 
@@ -317,6 +271,7 @@ import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import BaseTable from '@/components/ui/tables/BaseTable.vue';
+import BasePaginator from '@/components/ui/pagination/BasePaginator.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
@@ -336,6 +291,13 @@ const columns = [
   { key: 'status', label: 'Estado' },
   { key: 'created_at', label: 'Fecha de registro' }
 ];
+
+// Pagination
+const pagination = reactive({
+  currentPage: 1,
+  totalPages: 1,
+  perPage: 10
+});
 
 // Filters
 const filters = reactive({
@@ -387,25 +349,43 @@ const roleClasses = {
 const fetchUsers = async () => {
   loading.value = true;
   try {
-    // Call the API with filters
-    const response = await api.get('/admin/users', { params: filters });
+    // Call the API with filters and pagination
+    const params = {
+      ...filters,
+      page: pagination.currentPage,
+      per_page: pagination.perPage
+    };
+
+    const response = await api.get('/admin/users', { params });
     console.log('Users fetched successfully:', response.data);
 
     if (response.data && response.data.data) {
       users.value = response.data.data;
       totalUsers.value = response.data.total || response.data.data.length;
+
+      // Update pagination
+      pagination.totalPages = response.data.last_page || Math.ceil(totalUsers.value / pagination.perPage);
+      pagination.currentPage = response.data.current_page || pagination.currentPage;
     } else {
       console.error('Unexpected API response format:', response.data);
       users.value = [];
       totalUsers.value = 0;
+      pagination.totalPages = 1;
     }
   } catch (error) {
     console.error('Error fetching users:', error);
     users.value = [];
     totalUsers.value = 0;
+    pagination.totalPages = 1;
   } finally {
     loading.value = false;
   }
+};
+
+// Change page
+const changePage = (page) => {
+  pagination.currentPage = page;
+  fetchUsers();
 };
 
 // Apply filters
