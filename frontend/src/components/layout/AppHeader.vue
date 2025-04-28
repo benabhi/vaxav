@@ -9,6 +9,7 @@
               <BaseNavLink
                 to="/"
                 label="Dashboard"
+                :horizontal="true"
                 activeClass="bg-gray-700 text-blue-400"
                 inactiveClass="text-gray-300 hover:text-white"
               />
@@ -17,6 +18,7 @@
               <BaseNavLink
                 to="/universe"
                 label="Universo"
+                :horizontal="true"
                 activeClass="bg-gray-700 text-blue-400"
                 inactiveClass="text-gray-300 hover:text-white"
               />
@@ -25,6 +27,7 @@
               <BaseNavLink
                 to="/market"
                 label="Mercado"
+                :horizontal="true"
                 activeClass="bg-gray-700 text-blue-400"
                 inactiveClass="text-gray-300 hover:text-white"
               />
@@ -33,6 +36,7 @@
               <BaseNavLink
                 to="/ships"
                 label="Naves"
+                :horizontal="true"
                 activeClass="bg-gray-700 text-blue-400"
                 inactiveClass="text-gray-300 hover:text-white"
               />
@@ -41,6 +45,7 @@
               <BaseNavLink
                 to="/admin"
                 label="Administración"
+                :horizontal="true"
                 activeClass="bg-gray-700 text-blue-400"
                 inactiveClass="text-gray-300 hover:text-white"
               />
@@ -55,7 +60,7 @@
             <span class="mr-2">{{ user?.name }}</span>
             <span class="text-blue-400">{{ credits }} ISK</span>
           </div>
-          <BaseButton variant="secondary" size="sm" @click="logout">
+          <BaseButton variant="secondary" size="md" @click="logout">
             Cerrar Sesión
           </BaseButton>
         </template>

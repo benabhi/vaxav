@@ -84,18 +84,18 @@ defineEmits(['click']);
 const buttonClasses = computed(() => {
   const baseClasses = 'relative inline-flex items-center justify-center font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors';
 
-  // Size classes
+  // Size classes - ajustados para coincidir con la altura de los inputs (con bordes)
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
+    md: 'px-4 py-[9px] text-base', // Ajustado para coincidir con la altura de BaseInput (38px)
     lg: 'px-5 py-2.5 text-lg',
     xl: 'px-6 py-3 text-xl'
   };
 
-  // Icon-only button adjustments
+  // Icon-only button adjustments - ajustados para coincidir con la altura de los inputs
   const iconClasses = props.icon ? {
     sm: 'p-1.5',
-    md: 'p-2',
+    md: 'p-[9px]', // Ajustado para coincidir con la altura de BaseInput (38px)
     lg: 'p-2.5',
     xl: 'p-3'
   } : {};

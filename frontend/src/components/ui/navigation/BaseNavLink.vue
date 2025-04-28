@@ -3,7 +3,8 @@
     :to="to"
     :class="[
       isActive ? activeClass : inactiveClass,
-      'block px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+      'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+      horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
       className
     ]"
   >
@@ -37,6 +38,10 @@ const props = defineProps({
     default: null
   },
   exact: {
+    type: Boolean,
+    default: false
+  },
+  horizontal: {
     type: Boolean,
     default: false
   },

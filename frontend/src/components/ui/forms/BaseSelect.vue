@@ -181,11 +181,11 @@ const emit = defineEmits(['update:modelValue', 'focus', 'blur']);
 // Generate a unique ID if not provided
 const selectId = computed(() => props.id || `select-${Math.random().toString(36).substring(2, 9)}`);
 
-// Size classes
+// Size classes - altura estándar para todos los componentes
 const sizeClasses = {
-  sm: 'py-1.5 pl-3 pr-10 text-sm',
-  md: 'py-2 pl-3 pr-10 text-base',
-  lg: 'py-3 pl-3 pr-10 text-lg'
+  sm: 'py-1.5 pl-3 pr-10 text-sm',     // ~32px de altura total con bordes
+  md: 'py-[9px] pl-3 pr-10 text-base', // 38px de altura total con bordes (2px de bordes + 18px de texto + 18px de padding)
+  lg: 'py-2.5 pl-3 pr-10 text-lg'      // ~42px de altura total con bordes
 };
 
 // Helper functions for options

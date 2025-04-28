@@ -29,7 +29,6 @@
           v-if="showReset"
           variant="secondary"
           size="md"
-          class="h-[36px]"
           @click="resetFilters"
         >
           {{ resetLabel }}
@@ -38,7 +37,6 @@
           v-if="showApply"
           variant="primary"
           size="md"
-          class="h-[36px]"
           @click="applyFilters"
         >
           {{ applyLabel }}
