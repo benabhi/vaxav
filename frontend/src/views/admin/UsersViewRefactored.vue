@@ -197,7 +197,7 @@
   </AdminCrudView>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminCrudView from '@/components/admin/AdminCrudView.vue';
@@ -374,7 +374,7 @@ const deleteUser = async () => {
 
   try {
     const success = await deleteUserApi(userToDelete.value.id);
-
+    
     if (success) {
       closeDeleteModal();
     }

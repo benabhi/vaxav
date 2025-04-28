@@ -1,0 +1,4 @@
+- [ ] Quitar css innecesario
+- [ ] Crear componente BaseCard (mirar como se ven los formularios de nuvo usuario o rol)
+- [ ] Editar en la vista de usuarios y roles sigue siendo un modal.
+- [ ] Cambiar AdminCrudView a otro nombre?
