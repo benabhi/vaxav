@@ -29,7 +29,7 @@ Para iniciar los servicios de Vaxav con PM2:
 ```bash
 # Desde la raíz del proyecto
 # Inicia el servidor de Laravel
-pm2 start "cd api && php artisan serve --host=0.0.0.0 --port=8000" --name vaxav-api
+pm2 start "cd backend && php artisan serve --host=0.0.0.0 --port=8000" --name vaxav-backend
 
 # Inicia el servidor de Vue.js
 pm2 start "cd frontend && yarn dev --host 0.0.0.0 --port 5173" --name vaxav-frontend
@@ -62,7 +62,7 @@ pm2 logs
 Para ver los logs de un servicio específico:
 
 ```bash
-pm2 logs vaxav-api
+pm2 logs vaxav-backend
 pm2 logs vaxav-frontend
 ```
 
@@ -83,7 +83,7 @@ pm2 restart all
 Para reiniciar un servicio específico:
 
 ```bash
-pm2 restart vaxav-api
+pm2 restart vaxav-backend
 pm2 restart vaxav-frontend
 ```
 
@@ -98,7 +98,7 @@ pm2 stop all
 Para detener un servicio específico:
 
 ```bash
-pm2 stop vaxav-api
+pm2 stop vaxav-backend
 pm2 stop vaxav-frontend
 ```
 
@@ -113,7 +113,7 @@ pm2 delete all
 Para eliminar un servicio específico:
 
 ```bash
-pm2 delete vaxav-api
+pm2 delete vaxav-backend
 pm2 delete vaxav-frontend
 ```
 
@@ -125,8 +125,8 @@ Para una gestión más avanzada, puedes crear un archivo `ecosystem.config.js` e
 module.exports = {
   apps: [
     {
-      name: 'vaxav-api',
-      cwd: './api',
+      name: 'vaxav-backend',
+      cwd: './backend',
       script: 'php',
       args: 'artisan serve --host=0.0.0.0 --port=8000',
       watch: false,
@@ -209,7 +209,7 @@ Si recibes un error de "comando no encontrado", puedes usar la ruta completa:
 Si un servicio falla al iniciar, verifica los logs:
 
 ```bash
-pm2 logs vaxav-api
+pm2 logs vaxav-backend
 ```
 
 ### Reinicio de Servicios
@@ -217,8 +217,8 @@ pm2 logs vaxav-api
 Si necesitas reiniciar un servicio con una configuración diferente:
 
 ```bash
-pm2 delete vaxav-api
-pm2 start "cd api && php artisan serve --host=0.0.0.0 --port=8000" --name vaxav-api
+pm2 delete vaxav-backend
+pm2 start "cd backend && php artisan serve --host=0.0.0.0 --port=8000" --name vaxav-backend
 ```
 
 ### Actualización de PM2

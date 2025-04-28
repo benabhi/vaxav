@@ -18,7 +18,7 @@ Esta guía aborda los problemas más comunes que puedes encontrar al trabajar co
    ```bash
    # En Ubuntu/Debian
    sudo apt install php8.3-mbstring php8.3-xml php8.3-curl php8.3-sqlite3
-   
+
    # En macOS con Homebrew
    brew install php
    ```
@@ -42,7 +42,7 @@ Esta guía aborda los problemas más comunes que puedes encontrar al trabajar co
    ```bash
    # Para yarn
    yarn cache clean
-   
+
    # Para npm
    npm cache clean --force
    ```
@@ -64,7 +64,7 @@ Esta guía aborda los problemas más comunes que puedes encontrar al trabajar co
    ```bash
    # En Linux/macOS
    lsof -i :8000
-   
+
    # En Windows
    netstat -ano | findstr :8000
    ```
@@ -88,7 +88,7 @@ Esta guía aborda los problemas más comunes que puedes encontrar al trabajar co
    ```bash
    # En Linux/macOS
    lsof -i :5173
-   
+
    # En Windows
    netstat -ano | findstr :5173
    ```
@@ -108,7 +108,7 @@ Esta guía aborda los problemas más comunes que puedes encontrar al trabajar co
 **Problema:** Errores de CORS al intentar comunicarse con la API desde el frontend.
 
 **Soluciones:**
-1. Verifica la configuración de CORS en `/api/config/cors.php`:
+1. Verifica la configuración de CORS en `/backend/config/cors.php`:
    ```php
    'allowed_origins' => [
        'http://localhost:5173',

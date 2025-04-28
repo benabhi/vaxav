@@ -14,7 +14,7 @@ Para mantener la coherencia visual y estructural en toda la aplicación, consult
 
 El proyecto está dividido en dos partes principales:
 
-- **Backend (API)**: Desarrollado con Laravel 12 y PHP 8.3
+- **Backend**: Desarrollado con Laravel 12 y PHP 8.3
 - **Frontend**: Desarrollado con Vue.js 3, Pinia, Axios y Tailwind CSS
 
 Para más detalles sobre la estructura del proyecto, consulta la [documentación de estructura del proyecto](./docs/architecture/project-structure.md).
@@ -30,10 +30,10 @@ Para más detalles sobre la estructura del proyecto, consulta la [documentación
 
 Para instrucciones detalladas de instalación, consulta la [guía de instalación](./docs/installation.md).
 
-### Backend (Laravel API)
+### Backend (Laravel)
 
 ```bash
-cd api
+cd backend
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -61,7 +61,7 @@ Para instrucciones detalladas sobre cómo poner en marcha el proyecto, consulta:
 npm install -g pm2
 
 # Iniciar el servidor de Laravel
-pm2 start "cd api && php artisan serve --host=0.0.0.0 --port=8000" --name vaxav-api
+pm2 start "cd backend && php artisan serve --host=0.0.0.0 --port=8000" --name vaxav-backend
 
 # Iniciar el servidor de Vue.js
 pm2 start "cd frontend && yarn dev --host 0.0.0.0 --port 5173" --name vaxav-frontend
@@ -91,7 +91,7 @@ El proyecto incluye tests automatizados tanto para el frontend como para el back
 ### Ejecutar Tests del Backend
 
 ```bash
-cd api
+cd backend
 php artisan test
 ```
 

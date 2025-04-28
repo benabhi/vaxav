@@ -19,11 +19,11 @@ git clone https://github.com/tu-usuario/vaxav.git
 cd vaxav
 ```
 
-## Instalación del Backend (Laravel API)
+## Instalación del Backend (Laravel)
 
-1. Navega al directorio `/api`:
+1. Navega al directorio `/backend`:
    ```bash
-   cd api
+   cd backend
    ```
 
 2. Instala las dependencias de PHP:
@@ -44,7 +44,7 @@ cd vaxav
 5. Configura la base de datos en el archivo `.env`:
    ```
    DB_CONNECTION=sqlite
-   DB_DATABASE=/ruta/absoluta/a/tu/proyecto/api/database/database.sqlite
+   DB_DATABASE=/ruta/absoluta/a/tu/proyecto/backend/database/database.sqlite
    ```
 
 6. Crea el archivo de base de datos SQLite:
@@ -80,7 +80,7 @@ cd vaxav
 
 Para que el frontend pueda comunicarse con el backend, necesitas configurar CORS correctamente:
 
-1. Abre el archivo `/api/config/cors.php`
+1. Abre el archivo `/backend/config/cors.php`
 2. Asegúrate de que los orígenes permitidos incluyan tu URL de desarrollo:
    ```php
    'allowed_origins' => [
@@ -97,7 +97,7 @@ Para verificar que todo está instalado correctamente:
 
 1. Inicia el servidor de Laravel:
    ```bash
-   cd api
+   cd backend
    php artisan serve
    ```
 

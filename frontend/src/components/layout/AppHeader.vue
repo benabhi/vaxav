@@ -66,12 +66,12 @@
         </template>
         <template v-else>
           <RouterLink to="/login" custom v-slot="{ navigate }">
-            <BaseButton variant="secondary" size="sm" @click="navigate">
+            <BaseButton variant="secondary" size="md" @click="navigate">
               Iniciar Sesión
             </BaseButton>
           </RouterLink>
           <RouterLink to="/register" custom v-slot="{ navigate }">
-            <BaseButton variant="primary" size="sm" @click="navigate">
+            <BaseButton variant="primary" size="md" @click="navigate">
               Registrarse
             </BaseButton>
           </RouterLink>

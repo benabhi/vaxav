@@ -13,17 +13,17 @@ El proyecto Vaxav está organizado en dos componentes principales:
 
 ```
 vaxav/
-├── api/                # Backend Laravel
+├── backend/            # Backend Laravel
 ├── frontend/           # Frontend Vue.js
 ├── docs/               # Documentación del proyecto
 ├── ecosystem.config.js # Configuración de PM2 (opcional)
 └── README.md           # Documentación general
 ```
 
-## Estructura del Backend (Laravel API)
+## Estructura del Backend (Laravel)
 
 ```
-api/
+backend/
 ├── app/                # Código principal de la aplicación
 │   ├── Console/        # Comandos de Artisan
 │   ├── Exceptions/     # Manejadores de excepciones
@@ -60,7 +60,7 @@ api/
 
 #### Controladores
 
-Los controladores se encuentran en `api/app/Http/Controllers/` y manejan las solicitudes HTTP. Los principales controladores son:
+Los controladores se encuentran en `backend/app/Http/Controllers/` y manejan las solicitudes HTTP. Los principales controladores son:
 
 - `AuthController.php`: Maneja la autenticación (login, registro, logout)
 - `Admin/UserController.php`: Gestiona los usuarios (CRUD)
@@ -72,13 +72,13 @@ Los controladores se encuentran en `api/app/Http/Controllers/` y manejan las sol
 
 #### Middleware
 
-Los middleware se encuentran en `api/app/Http/Middleware/` y filtran las solicitudes HTTP:
+Los middleware se encuentran en `backend/app/Http/Middleware/` y filtran las solicitudes HTTP:
 
 - `CheckPermission.php`: Verifica si el usuario tiene el permiso requerido para acceder a una ruta
 
 #### Modelos
 
-Los modelos se encuentran en `api/app/Models/` y representan las entidades de la base de datos:
+Los modelos se encuentran en `backend/app/Models/` y representan las entidades de la base de datos:
 
 - `User.php`: Usuarios del sistema
 - `Role.php`: Roles de usuario
@@ -92,7 +92,7 @@ Los modelos se encuentran en `api/app/Models/` y representan las entidades de la
 
 #### Rutas
 
-Las rutas de la API se definen en `api/routes/api.php` y están organizadas por grupos funcionales.
+Las rutas de la API se definen en `backend/routes/api.php` y están organizadas por grupos funcionales.
 
 ## Estructura del Frontend (Vue.js)
 

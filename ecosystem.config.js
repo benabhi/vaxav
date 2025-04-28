@@ -1,8 +1,8 @@
 module.exports = {
   apps: [
     {
-      name: 'vaxav-api',
-      cwd: './api',
+      name: 'vaxav-backend',
+      cwd: './backend',
       script: 'php',
       args: 'artisan serve --host=0.0.0.0 --port=8000',
       watch: false,
