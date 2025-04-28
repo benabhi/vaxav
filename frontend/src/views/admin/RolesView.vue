@@ -47,6 +47,7 @@
         @page-change="changePage"
         @per-page-change="handlePerPageChange"
         @filter-change="handleFilterChange"
+        @sort-change="handleSortChange"
         @update:filters="handleFilterChange"
       >
         <template #cell(name)="{ item }">
@@ -230,7 +231,9 @@ const pagination = reactive({
 
 // Filters
 const filters = reactive({
-  search: ''
+  search: '',
+  sort_field: 'name',
+  sort_direction: 'asc'
 });
 
 // Role form
@@ -351,6 +354,13 @@ const handleFilterChange = (newFilters) => {
 const handlePerPageChange = (newPerPage) => {
   pagination.perPage = newPerPage;
   pagination.currentPage = 1; // Reset to first page
+  fetchRoles();
+};
+
+// Handle sort change
+const handleSortChange = (sortData) => {
+  filters.sort_field = sortData.key;
+  filters.sort_direction = sortData.order;
   fetchRoles();
 };
 

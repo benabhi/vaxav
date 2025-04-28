@@ -16,7 +16,7 @@
                 ]"
                 @click="column.sortable ? $emit('sort', column.key) : null"
               >
-                <div class="flex items-center">
+                <div class="flex items-center group">
                   <span>{{ column.label }}</span>
                   <span v-if="column.sortable" class="ml-1">
                     <template v-if="sortKey === column.key">
@@ -27,7 +27,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                       </svg>
                     </template>
-                    <svg v-else class="w-4 h-4 opacity-0 group-hover:opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg v-else class="w-4 h-4 opacity-30 group-hover:opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4"></path>
                     </svg>
                   </span>
@@ -166,12 +166,12 @@ const emit = defineEmits(['sort', 'row-click']);
  */
 const getValue = (item: any, key: string) => {
   if (!item || !key) return '';
-  
+
   // Handle nested keys (e.g. 'user.name')
   if (key.includes('.')) {
     return key.split('.').reduce((obj, k) => (obj && obj[k] !== undefined) ? obj[k] : '', item);
   }
-  
+
   return item[key] !== undefined ? item[key] : '';
 };
 </script>

@@ -354,9 +354,26 @@ const handleSort = (key: string) => {
     sortOrder.value = 'asc';
   }
 
+  // Update filters with sort information
+  const updatedFilters = {
+    ...localFilters,
+    sort_field: sortKey.value,
+    sort_direction: sortOrder.value
+  };
+
+  // Update local filters
+  Object.keys(updatedFilters).forEach((key: string) => {
+    if (key in localFilters) {
+      // @ts-ignore - We know these keys exist in localFilters
+      localFilters[key] = updatedFilters[key];
+    }
+  });
+
   emit('update:sortKey', sortKey.value);
   emit('update:sortOrder', sortOrder.value);
   emit('sort-change', { key: sortKey.value, order: sortOrder.value });
+  emit('update:filters', updatedFilters);
+  emit('filter-change', updatedFilters);
 };
 
 // Handle page change
@@ -402,5 +419,16 @@ onMounted(() => {
 
   // Set initial per page
   localPerPage.value = props.perPage;
+
+  // Initialize sort filters if they don't exist
+  if (!localFilters.sort_field) {
+    // @ts-ignore - Adding new properties to reactive object
+    localFilters.sort_field = sortKey.value || 'name';
+  }
+
+  if (!localFilters.sort_direction) {
+    // @ts-ignore - Adding new properties to reactive object
+    localFilters.sort_direction = sortOrder.value || 'asc';
+  }
 });
 </script>

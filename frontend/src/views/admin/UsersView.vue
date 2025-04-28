@@ -46,6 +46,7 @@
         @page-change="changePage"
         @per-page-change="handlePerPageChange"
         @filter-change="handleFilterChange"
+        @sort-change="handleSortChange"
         @create="openCreateUserModal"
       >
         <!-- Custom filters -->
@@ -249,10 +250,10 @@ const loading = ref(true);
 
 // Table columns
 const columns = [
-  { key: 'user', label: 'Usuario' },
+  { key: 'name', label: 'Usuario', sortable: true },
   { key: 'roles', label: 'Roles' },
   { key: 'status', label: 'Estado' },
-  { key: 'created_at', label: 'Fecha de registro' }
+  { key: 'created_at', label: 'Fecha de registro', sortable: true }
 ];
 
 // Pagination
@@ -265,7 +266,9 @@ const pagination = reactive({
 // Filters
 const filters = reactive({
   search: '',
-  role: ''
+  role: '',
+  sort_field: 'name',
+  sort_direction: 'asc'
 });
 
 // User form
@@ -374,6 +377,13 @@ const handleRoleChange = (value) => {
 const handlePerPageChange = (newPerPage) => {
   pagination.perPage = newPerPage;
   pagination.currentPage = 1; // Reset to first page
+  fetchUsers();
+};
+
+// Handle sort change
+const handleSortChange = (sortData) => {
+  filters.sort_field = sortData.key;
+  filters.sort_direction = sortData.order;
   fetchUsers();
 };
 
