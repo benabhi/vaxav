@@ -3,7 +3,7 @@
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center">
         <h1 class="text-xl font-bold text-blue-400">VAXAV</h1>
-        <nav class="ml-8 hidden md:block">
+        <nav v-if="isLoggedIn" class="ml-8 hidden md:block">
           <ul class="flex space-x-6">
             <li>
               <RouterLink to="/" class="text-gray-300 hover:text-white transition-colors">
@@ -63,11 +63,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 
+const router = useRouter();
 const authStore = useAuthStore();
 const pilotStore = usePilotStore();
 
@@ -78,5 +79,6 @@ const isModerator = computed(() => authStore.isModerator);
 
 const logout = async () => {
   await authStore.logout();
+  router.push('/login');
 };
 </script>
