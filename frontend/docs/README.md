@@ -12,6 +12,7 @@ Esta carpeta contiene la documentación de los componentes, composables y otras 
 - [BaseCheckbox](./components/BaseCheckbox.md)
 - [BaseTextarea](./components/BaseTextarea.md)
 - [BaseRange](./components/BaseRange.md)
+- [BaseForm](./components/BaseForm.md)
 
 #### Tablas
 - [BaseTable](./components/BaseTable.md)
@@ -33,6 +34,7 @@ Esta carpeta contiene la documentación de los componentes, composables y otras 
 
 ### Componentes de Layout
 - [AdminLayout](./components/AdminLayout.md)
+- [BaseCard](./components/BaseCard.md)
 
 ## Composables
 

@@ -10,100 +10,86 @@
       />
     </template>
 
-    <div class="py-6">
-      <!-- Form Card -->
-      <div class="max-w-3xl mx-auto bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-700">
-          <h2 class="text-xl font-bold text-white">Crear Nuevo Usuario</h2>
-        </div>
-
-        <div class="p-6">
-          <form @submit.prevent="handleSubmit">
-            <!-- Name -->
-            <div class="mb-4">
-              <BaseInput
-                id="name"
-                v-model="values.name"
-                label="Nombre"
-                type="text"
-                required
-                :error="touched.name && errors.name ? errors.name : ''"
-                @blur="() => handleBlur('name')"
-                labelClass="text-lg font-bold text-white"
-              />
-            </div>
-
-            <!-- Email -->
-            <div class="mb-4">
-              <BaseInput
-                id="email"
-                v-model="values.email"
-                label="Correo electrónico"
-                type="email"
-                required
-                :error="touched.email && errors.email ? errors.email : ''"
-                @blur="() => handleBlur('email')"
-                labelClass="text-lg font-bold text-white"
-              />
-            </div>
-
-            <!-- Password -->
-            <div class="mb-4">
-              <BaseInput
-                id="password"
-                v-model="values.password"
-                label="Contraseña"
-                type="password"
-                required
-                :error="touched.password && errors.password ? errors.password : ''"
-                @blur="() => handleBlur('password')"
-                labelClass="text-lg font-bold text-white"
-              />
-            </div>
-
-            <!-- Password Confirmation -->
-            <div class="mb-4">
-              <BaseInput
-                id="password_confirmation"
-                v-model="values.password_confirmation"
-                label="Confirmar contraseña"
-                type="password"
-                required
-                :error="touched.password_confirmation && errors.password_confirmation ? errors.password_confirmation : ''"
-                @blur="() => handleBlur('password_confirmation')"
-                labelClass="text-lg font-bold text-white"
-              />
-            </div>
-
-            <!-- Roles -->
-            <div class="mb-6">
-              <label class="block text-lg font-bold text-white mb-2">Roles</label>
-              <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-40 overflow-y-auto">
-                <div v-for="role in availableRoles" :key="role.id" class="mb-2 last:mb-0">
-                  <BaseCheckbox
-                    :id="`role-${role.id}`"
-                    :value="role.id"
-                    v-model="values.roles"
-                    :label="role.name"
-                    @blur="() => handleBlur('roles')"
-                  />
-                </div>
-              </div>
-              <p v-if="touched.roles && errors.roles" class="mt-1 text-sm text-red-500">{{ errors.roles }}</p>
-            </div>
-
-            <div class="flex space-x-3">
-              <BaseButton type="submit" variant="primary" :full-width="false" :loading="submitting">
-                Crear usuario
-              </BaseButton>
-              <BaseButton type="button" variant="secondary" :full-width="false" @click="goBack">
-                Cancelar
-              </BaseButton>
-            </div>
-          </form>
-        </div>
+    <BaseForm
+      title="Crear Nuevo Usuario"
+      submitText="Crear usuario"
+      :loading="submitting"
+      @submit="handleSubmit"
+      @cancel="goBack"
+    >
+      <!-- Name -->
+      <div class="mb-4">
+        <BaseInput
+          id="name"
+          v-model="values.name"
+          label="Nombre"
+          type="text"
+          required
+          :error="touched.name && errors.name ? errors.name : ''"
+          @blur="() => handleBlur('name')"
+          labelClass="text-lg font-bold text-white"
+        />
       </div>
-    </div>
+
+      <!-- Email -->
+      <div class="mb-4">
+        <BaseInput
+          id="email"
+          v-model="values.email"
+          label="Correo electrónico"
+          type="email"
+          required
+          :error="touched.email && errors.email ? errors.email : ''"
+          @blur="() => handleBlur('email')"
+          labelClass="text-lg font-bold text-white"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="mb-4">
+        <BaseInput
+          id="password"
+          v-model="values.password"
+          label="Contraseña"
+          type="password"
+          required
+          :error="touched.password && errors.password ? errors.password : ''"
+          @blur="() => handleBlur('password')"
+          labelClass="text-lg font-bold text-white"
+        />
+      </div>
+
+      <!-- Password Confirmation -->
+      <div class="mb-4">
+        <BaseInput
+          id="password_confirmation"
+          v-model="values.password_confirmation"
+          label="Confirmar contraseña"
+          type="password"
+          required
+          :error="touched.password_confirmation && errors.password_confirmation ? errors.password_confirmation : ''"
+          @blur="() => handleBlur('password_confirmation')"
+          labelClass="text-lg font-bold text-white"
+        />
+      </div>
+
+      <!-- Roles -->
+      <div class="mb-6">
+        <label class="block text-lg font-bold text-white mb-2">Roles</label>
+        <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-40 overflow-y-auto">
+          <div v-for="role in availableRoles" :key="role.id" class="mb-2 last:mb-0">
+            <BaseCheckbox
+              :id="`role-${role.id}`"
+              :value="role.id"
+              v-model="values.roles"
+              :label="role.name"
+              @blur="() => handleBlur('roles')"
+            />
+          </div>
+        </div>
+        <p v-if="touched.roles && errors.roles" class="mt-1 text-sm text-red-500">{{ errors.roles }}</p>
+      </div>
+    </BaseForm>
   </AdminLayout>
 </template>
 
@@ -111,7 +97,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseForm from '@/components/ui/forms/BaseForm.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseBreadcrumb from '@/components/ui/navigation/BaseBreadcrumb.vue';

@@ -3,6 +3,7 @@ import { onMounted, computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
+import BaseCard from '@/components/ui/layout/BaseCard.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 
 const authStore = useAuthStore();
@@ -27,34 +28,35 @@ onMounted(async () => {
       </p>
     </div>
 
-    <div v-if="!hasPilot && isLoggedIn" class="card max-w-md mx-auto p-6">
-      <h2 class="text-2xl font-bold mb-4">Crea tu Piloto</h2>
+    <BaseCard
+      v-if="!hasPilot && isLoggedIn"
+      title="Crea tu Piloto"
+      max-width="md"
+      centered
+    >
       <p class="mb-4 text-gray-300">Para comenzar tu aventura en la galaxia, necesitas crear un piloto.</p>
       <RouterLink to="/create-pilot" custom v-slot="{ navigate }">
         <BaseButton variant="primary" :full-width="true" @click="navigate">
           Crear Piloto
         </BaseButton>
       </RouterLink>
-    </div>
+    </BaseCard>
 
     <div v-else-if="hasPilot" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="card">
-        <h2 class="text-xl font-bold mb-3 text-blue-400">Estado del Piloto</h2>
+      <BaseCard title="Estado del Piloto" has-border>
         <div v-if="pilotStore.loading">Cargando...</div>
         <div v-else>
           <p><span class="text-gray-400">Nombre:</span> {{ pilotStore.pilotName }}</p>
           <p><span class="text-gray-400">Raza:</span> {{ pilotStore.pilotRace }}</p>
           <p><span class="text-gray-400">Créditos:</span> {{ pilotStore.pilotCredits.toLocaleString() }} ISK</p>
         </div>
-      </div>
+      </BaseCard>
 
-      <div class="card">
-        <h2 class="text-xl font-bold mb-3 text-blue-400">Actividad Reciente</h2>
+      <BaseCard title="Actividad Reciente" has-border>
         <p class="text-gray-300">No hay actividad reciente.</p>
-      </div>
+      </BaseCard>
 
-      <div class="card">
-        <h2 class="text-xl font-bold mb-3 text-blue-400">Acciones Rápidas</h2>
+      <BaseCard title="Acciones Rápidas" has-border>
         <div class="space-y-2">
           <RouterLink to="/universe" custom v-slot="{ navigate }">
             <BaseButton variant="secondary" :full-width="true" @click="navigate">
@@ -72,7 +74,7 @@ onMounted(async () => {
             </BaseButton>
           </RouterLink>
         </div>
-      </div>
+      </BaseCard>
     </div>
 
     <div v-else-if="!isLoggedIn" class="text-center mt-8">

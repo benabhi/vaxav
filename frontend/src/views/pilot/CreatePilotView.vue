@@ -1,8 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-12">
-    <div class="max-w-md mx-auto card p-6">
-      <h1 class="text-2xl font-bold mb-6 text-center">Crear Piloto</h1>
-
+    <BaseCard title="Crear Piloto" max-width="md" centered>
       <div v-if="pilotStore.error" class="bg-red-900/50 text-red-200 p-3 rounded-md mb-4">
         {{ pilotStore.error }}
       </div>
@@ -69,7 +67,7 @@
           Crear Piloto
         </BaseButton>
       </form>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
@@ -77,6 +75,7 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePilotStore } from '@/stores/pilot';
+import BaseCard from '@/components/ui/layout/BaseCard.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';

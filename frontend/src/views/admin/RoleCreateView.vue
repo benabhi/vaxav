@@ -10,90 +10,76 @@
       />
     </template>
 
-    <div class="py-6">
-      <!-- Form Card -->
-      <div class="max-w-3xl mx-auto bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-700">
-          <h2 class="text-xl font-bold text-white">Crear Nuevo Rol</h2>
-        </div>
-
-        <div class="p-6">
-          <form @submit.prevent="handleSubmit">
-            <!-- Name -->
-            <div class="mb-4">
-              <BaseInput
-                id="name"
-                v-model="values.name"
-                label="Nombre"
-                type="text"
-                required
-                :error="touched.name && errors.name ? errors.name : ''"
-                @blur="() => handleBlur('name')"
-                labelClass="text-lg font-bold text-white"
-              />
-            </div>
-
-            <!-- Slug -->
-            <div class="mb-4">
-              <BaseInput
-                id="slug"
-                v-model="values.slug"
-                label="Slug"
-                type="text"
-                required
-                :error="touched.slug && errors.slug ? errors.slug : ''"
-                @blur="() => handleBlur('slug')"
-                labelClass="text-lg font-bold text-white"
-              />
-            </div>
-
-            <!-- Description -->
-            <div class="mb-4">
-              <BaseTextarea
-                id="description"
-                v-model="values.description"
-                label="Descripción"
-                :error="touched.description && errors.description ? errors.description : ''"
-                @blur="() => handleBlur('description')"
-                labelClass="text-lg font-bold text-white"
-                rows="3"
-              />
-            </div>
-
-            <!-- Permissions -->
-            <div class="mb-6">
-              <label class="block text-lg font-bold text-white mb-2">Permisos</label>
-              <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-60 overflow-y-auto">
-                <div v-if="availablePermissions.length === 0" class="text-gray-400">
-                  Cargando permisos...
-                </div>
-                <div v-else>
-                  <div v-for="permission in availablePermissions" :key="permission.id" class="mb-2 last:mb-0">
-                    <BaseCheckbox
-                      :id="`permission-${permission.id}`"
-                      :value="permission.id"
-                      v-model="values.permissions"
-                      :label="permission.name"
-                      @blur="() => handleBlur('permissions')"
-                    />
-                  </div>
-                </div>
-              </div>
-              <p v-if="touched.permissions && errors.permissions" class="mt-1 text-sm text-red-500">{{ errors.permissions }}</p>
-            </div>
-
-            <div class="flex space-x-3">
-              <BaseButton type="submit" variant="primary" :full-width="false" :loading="submitting">
-                Crear rol
-              </BaseButton>
-              <BaseButton type="button" variant="secondary" :full-width="false" @click="goBack">
-                Cancelar
-              </BaseButton>
-            </div>
-          </form>
-        </div>
+    <BaseForm
+      title="Crear Nuevo Rol"
+      submitText="Crear rol"
+      :loading="submitting"
+      @submit="handleSubmit"
+      @cancel="goBack"
+    >
+      <!-- Name -->
+      <div class="mb-4">
+        <BaseInput
+          id="name"
+          v-model="values.name"
+          label="Nombre"
+          type="text"
+          required
+          :error="touched.name && errors.name ? errors.name : ''"
+          @blur="() => handleBlur('name')"
+          labelClass="text-lg font-bold text-white"
+        />
       </div>
-    </div>
+
+      <!-- Slug -->
+      <div class="mb-4">
+        <BaseInput
+          id="slug"
+          v-model="values.slug"
+          label="Slug"
+          type="text"
+          required
+          :error="touched.slug && errors.slug ? errors.slug : ''"
+          @blur="() => handleBlur('slug')"
+          labelClass="text-lg font-bold text-white"
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="mb-4">
+        <BaseTextarea
+          id="description"
+          v-model="values.description"
+          label="Descripción"
+          :error="touched.description && errors.description ? errors.description : ''"
+          @blur="() => handleBlur('description')"
+          labelClass="text-lg font-bold text-white"
+          rows="3"
+        />
+      </div>
+
+      <!-- Permissions -->
+      <div class="mb-6">
+        <label class="block text-lg font-bold text-white mb-2">Permisos</label>
+        <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-60 overflow-y-auto">
+          <div v-if="availablePermissions.length === 0" class="text-gray-400">
+            Cargando permisos...
+          </div>
+          <div v-else>
+            <div v-for="permission in availablePermissions" :key="permission.id" class="mb-2 last:mb-0">
+              <BaseCheckbox
+                :id="`permission-${permission.id}`"
+                :value="permission.id"
+                v-model="values.permissions"
+                :label="permission.name"
+                @blur="() => handleBlur('permissions')"
+              />
+            </div>
+          </div>
+        </div>
+        <p v-if="touched.permissions && errors.permissions" class="mt-1 text-sm text-red-500">{{ errors.permissions }}</p>
+      </div>
+    </BaseForm>
   </AdminLayout>
 </template>
 
@@ -101,7 +87,7 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseForm from '@/components/ui/forms/BaseForm.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseTextarea from '@/components/ui/forms/BaseTextarea.vue';

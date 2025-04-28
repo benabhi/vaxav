@@ -4,9 +4,8 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
-        <div class="card mb-6">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-400">Hangar Personal</h2>
+        <BaseCard title="Hangar Personal" has-border class="mb-6">
+          <div class="flex justify-end mb-4">
             <BaseButton variant="primary" size="sm">
               Comprar Nueva Nave
             </BaseButton>
@@ -55,12 +54,11 @@
               </div>
             </div>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <div class="lg:col-span-1">
-        <div class="card mb-6">
-          <h2 class="text-xl font-bold mb-3 text-blue-400">Nave Activa</h2>
+        <BaseCard title="Nave Activa" has-border class="mb-6">
           <div class="space-y-3">
             <div>
               <span class="text-gray-400">Nombre:</span>
@@ -95,10 +93,9 @@
               <p>250/500 m³</p>
             </div>
           </div>
-        </div>
+        </BaseCard>
 
-        <div class="card">
-          <h2 class="text-xl font-bold mb-3 text-blue-400">Módulos Instalados</h2>
+        <BaseCard title="Módulos Instalados" has-border>
           <ul class="space-y-2">
             <li class="p-2 bg-gray-700 rounded flex justify-between">
               <span>Escáner Avanzado</span>
@@ -113,7 +110,7 @@
               <span class="text-gray-400">Inactivo</span>
             </li>
           </ul>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </div>
@@ -121,5 +118,6 @@
 
 <script setup lang="ts">
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseCard from '@/components/ui/layout/BaseCard.vue';
 // Lógica para cargar datos de naves
 </script>

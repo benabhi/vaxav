@@ -4,8 +4,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div class="lg:col-span-1">
-        <div class="card mb-6">
-          <h2 class="text-xl font-bold mb-3">Categorías</h2>
+        <BaseCard title="Categorías" has-border class="mb-6">
           <ul class="space-y-2">
             <li class="p-2 bg-gray-700 rounded hover:bg-gray-600 cursor-pointer">
               Naves
@@ -20,10 +19,9 @@
               Planos
             </li>
           </ul>
-        </div>
+        </BaseCard>
 
-        <div class="card">
-          <h2 class="text-xl font-bold mb-3">Filtros</h2>
+        <BaseCard title="Filtros" has-border>
           <div class="space-y-3">
             <div>
               <BaseRange
@@ -49,13 +47,12 @@
               />
             </div>
           </div>
-        </div>
+        </BaseCard>
       </div>
 
       <div class="lg:col-span-3">
-        <div class="card">
+        <BaseCard title="Artículos en Venta" has-border>
           <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-400">Artículos en Venta</h2>
             <div class="flex space-x-2">
               <BaseButton variant="secondary" size="sm">
                 Mis Órdenes
@@ -93,7 +90,7 @@
               </template>
             </BaseTable>
           </div>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </div>
@@ -105,6 +102,7 @@ import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseRange from '@/components/ui/forms/BaseRange.vue';
 import BaseTable from '@/components/ui/tables/BaseTable.vue';
+import BaseCard from '@/components/ui/layout/BaseCard.vue';
 
 // Filtros reactivos
 const filters = reactive({
