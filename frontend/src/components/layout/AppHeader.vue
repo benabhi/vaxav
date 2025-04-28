@@ -25,10 +25,15 @@
                 Naves
               </RouterLink>
             </li>
+            <li v-if="isModerator">
+              <RouterLink to="/admin" class="text-gray-300 hover:text-white transition-colors">
+                Administración
+              </RouterLink>
+            </li>
           </ul>
         </nav>
       </div>
-      
+
       <div class="flex items-center space-x-4">
         <template v-if="isLoggedIn">
           <div class="text-sm text-gray-300">
@@ -64,6 +69,7 @@ const pilotStore = usePilotStore();
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const user = computed(() => authStore.currentUser);
 const credits = computed(() => pilotStore.pilotCredits.toLocaleString());
+const isModerator = computed(() => authStore.isModerator);
 
 const logout = async () => {
   await authStore.logout();

@@ -10,6 +10,26 @@ const api = axios.create({
   withCredentials: false, // No necesitamos cookies para autenticación con tokens
 });
 
+// Configurar el token de autenticación si existe en localStorage
+const token = localStorage.getItem('auth_token');
+if (token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+// Interceptor para agregar el token a cada solicitud
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Interceptor para manejar errores
 api.interceptors.response.use(
   (response) => response,
@@ -23,6 +43,8 @@ api.interceptors.response.use(
       if (error.response.status === 401) {
         // Redirigir a la página de inicio de sesión o mostrar mensaje
         console.error('No autenticado');
+        // Limpiar el token si no es válido
+        localStorage.removeItem('auth_token');
       }
     } else if (error.request) {
       // La solicitud se realizó pero no se recibió respuesta

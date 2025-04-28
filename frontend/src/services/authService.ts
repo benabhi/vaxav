@@ -13,10 +13,28 @@ export interface RegisterData {
   password_confirmation: string;
 }
 
+export interface Role {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
 export interface User {
   id: number;
   name: string;
   email: string;
+  roles?: Role[];
+  is_superadmin?: boolean;
+  is_admin?: boolean;
+  is_moderator?: boolean;
 }
 
 const authService = {

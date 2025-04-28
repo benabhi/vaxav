@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,8 +25,18 @@ class AuthController extends Controller
             // Generamos un token para el usuario
             $token = $request->user()->createToken('auth-token')->plainTextToken;
 
+            // Obtenemos el usuario con sus roles
+            $user = Auth::user();
+            $user->load('roles');
+
+            // Agregamos información de roles para el frontend
+            $userData = $user->toArray();
+            $userData['is_superadmin'] = $user->isSuperAdmin();
+            $userData['is_admin'] = $user->isAdmin();
+            $userData['is_moderator'] = $user->isModerator();
+
             return response()->json([
-                'user' => Auth::user(),
+                'user' => $userData,
                 'token' => $token
             ]);
         }
@@ -52,13 +63,28 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Asignar rol de usuario por defecto
+        $userRole = Role::where('slug', 'user')->first();
+        if ($userRole) {
+            $user->roles()->attach($userRole);
+        }
+
         Auth::login($user);
 
         // Generamos un token para el usuario
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        // Cargamos los roles
+        $user->load('roles');
+
+        // Agregamos información de roles para el frontend
+        $userData = $user->toArray();
+        $userData['is_superadmin'] = $user->isSuperAdmin();
+        $userData['is_admin'] = $user->isAdmin();
+        $userData['is_moderator'] = $user->isModerator();
+
         return response()->json([
-            'user' => $user,
+            'user' => $userData,
             'token' => $token
         ]);
     }
@@ -79,7 +105,16 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
-        // Devolvemos el usuario autenticado
-        return response()->json($request->user());
+        // Devolvemos el usuario autenticado con sus roles
+        $user = $request->user();
+        $user->load('roles');
+
+        // Agregamos información de roles para el frontend
+        $userData = $user->toArray();
+        $userData['is_superadmin'] = $user->isSuperAdmin();
+        $userData['is_admin'] = $user->isAdmin();
+        $userData['is_moderator'] = $user->isModerator();
+
+        return response()->json($userData);
     }
 }

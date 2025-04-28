@@ -1,0 +1,37 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#277
+    [34mall[39m: [
+      [34;4mApp\Models\Role[39;24m {#6215
+        [34mid[39m: [35m1[39m,
+        [34mname[39m: "[32mSuper Admin[39m",
+        [34mslug[39m: "[32msuperadmin[39m",
+        [34mdescription[39m: "[32mSuper Administrator with all permissions[39m",
+        [34mcreated_at[39m: "[32m2025-04-28 14:12:00[39m",
+        [34mupdated_at[39m: "[32m2025-04-28 14:12:00[39m",
+      },
+      [34;4mApp\Models\Role[39;24m {#6216
+        [34mid[39m: [35m2[39m,
+        [34mname[39m: "[32mAdministrator[39m",
+        [34mslug[39m: "[32madmin[39m",
+        [34mdescription[39m: "[32mAdministrator with most permissions[39m",
+        [34mcreated_at[39m: "[32m2025-04-28 14:12:00[39m",
+        [34mupdated_at[39m: "[32m2025-04-28 14:12:00[39m",
+      },
+      [34;4mApp\Models\Role[39;24m {#6217
+        [34mid[39m: [35m3[39m,
+        [34mname[39m: "[32mModerator[39m",
+        [34mslug[39m: "[32mmoderator[39m",
+        [34mdescription[39m: "[32mModerator with limited permissions[39m",
+        [34mcreated_at[39m: "[32m2025-04-28 14:12:00[39m",
+        [34mupdated_at[39m: "[32m2025-04-28 14:12:00[39m",
+      },
+      [34;4mApp\Models\Role[39;24m {#6218
+        [34mid[39m: [35m4[39m,
+        [34mname[39m: "[32mUser[39m",
+        [34mslug[39m: "[32muser[39m",
+        [34mdescription[39m: "[32mRegular user with basic permissions[39m",
+        [34mcreated_at[39m: "[32m2025-04-28 14:12:00[39m",
+        [34mupdated_at[39m: "[32m2025-04-28 14:12:00[39m",
+      },
+    ],
+  }
+
