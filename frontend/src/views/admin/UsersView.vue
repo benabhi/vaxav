@@ -79,82 +79,61 @@
         <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
             <div class="shadow overflow-hidden border border-gray-700 sm:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-800">
-                  <tr>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Usuario
-                    </th>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Rol
-                    </th>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Estado
-                    </th>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Fecha de registro
-                    </th>
-                    <th scope="col" class="relative px-6 py-3">
-                      <span class="sr-only">Acciones</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-gray-800 divide-y divide-gray-700">
-                  <tr v-if="loading">
-                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-300">
-                      Cargando usuarios...
-                    </td>
-                  </tr>
-                  <tr v-else-if="users.length === 0">
-                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-300">
-                      No se encontraron usuarios
-                    </td>
-                  </tr>
-                  <tr v-for="user in users" :key="user.id" class="hover:bg-gray-700">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10">
-                          <img class="h-10 w-10 rounded-full"
-                            :src="user.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'"
-                            alt="" />
-                        </div>
-                        <div class="ml-4">
-                          <div class="text-sm font-medium text-white">
-                            {{ user.name }}
-                          </div>
-                          <div class="text-sm text-gray-300">
-                            {{ user.email }}
-                          </div>
-                        </div>
+              <BaseTable
+                :columns="columns"
+                :items="users"
+                :loading="loading"
+                row-key="id"
+              >
+                <template #loading>
+                  Cargando usuarios...
+                </template>
+                <template #empty>
+                  No se encontraron usuarios
+                </template>
+
+                <template #cell(user)="{ item }">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <img class="h-10 w-10 rounded-full"
+                        :src="item.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'"
+                        alt="" />
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-white">
+                        {{ item.name }}
                       </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div v-for="role in user.roles" :key="role.id"
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
-                        :class="roleClasses[role.slug] || roleClasses.default">
-                        {{ role.name }}
+                      <div class="text-sm text-gray-300">
+                        {{ item.email }}
                       </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span
-                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Activo
-                      </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                      {{ formatDate(user.created_at) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button @click="editUser(user)" class="text-blue-400 hover:text-blue-300 mr-4">Editar</button>
-                      <button @click="confirmDeleteUser(user)" class="text-red-400 hover:text-red-300">Eliminar</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </div>
+                  </div>
+                </template>
+
+                <template #cell(roles)="{ item }">
+                  <div v-for="role in item.roles" :key="role.id"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
+                    :class="roleClasses[role.slug] || roleClasses.default">
+                    {{ role.name }}
+                  </div>
+                </template>
+
+                <template #cell(status)="{ item }">
+                  <span
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Activo
+                  </span>
+                </template>
+
+                <template #cell(created_at)="{ item }">
+                  {{ formatDate(item.created_at) }}
+                </template>
+
+                <template #actions="{ item }">
+                  <button @click="editUser(item)" class="text-blue-400 hover:text-blue-300 mr-4">Editar</button>
+                  <button @click="confirmDeleteUser(item)" class="text-red-400 hover:text-red-300">Eliminar</button>
+                </template>
+              </BaseTable>
             </div>
           </div>
         </div>
@@ -337,6 +316,7 @@ import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
+import BaseTable from '@/components/ui/tables/BaseTable.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
@@ -348,6 +328,14 @@ const notificationStore = useNotificationStore();
 const users = ref([]);
 const totalUsers = ref(0);
 const loading = ref(true);
+
+// Table columns
+const columns = [
+  { key: 'user', label: 'Usuario' },
+  { key: 'roles', label: 'Roles' },
+  { key: 'status', label: 'Estado' },
+  { key: 'created_at', label: 'Fecha de registro' }
+];
 
 // Filters
 const filters = reactive({

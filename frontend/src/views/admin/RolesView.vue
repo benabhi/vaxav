@@ -41,79 +41,58 @@
         <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
             <div class="shadow overflow-hidden border border-gray-700 sm:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-800">
-                  <tr>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Nombre
-                    </th>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Slug
-                    </th>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Descripción
-                    </th>
-                    <th scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Permisos
-                    </th>
-                    <th scope="col" class="relative px-6 py-3">
-                      <span class="sr-only">Acciones</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-gray-800 divide-y divide-gray-700">
-                  <tr v-if="loading">
-                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-300">
-                      Cargando roles...
-                    </td>
-                  </tr>
-                  <tr v-else-if="roles.length === 0">
-                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-300">
-                      No se encontraron roles
-                    </td>
-                  </tr>
-                  <tr v-for="role in roles" :key="role.id" class="hover:bg-gray-700">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm font-medium text-white">{{ role.name }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm text-gray-300">{{ role.slug }}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                      <div class="text-sm text-gray-300">{{ role.description || 'Sin descripción' }}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                      <div class="flex flex-wrap gap-1">
-                        <span v-for="permission in role.permissions.slice(0, 3)" :key="permission.id"
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                          {{ permission.name }}
-                        </span>
-                        <span v-if="role.permissions.length > 3"
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                          +{{ role.permissions.length - 3 }} más
-                        </span>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button @click="editRole(role)" class="text-blue-400 hover:text-blue-300 mr-4"
-                        :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(role.slug) && !isSuperAdmin">
-                        Editar
-                      </button>
-                      <button
-                        @click="confirmDeleteRole(role)"
-                        class="text-red-400 hover:text-red-300"
-                        :class="{ 'opacity-50 cursor-not-allowed': ['superadmin', 'admin', 'moderator', 'user'].includes(role.slug) }"
-                        :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(role.slug)">
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <BaseTable
+                :columns="columns"
+                :items="roles"
+                :loading="loading"
+                row-key="id"
+              >
+                <template #loading>
+                  Cargando roles...
+                </template>
+                <template #empty>
+                  No se encontraron roles
+                </template>
+
+                <template #cell(name)="{ item }">
+                  <div class="text-sm font-medium text-white">{{ item.name }}</div>
+                </template>
+
+                <template #cell(slug)="{ item }">
+                  <div class="text-sm text-gray-300">{{ item.slug }}</div>
+                </template>
+
+                <template #cell(description)="{ item }">
+                  <div class="text-sm text-gray-300">{{ item.description || 'Sin descripción' }}</div>
+                </template>
+
+                <template #cell(permissions)="{ item }">
+                  <div class="flex flex-wrap gap-1">
+                    <span v-for="permission in item.permissions.slice(0, 3)" :key="permission.id"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ permission.name }}
+                    </span>
+                    <span v-if="item.permissions.length > 3"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                      +{{ item.permissions.length - 3 }} más
+                    </span>
+                  </div>
+                </template>
+
+                <template #actions="{ item }">
+                  <button @click="editRole(item)" class="text-blue-400 hover:text-blue-300 mr-4"
+                    :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(item.slug) && !isSuperAdmin">
+                    Editar
+                  </button>
+                  <button
+                    @click="confirmDeleteRole(item)"
+                    class="text-red-400 hover:text-red-300"
+                    :class="{ 'opacity-50 cursor-not-allowed': ['superadmin', 'admin', 'moderator', 'user'].includes(item.slug) }"
+                    :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(item.slug)">
+                    Eliminar
+                  </button>
+                </template>
+              </BaseTable>
             </div>
           </div>
         </div>
@@ -226,6 +205,7 @@ import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
+import BaseTable from '@/components/ui/tables/BaseTable.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
@@ -241,6 +221,14 @@ const isSuperAdmin = computed(() => {
 // Roles data
 const roles = ref([]);
 const loading = ref(true);
+
+// Table columns
+const columns = [
+  { key: 'name', label: 'Nombre' },
+  { key: 'slug', label: 'Slug' },
+  { key: 'description', label: 'Descripción' },
+  { key: 'permissions', label: 'Permisos' }
+];
 
 // Role form
 const showRoleModal = ref(false);

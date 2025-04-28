@@ -67,46 +67,31 @@
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead>
-                <tr class="border-b border-gray-700">
-                  <th class="text-left py-2 px-3">Artículo</th>
-                  <th class="text-left py-2 px-3">Precio</th>
-                  <th class="text-left py-2 px-3">Ubicación</th>
-                  <th class="text-left py-2 px-3">Vendedor</th>
-                  <th class="text-left py-2 px-3">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                  <td class="py-2 px-3">Nave Exploradora</td>
-                  <td class="py-2 px-3">50,000 ISK</td>
-                  <td class="py-2 px-3">Estación Alpha</td>
-                  <td class="py-2 px-3">Comerciante NPC</td>
-                  <td class="py-2 px-3">
-                    <BaseButton variant="primary" size="sm">Comprar</BaseButton>
-                  </td>
-                </tr>
-                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                  <td class="py-2 px-3">Módulo de Escudo</td>
-                  <td class="py-2 px-3">15,000 ISK</td>
-                  <td class="py-2 px-3">Estación Beta</td>
-                  <td class="py-2 px-3">Comerciante NPC</td>
-                  <td class="py-2 px-3">
-                    <BaseButton variant="primary" size="sm">Comprar</BaseButton>
-                  </td>
-                </tr>
-                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                  <td class="py-2 px-3">Mineral Exótico</td>
-                  <td class="py-2 px-3">5,000 ISK</td>
-                  <td class="py-2 px-3">Estación Gamma</td>
-                  <td class="py-2 px-3">Piloto Vendedor</td>
-                  <td class="py-2 px-3">
-                    <BaseButton variant="primary" size="sm">Comprar</BaseButton>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <BaseTable
+              :columns="columns"
+              :items="marketItems"
+              row-key="id"
+            >
+              <template #cell(item)="{ item }">
+                {{ item.name }}
+              </template>
+
+              <template #cell(price)="{ item }">
+                {{ item.price }} ISK
+              </template>
+
+              <template #cell(location)="{ item }">
+                {{ item.location }}
+              </template>
+
+              <template #cell(seller)="{ item }">
+                {{ item.seller }}
+              </template>
+
+              <template #actions="{ item }">
+                <BaseButton variant="primary" size="sm">Comprar</BaseButton>
+              </template>
+            </BaseTable>
           </div>
         </div>
       </div>
@@ -115,10 +100,11 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseRange from '@/components/ui/forms/BaseRange.vue';
+import BaseTable from '@/components/ui/tables/BaseTable.vue';
 
 // Filtros reactivos
 const filters = reactive({
@@ -131,6 +117,21 @@ const formatPrice = (value: number | string) => {
   const numValue = Number(value);
   return numValue.toLocaleString('es-ES') + ' ISK';
 };
+
+// Definición de columnas para la tabla
+const columns = [
+  { key: 'item', label: 'Artículo' },
+  { key: 'price', label: 'Precio' },
+  { key: 'location', label: 'Ubicación' },
+  { key: 'seller', label: 'Vendedor' }
+];
+
+// Datos de ejemplo para el mercado
+const marketItems = [
+  { id: 1, name: 'Nave Exploradora', price: '50,000', location: 'Estación Alpha', seller: 'Comerciante NPC' },
+  { id: 2, name: 'Módulo de Escudo', price: '15,000', location: 'Estación Beta', seller: 'Comerciante NPC' },
+  { id: 3, name: 'Mineral Exótico', price: '5,000', location: 'Estación Gamma', seller: 'Piloto Vendedor' }
+];
 
 // Lógica para cargar datos del mercado
 </script>
