@@ -298,16 +298,9 @@ const goToCreateUser = () => {
   router.push('/admin/users/create');
 };
 
-// Open edit user modal
+// Navigate to edit user page
 const editUser = (user) => {
-  editingUser.value = user;
-  userForm.name = user.name;
-  userForm.email = user.email;
-  userForm.password = '';
-  userForm.password_confirmation = '';
-  userForm.roles = user.roles.map(role => role.id);
-  clearFormErrors();
-  showUserModal.value = true;
+  router.push(`/admin/users/${user.id}/edit`);
 };
 
 // Close user modal

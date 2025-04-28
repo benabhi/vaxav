@@ -1,10 +1,10 @@
 <template>
-  <AdminLayout title="Crear Usuario">
+  <AdminLayout title="Editar Usuario">
     <template #breadcrumbs>
       <BaseBreadcrumb
         :items="[
           { text: 'Usuarios', to: '/admin/users' },
-          { text: 'Crear' }
+          { text: 'Editar' }
         ]"
         homeLink="/admin"
       />
@@ -14,10 +14,14 @@
       <!-- Form Card -->
       <div class="max-w-3xl mx-auto bg-gray-800 shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-700">
-          <h2 class="text-xl font-bold text-white">Crear Nuevo Usuario</h2>
+          <h2 class="text-xl font-bold text-white">Editar Usuario</h2>
         </div>
 
-        <div class="p-6">
+        <div v-if="loading" class="p-6 flex justify-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+
+        <div v-else class="p-6">
           <form @submit.prevent="handleSubmit">
             <!-- Name -->
             <div class="mb-4">
@@ -52,9 +56,8 @@
               <BaseInput
                 id="password"
                 v-model="values.password"
-                label="Contraseña"
+                label="Contraseña (dejar en blanco para mantener la actual)"
                 type="password"
-                required
                 :error="touched.password && errors.password ? errors.password : ''"
                 @blur="() => handleBlur('password')"
                 labelClass="text-lg font-bold text-white"
@@ -68,7 +71,6 @@
                 v-model="values.password_confirmation"
                 label="Confirmar contraseña"
                 type="password"
-                required
                 :error="touched.password_confirmation && errors.password_confirmation ? errors.password_confirmation : ''"
                 @blur="() => handleBlur('password_confirmation')"
                 labelClass="text-lg font-bold text-white"
@@ -94,7 +96,7 @@
 
             <div class="flex space-x-3">
               <BaseButton type="submit" variant="primary" :full-width="false" :loading="submitting">
-                Crear usuario
+                Guardar cambios
               </BaseButton>
               <BaseButton type="button" variant="secondary" :full-width="false" @click="goBack">
                 Cancelar
@@ -108,8 +110,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
@@ -120,7 +122,10 @@ import { useForm } from '@/composables/useForm';
 import api from '@/services/api';
 
 const router = useRouter();
+const route = useRoute();
 const notificationStore = useNotificationStore();
+const userId = route.params.id;
+const loading = ref(true);
 
 // Available roles
 const availableRoles = ref([
@@ -141,12 +146,12 @@ const validationRules = {
     value => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'El correo electrónico no es válido' : null
   ],
   password: [
-    value => !value ? 'La contraseña es obligatoria' : null,
-    value => value.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : null
+    // Password is optional when editing
+    value => value && value.length > 0 && value.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : null
   ],
   password_confirmation: [
-    value => !value ? 'La confirmación de contraseña es obligatoria' : null,
-    (value, values) => value !== values.password ? 'Las contraseñas no coinciden' : null
+    // Only validate if password is provided
+    (value, values) => values.password && value !== values.password ? 'Las contraseñas no coinciden' : null
   ],
   roles: [
     value => !value || value.length === 0 ? 'Debe seleccionar al menos un rol' : null
@@ -162,6 +167,7 @@ const {
   handleChange,
   handleBlur,
   handleSubmit,
+  setValues,
   setErrors
 } = useForm({
   initialValues: {
@@ -169,18 +175,25 @@ const {
     email: '',
     password: '',
     password_confirmation: '',
-    roles: [4] // Default to 'user' role
+    roles: []
   },
   validationRules,
   onSubmit: async (formValues) => {
     try {
-      // Create new user
-      const response = await api.post('/admin/users', formValues);
+      // Remove password fields if empty
+      const userData = { ...formValues };
+      if (!userData.password) {
+        delete userData.password;
+        delete userData.password_confirmation;
+      }
+
+      // Update user
+      const response = await api.put(`/admin/users/${userId}`, userData);
 
 
       // Show success notification
       notificationStore.adminSuccess(
-        `El usuario ${formValues.name} ha sido creado correctamente.`
+        `El usuario ${formValues.name} ha sido actualizado correctamente.`
       );
 
       // Redirect to users list
@@ -202,7 +215,7 @@ const {
       } else {
         // Show error notification
         notificationStore.adminError(
-          'Ha ocurrido un error al crear el usuario. Por favor, inténtalo de nuevo.'
+          'Ha ocurrido un error al actualizar el usuario. Por favor, inténtalo de nuevo.'
         );
       }
 
@@ -215,8 +228,39 @@ const {
   }
 });
 
+// Fetch user data
+const fetchUser = async () => {
+  try {
+    loading.value = true;
+    const response = await api.get(`/admin/users/${userId}`);
+    const userData = response.data;
+
+    // Set form values
+    setValues({
+      name: userData.name,
+      email: userData.email,
+      password: '',
+      password_confirmation: '',
+      roles: userData.roles.map(role => role.id)
+    });
+  } catch (error) {
+
+    notificationStore.adminError(
+      'Ha ocurrido un error al cargar los datos del usuario.'
+    );
+    router.push('/admin/users');
+  } finally {
+    loading.value = false;
+  }
+};
+
 // Go back to users list
 const goBack = () => {
   router.push('/admin/users');
 };
+
+// Fetch user data on mount
+onMounted(() => {
+  fetchUser();
+});
 </script>

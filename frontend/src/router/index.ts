@@ -128,6 +128,15 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/users/:id/edit',
+      name: 'admin-users-edit',
+      component: () => import('../views/admin/UserEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
       path: '/admin/roles',
       name: 'admin-roles',
       component: () => import('../views/admin/RolesView.vue'),
@@ -140,6 +149,15 @@ const router = createRouter({
       path: '/admin/roles/create',
       name: 'admin-roles-create',
       component: () => import('../views/admin/RoleCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/roles/:id/edit',
+      name: 'admin-roles-edit',
+      component: () => import('../views/admin/RoleEditView.vue'),
       meta: {
         requiresAuth: true,
         requiresRoles: ['superadmin', 'admin']

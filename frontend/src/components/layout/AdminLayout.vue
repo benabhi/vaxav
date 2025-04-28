@@ -29,16 +29,6 @@
         </template>
       </BasePageTitle>
 
-      <!-- Static Alert -->
-      <div class="px-2">
-        <BaseStaticAlert
-          v-if="notificationStore.adminAlert.show"
-          :variant="notificationStore.adminAlert.type"
-          :message="notificationStore.adminAlert.message"
-          @dismiss="notificationStore.clearAdminAlert()"
-        />
-      </div>
-
       <!-- Notifications -->
       <BaseNotification />
 
@@ -105,7 +95,6 @@ import BaseSidebarGroup from '@/components/ui/navigation/BaseSidebarGroup.vue';
 import BaseNavLink from '@/components/ui/navigation/BaseNavLink.vue';
 import BasePageTitle from '@/components/ui/layout/BasePageTitle.vue';
 import BaseNotification from '@/components/ui/feedback/BaseNotification.vue';
-import BaseStaticAlert from '@/components/ui/feedback/BaseStaticAlert.vue';
 import { useNotificationStore } from '@/stores/notification';
 
 defineProps({

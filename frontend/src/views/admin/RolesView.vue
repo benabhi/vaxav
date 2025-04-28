@@ -265,15 +265,9 @@ const goToCreateRole = () => {
   router.push('/admin/roles/create');
 };
 
-// Edit role
+// Navigate to edit role page
 const editRole = (role) => {
-  editingRole.value = role;
-  roleForm.name = role.name;
-  roleForm.slug = role.slug;
-  roleForm.description = role.description || '';
-  roleForm.permissions = role.permissions ? role.permissions.map(p => p.id) : [];
-  clearFormErrors();
-  showRoleModal.value = true;
+  router.push(`/admin/roles/${role.id}/edit`);
 };
 
 // Close role modal

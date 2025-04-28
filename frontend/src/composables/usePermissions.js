@@ -3,13 +3,13 @@ import api from '@/services/api';
 import { useNotificationStore } from '@/stores/notification';
 
 /**
- * Composable para gestionar roles
- * Proporciona estado y métodos para operaciones CRUD de roles
+ * Composable para gestionar permisos
+ * Proporciona estado y métodos para operaciones CRUD de permisos
  *
- * @returns {Object} Estado y métodos para gestionar roles
+ * @returns {Object} Estado y métodos para gestionar permisos
  */
-export function useRoles() {
-  const roles = ref([]);
+export function usePermissions() {
+  const permissions = ref([]);
   const loading = ref(false);
   const pagination = reactive({
     currentPage: 1,
@@ -25,9 +25,9 @@ export function useRoles() {
   const notificationStore = useNotificationStore();
 
   /**
-   * Obtiene la lista de roles con filtros y paginación
+   * Obtiene la lista de permisos con filtros y paginación
    */
-  const fetchRoles = async () => {
+  const fetchPermissions = async () => {
     loading.value = true;
     try {
       const params = {
@@ -36,10 +36,10 @@ export function useRoles() {
         per_page: pagination.perPage
       };
 
-      const response = await api.get('/admin/roles', { params });
+      const response = await api.get('/admin/permissions', { params });
 
       if (response.data && response.data.data) {
-        roles.value = response.data.data;
+        permissions.value = response.data.data;
 
         // Update pagination
         if (response.data.total) {
@@ -53,12 +53,12 @@ export function useRoles() {
         }
       } else {
 
-        roles.value = [];
+        permissions.value = [];
         pagination.totalPages = 1;
       }
     } catch (error) {
 
-      roles.value = [];
+      permissions.value = [];
       pagination.totalPages = 1;
     } finally {
       loading.value = false;
@@ -66,70 +66,80 @@ export function useRoles() {
   };
 
   /**
-   * Crea un nuevo rol
-   * @param {Object} roleData - Datos del rol a crear
-   * @returns {Promise<Object|null>} Rol creado o null si hay error
+   * Crea un nuevo permiso
+   * @param {Object} permissionData - Datos del permiso a crear
+   * @returns {Promise<Object|null>} Permiso creado o null si hay error
    */
-  const createRole = async (roleData) => {
+  const createPermission = async (permissionData) => {
     try {
-      const response = await api.post('/admin/roles', roleData);
+      const response = await api.post('/admin/permissions', permissionData);
 
       notificationStore.adminSuccess(
-        `El rol ${roleData.name} ha sido creado correctamente.`
+        `El permiso ${permissionData.name} ha sido creado correctamente.`
       );
 
-      await fetchRoles();
+      await fetchPermissions();
       return response.data;
     } catch (error) {
+
+
+      notificationStore.adminError(
+        'Ha ocurrido un error al crear el permiso.'
+      );
 
       return null;
     }
   };
 
   /**
-   * Actualiza un rol existente
-   * @param {number} roleId - ID del rol a actualizar
-   * @param {Object} roleData - Datos actualizados del rol
-   * @returns {Promise<Object|null>} Rol actualizado o null si hay error
+   * Actualiza un permiso existente
+   * @param {number} permissionId - ID del permiso a actualizar
+   * @param {Object} permissionData - Datos actualizados del permiso
+   * @returns {Promise<Object|null>} Permiso actualizado o null si hay error
    */
-  const updateRole = async (roleId, roleData) => {
+  const updatePermission = async (permissionId, permissionData) => {
     try {
-      const response = await api.put(`/admin/roles/${roleId}`, roleData);
+      const response = await api.put(`/admin/permissions/${permissionId}`, permissionData);
 
       notificationStore.adminSuccess(
-        `El rol ${roleData.name} ha sido actualizado correctamente.`
+        `El permiso ${permissionData.name} ha sido actualizado correctamente.`
       );
 
-      await fetchRoles();
+      await fetchPermissions();
       return response.data;
     } catch (error) {
+
+
+      notificationStore.adminError(
+        'Ha ocurrido un error al actualizar el permiso.'
+      );
 
       return null;
     }
   };
 
   /**
-   * Elimina un rol
-   * @param {number} roleId - ID del rol a eliminar
+   * Elimina un permiso
+   * @param {number} permissionId - ID del permiso a eliminar
    * @returns {Promise<boolean>} true si se eliminó correctamente, false en caso contrario
    */
-  const deleteRole = async (roleId) => {
+  const deletePermission = async (permissionId) => {
     try {
-      await api.delete(`/admin/roles/${roleId}`);
+      await api.delete(`/admin/permissions/${permissionId}`);
 
       notificationStore.adminSuccess(
-        'El rol ha sido eliminado correctamente.'
+        'El permiso ha sido eliminado correctamente.'
       );
 
-      await fetchRoles();
+      await fetchPermissions();
       return true;
     } catch (error) {
 
 
-      let errorMessage = 'Ha ocurrido un error al eliminar el rol.';
+      let errorMessage = 'Ha ocurrido un error al eliminar el permiso.';
 
       if (error.response && error.response.status === 403) {
-        errorMessage = 'No tienes permiso para eliminar este rol o es un rol predeterminado del sistema.';
+        errorMessage = 'No tienes permiso para eliminar este permiso o es un permiso predeterminado del sistema.';
       }
 
       notificationStore.adminError(
@@ -146,7 +156,7 @@ export function useRoles() {
    */
   const changePage = (page) => {
     pagination.currentPage = page;
-    fetchRoles();
+    fetchPermissions();
   };
 
   /**
@@ -156,7 +166,7 @@ export function useRoles() {
   const changePerPage = (perPage) => {
     pagination.perPage = perPage;
     pagination.currentPage = 1; // Reset to first page
-    fetchRoles();
+    fetchPermissions();
   };
 
   /**
@@ -168,7 +178,7 @@ export function useRoles() {
       filters[key] = newFilters[key];
     });
     pagination.currentPage = 1; // Reset to first page
-    fetchRoles();
+    fetchPermissions();
   };
 
   /**
@@ -178,24 +188,50 @@ export function useRoles() {
   const updateSort = (sortData) => {
     filters.sort_field = sortData.key;
     filters.sort_direction = sortData.order;
-    fetchRoles();
+    fetchPermissions();
+  };
+
+  /**
+   * Obtiene todos los permisos sin paginación
+   * @returns {Promise<Array>} Lista de todos los permisos
+   */
+  const getAllPermissions = async () => {
+    try {
+      const response = await api.get('/admin/permissions');
+
+      let permissionsData = [];
+
+      if (response.data && response.data.data) {
+        permissionsData = response.data.data;
+      } else if (response.data) {
+        permissionsData = response.data;
+      } else {
+
+      }
+
+      return permissionsData;
+    } catch (error) {
+
+      return [];
+    }
   };
 
   return {
     // Estado
-    roles,
+    permissions,
     loading,
     pagination,
     filters,
 
     // Métodos
-    fetchRoles,
-    createRole,
-    updateRole,
-    deleteRole,
+    fetchPermissions,
+    createPermission,
+    updatePermission,
+    deletePermission,
     changePage,
     changePerPage,
     updateFilters,
-    updateSort
+    updateSort,
+    getAllPermissions
   };
 }

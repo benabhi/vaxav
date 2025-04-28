@@ -3,14 +3,7 @@ import { defineStore } from 'pinia';
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
     notifications: [],
-    nextId: 1,
-    // Static alert for admin panel
-    adminAlert: {
-      type: '',
-      title: '',
-      message: '',
-      show: false
-    }
+    nextId: 1
   }),
 
   actions: {
@@ -40,23 +33,6 @@ export const useNotificationStore = defineStore('notification', {
       this.notifications = [];
     },
 
-    // Static admin alert (persistent)
-    setAdminAlert({ type = 'info', title = '', message = '' }) {
-      this.adminAlert = {
-        type,
-        title,
-        message,
-        show: true
-      };
-    },
-
-    clearAdminAlert() {
-      this.adminAlert.show = false;
-      this.adminAlert.message = '';
-      this.adminAlert.title = '';
-      this.adminAlert.type = '';
-    },
-
     // Métodos de conveniencia para diferentes tipos de notificaciones
     success(message, title = 'Éxito', duration = 5000) {
       return this.addNotification({ type: 'success', title, message, duration });
@@ -74,21 +50,21 @@ export const useNotificationStore = defineStore('notification', {
       return this.addNotification({ type: 'info', title, message, duration });
     },
 
-    // Métodos de conveniencia para alertas estáticas
+    // Métodos de conveniencia para notificaciones administrativas
     adminSuccess(message, title = 'Éxito') {
-      this.setAdminAlert({ type: 'success', title, message });
+      return this.addNotification({ type: 'success', title, message, duration: 5000 });
     },
 
     adminError(message, title = 'Error') {
-      this.setAdminAlert({ type: 'error', title, message });
+      return this.addNotification({ type: 'error', title, message, duration: 8000 });
     },
 
     adminWarning(message, title = 'Advertencia') {
-      this.setAdminAlert({ type: 'warning', title, message });
+      return this.addNotification({ type: 'warning', title, message, duration: 7000 });
     },
 
     adminInfo(message, title = 'Información') {
-      this.setAdminAlert({ type: 'info', title, message });
+      return this.addNotification({ type: 'info', title, message, duration: 5000 });
     }
   }
 });

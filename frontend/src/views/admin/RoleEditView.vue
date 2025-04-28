@@ -1,10 +1,10 @@
 <template>
-  <AdminLayout title="Crear Rol">
+  <AdminLayout title="Editar Rol">
     <template #breadcrumbs>
       <BaseBreadcrumb
         :items="[
           { text: 'Roles', to: '/admin/roles' },
-          { text: 'Crear' }
+          { text: 'Editar' }
         ]"
         homeLink="/admin"
       />
@@ -14,10 +14,14 @@
       <!-- Form Card -->
       <div class="max-w-3xl mx-auto bg-gray-800 shadow rounded-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-700">
-          <h2 class="text-xl font-bold text-white">Crear Nuevo Rol</h2>
+          <h2 class="text-xl font-bold text-white">Editar Rol</h2>
         </div>
 
-        <div class="p-6">
+        <div v-if="loading" class="p-6 flex justify-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+
+        <div v-else class="p-6">
           <form @submit.prevent="handleSubmit">
             <!-- Name -->
             <div class="mb-4">
@@ -44,7 +48,11 @@
                 :error="touched.slug && errors.slug ? errors.slug : ''"
                 @blur="() => handleBlur('slug')"
                 labelClass="text-lg font-bold text-white"
+                :disabled="isSystemRole"
               />
+              <p v-if="isSystemRole" class="mt-1 text-sm text-yellow-500">
+                Este es un rol del sistema y su slug no puede ser modificado.
+              </p>
             </div>
 
             <!-- Description -->
@@ -84,7 +92,7 @@
 
             <div class="flex space-x-3">
               <BaseButton type="submit" variant="primary" :full-width="false" :loading="submitting">
-                Crear rol
+                Guardar cambios
               </BaseButton>
               <BaseButton type="button" variant="secondary" :full-width="false" @click="goBack">
                 Cancelar
@@ -98,8 +106,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
@@ -108,24 +116,24 @@ import BaseTextarea from '@/components/ui/forms/BaseTextarea.vue';
 import BaseBreadcrumb from '@/components/ui/navigation/BaseBreadcrumb.vue';
 import { useNotificationStore } from '@/stores/notification';
 import { useForm } from '@/composables/useForm';
+import { useRoles } from '@/composables/useRoles';
 import { usePermissions } from '@/composables/usePermissions';
 import api from '@/services/api';
 
 const router = useRouter();
+const route = useRoute();
 const notificationStore = useNotificationStore();
-
-// Available permissions
+const roleId = route.params.id;
+const loading = ref(true);
 const availablePermissions = ref([]);
 
 // Use permissions composable
 const { getAllPermissions } = usePermissions();
 
-// Generate slug from name
-const generateSlug = (name) => {
-  return name.toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-');
-};
+// Check if it's a system role
+const isSystemRole = computed(() => {
+  return ['superadmin', 'admin', 'moderator', 'user'].includes(values.slug);
+});
 
 // Validation rules
 const validationRules = {
@@ -151,6 +159,7 @@ const {
   handleChange,
   handleBlur,
   handleSubmit,
+  setValues,
   setErrors
 } = useForm({
   initialValues: {
@@ -162,13 +171,13 @@ const {
   validationRules,
   onSubmit: async (formValues) => {
     try {
-      // Create new role
-      const response = await api.post('/admin/roles', formValues);
+      // Update role
+      const response = await api.put(`/admin/roles/${roleId}`, formValues);
 
 
       // Show success notification
       notificationStore.adminSuccess(
-        `El rol ${formValues.name} ha sido creado correctamente.`
+        `El rol ${formValues.name} ha sido actualizado correctamente.`
       );
 
       // Redirect to roles list
@@ -190,7 +199,7 @@ const {
       } else {
         // Show error notification
         notificationStore.adminError(
-          'Ha ocurrido un error al crear el rol. Por favor, inténtalo de nuevo.'
+          'Ha ocurrido un error al actualizar el rol. Por favor, inténtalo de nuevo.'
         );
       }
 
@@ -203,24 +212,38 @@ const {
   }
 });
 
-// Watch for name changes to auto-generate slug
-watch(() => values.name, (newName) => {
-  values.slug = generateSlug(newName);
-});
+// Fetch role data
+const fetchRole = async () => {
+  try {
+    loading.value = true;
+    const response = await api.get(`/admin/roles/${roleId}`);
+    const roleData = response.data;
+
+    // Set form values
+    setValues({
+      name: roleData.name,
+      slug: roleData.slug,
+      description: roleData.description || '',
+      permissions: roleData.permissions ? roleData.permissions.map(p => p.id) : []
+    });
+  } catch (error) {
+
+    notificationStore.adminError(
+      'Ha ocurrido un error al cargar los datos del rol.'
+    );
+    router.push('/admin/roles');
+  } finally {
+    loading.value = false;
+  }
+};
 
 // Fetch available permissions
 const fetchPermissions = async () => {
   try {
     const permissions = await getAllPermissions();
-
-    if (Array.isArray(permissions)) {
-      availablePermissions.value = permissions;
-    } else {
-      console.error('Permissions is not an array:', permissions);
-      availablePermissions.value = [];
-    }
+    availablePermissions.value = permissions;
   } catch (error) {
-    console.error('Error fetching permissions:', error);
+
     availablePermissions.value = [];
   }
 };
@@ -232,6 +255,7 @@ const goBack = () => {
 
 // Fetch data on mount
 onMounted(() => {
+  fetchRole();
   fetchPermissions();
 });
 </script>

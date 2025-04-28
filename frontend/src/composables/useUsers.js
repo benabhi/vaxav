@@ -5,7 +5,7 @@ import { useNotificationStore } from '@/stores/notification';
 /**
  * Composable para gestionar usuarios
  * Proporciona estado y métodos para operaciones CRUD de usuarios
- * 
+ *
  * @returns {Object} Estado y métodos para gestionar usuarios
  */
 export function useUsers() {
@@ -23,7 +23,7 @@ export function useUsers() {
     sort_field: 'name',
     sort_direction: 'asc'
   });
-  
+
   const notificationStore = useNotificationStore();
 
   /**
@@ -39,20 +39,20 @@ export function useUsers() {
       };
 
       const response = await api.get('/admin/users', { params });
-      
+
       if (response.data && response.data.data) {
         users.value = response.data.data;
         totalUsers.value = response.data.total || response.data.data.length;
         pagination.totalPages = response.data.last_page || Math.ceil(totalUsers.value / pagination.perPage);
         pagination.currentPage = response.data.current_page || pagination.currentPage;
       } else {
-        console.error('Unexpected API response format:', response.data);
+
         users.value = [];
         totalUsers.value = 0;
         pagination.totalPages = 1;
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+
       users.value = [];
       totalUsers.value = 0;
       pagination.totalPages = 1;
@@ -69,16 +69,20 @@ export function useUsers() {
   const createUser = async (userData) => {
     try {
       const response = await api.post('/admin/users', userData);
-      
-      notificationStore.success(
-        `El usuario ${userData.name} ha sido creado correctamente.`,
-        'Usuario creado'
+
+      notificationStore.adminSuccess(
+        `El usuario ${userData.name} ha sido creado correctamente.`
       );
-      
+
       await fetchUsers();
       return response.data;
     } catch (error) {
-      console.error('Error creating user:', error);
+
+
+      notificationStore.adminError(
+        'Ha ocurrido un error al crear el usuario.'
+      );
+
       return null;
     }
   };
@@ -92,16 +96,15 @@ export function useUsers() {
   const updateUser = async (userId, userData) => {
     try {
       const response = await api.put(`/admin/users/${userId}`, userData);
-      
-      notificationStore.success(
-        `El usuario ${userData.name} ha sido actualizado correctamente.`,
-        'Usuario actualizado'
+
+      notificationStore.adminSuccess(
+        `El usuario ${userData.name} ha sido actualizado correctamente.`
       );
-      
+
       await fetchUsers();
       return response.data;
     } catch (error) {
-      console.error('Error updating user:', error);
+
       return null;
     }
   };
@@ -114,22 +117,20 @@ export function useUsers() {
   const deleteUser = async (userId) => {
     try {
       await api.delete(`/admin/users/${userId}`);
-      
-      notificationStore.success(
-        'El usuario ha sido eliminado correctamente.',
-        'Usuario eliminado'
+
+      notificationStore.adminSuccess(
+        'El usuario ha sido eliminado correctamente.'
       );
-      
+
       await fetchUsers();
       return true;
     } catch (error) {
-      console.error('Error deleting user:', error);
-      
-      notificationStore.error(
-        'Ha ocurrido un error al eliminar el usuario.',
-        'Error'
+
+
+      notificationStore.adminError(
+        'Ha ocurrido un error al eliminar el usuario.'
       );
-      
+
       return false;
     }
   };
@@ -182,7 +183,7 @@ export function useUsers() {
     loading,
     pagination,
     filters,
-    
+
     // Métodos
     fetchUsers,
     createUser,

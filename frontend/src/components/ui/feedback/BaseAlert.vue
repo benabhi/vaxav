@@ -151,75 +151,42 @@ let dismissTimer = null;
 const variantClasses = computed(() => {
   switch (props.variant) {
     case 'success':
-      return 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800';
+      return 'bg-green-800 text-white shadow-md';
     case 'error':
-      return 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800';
+      return 'bg-red-800 text-white shadow-md';
     case 'warning':
-      return 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800';
+      return 'bg-yellow-800 text-white shadow-md';
     case 'info':
-      return 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800';
+      return 'bg-blue-800 text-white shadow-md';
     default:
-      return 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700';
+      return 'bg-gray-800 text-white shadow-md';
   }
 });
 
 const iconClass = computed(() => {
-  switch (props.variant) {
-    case 'success':
-      return 'text-green-400 dark:text-green-300';
-    case 'error':
-      return 'text-red-400 dark:text-red-300';
-    case 'warning':
-      return 'text-yellow-400 dark:text-yellow-300';
-    case 'info':
-      return 'text-blue-400 dark:text-blue-300';
-    default:
-      return 'text-gray-400 dark:text-gray-300';
-  }
+  return 'text-white';
 });
 
 const titleClass = computed(() => {
-  switch (props.variant) {
-    case 'success':
-      return 'text-green-800 dark:text-green-200';
-    case 'error':
-      return 'text-red-800 dark:text-red-200';
-    case 'warning':
-      return 'text-yellow-800 dark:text-yellow-200';
-    case 'info':
-      return 'text-blue-800 dark:text-blue-200';
-    default:
-      return 'text-gray-800 dark:text-gray-200';
-  }
+  return 'text-white font-bold';
 });
 
 const messageClass = computed(() => {
-  switch (props.variant) {
-    case 'success':
-      return 'text-green-700 dark:text-green-300';
-    case 'error':
-      return 'text-red-700 dark:text-red-300';
-    case 'warning':
-      return 'text-yellow-700 dark:text-yellow-300';
-    case 'info':
-      return 'text-blue-700 dark:text-blue-300';
-    default:
-      return 'text-gray-700 dark:text-gray-300';
-  }
+  return 'text-white';
 });
 
 const dismissButtonClass = computed(() => {
   switch (props.variant) {
     case 'success':
-      return 'bg-green-50 dark:bg-green-900/20 text-green-500 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-800 focus:ring-green-500 focus:ring-offset-green-50 dark:focus:ring-offset-green-900';
+      return 'text-white hover:bg-green-700 focus:ring-green-500 focus:ring-offset-green-800';
     case 'error':
-      return 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-800 focus:ring-red-500 focus:ring-offset-red-50 dark:focus:ring-offset-red-900';
+      return 'text-white hover:bg-red-700 focus:ring-red-500 focus:ring-offset-red-800';
     case 'warning':
-      return 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-500 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-800 focus:ring-yellow-500 focus:ring-offset-yellow-50 dark:focus:ring-offset-yellow-900';
+      return 'text-white hover:bg-yellow-700 focus:ring-yellow-500 focus:ring-offset-yellow-800';
     case 'info':
-      return 'bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800 focus:ring-blue-500 focus:ring-offset-blue-50 dark:focus:ring-offset-blue-900';
+      return 'text-white hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-blue-800';
     default:
-      return 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-gray-500 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900';
+      return 'text-white hover:bg-gray-700 focus:ring-gray-500 focus:ring-offset-gray-800';
   }
 });
 
@@ -233,7 +200,7 @@ watch(() => props.duration, (newDuration) => {
     clearTimeout(dismissTimer);
     dismissTimer = null;
   }
-  
+
   if (newDuration > 0) {
     dismissTimer = setTimeout(() => {
       dismiss();
