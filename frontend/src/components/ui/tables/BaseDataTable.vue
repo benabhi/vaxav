@@ -1,5 +1,23 @@
 <template>
   <div>
+    <!-- Header section with title and create button -->
+    <div v-if="showHeader" class="flex justify-between items-center mb-4">
+      <h2 v-if="title" class="text-xl font-bold text-white">{{ title }}</h2>
+      <div v-else></div>
+
+      <button
+        v-if="showCreateButton"
+        type="button"
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none flex items-center"
+        @click="$emit('create')"
+      >
+        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        {{ createButtonLabel }}
+      </button>
+    </div>
+
     <!-- Filters section -->
     <BaseFilters
       v-if="showFilters"
@@ -28,7 +46,7 @@
             </option>
           </select>
         </div>
-        
+
         <!-- Custom filter slots -->
         <slot name="filters"></slot>
       </template>
@@ -51,19 +69,19 @@
       <template v-if="$slots.loading" #loading>
         <slot name="loading"></slot>
       </template>
-      
+
       <!-- Empty slot -->
       <template v-if="$slots.empty" #empty>
         <slot name="empty"></slot>
       </template>
-      
+
       <!-- Dynamic cell slots -->
       <template v-for="column in columns" :key="column.key" #[`cell(${column.key})`]="slotProps">
         <slot :name="`cell(${column.key})`" v-bind="slotProps">
           {{ slotProps.value }}
         </slot>
       </template>
-      
+
       <!-- Actions slot -->
       <template v-if="$slots.actions" #actions="slotProps">
         <slot name="actions" v-bind="slotProps"></slot>
@@ -98,6 +116,34 @@ const props = defineProps({
   id: {
     type: String,
     default: () => `data-table-${Math.random().toString(36).substring(2, 9)}`
+  },
+  /**
+   * Title for the data table
+   */
+  title: {
+    type: String,
+    default: ''
+  },
+  /**
+   * Whether to show the header section
+   */
+  showHeader: {
+    type: Boolean,
+    default: true
+  },
+  /**
+   * Whether to show the create button
+   */
+  showCreateButton: {
+    type: Boolean,
+    default: true
+  },
+  /**
+   * Label for the create button
+   */
+  createButtonLabel: {
+    type: String,
+    default: 'Crear nuevo'
   },
   /**
    * Array of column definitions
@@ -277,7 +323,10 @@ const emit = defineEmits([
   'per-page-change',
   'sort-change',
   'filter-change',
-  'row-click'
+  'row-click',
+  'create',
+  'edit',
+  'delete'
 ]);
 
 // Local state
@@ -296,7 +345,7 @@ const handleSort = (key: string) => {
     sortKey.value = key;
     sortOrder.value = 'asc';
   }
-  
+
   emit('update:sortKey', sortKey.value);
   emit('update:sortOrder', sortOrder.value);
   emit('sort-change', { key: sortKey.value, order: sortOrder.value });
@@ -342,7 +391,7 @@ onMounted(() => {
   // Set initial sort key and order
   sortKey.value = props.initialSortKey;
   sortOrder.value = props.initialSortOrder;
-  
+
   // Set initial per page
   localPerPage.value = props.perPage;
 });

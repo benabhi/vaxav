@@ -13,6 +13,10 @@ Esta documentación describe los componentes de tablas de datos disponibles en V
 | Nombre | Tipo | Valor por defecto | Descripción |
 |--------|------|------------------|-------------|
 | `id` | `String` | Generado automáticamente | Identificador único para el componente |
+| `title` | `String` | `''` | Título para la tabla de datos |
+| `showHeader` | `Boolean` | `true` | Si se muestra la sección de encabezado |
+| `showCreateButton` | `Boolean` | `true` | Si se muestra el botón de crear |
+| `createButtonLabel` | `String` | `'Crear nuevo'` | Etiqueta para el botón de crear |
 | `columns` | `Array` | `[]` | Array de definiciones de columnas |
 | `items` | `Array` | `[]` | Array de elementos a mostrar |
 | `rowKey` | `String` | `'id'` | Propiedad a usar como clave única para las filas |
@@ -51,6 +55,9 @@ Esta documentación describe los componentes de tablas de datos disponibles en V
 | `sort-change` | `{ key, order }` | Emitido cuando se cambia la ordenación |
 | `filter-change` | `filters` | Emitido cuando se cambian los filtros |
 | `row-click` | `item` | Emitido cuando se hace clic en una fila |
+| `create` | - | Emitido cuando se hace clic en el botón de crear |
+| `edit` | `item` | Emitido cuando se hace clic en el botón de editar |
+| `delete` | `item` | Emitido cuando se hace clic en el botón de eliminar |
 
 ### Slots
 
@@ -108,7 +115,7 @@ const fetchUsers = async (page = 1) => {
         per_page: 10
       }
     });
-    
+
     users.value = response.data.data;
     totalUsers.value = response.data.total;
     totalPages.value = response.data.last_page;
@@ -133,18 +140,21 @@ fetchUsers();
 </script>
 ```
 
-#### Tabla de Datos con Celdas Personalizadas
+#### Tabla de Datos con Celdas Personalizadas y Botones de Acción
 
 ```vue
 <template>
   <BaseDataTable
+    title="Gestión de Usuarios"
     :columns="columns"
     :items="users"
     :loading="loading"
     :total="totalUsers"
     :total-pages="totalPages"
     :current-page="currentPage"
+    create-button-label="Nuevo Usuario"
     @page-change="fetchUsers"
+    @create="openCreateModal"
   >
     <template #cell(name)="{ item }">
       <div class="flex items-center">
@@ -152,7 +162,7 @@ fetchUsers();
         <span>{{ item.name }}</span>
       </div>
     </template>
-    
+
     <template #cell(status)="{ item }">
       <span
         class="px-2 py-1 rounded-full text-xs"
@@ -161,13 +171,61 @@ fetchUsers();
         {{ item.active ? 'Activo' : 'Inactivo' }}
       </span>
     </template>
-    
+
     <template #actions="{ item }">
-      <button class="text-blue-500 hover:text-blue-700 mr-2">Editar</button>
-      <button class="text-red-500 hover:text-red-700">Eliminar</button>
+      <button
+        class="text-blue-400 hover:text-blue-300 mr-4"
+        @click="editUser(item)"
+      >
+        Editar
+      </button>
+      <button
+        class="text-red-400 hover:text-red-300"
+        @click="confirmDeleteUser(item)"
+      >
+        Eliminar
+      </button>
     </template>
   </BaseDataTable>
 </template>
+
+<script setup>
+import { ref } from 'vue';
+import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
+
+const users = ref([]);
+const loading = ref(false);
+const totalUsers = ref(0);
+const totalPages = ref(1);
+const currentPage = ref(1);
+
+const columns = [
+  { key: 'name', label: 'Nombre', sortable: true },
+  { key: 'email', label: 'Correo electrónico', sortable: true },
+  { key: 'role', label: 'Rol' },
+  { key: 'status', label: 'Estado' },
+  { key: 'created_at', label: 'Fecha de registro', sortable: true }
+];
+
+const openCreateModal = () => {
+  // Lógica para abrir el modal de creación
+  console.log('Abrir modal de creación');
+};
+
+const editUser = (user) => {
+  // Lógica para editar un usuario
+  console.log('Editar usuario:', user);
+};
+
+const confirmDeleteUser = (user) => {
+  // Lógica para confirmar la eliminación de un usuario
+  console.log('Confirmar eliminación de usuario:', user);
+};
+
+const fetchUsers = async (page = 1) => {
+  // Lógica para cargar usuarios
+};
+</script>
 ```
 
 #### Tabla de Datos con Filtros Personalizados
@@ -198,7 +256,7 @@ fetchUsers();
           <option value="guest">Invitado</option>
         </select>
       </div>
-      
+
       <div class="w-full md:w-auto">
         <label for="status-filter" class="block text-sm font-medium text-gray-300 mb-1">
           Estado
@@ -322,7 +380,7 @@ const handleFilterChange = (newFilters) => {
           <option value="guest">Invitado</option>
         </select>
       </div>
-      
+
       <div class="w-full md:w-auto">
         <label for="date-filter" class="block text-sm font-medium text-gray-300 mb-1">
           Fecha de registro
@@ -414,7 +472,7 @@ const fetchData = async () => {
         status: filters.status
       }
     });
-    
+
     items.value = response.data.data;
     total.value = response.data.total;
     totalPages.value = response.data.last_page;
