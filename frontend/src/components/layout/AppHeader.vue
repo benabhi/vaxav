@@ -40,16 +40,20 @@
             <span class="mr-2">{{ user?.name }}</span>
             <span class="text-blue-400">{{ credits }} ISK</span>
           </div>
-          <button @click="logout" class="btn btn-secondary text-sm">
+          <BaseButton variant="secondary" size="sm" @click="logout">
             Cerrar Sesión
-          </button>
+          </BaseButton>
         </template>
         <template v-else>
-          <RouterLink to="/login" class="btn btn-secondary text-sm">
-            Iniciar Sesión
+          <RouterLink to="/login" custom v-slot="{ navigate }">
+            <BaseButton variant="secondary" size="sm" @click="navigate">
+              Iniciar Sesión
+            </BaseButton>
           </RouterLink>
-          <RouterLink to="/register" class="btn btn-primary text-sm">
-            Registrarse
+          <RouterLink to="/register" custom v-slot="{ navigate }">
+            <BaseButton variant="primary" size="sm" @click="navigate">
+              Registrarse
+            </BaseButton>
           </RouterLink>
         </template>
       </div>
@@ -62,6 +66,7 @@ import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
+import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 
 const authStore = useAuthStore();
 const pilotStore = usePilotStore();

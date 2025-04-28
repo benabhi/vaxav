@@ -267,15 +267,12 @@
         </div>
 
         <div class="flex space-x-3">
-          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md"
-            :disabled="saving">
-            <span v-if="saving">Procesando...</span>
-            <span v-else>{{ editingUser ? 'Guardar cambios' : 'Crear usuario' }}</span>
-          </button>
-          <button type="button" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md"
-            @click="closeUserModal">
+          <BaseButton type="submit" variant="primary" :full-width="true" :loading="saving">
+            {{ editingUser ? 'Guardar cambios' : 'Crear usuario' }}
+          </BaseButton>
+          <BaseButton type="button" variant="secondary" :full-width="true" @click="closeUserModal">
             Cancelar
-          </button>
+          </BaseButton>
         </div>
       </form>
     </BaseModal>
@@ -297,15 +294,12 @@
       </div>
 
       <div class="flex space-x-3">
-        <button type="button" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md"
-          :disabled="deleting" @click="deleteUser">
-          <span v-if="deleting">Procesando...</span>
-          <span v-else>Eliminar</span>
-        </button>
-        <button type="button" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md"
-          @click="closeDeleteModal">
+        <BaseButton type="button" variant="danger" :full-width="true" :loading="deleting" @click="deleteUser">
+          Eliminar
+        </BaseButton>
+        <BaseButton type="button" variant="secondary" :full-width="true" @click="closeDeleteModal">
           Cancelar
-        </button>
+        </BaseButton>
       </div>
     </BaseModal>
   </AdminLayout>

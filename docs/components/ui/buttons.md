@@ -18,7 +18,7 @@ Los botones son componentes interactivos que permiten a los usuarios realizar ac
 | `size` | `String` | `'md'` | Tamaño del botón (`'sm'`, `'md'`, `'lg'`, `'xl'`) |
 | `disabled` | `Boolean` | `false` | Si el botón está deshabilitado |
 | `loading` | `Boolean` | `false` | Si el botón está en estado de carga |
-| `fullWidth` | `Boolean` | `false` | Si el botón debe ocupar todo el ancho disponible |
+| `fullWidth` | `Boolean` | `false` | Si el botón debe ocupar todo el ancho disponible (adaptativo) |
 | `rounded` | `Boolean` | `false` | Si el botón debe tener bordes completamente redondeados |
 | `icon` | `Boolean` | `false` | Si el botón es solo un icono (forma circular) |
 | `type` | `String` | `'button'` | Tipo de botón HTML (`'button'`, `'submit'`, `'reset'`) |
@@ -47,7 +47,17 @@ Los botones son componentes interactivos que permiten a los usuarios realizar ac
 
 **Botón con Variante**:
 ```vue
+<BaseButton variant="secondary">Cancelar</BaseButton>
+```
+
+**Botón de Acción Destructiva**:
+```vue
 <BaseButton variant="danger">Eliminar</BaseButton>
+```
+
+**Botón Adaptativo (Ancho Completo)**:
+```vue
+<BaseButton :full-width="true">Botón Adaptativo</BaseButton>
 ```
 
 **Botón con Icono**:
@@ -164,7 +174,9 @@ Los botones tienen los siguientes estados visuales:
 2. Usa `IconButton` para botones que solo contienen un icono.
 3. Usa `LinkButton` para enlaces que deben parecer botones.
 4. Usa la variante `primary` para la acción principal en un formulario o sección.
-5. Usa la variante `danger` para acciones destructivas que requieren atención.
-6. Proporciona siempre un estado de carga para acciones asíncronas.
-7. Incluye texto descriptivo en los botones; evita términos ambiguos como "OK" o "Cancelar".
-8. Para botones de solo icono, siempre proporciona un tooltip para accesibilidad.
+5. Usa la variante `secondary` para acciones secundarias como "Cancelar" o "Cerrar".
+6. Usa la variante `danger` para acciones destructivas que requieren atención, como "Eliminar".
+7. Usa la propiedad `fullWidth` cuando necesites que el botón se adapte al ancho de su contenedor.
+8. Proporciona siempre un estado de carga para acciones asíncronas.
+9. Incluye texto descriptivo en los botones; evita términos ambiguos como "OK" o "Cancelar".
+10. Para botones de solo icono, siempre proporciona un tooltip para accesibilidad.

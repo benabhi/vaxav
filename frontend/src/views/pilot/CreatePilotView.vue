@@ -2,11 +2,11 @@
   <div class="container mx-auto px-4 py-12">
     <div class="max-w-md mx-auto card p-6">
       <h1 class="text-2xl font-bold mb-6 text-center">Crear Piloto</h1>
-      
+
       <div v-if="pilotStore.error" class="bg-red-900/50 text-red-200 p-3 rounded-md mb-4">
         {{ pilotStore.error }}
       </div>
-      
+
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
           <label for="name" class="block text-gray-300 mb-1">Nombre del Piloto</label>
@@ -18,7 +18,7 @@
             required
           />
         </div>
-        
+
         <div class="mb-6">
           <label for="race" class="block text-gray-300 mb-1">Raza</label>
           <select
@@ -34,7 +34,7 @@
             <option value="Sintético">Sintético</option>
           </select>
         </div>
-        
+
         <div class="mb-6">
           <h3 class="text-lg font-semibold mb-2">Bonificaciones de Raza</h3>
           <div v-if="form.race" class="bg-gray-700/50 p-3 rounded-md">
@@ -59,15 +59,16 @@
             Selecciona una raza para ver sus bonificaciones
           </div>
         </div>
-        
-        <button
+
+        <BaseButton
           type="submit"
-          class="btn btn-primary w-full"
-          :disabled="pilotStore.loading || !form.race"
+          variant="primary"
+          :full-width="true"
+          :loading="pilotStore.loading"
+          :disabled="!form.race"
         >
-          <span v-if="pilotStore.loading">Creando piloto...</span>
-          <span v-else>Crear Piloto</span>
-        </button>
+          Crear Piloto
+        </BaseButton>
       </form>
     </div>
   </div>
@@ -77,6 +78,7 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePilotStore } from '@/stores/pilot';
+import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 
 const router = useRouter();
 const pilotStore = usePilotStore();
@@ -88,7 +90,7 @@ const form = reactive({
 
 const handleSubmit = async () => {
   await pilotStore.createPilot(form);
-  
+
   if (pilotStore.currentPilot) {
     router.push('/');
   }

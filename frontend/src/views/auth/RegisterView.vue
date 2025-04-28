@@ -2,11 +2,11 @@
   <div class="container mx-auto px-4 py-12">
     <div class="max-w-md mx-auto card p-6">
       <h1 class="text-2xl font-bold mb-6 text-center">Crear Cuenta</h1>
-      
+
       <div v-if="authStore.error" class="bg-red-900/50 text-red-200 p-3 rounded-md mb-4">
         {{ authStore.error }}
       </div>
-      
+
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
           <label for="name" class="block text-gray-300 mb-1">Nombre</label>
@@ -18,7 +18,7 @@
             required
           />
         </div>
-        
+
         <div class="mb-4">
           <label for="email" class="block text-gray-300 mb-1">Email</label>
           <input
@@ -29,7 +29,7 @@
             required
           />
         </div>
-        
+
         <div class="mb-4">
           <label for="password" class="block text-gray-300 mb-1">Contraseña</label>
           <input
@@ -40,7 +40,7 @@
             required
           />
         </div>
-        
+
         <div class="mb-6">
           <label for="password_confirmation" class="block text-gray-300 mb-1">Confirmar Contraseña</label>
           <input
@@ -51,17 +51,17 @@
             required
           />
         </div>
-        
-        <button
+
+        <BaseButton
           type="submit"
-          class="btn btn-primary w-full"
-          :disabled="authStore.loading"
+          variant="primary"
+          :full-width="true"
+          :loading="authStore.loading"
         >
-          <span v-if="authStore.loading">Cargando...</span>
-          <span v-else>Registrarse</span>
-        </button>
+          Registrarse
+        </BaseButton>
       </form>
-      
+
       <div class="mt-4 text-center text-gray-400">
         ¿Ya tienes una cuenta?
         <RouterLink to="/login" class="text-blue-400 hover:underline">
@@ -76,6 +76,7 @@
 import { reactive } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -89,7 +90,7 @@ const form = reactive({
 
 const handleSubmit = async () => {
   await authStore.register(form);
-  
+
   if (authStore.isLoggedIn) {
     router.push('/create-pilot');
   }
