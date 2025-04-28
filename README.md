@@ -6,6 +6,10 @@ Vaxav es un juego multijugador masivo (MMO) basado en navegador con ambientació
 
 Para una documentación más detallada, consulta la [carpeta docs](./docs/README.md).
 
+### Guía de Estilo
+
+Para mantener la coherencia visual y estructural en toda la aplicación, consulta nuestra [Guía de Estilo](./docs/design/style-guide.md) que incluye información sobre componentes, estructura, paleta de colores y mejores prácticas.
+
 ## Visión General
 
 El proyecto está dividido en dos partes principales:
@@ -79,6 +83,24 @@ El sistema utiliza autenticación basada en tokens (Laravel Sanctum) para la com
 
 - **Email**: test@example.com
 - **Contraseña**: password
+
+## Testing
+
+El proyecto incluye tests automatizados tanto para el frontend como para el backend. Para más detalles, consulta la [documentación de testing](./docs/testing/testing-strategy.md).
+
+### Ejecutar Tests del Backend
+
+```bash
+cd api
+php artisan test
+```
+
+### Ejecutar Tests del Frontend
+
+```bash
+cd frontend
+npm run test:unit
+```
 
 ## Solución de Problemas
 

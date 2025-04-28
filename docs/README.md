@@ -17,6 +17,12 @@ Bienvenido a la documentación de Vaxav, un MMO espacial en navegador web. Esta 
 - [Frontend (Vue.js)](./architecture/frontend.md) - Detalles sobre el frontend
 - [Base de Datos](./architecture/database.md) - Esquema y relaciones de la base de datos
 
+### Diseño y Estilo
+
+- [Guía de Estilo](./design/style-guide.md) - Guía completa de estilo para mantener la coherencia visual
+- [Diseño y Estilo](./design/README.md) - Visión general del diseño de Vaxav
+- [Sistema de Componentes](./components/README.md) - Documentación del sistema de componentes
+
 ### API y Autenticación
 
 - [Autenticación y Autorización](./auth/README.md) - Sistema completo de autenticación y autorización
@@ -29,11 +35,16 @@ Bienvenido a la documentación de Vaxav, un MMO espacial en navegador web. Esta 
 - [Naves](./api/ships.md) - Endpoints relacionados con naves
 - [Mercado](./api/market.md) - Endpoints relacionados con el mercado
 
+### Testing
+
+- [Estrategia de Testing](./testing/testing-strategy.md) - Visión general de la estrategia de testing
+- [Testing Frontend](./testing/frontend-testing.md) - Guía para escribir y ejecutar tests en el frontend
+- [Testing Backend](./testing/backend-testing.md) - Guía para escribir y ejecutar tests en el backend
+
 ### Guías de Desarrollo
 
 - [Contribución](./development/contributing.md) - Cómo contribuir al proyecto
 - [Estándares de Código](./development/code-standards.md) - Estándares y convenciones de código
-- [Pruebas](./development/testing.md) - Cómo ejecutar y escribir pruebas
 
 ### Solución de Problemas
 
