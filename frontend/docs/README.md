@@ -37,6 +37,9 @@ Esta carpeta contiene la documentación de los componentes, composables y otras 
 - [AdminLayout](./components/AdminLayout.md)
 - [BaseCard](./components/BaseCard.md)
 
+### Componentes de Marca
+- [BaseLogo](./components/BaseLogo.md)
+
 ## Composables
 
 - [useForm](./composables/useForm.md)
