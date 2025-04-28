@@ -1,26 +1,23 @@
 <template>
-  <div class="bg-gray-800 p-4 rounded-lg mb-4">
-    <div class="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+  <div class="bg-gray-800 p-3 rounded-lg mb-4">
+    <div class="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3 items-center">
       <!-- Search input -->
       <div v-if="showSearch" class="flex-grow">
-        <label v-if="searchLabel" :for="`${id}-search`" class="block text-sm font-medium text-gray-300 mb-1">
-          {{ searchLabel }}
-        </label>
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <BaseInput
+          :id="`${id}-search`"
+          v-model="localFilters.search"
+          :label="searchLabel"
+          :placeholder="searchPlaceholder"
+          prefixIcon
+          size="sm"
+          @update:modelValue="debouncedEmitChange"
+        >
+          <template #prefix>
             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
             </svg>
-          </div>
-          <input
-            :id="`${id}-search`"
-            v-model="localFilters.search"
-            type="text"
-            :placeholder="searchPlaceholder"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:border-blue-500"
-            @input="debouncedEmitChange"
-          />
-        </div>
+          </template>
+        </BaseInput>
       </div>
 
       <!-- Filter slots -->
@@ -28,22 +25,24 @@
 
       <!-- Action buttons -->
       <div class="flex space-x-2 md:self-end">
-        <button
+        <BaseButton
           v-if="showReset"
-          type="button"
-          class="px-4 py-2 border border-gray-600 rounded-md bg-gray-700 text-gray-300 hover:bg-gray-600 focus:outline-none"
+          variant="secondary"
+          size="md"
+          class="h-[36px]"
           @click="resetFilters"
         >
           {{ resetLabel }}
-        </button>
-        <button
+        </BaseButton>
+        <BaseButton
           v-if="showApply"
-          type="button"
-          class="px-4 py-2 border border-blue-600 rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none"
+          variant="primary"
+          size="md"
+          class="h-[36px]"
           @click="applyFilters"
         >
           {{ applyLabel }}
-        </button>
+        </BaseButton>
       </div>
     </div>
   </div>
@@ -51,6 +50,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue';
+import BaseInput from '../forms/BaseInput.vue';
+import BaseButton from '../buttons/BaseButton.vue';
 
 // Define props
 const props = defineProps({
@@ -184,7 +185,7 @@ const applyFilters = () => {
 const resetFilters = () => {
   // Reset search
   localFilters.search = '';
-  
+
   // Reset other filters
   Object.keys(localFilters).forEach(key => {
     if (key !== 'search') {
@@ -197,7 +198,7 @@ const resetFilters = () => {
       }
     }
   });
-  
+
   emit('update:filters', { ...localFilters });
   emit('filter-change', { ...localFilters });
   emit('reset');

@@ -29,74 +29,64 @@
     </template>
 
     <div class="py-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-semibold text-white">Roles</h1>
-        <BaseButton @click="openCreateRoleModal">
-          Nuevo Rol
-        </BaseButton>
-      </div>
+      <!-- Roles DataTable -->
+      <BaseDataTable
+        title="Roles"
+        :columns="columns"
+        :items="roles"
+        :loading="loading"
+        :total-pages="pagination.totalPages"
+        :current-page="pagination.currentPage"
+        :per-page="pagination.perPage"
+        :filters="filters"
+        row-key="id"
+        create-button-label="Nuevo Rol"
+        search-placeholder="Buscar roles..."
+        item-name="roles"
+        @create="openCreateRoleModal"
+        @page-change="changePage"
+        @per-page-change="handlePerPageChange"
+        @filter-change="handleFilterChange"
+      >
+        <template #cell(name)="{ item }">
+          <div class="text-sm font-medium text-white">{{ item.name }}</div>
+        </template>
 
-      <!-- Roles table -->
-      <div class="mt-8 flex flex-col">
-        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-            <div class="shadow overflow-hidden border border-gray-700 sm:rounded-lg">
-              <BaseTable
-                :columns="columns"
-                :items="roles"
-                :loading="loading"
-                row-key="id"
-              >
-                <template #loading>
-                  Cargando roles...
-                </template>
-                <template #empty>
-                  No se encontraron roles
-                </template>
+        <template #cell(slug)="{ item }">
+          <div class="text-sm text-gray-300">{{ item.slug }}</div>
+        </template>
 
-                <template #cell(name)="{ item }">
-                  <div class="text-sm font-medium text-white">{{ item.name }}</div>
-                </template>
+        <template #cell(description)="{ item }">
+          <div class="text-sm text-gray-300">{{ item.description || 'Sin descripción' }}</div>
+        </template>
 
-                <template #cell(slug)="{ item }">
-                  <div class="text-sm text-gray-300">{{ item.slug }}</div>
-                </template>
-
-                <template #cell(description)="{ item }">
-                  <div class="text-sm text-gray-300">{{ item.description || 'Sin descripción' }}</div>
-                </template>
-
-                <template #cell(permissions)="{ item }">
-                  <div class="flex flex-wrap gap-1">
-                    <span v-for="permission in item.permissions.slice(0, 3)" :key="permission.id"
-                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                      {{ permission.name }}
-                    </span>
-                    <span v-if="item.permissions.length > 3"
-                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                      +{{ item.permissions.length - 3 }} más
-                    </span>
-                  </div>
-                </template>
-
-                <template #actions="{ item }">
-                  <button @click="editRole(item)" class="text-blue-400 hover:text-blue-300 mr-4"
-                    :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(item.slug) && !isSuperAdmin">
-                    Editar
-                  </button>
-                  <button
-                    @click="confirmDeleteRole(item)"
-                    class="text-red-400 hover:text-red-300"
-                    :class="{ 'opacity-50 cursor-not-allowed': ['superadmin', 'admin', 'moderator', 'user'].includes(item.slug) }"
-                    :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(item.slug)">
-                    Eliminar
-                  </button>
-                </template>
-              </BaseTable>
-            </div>
+        <template #cell(permissions)="{ item }">
+          <div class="flex flex-wrap gap-1">
+            <span v-for="permission in item.permissions.slice(0, 3)" :key="permission.id"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+              {{ permission.name }}
+            </span>
+            <span v-if="item.permissions.length > 3"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+              +{{ item.permissions.length - 3 }} más
+            </span>
           </div>
-        </div>
-      </div>
+        </template>
+
+        <template #actions="{ item }">
+          <button @click="editRole(item)" class="text-blue-400 hover:text-blue-300 mr-4"
+            :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(item.slug) && !isSuperAdmin">
+            Editar
+          </button>
+          <button
+            @click="confirmDeleteRole(item)"
+            class="text-red-400 hover:text-red-300"
+            :class="{ 'opacity-50 cursor-not-allowed': ['superadmin', 'admin', 'moderator', 'user'].includes(item.slug) }"
+            :disabled="['superadmin', 'admin', 'moderator', 'user'].includes(item.slug)">
+            Eliminar
+          </button>
+        </template>
+      </BaseDataTable>
     </div>
 
     <!-- Role form modal (create/edit) -->
@@ -205,7 +195,7 @@ import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
-import BaseTable from '@/components/ui/tables/BaseTable.vue';
+import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
@@ -224,11 +214,23 @@ const loading = ref(true);
 
 // Table columns
 const columns = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'slug', label: 'Slug' },
+  { key: 'name', label: 'Nombre', sortable: true },
+  { key: 'slug', label: 'Slug', sortable: true },
   { key: 'description', label: 'Descripción' },
   { key: 'permissions', label: 'Permisos' }
 ];
+
+// Pagination
+const pagination = reactive({
+  currentPage: 1,
+  totalPages: 1,
+  perPage: 10
+});
+
+// Filters
+const filters = reactive({
+  search: ''
+});
 
 // Role form
 const showRoleModal = ref(false);
@@ -289,22 +291,66 @@ const fetchPermissions = async () => {
 const fetchRoles = async () => {
   loading.value = true;
   try {
-    // Call the API to get roles
-    const response = await api.get('/admin/roles');
+    // Call the API with filters and pagination
+    const params = {
+      ...filters,
+      page: pagination.currentPage,
+      per_page: pagination.perPage
+    };
+
+    const response = await api.get('/admin/roles', { params });
     console.log('Roles fetched successfully:', response.data);
 
     if (response.data && response.data.data) {
       roles.value = response.data.data;
+
+      // Update pagination
+      if (response.data.total) {
+        pagination.totalPages = Math.ceil(response.data.total / pagination.perPage);
+      } else if (response.data.last_page) {
+        pagination.totalPages = response.data.last_page;
+      }
+
+      if (response.data.current_page) {
+        pagination.currentPage = response.data.current_page;
+      }
     } else {
       console.error('Unexpected API response format:', response.data);
       roles.value = [];
+      pagination.totalPages = 1;
     }
   } catch (error) {
     console.error('Error fetching roles:', error);
     roles.value = [];
+    pagination.totalPages = 1;
   } finally {
     loading.value = false;
   }
+};
+
+// Change page
+const changePage = (page) => {
+  pagination.currentPage = page;
+  fetchRoles();
+};
+
+// Handle filter change
+const handleFilterChange = (newFilters) => {
+  // Update local filters with new values
+  Object.keys(newFilters).forEach(key => {
+    filters[key] = newFilters[key];
+  });
+
+  // Reset to first page when filters change
+  pagination.currentPage = 1;
+  fetchRoles();
+};
+
+// Handle per page change
+const handlePerPageChange = (newPerPage) => {
+  pagination.perPage = newPerPage;
+  pagination.currentPage = 1; // Reset to first page
+  fetchRoles();
 };
 
 // Open create role modal

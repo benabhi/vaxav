@@ -5,17 +5,18 @@
       <h2 v-if="title" class="text-xl font-bold text-white">{{ title }}</h2>
       <div v-else></div>
 
-      <button
+      <BaseButton
         v-if="showCreateButton"
-        type="button"
-        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none flex items-center"
+        variant="primary"
         @click="$emit('create')"
       >
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
+        <template #prefix>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </template>
         {{ createButtonLabel }}
-      </button>
+      </BaseButton>
     </div>
 
     <!-- Filters section -->
@@ -32,19 +33,16 @@
       <template #filters>
         <!-- Per page selector -->
         <div v-if="showPerPage" class="w-full md:w-auto">
-          <label :for="`${id}-per-page`" class="block text-sm font-medium text-gray-300 mb-1">
-            {{ perPageLabel }}
-          </label>
-          <select
-            :id="`${id}-per-page`"
-            v-model="localPerPage"
-            class="block w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white focus:outline-none focus:border-blue-500"
-            @change="handlePerPageChange"
-          >
-            <option v-for="option in perPageOptions" :key="option" :value="option">
-              {{ option }}
-            </option>
-          </select>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm text-gray-300">{{ perPageLabel }}:</span>
+            <BaseSelect
+              :id="`${id}-per-page`"
+              v-model="localPerPage"
+              :options="perPageOptionsFormatted"
+              size="sm"
+              @update:modelValue="handlePerPageChange"
+            />
+          </div>
         </div>
 
         <!-- Custom filter slots -->
@@ -107,6 +105,8 @@ import { ref, reactive, computed, watch, onMounted } from 'vue';
 import BaseTable from './BaseTable.vue';
 import BasePaginator from '../pagination/BasePaginator.vue';
 import BaseFilters from '../filters/BaseFilters.vue';
+import BaseButton from '../buttons/BaseButton.vue';
+import BaseSelect from '../forms/BaseSelect.vue';
 
 // Define props
 const props = defineProps({
@@ -334,6 +334,14 @@ const sortKey = ref(props.initialSortKey);
 const sortOrder = ref(props.initialSortOrder);
 const localFilters = reactive({ ...props.filters });
 const localPerPage = ref(props.perPage);
+
+// Computed properties
+const perPageOptionsFormatted = computed(() => {
+  return props.perPageOptions.map(option => ({
+    value: option,
+    label: option.toString()
+  }));
+});
 
 // Handle sort
 const handleSort = (key: string) => {

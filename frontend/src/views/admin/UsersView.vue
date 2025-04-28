@@ -29,127 +29,90 @@
     </template>
 
     <div class="py-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-semibold text-white">Usuarios</h1>
-        <BaseButton @click="openCreateUserModal">
-          Nuevo Usuario
-        </BaseButton>
-      </div>
-
-      <!-- Filters -->
-      <div class="mt-6 bg-gray-800 shadow px-4 py-5 sm:rounded-lg sm:p-6 border border-gray-700">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <div>
-            <BaseInput v-model="filters.search" placeholder="Buscar por nombre o email" prefixIcon>
-              <template #prefix>
-                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </template>
-            </BaseInput>
-          </div>
-
-          <div>
-            <BaseSelect
-              id="role-filter"
-              v-model="filters.role"
-              label="Rol"
-              labelClass="text-sm font-medium text-white"
-              :options="[
-                { value: '', label: 'Todos los roles' },
-                { value: 'superadmin', label: 'Super Admin' },
-                { value: 'admin', label: 'Administrador' },
-                { value: 'moderator', label: 'Moderador' },
-                { value: 'user', label: 'Usuario' }
-              ]"
-            />
-          </div>
-
-          <div class="flex items-end space-x-2">
-            <BaseButton variant="secondary" @click="applyFilters">Filtrar</BaseButton>
-            <BaseButton variant="ghost" @click="resetFilters">Limpiar</BaseButton>
-          </div>
-        </div>
-      </div>
-
-      <!-- Users table -->
-      <div class="mt-8 flex flex-col">
-        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-            <div class="shadow overflow-hidden border border-gray-700 sm:rounded-lg">
-              <BaseTable
-                :columns="columns"
-                :items="users"
-                :loading="loading"
-                row-key="id"
-              >
-                <template #loading>
-                  Cargando usuarios...
-                </template>
-                <template #empty>
-                  No se encontraron usuarios
-                </template>
-
-                <template #cell(user)="{ item }">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <img class="h-10 w-10 rounded-full"
-                        :src="item.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'"
-                        alt="" />
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-white">
-                        {{ item.name }}
-                      </div>
-                      <div class="text-sm text-gray-300">
-                        {{ item.email }}
-                      </div>
-                    </div>
-                  </div>
-                </template>
-
-                <template #cell(roles)="{ item }">
-                  <div v-for="role in item.roles" :key="role.id"
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
-                    :class="roleClasses[role.slug] || roleClasses.default">
-                    {{ role.name }}
-                  </div>
-                </template>
-
-                <template #cell(status)="{ item }">
-                  <span
-                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                  </span>
-                </template>
-
-                <template #cell(created_at)="{ item }">
-                  {{ formatDate(item.created_at) }}
-                </template>
-
-                <template #actions="{ item }">
-                  <button @click="editUser(item)" class="text-blue-400 hover:text-blue-300 mr-4">Editar</button>
-                  <button @click="confirmDeleteUser(item)" class="text-red-400 hover:text-red-300">Eliminar</button>
-                </template>
-              </BaseTable>
+      <!-- Users DataTable -->
+      <BaseDataTable
+        title="Usuarios"
+        :columns="columns"
+        :items="users"
+        :loading="loading"
+        :total="totalUsers"
+        :total-pages="pagination.totalPages"
+        :current-page="pagination.currentPage"
+        :per-page="pagination.perPage"
+        :filters="filters"
+        create-button-label="Nuevo Usuario"
+        search-placeholder="Buscar por nombre o email"
+        item-name="usuarios"
+        @page-change="changePage"
+        @per-page-change="handlePerPageChange"
+        @filter-change="handleFilterChange"
+        @create="openCreateUserModal"
+      >
+        <!-- Custom filters -->
+        <template #filters>
+          <div class="w-full md:w-auto">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-300">Rol:</span>
+              <BaseSelect
+                id="role-filter"
+                v-model="filters.role"
+                size="sm"
+                :options="[
+                  { value: '', label: 'Todos los roles' },
+                  { value: 'superadmin', label: 'Super Admin' },
+                  { value: 'admin', label: 'Administrador' },
+                  { value: 'moderator', label: 'Moderador' },
+                  { value: 'user', label: 'Usuario' }
+                ]"
+                class="block w-full"
+              />
             </div>
           </div>
-        </div>
-      </div>
+        </template>
 
-      <!-- Pagination -->
-      <div class="mt-4">
-        <BasePaginator
-          :current-page="pagination.currentPage"
-          :total-pages="pagination.totalPages"
-          :total="totalUsers"
-          :per-page="pagination.perPage"
-          item-name="usuarios"
-          @page-change="changePage"
-        />
-      </div>
+        <!-- Custom cell templates -->
+        <template #cell(user)="{ item }">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10">
+              <img class="h-10 w-10 rounded-full"
+                :src="item.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'"
+                alt="" />
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-white">
+                {{ item.name }}
+              </div>
+              <div class="text-sm text-gray-300">
+                {{ item.email }}
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template #cell(roles)="{ item }">
+          <div v-for="role in item.roles" :key="role.id"
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2"
+            :class="roleClasses[role.slug] || roleClasses.default">
+            {{ role.name }}
+          </div>
+        </template>
+
+        <template #cell(status)="{ item }">
+          <span
+            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            Activo
+          </span>
+        </template>
+
+        <template #cell(created_at)="{ item }">
+          {{ formatDate(item.created_at) }}
+        </template>
+
+        <template #actions="{ item }">
+          <button @click="editUser(item)" class="text-blue-400 hover:text-blue-300 mr-4">Editar</button>
+          <button @click="confirmDeleteUser(item)" class="text-red-400 hover:text-red-300">Eliminar</button>
+        </template>
+      </BaseDataTable>
     </div>
 
     <!-- User form modal (create/edit) -->
@@ -270,8 +233,7 @@ import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
-import BaseTable from '@/components/ui/tables/BaseTable.vue';
-import BasePaginator from '@/components/ui/pagination/BasePaginator.vue';
+import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
@@ -388,15 +350,22 @@ const changePage = (page) => {
   fetchUsers();
 };
 
-// Apply filters
-const applyFilters = () => {
+// Handle filter change
+const handleFilterChange = (newFilters) => {
+  // Update local filters with new values
+  Object.keys(newFilters).forEach(key => {
+    filters[key] = newFilters[key];
+  });
+
+  // Reset to first page when filters change
+  pagination.currentPage = 1;
   fetchUsers();
 };
 
-// Reset filters
-const resetFilters = () => {
-  filters.search = '';
-  filters.role = '';
+// Handle per page change
+const handlePerPageChange = (newPerPage) => {
+  pagination.perPage = newPerPage;
+  pagination.currentPage = 1; // Reset to first page
   fetchUsers();
 };
 
