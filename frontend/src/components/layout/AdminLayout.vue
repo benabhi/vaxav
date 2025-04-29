@@ -2,17 +2,43 @@
   <!-- Two-column layout that fits within App.vue's main element -->
   <div class="flex min-h-full">
     <!-- Column 1: Sidebar - fixed width, full height -->
-    <aside class="w-64 bg-gray-800 border-r border-gray-700 hidden lg:block">
+    <aside
+      class="w-64 bg-gray-800 border-r border-gray-700 hidden lg:block"
+    >
       <div class="sticky top-0 h-screen overflow-y-auto">
-        <VxvSidebar title="Panel Admin">
+        <VxvSidebar
+          title="Panel Admin"
+          :collapsible="false"
+          :is-mobile="false"
+        >
           <!-- User Management Group -->
-          <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
-            <VxvNavLink to="/admin/users" label="Usuarios" />
-            <VxvNavLink to="/admin/roles" label="Roles" />
+          <VxvSidebarGroup
+            title="Gestión de Usuarios"
+            :default-collapsed="false"
+            :is-sidebar-collapsed="false"
+            :is-mobile="false"
+          >
+            <VxvNavLink
+              to="/admin/users"
+              label="Usuarios"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+            />
+            <VxvNavLink
+              to="/admin/roles"
+              label="Roles"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+            />
           </VxvSidebarGroup>
 
           <!-- Other menu items -->
-          <VxvNavLink to="/admin/settings" label="Configuración" />
+          <VxvNavLink
+            to="/admin/settings"
+            label="Configuración"
+            :is-sidebar-collapsed="false"
+            :is-mobile="false"
+          />
         </VxvSidebar>
       </div>
     </aside>
@@ -58,30 +84,41 @@
         :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
         @click.stop
       >
-        <!-- Close button -->
-        <div class="absolute top-0 right-0 pt-2 -mr-12">
-          <button
-            type="button"
-            class="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-white"
-            @click="closeMobileMenu"
-          >
-            <span class="sr-only">Cerrar menú</span>
-            <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
         <!-- Mobile sidebar content -->
-        <VxvSidebar title="Panel Admin">
+        <VxvSidebar
+          title="Panel Admin"
+          :collapsible="false"
+          :is-mobile="true"
+          @close="closeMobileMenu"
+        >
           <!-- User Management Group -->
-          <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
-            <VxvNavLink to="/admin/users" label="Usuarios" />
-            <VxvNavLink to="/admin/roles" label="Roles" />
+          <VxvSidebarGroup
+            title="Gestión de Usuarios"
+            :default-collapsed="false"
+            :is-sidebar-collapsed="false"
+            :is-mobile="true"
+          >
+            <VxvNavLink
+              to="/admin/users"
+              label="Usuarios"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+            />
+            <VxvNavLink
+              to="/admin/roles"
+              label="Roles"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+            />
           </VxvSidebarGroup>
 
           <!-- Other menu items -->
-          <VxvNavLink to="/admin/settings" label="Configuración" />
+          <VxvNavLink
+            to="/admin/settings"
+            label="Configuración"
+            :is-sidebar-collapsed="false"
+            :is-mobile="true"
+          />
         </VxvSidebar>
       </div>
     </div>

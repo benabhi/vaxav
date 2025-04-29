@@ -5,17 +5,29 @@
       isActive ? activeClass : inactiveClass,
       'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
       horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
+      isSidebarCollapsed && !isMobile ? 'px-2 py-2 text-center' : '',
       className
     ]"
+    :title="label"
   >
-    <div class="flex items-center">
+    <div
+      class="flex items-center"
+      :class="{ 'justify-center': isSidebarCollapsed && !isMobile }"
+    >
       <component
         v-if="icon"
         :is="icon"
-        class="mr-2 h-5 w-5"
-        :class="isActive ? activeIconClass : inactiveIconClass"
+        class="h-5 w-5"
+        :class="[
+          isActive ? activeIconClass : inactiveIconClass,
+          { 'mr-0': isSidebarCollapsed && !isMobile, 'mr-2': !isSidebarCollapsed || isMobile }
+        ]"
       />
-      <span>{{ label }}</span>
+      <span
+        :class="{ 'sr-only': isSidebarCollapsed && !isMobile }"
+      >
+        {{ label }}
+      </span>
     </div>
   </router-link>
 </template>
@@ -64,6 +76,14 @@ const props = defineProps({
   className: {
     type: String,
     default: ''
+  },
+  isSidebarCollapsed: {
+    type: Boolean,
+    default: false
+  },
+  isMobile: {
+    type: Boolean,
+    default: false
   }
 });
 
