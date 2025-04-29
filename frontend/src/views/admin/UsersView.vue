@@ -494,9 +494,8 @@ const deleteUser = async () => {
     console.log('User deleted successfully');
 
     // Show success notification
-    notificationStore.success(
-      `El usuario ${userToDelete.value.name} ha sido eliminado correctamente.`,
-      'Usuario eliminado'
+    notificationStore.adminSuccess(
+      `El usuario ${userToDelete.value.name} ha sido eliminado correctamente.`
     );
 
     // Refresh the user list
@@ -507,9 +506,8 @@ const deleteUser = async () => {
     console.error('Error deleting user:', error);
 
     // Show error notification
-    notificationStore.error(
-      'Ha ocurrido un error al eliminar el usuario. Por favor, inténtelo de nuevo.',
-      'Error al eliminar'
+    notificationStore.adminError(
+      'Ha ocurrido un error al eliminar el usuario. Por favor, inténtelo de nuevo.'
     );
   } finally {
     deleting.value = false;

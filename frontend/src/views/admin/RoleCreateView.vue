@@ -189,9 +189,8 @@ const saveRole = async () => {
     console.log('Role created successfully:', response.data);
 
     // Show success notification
-    notificationStore.success(
-      `El rol ${roleForm.name} ha sido creado correctamente.`,
-      'Rol creado'
+    notificationStore.adminSuccess(
+      `El rol ${roleForm.name} ha sido creado correctamente.`
     );
 
     // Redirect to roles list

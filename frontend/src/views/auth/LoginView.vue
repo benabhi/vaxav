@@ -3,9 +3,12 @@
     <div class="max-w-md mx-auto card p-6">
       <h1 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h1>
 
-      <div v-if="authStore.error" class="bg-red-900/50 text-red-200 p-3 rounded-md mb-4">
-        {{ authStore.error }}
-      </div>
+      <BaseStaticAlert
+        v-if="authStore.error"
+        variant="error"
+        :message="authStore.error"
+        :dismissible="false"
+      />
 
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
@@ -54,6 +57,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
+import BaseStaticAlert from '@/components/ui/feedback/BaseStaticAlert.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

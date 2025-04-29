@@ -467,9 +467,8 @@ const deleteRole = async () => {
 
   // Check if role is a default role
   if (['superadmin', 'admin', 'moderator', 'user'].includes(roleToDelete.value.slug)) {
-    notificationStore.error(
-      `No se puede eliminar el rol ${roleToDelete.value.name} porque es un rol predeterminado del sistema.`,
-      'Error al eliminar'
+    notificationStore.adminError(
+      `No se puede eliminar el rol ${roleToDelete.value.name} porque es un rol predeterminado del sistema.`
     );
     return;
   }
@@ -482,9 +481,8 @@ const deleteRole = async () => {
     console.log('Role deleted successfully');
 
     // Show success notification
-    notificationStore.success(
-      `El rol ${roleToDelete.value.name} ha sido eliminado correctamente.`,
-      'Rol eliminado'
+    notificationStore.adminSuccess(
+      `El rol ${roleToDelete.value.name} ha sido eliminado correctamente.`
     );
 
     // Refresh the roles list
@@ -501,9 +499,8 @@ const deleteRole = async () => {
       errorMessage = 'No tienes permiso para eliminar este rol o es un rol predeterminado del sistema.';
     }
 
-    notificationStore.error(
-      errorMessage,
-      'Error al eliminar'
+    notificationStore.adminError(
+      errorMessage
     );
   } finally {
     deleting.value = false;

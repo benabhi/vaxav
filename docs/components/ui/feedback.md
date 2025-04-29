@@ -95,6 +95,7 @@ El store de notificaciones (`notification.js`) gestiona el estado de las notific
 |--------|------|-------------|
 | `notifications` | `Array` | Lista de notificaciones activas |
 | `nextId` | `Number` | ID para la próxima notificación |
+| `adminAlert` | `Object` | Alerta estática para el panel de administración |
 
 ### Acciones
 
@@ -107,6 +108,12 @@ El store de notificaciones (`notification.js`) gestiona el estado de las notific
 | `error` | `message, title, duration` | Añade una notificación de error |
 | `warning` | `message, title, duration` | Añade una notificación de advertencia |
 | `info` | `message, title, duration` | Añade una notificación de información |
+| `setAdminAlert` | `{ type, message }` | Establece una alerta estática en el panel de administración |
+| `clearAdminAlert` | - | Elimina la alerta estática del panel de administración |
+| `adminSuccess` | `message` | Establece una alerta estática de éxito en el panel de administración |
+| `adminError` | `message` | Establece una alerta estática de error en el panel de administración |
+| `adminWarning` | `message` | Establece una alerta estática de advertencia en el panel de administración |
+| `adminInfo` | `message` | Establece una alerta estática de información en el panel de administración |
 
 ### Ejemplo de Uso
 
@@ -115,6 +122,7 @@ import { useNotificationStore } from '@/stores/notification';
 
 const notificationStore = useNotificationStore();
 
+// Notificaciones temporales (esquina superior derecha)
 // Mostrar una notificación de éxito
 notificationStore.success('Usuario creado correctamente.', 'Éxito', 5000);
 
@@ -128,29 +136,108 @@ notificationStore.addNotification({
   message: 'El sistema se reiniciará en 5 minutos.',
   duration: 10000
 });
+
+// Alertas estáticas (debajo del breadcrumb en el panel de administración)
+// Mostrar una alerta estática de éxito
+notificationStore.adminSuccess('Usuario creado correctamente.');
+
+// Mostrar una alerta estática de error
+notificationStore.adminError('No se pudo crear el usuario.');
+
+// Mostrar una alerta estática de advertencia
+notificationStore.adminWarning('Esta acción no se puede deshacer.');
+
+// Mostrar una alerta estática de información
+notificationStore.adminInfo('Hay actualizaciones disponibles.');
+
+// Limpiar la alerta estática
+notificationStore.clearAdminAlert();
 ```
 
 ## Integración con Vistas
 
-Las notificaciones se utilizan en varias vistas para proporcionar feedback sobre las acciones del usuario:
+Las notificaciones y alertas estáticas se utilizan en varias vistas para proporcionar feedback sobre las acciones del usuario:
 
-### UsersView
+### UsersView y UserCreateView
 
-En la vista de usuarios, las notificaciones se muestran cuando:
+En las vistas de usuarios, se utilizan:
 
-- Se crea un usuario correctamente
-- Se actualiza un usuario correctamente
-- Se elimina un usuario correctamente
-- Ocurre un error al realizar alguna de estas acciones
+- **Alertas estáticas** (BaseStaticAlert):
+  - Se muestran debajo del breadcrumb en el panel de administración
+  - Se utilizan para mostrar mensajes de éxito o error al crear, actualizar o eliminar usuarios
+  - Permanecen visibles hasta que el usuario las cierra o navega a otra página
 
-### RolesView
+- **Notificaciones** (BaseNotification):
+  - Se muestran en la esquina superior derecha
+  - Se utilizan para mensajes menos importantes o temporales
+  - Desaparecen automáticamente después de un tiempo
 
-En la vista de roles, las notificaciones se muestran cuando:
+### RolesView y RoleCreateView
 
-- Se crea un rol correctamente
-- Se actualiza un rol correctamente
-- Se elimina un rol correctamente
-- Ocurre un error al realizar alguna de estas acciones
+En las vistas de roles, se utilizan de manera similar:
+
+- **Alertas estáticas** para mensajes importantes sobre la creación, actualización o eliminación de roles
+- **Notificaciones** para mensajes menos importantes o temporales
+
+### LoginView y RegisterView
+
+En las vistas de autenticación, se utilizan:
+
+- **Alertas estáticas** para mostrar errores de autenticación o registro
+- No se utilizan notificaciones en estas vistas
+
+## BaseStaticAlert
+
+`BaseStaticAlert` es un componente que muestra mensajes de alerta estáticos con diferentes variantes visuales. A diferencia de BaseAlert, este componente está diseñado para mostrarse en una ubicación fija dentro del layout, como debajo del breadcrumb en el panel de administración.
+
+**Archivo**: `/components/ui/feedback/BaseStaticAlert.vue`
+
+### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `variant` | `String` | `'error'` | Variante visual de la alerta (`'success'`, `'error'`, `'warning'`, `'info'`) |
+| `message` | `String` | `''` | Mensaje de la alerta |
+| `dismissible` | `Boolean` | `true` | Si la alerta puede ser cerrada por el usuario |
+
+### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `dismiss` | Emitido cuando la alerta es cerrada |
+
+### Ejemplo de Uso
+
+```vue
+<BaseStaticAlert
+  variant="success"
+  message="El usuario ha sido creado correctamente."
+  :dismissible="true"
+  @dismiss="handleDismiss"
+/>
+```
+
+### Uso con el Store de Notificaciones
+
+El componente `BaseStaticAlert` se utiliza junto con el store de notificaciones para mostrar alertas estáticas en el panel de administración:
+
+```javascript
+import { useNotificationStore } from '@/stores/notification';
+
+const notificationStore = useNotificationStore();
+
+// Mostrar una alerta estática de éxito
+notificationStore.adminSuccess('El usuario ha sido creado correctamente.');
+
+// Mostrar una alerta estática de error
+notificationStore.adminError('No se pudo crear el usuario.');
+
+// Mostrar una alerta estática de advertencia
+notificationStore.adminWarning('Esta acción no se puede deshacer.');
+
+// Mostrar una alerta estática de información
+notificationStore.adminInfo('Hay actualizaciones disponibles.');
+```
 
 ## Mejores Prácticas
 

@@ -160,9 +160,8 @@ const saveUser = async () => {
     console.log('User created successfully:', response.data);
 
     // Show success notification
-    notificationStore.success(
-      `El usuario ${userForm.name} ha sido creado correctamente.`,
-      'Usuario creado'
+    notificationStore.adminSuccess(
+      `El usuario ${userForm.name} ha sido creado correctamente.`
     );
 
     // Redirect to users list
