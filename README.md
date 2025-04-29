@@ -6,9 +6,11 @@ Vaxav es un juego multijugador masivo (MMO) basado en navegador con ambientació
 
 Para una documentación más detallada, consulta la [carpeta docs](./docs/README.md).
 
-### Guía de Estilo
+### Guía de Estilo y Componentes
 
 Para mantener la coherencia visual y estructural en toda la aplicación, consulta nuestra [Guía de Estilo](./docs/design/style-guide.md) que incluye información sobre componentes, estructura, paleta de colores y mejores prácticas.
+
+Para visualizar y documentar los componentes de UI, utilizamos [Storybook](./frontend/docs/storybook.md).
 
 ## Visión General
 
@@ -74,6 +76,7 @@ pm2 status
 
 - **Frontend**: http://localhost:5173
 - **API**: http://localhost:8000/api
+- **Storybook**: http://localhost:6006
 
 ## Autenticación
 
@@ -86,7 +89,7 @@ El sistema utiliza autenticación basada en tokens (Laravel Sanctum) para la com
 
 ## Testing
 
-El proyecto incluye tests automatizados tanto para el frontend como para el backend. Para más detalles, consulta la [documentación de testing](./docs/testing/testing-strategy.md).
+El proyecto incluye tests automatizados tanto para el frontend como para el backend. Para más detalles, consulta la [documentación de testing](./docs/testing/README.md).
 
 ### Ejecutar Tests del Backend
 
@@ -98,9 +101,16 @@ php artisan test
 ### Ejecutar Tests del Frontend
 
 ```bash
+# Método recomendado (usando el script de limpieza de caché)
 cd frontend
-npm run test:unit
+./test-clean.sh
+
+# Método alternativo
+cd frontend
+npm run test:unit -- --no-cache
 ```
+
+> **Importante**: Siempre ejecuta los tests del frontend con el script `test-clean.sh` o con la opción `--no-cache` para evitar problemas con la caché de Vitest. Para más detalles sobre cómo resolver problemas con los tests, consulta la [documentación de solución de problemas con Vitest](./docs/testing/testing-vitest.md).
 
 ## Solución de Problemas
 

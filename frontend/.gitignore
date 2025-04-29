@@ -6,14 +6,21 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*storybook.log
 
+# Dependencias
 node_modules
+
+# Sistema operativo
 .DS_Store
+
+# Compilación
 dist
 dist-ssr
 coverage
 *.local
 
+# Cypress
 /cypress/videos/
 /cypress/screenshots/
 
@@ -27,6 +34,35 @@ coverage
 *.sln
 *.sw?
 
+# TypeScript
 *.tsbuildinfo
+.tscache/
 
+# Vite
 .vite/
+.vite-ssg-temp/
+.vite-ssg-dist/
+
+# Vitest
+.vitest/
+node_modules/.vitest/
+
+# Storybook
+storybook-static/
+.storybook-out/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# ESLint
+.eslintcache
+
+# PWA
+sw.*
+workbox-*
+
+# Nuxt.js (si se usa)
+.nuxt/
+.output/

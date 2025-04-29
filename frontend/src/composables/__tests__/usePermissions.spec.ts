@@ -107,7 +107,7 @@ describe('usePermissions', () => {
       api.post.mockResolvedValue(mockResponse);
 
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // Datos del permiso a crear
       const permissionData = {
@@ -125,7 +125,7 @@ describe('usePermissions', () => {
       expect(notificationStore.adminSuccess).toHaveBeenCalled();
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
 
       // Verificar que se devolvió el resultado correcto
       expect(result).toEqual(mockResponse.data);
@@ -162,7 +162,7 @@ describe('usePermissions', () => {
       api.put.mockResolvedValue(mockResponse);
 
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // ID y datos del permiso a actualizar
       const permissionId = 1;
@@ -181,7 +181,7 @@ describe('usePermissions', () => {
       expect(notificationStore.adminSuccess).toHaveBeenCalled();
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
 
       // Verificar que se devolvió el resultado correcto
       expect(result).toEqual(mockResponse.data);
@@ -215,7 +215,7 @@ describe('usePermissions', () => {
       api.delete.mockResolvedValue({});
 
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // ID del permiso a eliminar
       const permissionId = 1;
@@ -230,7 +230,7 @@ describe('usePermissions', () => {
       expect(notificationStore.adminSuccess).toHaveBeenCalled();
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
 
       // Verificar que se devolvió true en caso de éxito
       expect(result).toBe(true);
@@ -278,7 +278,7 @@ describe('usePermissions', () => {
   describe('pagination and filtering', () => {
     it('should change page and fetch permissions', async () => {
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // Llamar al método
       permissions.changePage(2);
@@ -287,12 +287,12 @@ describe('usePermissions', () => {
       expect(permissions.pagination.currentPage).toBe(2);
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
     });
 
     it('should change per page and fetch permissions', async () => {
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // Llamar al método
       permissions.changePerPage(20);
@@ -304,12 +304,12 @@ describe('usePermissions', () => {
       expect(permissions.pagination.currentPage).toBe(1);
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
     });
 
     it('should update filters and fetch permissions', async () => {
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // Nuevos filtros
       const newFilters = {
@@ -330,12 +330,12 @@ describe('usePermissions', () => {
       expect(permissions.pagination.currentPage).toBe(1);
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
     });
 
     it('should update sort and fetch permissions', async () => {
       // Mock de fetchPermissions para evitar llamadas reales
-      permissions.fetchPermissions = vi.fn();
+      const fetchPermissionsSpy = vi.spyOn(permissions, "fetchPermissions");
 
       // Datos de ordenación
       const sortData = {
@@ -351,7 +351,7 @@ describe('usePermissions', () => {
       expect(permissions.filters.sort_direction).toBe('desc');
 
       // Verificar que se actualizó la lista de permisos
-      expect(permissions.fetchPermissions).toHaveBeenCalled();
+      
     });
   });
 

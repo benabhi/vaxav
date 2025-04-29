@@ -5,12 +5,17 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/logs/*
+!storage/logs/.gitkeep
 /vendor
 .env
 .env.backup
 .env.production
+.env.*.local
 .phpactor.json
 .phpunit.result.cache
+/.php-cs-fixer.cache
+/.php_cs.cache
 Homestead.json
 Homestead.yaml
 npm-debug.log
@@ -21,3 +26,19 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Archivos de respaldo y temporales
+*.bak
+*.swp
+*.swo
+*~
+
+# Archivos de prueba generados
+/tests/coverage
+
+# Archivos de base de datos SQLite (si se usan para pruebas)
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Archivos de Composer
+composer.phar
