@@ -3,7 +3,7 @@
     <div class="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3 items-center">
       <!-- Search input -->
       <div v-if="showSearch" class="flex-grow">
-        <BaseInput
+        <VxvInput
           :id="`${id}-search`"
           v-model="localFilters.search"
           :label="searchLabel"
@@ -17,7 +17,7 @@
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
             </svg>
           </template>
-        </BaseInput>
+        </VxvInput>
       </div>
 
       <!-- Filter slots -->
@@ -25,22 +25,22 @@
 
       <!-- Action buttons -->
       <div class="flex space-x-2 md:self-end">
-        <BaseButton
+        <VxvButton
           v-if="showReset"
           variant="secondary"
           size="md"
           @click="resetFilters"
         >
           {{ resetLabel }}
-        </BaseButton>
-        <BaseButton
+        </VxvButton>
+        <VxvButton
           v-if="showApply"
           variant="primary"
           size="md"
           @click="applyFilters"
         >
           {{ applyLabel }}
-        </BaseButton>
+        </VxvButton>
       </div>
     </div>
   </div>
@@ -48,8 +48,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue';
-import BaseInput from '../forms/BaseInput.vue';
-import BaseButton from '../buttons/BaseButton.vue';
+import VxvInput from '../forms/VxvInput.vue';
+import VxvButton from '../buttons/VxvButton.vue';
 
 // Define props
 const props = defineProps({

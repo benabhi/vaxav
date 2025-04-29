@@ -4,33 +4,33 @@
     <!-- Column 1: Sidebar - fixed width, full height -->
     <aside class="w-64 bg-gray-800 border-r border-gray-700 hidden lg:block">
       <div class="sticky top-0 h-screen overflow-y-auto">
-        <BaseSidebar title="Panel Admin">
+        <VxvSidebar title="Panel Admin">
           <!-- User Management Group -->
-          <BaseSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
-            <BaseNavLink to="/admin/users" label="Usuarios" />
-            <BaseNavLink to="/admin/roles" label="Roles" />
-          </BaseSidebarGroup>
+          <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
+            <VxvNavLink to="/admin/users" label="Usuarios" />
+            <VxvNavLink to="/admin/roles" label="Roles" />
+          </VxvSidebarGroup>
 
           <!-- Other menu items -->
-          <BaseNavLink to="/admin/settings" label="Configuración" />
-        </BaseSidebar>
+          <VxvNavLink to="/admin/settings" label="Configuración" />
+        </VxvSidebar>
       </div>
     </aside>
 
     <!-- Column 2: Content area with three rows -->
     <div class="flex-1 flex flex-col">
       <!-- Row 1: Header -->
-      <BasePageTitle
+      <VxvPageTitle
         :title="title"
         @mobile-menu-click="openMobileMenu"
       >
         <template #breadcrumbs>
           <slot name="breadcrumbs"></slot>
         </template>
-      </BasePageTitle>
+      </VxvPageTitle>
 
       <!-- Notifications -->
-      <BaseNotification />
+      <VxvNotification />
 
       <!-- Row 2: Main content - takes all available space -->
       <main class="flex-1 overflow-auto p-4">
@@ -73,16 +73,16 @@
         </div>
 
         <!-- Mobile sidebar content -->
-        <BaseSidebar title="Panel Admin">
+        <VxvSidebar title="Panel Admin">
           <!-- User Management Group -->
-          <BaseSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
-            <BaseNavLink to="/admin/users" label="Usuarios" />
-            <BaseNavLink to="/admin/roles" label="Roles" />
-          </BaseSidebarGroup>
+          <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
+            <VxvNavLink to="/admin/users" label="Usuarios" />
+            <VxvNavLink to="/admin/roles" label="Roles" />
+          </VxvSidebarGroup>
 
           <!-- Other menu items -->
-          <BaseNavLink to="/admin/settings" label="Configuración" />
-        </BaseSidebar>
+          <VxvNavLink to="/admin/settings" label="Configuración" />
+        </VxvSidebar>
       </div>
     </div>
   </div>
@@ -90,11 +90,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import BaseSidebar from '@/components/ui/navigation/BaseSidebar.vue';
-import BaseSidebarGroup from '@/components/ui/navigation/BaseSidebarGroup.vue';
-import BaseNavLink from '@/components/ui/navigation/BaseNavLink.vue';
-import BasePageTitle from '@/components/ui/layout/BasePageTitle.vue';
-import BaseNotification from '@/components/ui/feedback/BaseNotification.vue';
+import VxvSidebar from '@/components/ui/navigation/VxvSidebar.vue';
+import VxvSidebarGroup from '@/components/ui/navigation/VxvSidebarGroup.vue';
+import VxvNavLink from '@/components/ui/navigation/VxvNavLink.vue';
+import VxvPageTitle from '@/components/ui/layout/VxvPageTitle.vue';
+import VxvNotification from '@/components/ui/feedback/VxvNotification.vue';
 import { useNotificationStore } from '@/stores/notification';
 
 defineProps({

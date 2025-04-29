@@ -3,8 +3,8 @@ import { onMounted, computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
-import BaseCard from '@/components/ui/layout/BaseCard.vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import VxvCard from '@/components/ui/layout/VxvCard.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 
 const authStore = useAuthStore();
 const pilotStore = usePilotStore();
@@ -28,7 +28,7 @@ onMounted(async () => {
       </p>
     </div>
 
-    <BaseCard
+    <VxvCard
       v-if="!hasPilot && isLoggedIn"
       title="Crea tu Piloto"
       max-width="md"
@@ -36,59 +36,59 @@ onMounted(async () => {
     >
       <p class="mb-4 text-gray-300">Para comenzar tu aventura en la galaxia, necesitas crear un piloto.</p>
       <RouterLink to="/create-pilot" custom v-slot="{ navigate }">
-        <BaseButton variant="primary" :full-width="true" @click="navigate">
+        <VxvButton variant="primary" :full-width="true" @click="navigate">
           Crear Piloto
-        </BaseButton>
+        </VxvButton>
       </RouterLink>
-    </BaseCard>
+    </VxvCard>
 
     <div v-else-if="hasPilot" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <BaseCard title="Estado del Piloto" has-border>
+      <VxvCard title="Estado del Piloto" has-border>
         <div v-if="pilotStore.loading">Cargando...</div>
         <div v-else>
           <p><span class="text-gray-400">Nombre:</span> {{ pilotStore.pilotName }}</p>
           <p><span class="text-gray-400">Raza:</span> {{ pilotStore.pilotRace }}</p>
           <p><span class="text-gray-400">Créditos:</span> {{ pilotStore.pilotCredits.toLocaleString() }} ISK</p>
         </div>
-      </BaseCard>
+      </VxvCard>
 
-      <BaseCard title="Actividad Reciente" has-border>
+      <VxvCard title="Actividad Reciente" has-border>
         <p class="text-gray-300">No hay actividad reciente.</p>
-      </BaseCard>
+      </VxvCard>
 
-      <BaseCard title="Acciones Rápidas" has-border>
+      <VxvCard title="Acciones Rápidas" has-border>
         <div class="space-y-2">
           <RouterLink to="/universe" custom v-slot="{ navigate }">
-            <BaseButton variant="secondary" :full-width="true" @click="navigate">
+            <VxvButton variant="secondary" :full-width="true" @click="navigate">
               Explorar Universo
-            </BaseButton>
+            </VxvButton>
           </RouterLink>
           <RouterLink to="/market" custom v-slot="{ navigate }">
-            <BaseButton variant="secondary" :full-width="true" @click="navigate">
+            <VxvButton variant="secondary" :full-width="true" @click="navigate">
               Visitar Mercado
-            </BaseButton>
+            </VxvButton>
           </RouterLink>
           <RouterLink to="/ships" custom v-slot="{ navigate }">
-            <BaseButton variant="secondary" :full-width="true" @click="navigate">
+            <VxvButton variant="secondary" :full-width="true" @click="navigate">
               Gestionar Naves
-            </BaseButton>
+            </VxvButton>
           </RouterLink>
         </div>
-      </BaseCard>
+      </VxvCard>
     </div>
 
     <div v-else-if="!isLoggedIn" class="text-center mt-8">
       <p class="text-xl mb-4">Para comenzar tu aventura, inicia sesión o regístrate.</p>
       <div class="flex justify-center space-x-4">
         <RouterLink to="/login" custom v-slot="{ navigate }">
-          <BaseButton variant="secondary" @click="navigate">
+          <VxvButton variant="secondary" @click="navigate">
             Iniciar Sesión
-          </BaseButton>
+          </VxvButton>
         </RouterLink>
         <RouterLink to="/register" custom v-slot="{ navigate }">
-          <BaseButton variant="primary" @click="navigate">
+          <VxvButton variant="primary" @click="navigate">
             Registrarse
-          </BaseButton>
+          </VxvButton>
         </RouterLink>
       </div>
     </div>

@@ -7,38 +7,38 @@ Esta carpeta contiene la documentación de los componentes, composables y otras 
 ### Componentes de UI
 
 #### Formularios
-- [BaseInput](./components/BaseInput.md)
-- [BaseSelect](./components/BaseSelect.md)
-- [BaseCheckbox](./components/BaseCheckbox.md)
-- [BaseTextarea](./components/BaseTextarea.md)
-- [BaseRange](./components/BaseRange.md)
-- [BaseForm](./components/BaseForm.md)
+- [VxvInput](./components/VxvInput.md)
+- [VxvSelect](./components/VxvSelect.md)
+- [VxvCheckbox](./components/VxvCheckbox.md)
+- [VxvTextarea](./components/VxvTextarea.md)
+- [VxvRange](./components/VxvRange.md)
+- [VxvForm](./components/VxvForm.md)
 
 #### Tablas
-- [BaseTable](./components/BaseTable.md)
-- [BaseDataTable](./components/BaseDataTable.md)
-- [BasePaginator](./components/BasePaginator.md)
+- [VxvTable](./components/VxvTable.md)
+- [VxvDataTable](./components/VxvDataTable.md)
+- [VxvPaginator](./components/VxvPaginator.md)
 
 #### Feedback
-- [BaseAlert](./components/BaseAlert.md)
-- [BaseNotification](./components/BaseNotification.md)
-- [BaseBadge](./components/BaseBadge.md)
+- [VxvAlert](./components/VxvAlert.md)
+- [VxvNotification](./components/VxvNotification.md)
+- [VxvBadge](./components/VxvBadge.md)
 
 #### Botones
-- [BaseButton](./components/BaseButton.md)
+- [VxvButton](./components/VxvButton.md)
 
 #### Navegación
-- [BaseBreadcrumb](./components/BaseBreadcrumb.md)
-- [BaseNavLink](./components/BaseNavLink.md)
-- [BaseSidebar](./components/BaseSidebar.md)
-- [BaseSidebarGroup](./components/BaseSidebarGroup.md)
+- [VxvBreadcrumb](./components/VxvBreadcrumb.md)
+- [VxvNavLink](./components/VxvNavLink.md)
+- [VxvSidebar](./components/VxvSidebar.md)
+- [VxvSidebarGroup](./components/VxvSidebarGroup.md)
 
 ### Componentes de Layout
 - [AdminLayout](./components/AdminLayout.md)
-- [BaseCard](./components/BaseCard.md)
+- [VxvCard](./components/VxvCard.md)
 
 ### Componentes de Marca
-- [BaseLogo](./components/BaseLogo.md)
+- [VxvLogo](./components/VxvLogo.md)
 
 ## Composables
 

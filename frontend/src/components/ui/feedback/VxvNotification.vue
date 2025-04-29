@@ -1,7 +1,7 @@
 <template>
   <div class="fixed inset-0 flex items-end px-4 py-6 pointer-events-none sm:p-6 z-50">
     <div class="w-full flex flex-col items-center space-y-4 sm:items-end">
-      <BaseAlert
+      <VxvAlert
         v-for="notification in notifications"
         :key="notification.id"
         :variant="notification.type"
@@ -18,7 +18,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import BaseAlert from './BaseAlert.vue';
+import VxvAlert from './VxvAlert.vue';
 import { useNotificationStore } from '@/stores/notification';
 
 const notificationStore = useNotificationStore();

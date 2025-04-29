@@ -1,41 +1,41 @@
 <template>
   <div class="py-6">
-    <BaseCard 
-      :title="title" 
-      :has-border="true" 
-      :max-width="maxWidth" 
+    <VxvCard
+      :title="title"
+      :has-border="true"
+      :max-width="maxWidth"
       centered
     >
       <form @submit.prevent="onSubmit">
         <slot></slot>
 
         <div class="flex space-x-3">
-          <BaseButton 
-            type="submit" 
-            variant="primary" 
-            :full-width="false" 
+          <VxvButton
+            type="submit"
+            variant="primary"
+            :full-width="false"
             :loading="loading"
           >
             {{ submitText }}
-          </BaseButton>
-          <BaseButton 
-            v-if="showCancel" 
-            type="button" 
-            variant="secondary" 
-            :full-width="false" 
+          </VxvButton>
+          <VxvButton
+            v-if="showCancel"
+            type="button"
+            variant="secondary"
+            :full-width="false"
             @click="onCancel"
           >
             {{ cancelText }}
-          </BaseButton>
+          </VxvButton>
         </div>
       </form>
-    </BaseCard>
+    </VxvCard>
   </div>
 </template>
 
 <script setup>
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseCard from '@/components/ui/layout/BaseCard.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvCard from '@/components/ui/layout/VxvCard.vue';
 
 const props = defineProps({
   title: {

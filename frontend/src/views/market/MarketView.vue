@@ -4,7 +4,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div class="lg:col-span-1">
-        <BaseCard title="Categorías" has-border class="mb-6">
+        <VxvCard title="Categorías" has-border class="mb-6">
           <ul class="space-y-2">
             <li class="p-2 bg-gray-700 rounded hover:bg-gray-600 cursor-pointer">
               Naves
@@ -19,12 +19,12 @@
               Planos
             </li>
           </ul>
-        </BaseCard>
+        </VxvCard>
 
-        <BaseCard title="Filtros" has-border>
+        <VxvCard title="Filtros" has-border>
           <div class="space-y-3">
             <div>
-              <BaseRange
+              <VxvRange
                 v-model="filters.maxPrice"
                 label="Precio Máximo"
                 :min="0"
@@ -37,7 +37,7 @@
               />
             </div>
             <div>
-              <BaseSelect
+              <VxvSelect
                 label="Ubicación"
                 :options="[
                   'Cualquier ubicación',
@@ -47,24 +47,24 @@
               />
             </div>
           </div>
-        </BaseCard>
+        </VxvCard>
       </div>
 
       <div class="lg:col-span-3">
-        <BaseCard title="Artículos en Venta" has-border>
+        <VxvCard title="Artículos en Venta" has-border>
           <div class="flex justify-between items-center mb-4">
             <div class="flex space-x-2">
-              <BaseButton variant="secondary" size="sm">
+              <VxvButton variant="secondary" size="sm">
                 Mis Órdenes
-              </BaseButton>
-              <BaseButton variant="primary" size="sm">
+              </VxvButton>
+              <VxvButton variant="primary" size="sm">
                 Vender
-              </BaseButton>
+              </VxvButton>
             </div>
           </div>
 
           <div class="overflow-x-auto">
-            <BaseTable
+            <VxvTable
               :columns="columns"
               :items="marketItems"
               row-key="id"
@@ -86,11 +86,11 @@
               </template>
 
               <template #actions="{ item }">
-                <BaseButton variant="primary" size="sm">Comprar</BaseButton>
+                <VxvButton variant="primary" size="sm">Comprar</VxvButton>
               </template>
-            </BaseTable>
+            </VxvTable>
           </div>
-        </BaseCard>
+        </VxvCard>
       </div>
     </div>
   </div>
@@ -98,11 +98,11 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
-import BaseRange from '@/components/ui/forms/BaseRange.vue';
-import BaseTable from '@/components/ui/tables/BaseTable.vue';
-import BaseCard from '@/components/ui/layout/BaseCard.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
+import VxvRange from '@/components/ui/forms/VxvRange.vue';
+import VxvTable from '@/components/ui/tables/VxvTable.vue';
+import VxvCard from '@/components/ui/layout/VxvCard.vue';
 
 // Filtros reactivos
 const filters = reactive({

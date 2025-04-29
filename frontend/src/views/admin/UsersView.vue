@@ -23,7 +23,7 @@
       <div class="w-full md:w-auto">
         <div class="flex items-center space-x-2">
           <span class="text-sm text-gray-300">Rol:</span>
-          <BaseSelect
+          <VxvSelect
             id="role-filter"
             v-model="filters.role"
             size="sm"
@@ -62,21 +62,21 @@
 
     <template #cell(roles)="{ item }">
       <div class="flex flex-wrap gap-1">
-        <BaseBadge
+        <VxvBadge
           v-for="role in item.roles"
           :key="role.id"
           :variant="roleBadgeVariants[role.slug] || 'gray'"
           class="mr-1"
         >
           {{ role.name }}
-        </BaseBadge>
+        </VxvBadge>
       </div>
     </template>
 
     <template #cell(status)="{ item }">
-      <BaseBadge variant="success">
+      <VxvBadge variant="success">
         Activo
-      </BaseBadge>
+      </VxvBadge>
     </template>
 
     <template #cell(created_at)="{ item }">
@@ -91,12 +91,12 @@
     <!-- Modals -->
     <template #modals>
       <!-- User form modal (create/edit) -->
-      <BaseModal :show="showUserModal" :title="editingUser ? 'Editar Usuario' : 'Crear Usuario'" color="blue"
+      <VxvModal :show="showUserModal" :title="editingUser ? 'Editar Usuario' : 'Crear Usuario'" color="blue"
         @close="closeUserModal">
         <form @submit.prevent="saveUser">
           <!-- Name -->
           <div class="mb-4">
-            <BaseInput
+            <VxvInput
               id="name"
               v-model="userForm.name"
               label="Nombre"
@@ -109,7 +109,7 @@
 
           <!-- Email -->
           <div class="mb-4">
-            <BaseInput
+            <VxvInput
               id="email"
               v-model="userForm.email"
               label="Correo electrónico"
@@ -122,7 +122,7 @@
 
           <!-- Password (only for new users) -->
           <div v-if="!editingUser" class="mb-4">
-            <BaseInput
+            <VxvInput
               id="password"
               v-model="userForm.password"
               label="Contraseña"
@@ -135,7 +135,7 @@
 
           <!-- Password Confirmation (only for new users) -->
           <div v-if="!editingUser" class="mb-4">
-            <BaseInput
+            <VxvInput
               id="password_confirmation"
               v-model="userForm.password_confirmation"
               label="Confirmar contraseña"
@@ -150,7 +150,7 @@
             <label class="block text-lg font-bold text-white mb-2">Roles</label>
             <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-40 overflow-y-auto">
               <div v-for="role in availableRoles" :key="role.id" class="mb-2 last:mb-0">
-                <BaseCheckbox
+                <VxvCheckbox
                   :id="`role-${role.id}`"
                   :value="role.id"
                   v-model="userForm.roles"
@@ -162,18 +162,18 @@
           </div>
 
           <div class="flex space-x-3">
-            <BaseButton type="submit" variant="primary" :full-width="true" :loading="saving">
+            <VxvButton type="submit" variant="primary" :full-width="true" :loading="saving">
               {{ editingUser ? 'Guardar cambios' : 'Crear usuario' }}
-            </BaseButton>
-            <BaseButton type="button" variant="secondary" :full-width="true" @click="closeUserModal">
+            </VxvButton>
+            <VxvButton type="button" variant="secondary" :full-width="true" @click="closeUserModal">
               Cancelar
-            </BaseButton>
+            </VxvButton>
           </div>
         </form>
-      </BaseModal>
+      </VxvModal>
 
       <!-- Delete confirmation modal -->
-      <BaseModal :show="showDeleteModal" title="Eliminar usuario" color="red" @close="closeDeleteModal">
+      <VxvModal :show="showDeleteModal" title="Eliminar usuario" color="red" @close="closeDeleteModal">
         <div class="text-center">
           <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
             <svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -189,14 +189,14 @@
         </div>
 
         <div class="flex space-x-3">
-          <BaseButton type="button" variant="danger" :full-width="true" :loading="deleting" @click="deleteUser">
+          <VxvButton type="button" variant="danger" :full-width="true" :loading="deleting" @click="deleteUser">
             Eliminar
-          </BaseButton>
-          <BaseButton type="button" variant="secondary" :full-width="true" @click="closeDeleteModal">
+          </VxvButton>
+          <VxvButton type="button" variant="secondary" :full-width="true" @click="closeDeleteModal">
             Cancelar
-          </BaseButton>
+          </VxvButton>
         </div>
-      </BaseModal>
+      </VxvModal>
     </template>
   </AdminCrudView>
 </template>
@@ -205,12 +205,12 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminCrudView from '@/components/admin/AdminCrudView.vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
-import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
-import BaseModal from '@/components/ui/modals/BaseModal.vue';
-import BaseBadge from '@/components/ui/feedback/BaseBadge.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvInput from '@/components/ui/forms/VxvInput.vue';
+import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
+import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
+import VxvModal from '@/components/ui/modals/VxvModal.vue';
+import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 import { useNotificationStore } from '@/stores/notification';
 import { useUsers } from '@/composables/useUsers';
 

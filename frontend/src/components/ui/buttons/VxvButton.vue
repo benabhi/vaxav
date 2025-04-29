@@ -87,7 +87,7 @@ const buttonClasses = computed(() => {
   // Size classes - ajustados para coincidir con la altura de los inputs (con bordes)
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-[9px] text-base', // Ajustado para coincidir con la altura de BaseInput (38px)
+    md: 'px-4 py-[9px] text-base', // Ajustado para coincidir con la altura de VxvInput (38px)
     lg: 'px-5 py-2.5 text-lg',
     xl: 'px-6 py-3 text-xl'
   };
@@ -95,7 +95,7 @@ const buttonClasses = computed(() => {
   // Icon-only button adjustments - ajustados para coincidir con la altura de los inputs
   const iconClasses = props.icon ? {
     sm: 'p-1.5',
-    md: 'p-[9px]', // Ajustado para coincidir con la altura de BaseInput (38px)
+    md: 'p-[9px]', // Ajustado para coincidir con la altura de VxvInput (38px)
     lg: 'p-2.5',
     xl: 'p-3'
   } : {};

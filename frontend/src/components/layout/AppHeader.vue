@@ -2,11 +2,11 @@
   <header class="bg-gray-800 shadow-md border-b border-gray-700">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center">
-        <BaseLogo size="md" />
+        <VxvLogo size="md" />
         <nav v-if="isLoggedIn" class="ml-8 hidden md:block">
           <ul class="flex space-x-6">
             <li>
-              <BaseNavLink
+              <VxvNavLink
                 to="/"
                 label="Dashboard"
                 :horizontal="true"
@@ -15,7 +15,7 @@
               />
             </li>
             <li>
-              <BaseNavLink
+              <VxvNavLink
                 to="/universe"
                 label="Universo"
                 :horizontal="true"
@@ -24,7 +24,7 @@
               />
             </li>
             <li>
-              <BaseNavLink
+              <VxvNavLink
                 to="/market"
                 label="Mercado"
                 :horizontal="true"
@@ -33,7 +33,7 @@
               />
             </li>
             <li>
-              <BaseNavLink
+              <VxvNavLink
                 to="/ships"
                 label="Naves"
                 :horizontal="true"
@@ -42,7 +42,7 @@
               />
             </li>
             <li v-if="isModerator">
-              <BaseNavLink
+              <VxvNavLink
                 to="/admin"
                 label="Administración"
                 :horizontal="true"
@@ -60,20 +60,20 @@
             <span class="mr-2">{{ user?.name }}</span>
             <span class="text-blue-400">{{ credits }} ISK</span>
           </div>
-          <BaseButton variant="secondary" size="md" @click="logout">
+          <VxvButton variant="secondary" size="md" @click="logout">
             Cerrar Sesión
-          </BaseButton>
+          </VxvButton>
         </template>
         <template v-else>
           <RouterLink to="/login" custom v-slot="{ navigate }">
-            <BaseButton variant="secondary" size="md" @click="navigate">
+            <VxvButton variant="secondary" size="md" @click="navigate">
               Iniciar Sesión
-            </BaseButton>
+            </VxvButton>
           </RouterLink>
           <RouterLink to="/register" custom v-slot="{ navigate }">
-            <BaseButton variant="primary" size="md" @click="navigate">
+            <VxvButton variant="primary" size="md" @click="navigate">
               Registrarse
-            </BaseButton>
+            </VxvButton>
           </RouterLink>
         </template>
       </div>
@@ -86,9 +86,9 @@ import { computed } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseNavLink from '@/components/ui/navigation/BaseNavLink.vue';
-import BaseLogo from '@/components/ui/branding/BaseLogo.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvNavLink from '@/components/ui/navigation/VxvNavLink.vue';
+import VxvLogo from '@/components/ui/branding/VxvLogo.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

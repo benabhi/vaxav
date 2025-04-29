@@ -1,7 +1,7 @@
 <template>
   <AdminLayout title="Crear Rol">
     <template #breadcrumbs>
-      <BaseBreadcrumb
+      <VxvBreadcrumb
         :items="[
           { text: 'Roles', to: '/admin/roles' },
           { text: 'Crear' }
@@ -10,7 +10,7 @@
       />
     </template>
 
-    <BaseForm
+    <VxvForm
       title="Crear Nuevo Rol"
       submitText="Crear rol"
       :loading="submitting"
@@ -19,7 +19,7 @@
     >
       <!-- Name -->
       <div class="mb-4">
-        <BaseInput
+        <VxvInput
           id="name"
           v-model="values.name"
           label="Nombre"
@@ -33,7 +33,7 @@
 
       <!-- Slug -->
       <div class="mb-4">
-        <BaseInput
+        <VxvInput
           id="slug"
           v-model="values.slug"
           label="Slug"
@@ -47,7 +47,7 @@
 
       <!-- Description -->
       <div class="mb-4">
-        <BaseTextarea
+        <VxvTextarea
           id="description"
           v-model="values.description"
           label="Descripción"
@@ -67,7 +67,7 @@
           </div>
           <div v-else>
             <div v-for="permission in availablePermissions" :key="permission.id" class="mb-2 last:mb-0">
-              <BaseCheckbox
+              <VxvCheckbox
                 :id="`permission-${permission.id}`"
                 :value="permission.id"
                 v-model="values.permissions"
@@ -79,7 +79,7 @@
         </div>
         <p v-if="touched.permissions && errors.permissions" class="mt-1 text-sm text-red-500">{{ errors.permissions }}</p>
       </div>
-    </BaseForm>
+    </VxvForm>
   </AdminLayout>
 </template>
 
@@ -87,11 +87,11 @@
 import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
-import BaseForm from '@/components/ui/forms/BaseForm.vue';
-import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
-import BaseTextarea from '@/components/ui/forms/BaseTextarea.vue';
-import BaseBreadcrumb from '@/components/ui/navigation/BaseBreadcrumb.vue';
+import VxvForm from '@/components/ui/forms/VxvForm.vue';
+import VxvInput from '@/components/ui/forms/VxvInput.vue';
+import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
+import VxvTextarea from '@/components/ui/forms/VxvTextarea.vue';
+import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
 import { useNotificationStore } from '@/stores/notification';
 import { useForm } from '@/composables/useForm';
 import { usePermissions } from '@/composables/usePermissions';

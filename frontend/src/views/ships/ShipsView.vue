@@ -4,11 +4,11 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
-        <BaseCard title="Hangar Personal" has-border class="mb-6">
+        <VxvCard title="Hangar Personal" has-border class="mb-6">
           <div class="flex justify-end mb-4">
-            <BaseButton variant="primary" size="sm">
+            <VxvButton variant="primary" size="sm">
               Comprar Nueva Nave
-            </BaseButton>
+            </VxvButton>
           </div>
 
           <div class="space-y-4">
@@ -54,11 +54,11 @@
               </div>
             </div>
           </div>
-        </BaseCard>
+        </VxvCard>
       </div>
 
       <div class="lg:col-span-1">
-        <BaseCard title="Nave Activa" has-border class="mb-6">
+        <VxvCard title="Nave Activa" has-border class="mb-6">
           <div class="space-y-3">
             <div>
               <span class="text-gray-400">Nombre:</span>
@@ -93,9 +93,9 @@
               <p>250/500 m³</p>
             </div>
           </div>
-        </BaseCard>
+        </VxvCard>
 
-        <BaseCard title="Módulos Instalados" has-border>
+        <VxvCard title="Módulos Instalados" has-border>
           <ul class="space-y-2">
             <li class="p-2 bg-gray-700 rounded flex justify-between">
               <span>Escáner Avanzado</span>
@@ -110,14 +110,14 @@
               <span class="text-gray-400">Inactivo</span>
             </li>
           </ul>
-        </BaseCard>
+        </VxvCard>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseCard from '@/components/ui/layout/BaseCard.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvCard from '@/components/ui/layout/VxvCard.vue';
 // Lógica para cargar datos de naves
 </script>

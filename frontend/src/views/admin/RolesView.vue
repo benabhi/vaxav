@@ -32,21 +32,21 @@
 
     <template #cell(permissions)="{ item }">
       <div class="flex flex-wrap gap-1">
-        <BaseBadge
+        <VxvBadge
           v-for="permission in item.permissions.slice(0, 3)"
           :key="permission.id"
           variant="blue"
           size="sm"
         >
           {{ permission.name }}
-        </BaseBadge>
-        <BaseBadge
+        </VxvBadge>
+        <VxvBadge
           v-if="item.permissions.length > 3"
           variant="gray"
           size="sm"
         >
           +{{ item.permissions.length - 3 }} más
-        </BaseBadge>
+        </VxvBadge>
       </div>
     </template>
 
@@ -67,12 +67,12 @@
     <!-- Modals -->
     <template #modals>
       <!-- Role form modal (create/edit) -->
-      <BaseModal :show="showRoleModal" :title="editingRole ? 'Editar Rol' : 'Crear Rol'" color="blue"
+      <VxvModal :show="showRoleModal" :title="editingRole ? 'Editar Rol' : 'Crear Rol'" color="blue"
         @close="closeRoleModal">
         <form @submit.prevent="saveRole">
           <!-- Name -->
           <div class="mb-4">
-            <BaseInput
+            <VxvInput
               id="name"
               v-model="roleForm.name"
               label="Nombre"
@@ -85,7 +85,7 @@
 
           <!-- Slug -->
           <div class="mb-4">
-            <BaseInput
+            <VxvInput
               id="slug"
               v-model="roleForm.slug"
               label="Slug"
@@ -111,7 +111,7 @@
             <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-60 overflow-y-auto">
               <div class="space-y-2">
                 <div v-for="permission in availablePermissions" :key="permission.id" class="mb-1">
-                  <BaseCheckbox
+                  <VxvCheckbox
                     :id="`permission-${permission.id}`"
                     :value="permission.id"
                     v-model="roleForm.permissions"
@@ -125,18 +125,18 @@
           </div>
 
           <div class="flex space-x-3">
-            <BaseButton type="submit" variant="primary" :full-width="true" :loading="saving">
+            <VxvButton type="submit" variant="primary" :full-width="true" :loading="saving">
               {{ editingRole ? 'Guardar cambios' : 'Crear rol' }}
-            </BaseButton>
-            <BaseButton type="button" variant="secondary" :full-width="true" @click="closeRoleModal">
+            </VxvButton>
+            <VxvButton type="button" variant="secondary" :full-width="true" @click="closeRoleModal">
               Cancelar
-            </BaseButton>
+            </VxvButton>
           </div>
         </form>
-      </BaseModal>
+      </VxvModal>
 
       <!-- Delete confirmation modal -->
-      <BaseModal :show="showDeleteModal" title="Eliminar rol" color="red" @close="closeDeleteModal">
+      <VxvModal :show="showDeleteModal" title="Eliminar rol" color="red" @close="closeDeleteModal">
         <div class="text-center">
           <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
             <svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -154,14 +154,14 @@
         </div>
 
         <div class="flex space-x-3">
-          <BaseButton type="button" variant="danger" :full-width="true" :loading="deleting" @click="deleteRole">
+          <VxvButton type="button" variant="danger" :full-width="true" :loading="deleting" @click="deleteRole">
             Eliminar
-          </BaseButton>
-          <BaseButton type="button" variant="secondary" :full-width="true" @click="closeDeleteModal">
+          </VxvButton>
+          <VxvButton type="button" variant="secondary" :full-width="true" @click="closeDeleteModal">
             Cancelar
-          </BaseButton>
+          </VxvButton>
         </div>
-      </BaseModal>
+      </VxvModal>
     </template>
   </AdminCrudView>
 </template>
@@ -170,11 +170,11 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminCrudView from '@/components/admin/AdminCrudView.vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
-import BaseModal from '@/components/ui/modals/BaseModal.vue';
-import BaseBadge from '@/components/ui/feedback/BaseBadge.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvInput from '@/components/ui/forms/VxvInput.vue';
+import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
+import VxvModal from '@/components/ui/modals/VxvModal.vue';
+import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import { useRoles } from '@/composables/useRoles';

@@ -1,7 +1,7 @@
 <template>
   <AdminLayout title="Crear Usuario">
     <template #breadcrumbs>
-      <BaseBreadcrumb
+      <VxvBreadcrumb
         :items="[
           { text: 'Usuarios', to: '/admin/users' },
           { text: 'Crear' }
@@ -10,7 +10,7 @@
       />
     </template>
 
-    <BaseForm
+    <VxvForm
       title="Crear Nuevo Usuario"
       submitText="Crear usuario"
       :loading="submitting"
@@ -19,7 +19,7 @@
     >
       <!-- Name -->
       <div class="mb-4">
-        <BaseInput
+        <VxvInput
           id="name"
           v-model="values.name"
           label="Nombre"
@@ -33,7 +33,7 @@
 
       <!-- Email -->
       <div class="mb-4">
-        <BaseInput
+        <VxvInput
           id="email"
           v-model="values.email"
           label="Correo electrónico"
@@ -47,7 +47,7 @@
 
       <!-- Password -->
       <div class="mb-4">
-        <BaseInput
+        <VxvInput
           id="password"
           v-model="values.password"
           label="Contraseña"
@@ -61,7 +61,7 @@
 
       <!-- Password Confirmation -->
       <div class="mb-4">
-        <BaseInput
+        <VxvInput
           id="password_confirmation"
           v-model="values.password_confirmation"
           label="Confirmar contraseña"
@@ -78,7 +78,7 @@
         <label class="block text-lg font-bold text-white mb-2">Roles</label>
         <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-40 overflow-y-auto">
           <div v-for="role in availableRoles" :key="role.id" class="mb-2 last:mb-0">
-            <BaseCheckbox
+            <VxvCheckbox
               :id="`role-${role.id}`"
               :value="role.id"
               v-model="values.roles"
@@ -89,7 +89,7 @@
         </div>
         <p v-if="touched.roles && errors.roles" class="mt-1 text-sm text-red-500">{{ errors.roles }}</p>
       </div>
-    </BaseForm>
+    </VxvForm>
   </AdminLayout>
 </template>
 
@@ -97,10 +97,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
-import BaseForm from '@/components/ui/forms/BaseForm.vue';
-import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
-import BaseBreadcrumb from '@/components/ui/navigation/BaseBreadcrumb.vue';
+import VxvForm from '@/components/ui/forms/VxvForm.vue';
+import VxvInput from '@/components/ui/forms/VxvInput.vue';
+import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
+import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
 import { useNotificationStore } from '@/stores/notification';
 import { useForm } from '@/composables/useForm';
 import api from '@/services/api';

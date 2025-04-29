@@ -3,7 +3,7 @@
     <div class="max-w-md mx-auto card p-6">
       <h1 class="text-2xl font-bold mb-6 text-center">Crear Cuenta</h1>
 
-      <BaseStaticAlert
+      <VxvAlert
         v-if="authStore.error"
         variant="error"
         :message="authStore.error"
@@ -12,7 +12,7 @@
 
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
-          <BaseInput
+          <VxvInput
             id="name"
             v-model="form.name"
             label="Nombre"
@@ -22,7 +22,7 @@
         </div>
 
         <div class="mb-4">
-          <BaseInput
+          <VxvInput
             id="email"
             v-model="form.email"
             label="Email"
@@ -32,7 +32,7 @@
         </div>
 
         <div class="mb-4">
-          <BaseInput
+          <VxvInput
             id="password"
             v-model="form.password"
             label="Contraseña"
@@ -42,7 +42,7 @@
         </div>
 
         <div class="mb-6">
-          <BaseInput
+          <VxvInput
             id="password_confirmation"
             v-model="form.password_confirmation"
             label="Confirmar Contraseña"
@@ -51,14 +51,14 @@
           />
         </div>
 
-        <BaseButton
+        <VxvButton
           type="submit"
           variant="primary"
           :full-width="true"
           :loading="authStore.loading"
         >
           Registrarse
-        </BaseButton>
+        </VxvButton>
       </form>
 
       <div class="mt-4 text-center text-gray-400">
@@ -75,9 +75,9 @@
 import { reactive } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import BaseStaticAlert from '@/components/ui/feedback/BaseStaticAlert.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvInput from '@/components/ui/forms/VxvInput.vue';
+import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

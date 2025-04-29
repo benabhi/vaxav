@@ -5,7 +5,7 @@
       <h2 v-if="title" class="text-xl font-bold text-white">{{ title }}</h2>
       <div v-else></div>
 
-      <BaseButton
+      <VxvButton
         v-if="showCreateButton"
         variant="primary"
         @click="$emit('create')"
@@ -16,11 +16,11 @@
           </svg>
         </template>
         {{ createButtonLabel }}
-      </BaseButton>
+      </VxvButton>
     </div>
 
     <!-- Filters section -->
-    <BaseFilters
+    <VxvFilters
       v-if="showFilters"
       v-model:filters="localFilters"
       :show-search="showSearch"
@@ -35,7 +35,7 @@
         <div v-if="showPerPage" class="w-full md:w-auto">
           <div class="flex items-center space-x-2">
             <span class="text-sm text-gray-300">{{ perPageLabel }}:</span>
-            <BaseSelect
+            <VxvSelect
               :id="`${id}-per-page`"
               v-model="localPerPage"
               :options="perPageOptionsFormatted"
@@ -48,10 +48,10 @@
         <!-- Custom filter slots -->
         <slot name="filters"></slot>
       </template>
-    </BaseFilters>
+    </VxvFilters>
 
     <!-- Table section -->
-    <BaseTable
+    <VxvTable
       :columns="columns"
       :items="items"
       :loading="loading"
@@ -84,11 +84,11 @@
       <template v-if="$slots.actions" #actions="slotProps">
         <slot name="actions" v-bind="slotProps"></slot>
       </template>
-    </BaseTable>
+    </VxvTable>
 
     <!-- Pagination section -->
     <div v-if="showPagination" class="mt-4">
-      <BasePaginator
+      <VxvPaginator
         :current-page="currentPage"
         :total-pages="totalPages"
         :total="total"
@@ -102,11 +102,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue';
-import BaseTable from './BaseTable.vue';
-import BasePaginator from '../pagination/BasePaginator.vue';
-import BaseFilters from '../filters/BaseFilters.vue';
-import BaseButton from '../buttons/BaseButton.vue';
-import BaseSelect from '../forms/BaseSelect.vue';
+import VxvTable from './VxvTable.vue';
+import VxvPaginator from '../pagination/VxvPaginator.vue';
+import VxvFilters from '../filters/VxvFilters.vue';
+import VxvButton from '../buttons/VxvButton.vue';
+import VxvSelect from '../forms/VxvSelect.vue';
 
 // Define props
 const props = defineProps({

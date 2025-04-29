@@ -1,13 +1,13 @@
 <template>
   <div class="container mx-auto px-4 py-12">
-    <BaseCard title="Crear Piloto" max-width="md" centered>
+    <VxvCard title="Crear Piloto" max-width="md" centered>
       <div v-if="pilotStore.error" class="bg-red-900/50 text-red-200 p-3 rounded-md mb-4">
         {{ pilotStore.error }}
       </div>
 
       <form @submit.prevent="handleSubmit">
         <div class="mb-4">
-          <BaseInput
+          <VxvInput
             id="name"
             v-model="form.name"
             label="Nombre del Piloto"
@@ -17,7 +17,7 @@
         </div>
 
         <div class="mb-6">
-          <BaseSelect
+          <VxvSelect
             id="race"
             v-model="form.race"
             label="Raza"
@@ -57,7 +57,7 @@
           </div>
         </div>
 
-        <BaseButton
+        <VxvButton
           type="submit"
           variant="primary"
           :full-width="true"
@@ -65,9 +65,9 @@
           :disabled="!form.race"
         >
           Crear Piloto
-        </BaseButton>
+        </VxvButton>
       </form>
-    </BaseCard>
+    </VxvCard>
   </div>
 </template>
 
@@ -75,10 +75,10 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePilotStore } from '@/stores/pilot';
-import BaseCard from '@/components/ui/layout/BaseCard.vue';
-import BaseButton from '@/components/ui/buttons/BaseButton.vue';
-import BaseInput from '@/components/ui/forms/BaseInput.vue';
-import BaseSelect from '@/components/ui/forms/BaseSelect.vue';
+import VxvCard from '@/components/ui/layout/VxvCard.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvInput from '@/components/ui/forms/VxvInput.vue';
+import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
 
 const router = useRouter();
 const pilotStore = usePilotStore();
