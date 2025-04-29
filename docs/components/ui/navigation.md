@@ -2,11 +2,11 @@
 
 Los componentes de navegación proporcionan interfaces para la navegación dentro de la aplicación, como barras laterales, enlaces de navegación y grupos de navegación.
 
-## BaseSidebar
+## VxvSidebar
 
-`BaseSidebar` es un componente que proporciona una barra lateral para la navegación.
+`VxvSidebar` es un componente que proporciona una barra lateral para la navegación.
 
-**Archivo**: `/components/ui/navigation/BaseSidebar.vue`
+**Archivo**: `/components/ui/navigation/VxvSidebar.vue`
 
 ### Props
 
@@ -23,21 +23,21 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 ### Ejemplo de Uso
 
 ```vue
-<BaseSidebar title="Panel Admin">
-  <BaseSidebarGroup title="Gestión de Usuarios">
-    <BaseNavLink to="/admin/users" label="Usuarios" />
-    <BaseNavLink to="/admin/roles" label="Roles" />
-  </BaseSidebarGroup>
+<vxv-sidebar title="Panel Admin">
+  <vxv-sidebar-group title="Gestión de Usuarios">
+    <vxv-nav-link to="/admin/users" label="Usuarios" />
+    <vxv-nav-link to="/admin/roles" label="Roles" />
+  </vxv-sidebar-group>
 
-  <BaseNavLink to="/admin/settings" label="Configuración" />
-</BaseSidebar>
+  <vxv-nav-link to="/admin/settings" label="Configuración" />
+</vxv-sidebar>
 ```
 
-## BaseSidebarGroup
+## VxvSidebarGroup
 
-`BaseSidebarGroup` es un componente que agrupa elementos de navegación bajo un título colapsable.
+`VxvSidebarGroup` es un componente que agrupa elementos de navegación bajo un título colapsable.
 
-**Archivo**: `/components/ui/navigation/BaseSidebarGroup.vue`
+**Archivo**: `/components/ui/navigation/VxvSidebarGroup.vue`
 
 ### Props
 
@@ -55,17 +55,19 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 ### Ejemplo de Uso
 
 ```vue
-<BaseSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
-  <BaseNavLink to="/admin/users" label="Usuarios" />
-  <BaseNavLink to="/admin/roles" label="Roles" />
-</BaseSidebarGroup>
+<vxv-sidebar-group title="Gestión de Usuarios" :default-collapsed="false">
+  <vxv-nav-link to="/admin/users" label="Usuarios" />
+  <vxv-nav-link to="/admin/roles" label="Roles" />
+</vxv-sidebar-group>
 ```
 
-## BaseNavLink
+## VxvNavLink
 
-`BaseNavLink` es un componente que proporciona un enlace de navegación estilizado que se integra con vue-router.
+`VxvNavLink` es un componente que proporciona un enlace de navegación estilizado que se integra con vue-router.
 
-**Archivo**: `/components/ui/navigation/BaseNavLink.vue`
+**Archivo**: `/components/ui/navigation/VxvNavLink.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 ### Props
 
@@ -84,7 +86,7 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 ### Ejemplo de Uso
 
 ```vue
-<BaseNavLink
+<vxv-nav-link
   to="/admin/users"
   label="Usuarios"
   :icon="UserIcon"
@@ -94,7 +96,7 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 Con clases personalizadas:
 
 ```vue
-<BaseNavLink
+<vxv-nav-link
   to="/admin/settings"
   label="Configuración"
   :icon="CogIcon"
@@ -104,11 +106,13 @@ Con clases personalizadas:
 />
 ```
 
-## BaseBreadcrumb
+## VxvBreadcrumb
 
-`BaseBreadcrumb` es un componente que muestra una ruta de navegación jerárquica (breadcrumb) para indicar la ubicación actual del usuario dentro de la aplicación.
+`VxvBreadcrumb` es un componente que muestra una ruta de navegación jerárquica (breadcrumb) para indicar la ubicación actual del usuario dentro de la aplicación.
 
-**Archivo**: `/components/ui/navigation/BaseBreadcrumb.vue`
+**Archivo**: `/components/ui/navigation/VxvBreadcrumb.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 ### Props
 
@@ -121,7 +125,7 @@ Con clases personalizadas:
 ### Ejemplo de Uso
 
 ```vue
-<BaseBreadcrumb
+<vxv-breadcrumb
   :items="[
     { text: 'Administración', to: '/admin' },
     { text: 'Usuarios' }
@@ -132,7 +136,7 @@ Con clases personalizadas:
 Con enlace de inicio personalizado:
 
 ```vue
-<BaseBreadcrumb
+<vxv-breadcrumb
   :items="[
     { text: 'Usuarios' }
   ]"
@@ -147,17 +151,17 @@ Estos componentes se utilizan en el layout de administración para proporcionar 
 
 ```vue
 <!-- Sidebar -->
-<BaseSidebar title="Panel Admin">
-  <BaseSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
-    <BaseNavLink to="/admin/users" label="Usuarios" />
-    <BaseNavLink to="/admin/roles" label="Roles" />
-  </BaseSidebarGroup>
+<vxv-sidebar title="Panel Admin">
+  <vxv-sidebar-group title="Gestión de Usuarios" :default-collapsed="false">
+    <vxv-nav-link to="/admin/users" label="Usuarios" />
+    <vxv-nav-link to="/admin/roles" label="Roles" />
+  </vxv-sidebar-group>
 
-  <BaseNavLink to="/admin/settings" label="Configuración" />
-</BaseSidebar>
+  <vxv-nav-link to="/admin/settings" label="Configuración" />
+</vxv-sidebar>
 
 <!-- Breadcrumbs -->
-<BaseBreadcrumb
+<vxv-breadcrumb
   :items="[
     { text: 'Usuarios' }
   ]"
@@ -167,17 +171,17 @@ Estos componentes se utilizan en el layout de administración para proporcionar 
 
 ## Uso en el Header Principal
 
-El componente `BaseNavLink` también puede utilizarse en el header principal para los enlaces de navegación:
+El componente `VxvNavLink` también puede utilizarse en el header principal para los enlaces de navegación:
 
 ```vue
 <nav class="flex space-x-4">
-  <BaseNavLink
+  <vxv-nav-link
     to="/"
     label="Dashboard"
     activeClass="text-blue-400"
     inactiveClass="text-gray-300 hover:text-white"
   />
-  <BaseNavLink
+  <vxv-nav-link
     to="/universe"
     label="Universo"
     activeClass="text-blue-400"
@@ -188,18 +192,18 @@ El componente `BaseNavLink` también puede utilizarse en el header principal par
 
 ## Mejores Prácticas
 
-1. **Estructura Jerárquica**: Utiliza `BaseSidebarGroup` para agrupar enlaces relacionados bajo un título descriptivo.
+1. **Estructura Jerárquica**: Utiliza `VxvSidebarGroup` para agrupar enlaces relacionados bajo un título descriptivo.
 2. **Iconos Consistentes**: Si utilizas iconos, mantén un estilo consistente en toda la aplicación.
 3. **Estados Activos Claros**: Asegúrate de que los enlaces activos sean claramente distinguibles de los inactivos.
 4. **Navegación Intuitiva**: Organiza los enlaces de navegación de manera lógica e intuitiva.
 5. **Accesibilidad**: Asegúrate de que la navegación sea accesible para todos los usuarios, incluyendo aquellos que utilizan lectores de pantalla.
-6. **Breadcrumbs Claros**: Utiliza `BaseBreadcrumb` para proporcionar una ruta de navegación clara y consistente en toda la aplicación.
+6. **Breadcrumbs Claros**: Utiliza `VxvBreadcrumb` para proporcionar una ruta de navegación clara y consistente en toda la aplicación.
 
 ## Personalización
 
 Estos componentes pueden ser personalizados mediante props y clases CSS adicionales. Por ejemplo:
 
-- `BaseSidebar` puede tener un título personalizado o ningún título.
-- `BaseSidebarGroup` puede estar colapsado o expandido por defecto.
-- `BaseNavLink` puede tener diferentes estilos para los estados activo e inactivo, así como iconos personalizados.
-- `BaseBreadcrumb` puede tener un enlace de inicio personalizado y elementos con o sin enlaces.
+- `VxvSidebar` puede tener un título personalizado o ningún título.
+- `VxvSidebarGroup` puede estar colapsado o expandido por defecto.
+- `VxvNavLink` puede tener diferentes estilos para los estados activo e inactivo, así como iconos personalizados.
+- `VxvBreadcrumb` puede tener un enlace de inicio personalizado y elementos con o sin enlaces.

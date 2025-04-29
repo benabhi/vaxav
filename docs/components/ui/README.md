@@ -2,6 +2,19 @@
 
 Los componentes UI son los bloques de construcción básicos de la interfaz de usuario de Vaxav. Estos componentes están diseñados para ser reutilizables, consistentes y accesibles.
 
+## Documentación en Storybook
+
+Algunos componentes tienen documentación interactiva en Storybook. Para más detalles, consulta [Componentes Documentados en Storybook](./storybook-components.md).
+
+Para iniciar Storybook, ejecuta:
+
+```bash
+cd frontend
+npm run storybook
+```
+
+Esto iniciará Storybook en `http://localhost:6006`.
+
 ## Categorías de Componentes
 
 Los componentes UI están organizados en las siguientes categorías:
@@ -18,7 +31,7 @@ Los componentes UI están organizados en las siguientes categorías:
 
 ### Feedback
 
-- [Alertas y Notificaciones](./feedback.md): Componentes `BaseAlert` y `BaseNotification` para mostrar mensajes de éxito, error, advertencia e información.
+- [Alertas y Notificaciones](./feedback.md): Componentes `VxvAlert` y `VxvNotification` para mostrar mensajes de éxito, error, advertencia e información.
 
 ### Modales y Diálogos
 
@@ -26,15 +39,15 @@ Los componentes UI están organizados en las siguientes categorías:
 
 ### Navegación
 
-- [Sidebar](./navigation.md#basesidebar): Barra lateral para navegación.
-- [SidebarGroup](./navigation.md#basesidebargroup): Grupos de navegación colapsables.
-- [NavLink](./navigation.md#basenavlink): Enlaces de navegación estilizados.
+- [Sidebar](./navigation.md#vxvsidebar): Barra lateral para navegación.
+- [SidebarGroup](./navigation.md#vxvsidebargroup): Grupos de navegación colapsables.
+- [NavLink](./navigation.md#vxvnavlink): Enlaces de navegación estilizados.
 - [Tabs](./navigation.md#tabs): Pestañas para cambiar entre diferentes vistas.
-- [Breadcrumbs](./navigation.md#basebreadcrumb): Migas de pan para mostrar la ubicación actual.
+- [Breadcrumbs](./navigation.md#vxvbreadcrumb): Migas de pan para mostrar la ubicación actual.
 
 ### Layout
 
-- [PageTitle](./layout.md#basepagetitle): Título de página con breadcrumb y acciones opcionales.
+- [PageTitle](./layout.md#vxvpagetitle): Título de página con breadcrumb y acciones opcionales.
 
 ### Visualización de Datos
 
@@ -86,3 +99,15 @@ Si deseas contribuir a los componentes UI, por favor sigue estas pautas:
 3. Proporciona ejemplos de uso del componente.
 4. Asegúrate de que el componente es accesible.
 5. Asegúrate de que el componente funciona en temas claro y oscuro.
+6. Crea un story en Storybook para el componente siguiendo el patrón de los stories existentes.
+
+## Componentes con Stories en Storybook
+
+Los siguientes componentes tienen documentación interactiva en Storybook:
+
+- [VxvButton](./buttons.md): Botón principal de la aplicación.
+- [VxvInput](./forms.md): Campo de entrada de texto.
+- [VxvAlert](./feedback.md): Componente para mostrar mensajes importantes.
+- [VxvTable](./tables.md): Tabla para mostrar datos tabulares.
+
+Para ver la lista completa y el plan de documentación, consulta [Componentes Documentados en Storybook](./storybook-components.md).

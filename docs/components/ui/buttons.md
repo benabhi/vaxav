@@ -4,11 +4,13 @@ Los botones son componentes interactivos que permiten a los usuarios realizar ac
 
 ## Componentes Disponibles
 
-### BaseButton
+### VxvButton
 
-`BaseButton` es el componente base para todos los botones en la aplicación. Proporciona funcionalidad básica y estilos que son heredados por otros componentes de botón.
+`VxvButton` es el componente base para todos los botones en la aplicación. Proporciona funcionalidad básica y estilos que son heredados por otros componentes de botón.
 
-**Archivo**: `/components/ui/buttons/BaseButton.vue`
+**Archivo**: `/components/ui/buttons/VxvButton.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 #### Props
 
@@ -42,50 +44,50 @@ Los botones son componentes interactivos que permiten a los usuarios realizar ac
 
 **Botón Básico**:
 ```vue
-<BaseButton>Botón Primario</BaseButton>
+<vxv-button>Botón Primario</vxv-button>
 ```
 
 **Botón con Variante**:
 ```vue
-<BaseButton variant="secondary">Cancelar</BaseButton>
+<vxv-button variant="secondary">Cancelar</vxv-button>
 ```
 
 **Botón de Acción Destructiva**:
 ```vue
-<BaseButton variant="danger">Eliminar</BaseButton>
+<vxv-button variant="danger">Eliminar</vxv-button>
 ```
 
 **Botón Adaptativo (Ancho Completo)**:
 ```vue
-<BaseButton :full-width="true">Botón Adaptativo</BaseButton>
+<vxv-button :full-width="true">Botón Adaptativo</vxv-button>
 ```
 
 **Botón con Icono**:
 ```vue
-<BaseButton>
+<vxv-button>
   Guardar
   <template #icon-right>
     <SaveIcon class="w-4 h-4" />
   </template>
-</BaseButton>
+</vxv-button>
 ```
 
 **Botón de Carga**:
 ```vue
-<BaseButton :loading="isLoading" @click="submitForm">
+<vxv-button :loading="isLoading" @click="submitForm">
   Enviar
-</BaseButton>
+</vxv-button>
 ```
 
-### IconButton
+### VxvIconButton
 
-`IconButton` es un componente especializado para botones que solo contienen un icono.
+`VxvIconButton` es un componente especializado para botones que solo contienen un icono.
 
-**Archivo**: `/components/ui/buttons/IconButton.vue`
+**Archivo**: `/components/ui/buttons/VxvIconButton.vue`
 
 #### Props
 
-Hereda todas las props de `BaseButton` y añade:
+Hereda todas las props de `VxvButton` y añade:
 
 | Nombre | Tipo | Valor por defecto | Descripción |
 |--------|------|------------------|-------------|
@@ -101,20 +103,20 @@ Hereda todas las props de `BaseButton` y añade:
 #### Ejemplos de Uso
 
 ```vue
-<IconButton variant="secondary" tooltip="Editar">
+<vxv-icon-button variant="secondary" tooltip="Editar">
   <EditIcon class="w-5 h-5" />
-</IconButton>
+</vxv-icon-button>
 ```
 
-### LinkButton
+### VxvLinkButton
 
-`LinkButton` es un componente que se parece a un botón pero funciona como un enlace.
+`VxvLinkButton` es un componente que se parece a un botón pero funciona como un enlace.
 
-**Archivo**: `/components/ui/buttons/LinkButton.vue`
+**Archivo**: `/components/ui/buttons/VxvLinkButton.vue`
 
 #### Props
 
-Hereda todas las props de `BaseButton` y añade:
+Hereda todas las props de `VxvButton` y añade:
 
 | Nombre | Tipo | Valor por defecto | Descripción |
 |--------|------|------------------|-------------|
@@ -125,13 +127,13 @@ Hereda todas las props de `BaseButton` y añade:
 #### Ejemplos de Uso
 
 ```vue
-<LinkButton to="/dashboard" variant="ghost">
+<vxv-link-button to="/dashboard" variant="ghost">
   Dashboard
-</LinkButton>
+</vxv-link-button>
 
-<LinkButton href="https://example.com" target="_blank" variant="secondary">
+<vxv-link-button href="https://example.com" target="_blank" variant="secondary">
   Sitio Externo
-</LinkButton>
+</vxv-link-button>
 ```
 
 ## Guía de Estilos
@@ -170,9 +172,9 @@ Los botones tienen los siguientes estados visuales:
 
 ## Mejores Prácticas
 
-1. Usa `BaseButton` para la mayoría de los casos.
-2. Usa `IconButton` para botones que solo contienen un icono.
-3. Usa `LinkButton` para enlaces que deben parecer botones.
+1. Usa `VxvButton` para la mayoría de los casos.
+2. Usa `VxvIconButton` para botones que solo contienen un icono.
+3. Usa `VxvLinkButton` para enlaces que deben parecer botones.
 4. Usa la variante `primary` para la acción principal en un formulario o sección.
 5. Usa la variante `secondary` para acciones secundarias como "Cancelar" o "Cerrar".
 6. Usa la variante `danger` para acciones destructivas que requieren atención, como "Eliminar".

@@ -4,11 +4,13 @@ Los componentes de formulario permiten a los usuarios ingresar, editar y enviar 
 
 ## Componentes Disponibles
 
-### BaseInput
+### VxvInput
 
-`BaseInput` es el componente base para campos de entrada de texto, diseñado con la estética sci-fi retro de Vaxav.
+`VxvInput` es el componente base para campos de entrada de texto, diseñado con la estética sci-fi retro de Vaxav.
 
-**Archivo**: `/components/ui/forms/BaseInput.vue`
+**Archivo**: `/components/ui/forms/VxvInput.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 #### Props
 
@@ -52,7 +54,7 @@ Los componentes de formulario permiten a los usuarios ingresar, editar y enviar 
 
 #### Estilo
 
-El componente `BaseInput` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
+El componente `VxvInput` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
 
 - Fondo oscuro (`bg-gray-700`)
 - Texto blanco (`text-white`)
@@ -65,7 +67,7 @@ El componente `BaseInput` sigue la guía de estilo de Vaxav, con un diseño oscu
 
 **Input Básico**:
 ```vue
-<BaseInput
+<vxv-input
   v-model="username"
   label="Nombre de usuario"
   placeholder="Ingrese su nombre de usuario"
@@ -74,7 +76,7 @@ El componente `BaseInput` sigue la guía de estilo de Vaxav, con un diseño oscu
 
 **Input con Error**:
 ```vue
-<BaseInput
+<vxv-input
   v-model="email"
   label="Correo electrónico"
   type="email"
@@ -85,27 +87,29 @@ El componente `BaseInput` sigue la guía de estilo de Vaxav, con un diseño oscu
 
 **Input con Icono**:
 ```vue
-<BaseInput v-model="search" placeholder="Buscar...">
+<vxv-input v-model="search" placeholder="Buscar...">
   <template #prefix>
     <SearchIcon class="w-5 h-5 text-gray-400" />
   </template>
-</BaseInput>
+</vxv-input>
 ```
 
 **Input con Etiqueta Personalizada**:
 ```vue
-<BaseInput v-model="form.name" labelClass="text-lg font-bold text-white">
+<vxv-input v-model="form.name" labelClass="text-lg font-bold text-white">
   <template #label>
     Nombre <span class="text-blue-400">*</span>
   </template>
-</BaseInput>
+</vxv-input>
 ```
 
-### BaseTextarea
+### VxvTextarea
 
-`BaseTextarea` es un componente para campos de texto multilínea.
+`VxvTextarea` es un componente para campos de texto multilínea.
 
-**Archivo**: `/components/ui/forms/BaseTextarea.vue`
+**Archivo**: `/components/ui/forms/VxvTextarea.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 #### Props
 
@@ -129,11 +133,13 @@ Hereda la mayoría de las props de `BaseInput` y añade:
 />
 ```
 
-### BaseSelect
+### VxvSelect
 
-`BaseSelect` es un componente para seleccionar opciones de una lista, diseñado con la estética sci-fi retro de Vaxav.
+`VxvSelect` es un componente para seleccionar opciones de una lista, diseñado con la estética sci-fi retro de Vaxav.
 
-**Archivo**: `/components/ui/forms/BaseSelect.vue`
+**Archivo**: `/components/ui/forms/VxvSelect.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 #### Props
 
@@ -175,7 +181,7 @@ Hereda la mayoría de las props de `BaseInput` y añade:
 
 #### Estilo
 
-El componente `BaseSelect` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
+El componente `VxvSelect` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
 
 - Fondo oscuro (`bg-gray-700`)
 - Texto blanco (`text-white`)
@@ -238,11 +244,13 @@ El componente `BaseSelect` sigue la guía de estilo de Vaxav, con un diseño osc
 />
 ```
 
-### BaseCheckbox
+### VxvCheckbox
 
-`BaseCheckbox` es un componente para casillas de verificación, diseñado con la estética sci-fi retro de Vaxav.
+`VxvCheckbox` es un componente para casillas de verificación, diseñado con la estética sci-fi retro de Vaxav.
 
-**Archivo**: `/components/ui/forms/BaseCheckbox.vue`
+**Archivo**: `/components/ui/forms/VxvCheckbox.vue`
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 #### Props
 
@@ -276,7 +284,7 @@ El componente `BaseSelect` sigue la guía de estilo de Vaxav, con un diseño osc
 
 #### Estilo
 
-El componente `BaseCheckbox` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
+El componente `VxvCheckbox` sigue la guía de estilo de Vaxav, con un diseño oscuro que se integra perfectamente con el resto de la interfaz:
 
 - Checkbox con bordes redondeados
 - Texto blanco para las etiquetas
@@ -320,11 +328,11 @@ El componente `BaseCheckbox` sigue la guía de estilo de Vaxav, con un diseño o
 />
 ```
 
-### BaseRadio
+### VxvRadio
 
-`BaseRadio` es un componente para selecciones únicas dentro de un grupo.
+`VxvRadio` es un componente para selecciones únicas dentro de un grupo.
 
-**Archivo**: `/components/ui/forms/BaseRadio.vue`
+**Archivo**: `/components/ui/forms/VxvRadio.vue`
 
 #### Props
 
@@ -338,11 +346,11 @@ Similar a `BaseCheckbox` pero para selecciones de radio.
 <BaseRadio v-model="gender" value="other" label="Otro" name="gender" />
 ```
 
-### BaseSwitch
+### VxvSwitch
 
-`BaseSwitch` es un componente para alternar entre dos estados.
+`VxvSwitch` es un componente para alternar entre dos estados.
 
-**Archivo**: `/components/ui/forms/BaseSwitch.vue`
+**Archivo**: `/components/ui/forms/VxvSwitch.vue`
 
 #### Props
 
@@ -354,11 +362,11 @@ Similar a `BaseCheckbox` pero con estilo de interruptor.
 <BaseSwitch v-model="darkMode" label="Modo oscuro" />
 ```
 
-### FormGroup
+### VxvForm
 
-`FormGroup` es un contenedor para agrupar campos de formulario relacionados.
+`VxvForm` es un contenedor para agrupar campos de formulario relacionados.
 
-**Archivo**: `/components/ui/forms/FormGroup.vue`
+**Archivo**: `/components/ui/forms/VxvForm.vue`
 
 #### Props
 
@@ -442,11 +450,11 @@ Todos los componentes de formulario siguen las mejores prácticas de accesibilid
 4. Navegación por teclado
 5. Contraste de color suficiente
 
-### BaseRange
+### VxvRange
 
-`BaseRange` es un componente para seleccionar valores numéricos dentro de un rango, diseñado con la estética sci-fi retro de Vaxav.
+`VxvRange` es un componente para seleccionar valores numéricos dentro de un rango, diseñado con la estética sci-fi retro de Vaxav.
 
-**Archivo**: `/components/ui/forms/BaseRange.vue`
+**Archivo**: `/components/ui/forms/VxvRange.vue`
 
 #### Props
 

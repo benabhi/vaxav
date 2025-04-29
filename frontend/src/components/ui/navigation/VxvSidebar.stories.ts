@@ -1,0 +1,368 @@
+import type { Meta, StoryObj } from '@storybook/vue3';
+import { ref } from 'vue';
+import VxvSidebar from './VxvSidebar.vue';
+import VxvSidebarGroup from './VxvSidebarGroup.vue';
+import VxvNavLink from './VxvNavLink.vue';
+
+/**
+ * VxvSidebar es un componente que proporciona una barra lateral para la navegación.
+ * Se utiliza principalmente para la navegación principal de la aplicación.
+ */
+const meta: Meta<typeof VxvSidebar> = {
+  title: 'UI/Navigation/VxvSidebar',
+  component: VxvSidebar,
+  tags: ['autodocs'],
+  argTypes: {
+    title: {
+      description: 'Título opcional para la barra lateral',
+      control: { type: 'text' },
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        component: `
+VxvSidebar es un componente que proporciona una barra lateral para la navegación.
+Se utiliza principalmente para la navegación principal de la aplicación.
+
+\`\`\`vue
+<template>
+  <VxvSidebar title="Panel Admin">
+    <VxvSidebarGroup title="Gestión de Usuarios">
+      <VxvNavLink to="/admin/users" label="Usuarios" />
+      <VxvNavLink to="/admin/roles" label="Roles" />
+    </VxvSidebarGroup>
+
+    <VxvNavLink to="/admin/settings" label="Configuración" />
+  </VxvSidebar>
+</template>
+\`\`\`
+        `,
+      },
+    },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof VxvSidebar>;
+
+// Componentes simplificados para Storybook
+const NavLinkStub = {
+  props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+  template: `
+    <a 
+      :href="to" 
+      :class="[
+        to === '/dashboard' ? 'bg-gray-700 text-blue-400' : 'text-gray-300 hover:text-white',
+        'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+        horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
+        className
+      ]"
+    >
+      <div class="flex items-center">
+        <component
+          v-if="icon"
+          :is="icon"
+          class="mr-2 h-5 w-5"
+          :class="to === '/dashboard' ? 'text-blue-400' : 'text-gray-400'"
+        />
+        <span>{{ label }}</span>
+      </div>
+    </a>
+  `
+};
+
+// Iconos de ejemplo
+const HomeIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+  `
+};
+
+const UsersIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  `
+};
+
+const SettingsIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  `
+};
+
+const ChartIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  `
+};
+
+/**
+ * Barra lateral básica sin título
+ */
+export const Default: Story = {
+  args: {
+    title: '',
+  },
+  render: (args) => ({
+    components: { 
+      VxvSidebar,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      return { 
+        args,
+        HomeIcon,
+        UsersIcon,
+        SettingsIcon
+      };
+    },
+    template: `
+      <div class="h-[500px] w-64 bg-gray-900 p-4">
+        <VxvSidebar v-bind="args">
+          <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
+          <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+          <VxvNavLink to="/settings" label="Configuración" :icon="SettingsIcon" />
+        </VxvSidebar>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Barra lateral con título
+ */
+export const WithTitle: Story = {
+  args: {
+    title: 'Panel de Administración',
+  },
+  render: (args) => ({
+    components: { 
+      VxvSidebar,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      return { 
+        args,
+        HomeIcon,
+        UsersIcon,
+        SettingsIcon
+      };
+    },
+    template: `
+      <div class="h-[500px] w-64 bg-gray-900 p-4">
+        <VxvSidebar v-bind="args">
+          <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
+          <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+          <VxvNavLink to="/settings" label="Configuración" :icon="SettingsIcon" />
+        </VxvSidebar>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Barra lateral con grupos
+ */
+export const WithGroups: Story = {
+  args: {
+    title: 'Panel de Administración',
+  },
+  render: (args) => ({
+    components: { 
+      VxvSidebar,
+      VxvSidebarGroup,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      return { 
+        args,
+        HomeIcon,
+        UsersIcon,
+        SettingsIcon,
+        ChartIcon
+      };
+    },
+    template: `
+      <div class="h-[500px] w-64 bg-gray-900 p-4">
+        <VxvSidebar v-bind="args">
+          <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
+          
+          <VxvSidebarGroup title="Gestión de Usuarios">
+            <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+            <VxvNavLink to="/roles" label="Roles" />
+            <VxvNavLink to="/permissions" label="Permisos" />
+          </VxvSidebarGroup>
+          
+          <VxvSidebarGroup title="Reportes">
+            <VxvNavLink to="/reports/sales" label="Ventas" :icon="ChartIcon" />
+            <VxvNavLink to="/reports/traffic" label="Tráfico" />
+            <VxvNavLink to="/reports/users" label="Usuarios" />
+          </VxvSidebarGroup>
+          
+          <VxvNavLink to="/settings" label="Configuración" :icon="SettingsIcon" />
+        </VxvSidebar>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Barra lateral con grupos colapsados
+ */
+export const WithCollapsedGroups: Story = {
+  args: {
+    title: 'Panel de Administración',
+  },
+  render: (args) => ({
+    components: { 
+      VxvSidebar,
+      VxvSidebarGroup,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      return { 
+        args,
+        HomeIcon,
+        UsersIcon,
+        SettingsIcon,
+        ChartIcon
+      };
+    },
+    template: `
+      <div class="h-[500px] w-64 bg-gray-900 p-4">
+        <VxvSidebar v-bind="args">
+          <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
+          
+          <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="true">
+            <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+            <VxvNavLink to="/roles" label="Roles" />
+            <VxvNavLink to="/permissions" label="Permisos" />
+          </VxvSidebarGroup>
+          
+          <VxvSidebarGroup title="Reportes" :default-collapsed="true">
+            <VxvNavLink to="/reports/sales" label="Ventas" :icon="ChartIcon" />
+            <VxvNavLink to="/reports/traffic" label="Tráfico" />
+            <VxvNavLink to="/reports/users" label="Usuarios" />
+          </VxvSidebarGroup>
+          
+          <VxvNavLink to="/settings" label="Configuración" :icon="SettingsIcon" />
+        </VxvSidebar>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Barra lateral con enlaces activos
+ */
+export const WithActiveLinks: Story = {
+  args: {
+    title: 'Panel de Administración',
+  },
+  render: (args) => ({
+    components: { 
+      VxvSidebar,
+      VxvSidebarGroup,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      return { 
+        args,
+        HomeIcon,
+        UsersIcon,
+        SettingsIcon
+      };
+    },
+    template: `
+      <div class="h-[500px] w-64 bg-gray-900 p-4">
+        <VxvSidebar v-bind="args">
+          <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
+          
+          <VxvSidebarGroup title="Gestión de Usuarios">
+            <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+            <VxvNavLink to="/roles" label="Roles" />
+            <VxvNavLink to="/permissions" label="Permisos" />
+          </VxvSidebarGroup>
+          
+          <VxvNavLink to="/settings" label="Configuración" :icon="SettingsIcon" />
+        </VxvSidebar>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Barra lateral en un layout de aplicación
+ */
+export const InAppLayout: Story = {
+  render: () => ({
+    components: { 
+      VxvSidebar,
+      VxvSidebarGroup,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      return { 
+        HomeIcon,
+        UsersIcon,
+        SettingsIcon,
+        ChartIcon
+      };
+    },
+    template: `
+      <div class="flex h-[600px] w-full bg-gray-900">
+        <!-- Sidebar -->
+        <div class="w-64 h-full">
+          <VxvSidebar title="Panel de Administración">
+            <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
+            
+            <VxvSidebarGroup title="Gestión de Usuarios">
+              <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+              <VxvNavLink to="/roles" label="Roles" />
+              <VxvNavLink to="/permissions" label="Permisos" />
+            </VxvSidebarGroup>
+            
+            <VxvSidebarGroup title="Reportes">
+              <VxvNavLink to="/reports/sales" label="Ventas" :icon="ChartIcon" />
+              <VxvNavLink to="/reports/traffic" label="Tráfico" />
+              <VxvNavLink to="/reports/users" label="Usuarios" />
+            </VxvSidebarGroup>
+            
+            <VxvNavLink to="/settings" label="Configuración" :icon="SettingsIcon" />
+          </VxvSidebar>
+        </div>
+        
+        <!-- Main content -->
+        <div class="flex-1 p-6 bg-gray-800">
+          <h1 class="text-2xl font-bold text-white mb-4">Dashboard</h1>
+          <p class="text-gray-300">Bienvenido al panel de administración.</p>
+          
+          <div class="grid grid-cols-3 gap-4 mt-6">
+            <div class="bg-gray-700 p-4 rounded-lg">
+              <h3 class="text-lg font-medium text-white">Usuarios</h3>
+              <p class="text-3xl font-bold text-blue-400 mt-2">1,234</p>
+            </div>
+            <div class="bg-gray-700 p-4 rounded-lg">
+              <h3 class="text-lg font-medium text-white">Ventas</h3>
+              <p class="text-3xl font-bold text-green-400 mt-2">$5,678</p>
+            </div>
+            <div class="bg-gray-700 p-4 rounded-lg">
+              <h3 class="text-lg font-medium text-white">Tráfico</h3>
+              <p class="text-3xl font-bold text-purple-400 mt-2">9,012</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `,
+  }),
+};
