@@ -1,31 +1,12 @@
 <template>
   <AdminLayout title="Gestión de Roles">
     <template #breadcrumbs>
-      <nav class="flex" aria-label="Breadcrumb">
-        <ol class="flex items-center space-x-4">
-          <li>
-            <div>
-              <router-link to="/admin" class="text-gray-400 hover:text-white">
-                <svg class="flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                  fill="currentColor" aria-hidden="true">
-                  <path
-                    d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                </svg>
-                <span class="sr-only">Inicio</span>
-              </router-link>
-            </div>
-          </li>
-          <li>
-            <div class="flex items-center">
-              <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
-              </svg>
-              <span class="ml-4 text-sm font-medium text-gray-300">Roles</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <BaseBreadcrumb
+        :items="[
+          { text: 'Roles' }
+        ]"
+        homeLink="/admin"
+      />
     </template>
 
     <div class="py-6">
@@ -43,7 +24,7 @@
         create-button-label="Nuevo Rol"
         search-placeholder="Buscar roles..."
         item-name="roles"
-        @create="openCreateRoleModal"
+        @create="goToCreateRole"
         @page-change="changePage"
         @per-page-change="handlePerPageChange"
         @filter-change="handleFilterChange"
@@ -192,16 +173,19 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
 import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
+import BaseBreadcrumb from '@/components/ui/navigation/BaseBreadcrumb.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
 
+const router = useRouter();
 const authStore = useAuthStore();
 const notificationStore = useNotificationStore();
 
@@ -364,15 +348,9 @@ const handleSortChange = (sortData) => {
   fetchRoles();
 };
 
-// Open create role modal
-const openCreateRoleModal = () => {
-  editingRole.value = null;
-  roleForm.name = '';
-  roleForm.slug = '';
-  roleForm.description = '';
-  roleForm.permissions = [];
-  clearFormErrors();
-  showRoleModal.value = true;
+// Navigate to create role page
+const goToCreateRole = () => {
+  router.push('/admin/roles/create');
 };
 
 // Edit role

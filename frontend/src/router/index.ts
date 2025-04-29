@@ -119,9 +119,27 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/users/create',
+      name: 'admin-users-create',
+      component: () => import('../views/admin/UserCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
       path: '/admin/roles',
       name: 'admin-roles',
       component: () => import('../views/admin/RolesView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/roles/create',
+      name: 'admin-roles-create',
+      component: () => import('../views/admin/RoleCreateView.vue'),
       meta: {
         requiresAuth: true,
         requiresRoles: ['superadmin', 'admin']

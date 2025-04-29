@@ -28,7 +28,7 @@
         @per-page-change="handlePerPageChange"
         @filter-change="handleFilterChange"
         @sort-change="handleSortChange"
-        @create="openCreateUserModal"
+        @create="goToCreateUser"
       >
         <!-- Custom filters -->
         <template #filters>
@@ -210,6 +210,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
 import BaseInput from '@/components/ui/forms/BaseInput.vue';
@@ -218,11 +219,10 @@ import BaseCheckbox from '@/components/ui/forms/BaseCheckbox.vue';
 import BaseModal from '@/components/ui/modals/BaseModal.vue';
 import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
 import BaseBreadcrumb from '@/components/ui/navigation/BaseBreadcrumb.vue';
-import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
 import api from '@/services/api';
 
-const authStore = useAuthStore();
+const router = useRouter();
 const notificationStore = useNotificationStore();
 
 // Users data
@@ -379,16 +379,9 @@ const formatDate = (dateString) => {
   }).format(date);
 };
 
-// Open create user modal
-const openCreateUserModal = () => {
-  editingUser.value = null;
-  userForm.name = '';
-  userForm.email = '';
-  userForm.password = '';
-  userForm.password_confirmation = '';
-  userForm.roles = [4]; // Default to 'user' role
-  clearFormErrors();
-  showUserModal.value = true;
+// Navigate to create user page
+const goToCreateUser = () => {
+  router.push('/admin/users/create');
 };
 
 // Open edit user modal
