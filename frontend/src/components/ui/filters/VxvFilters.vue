@@ -32,14 +32,11 @@
         </VxvInput>
       </div>
 
-      <!-- Custom filters wrapper -->
-      <div class="w-full md:w-auto md:flex md:space-x-4">
-        <!-- Custom filters -->
-        <slot name="filters"></slot>
-      </div>
+      <!-- Custom filters -->
+      <slot name="filters"></slot>
 
       <!-- Action buttons -->
-      <div class="flex space-x-2 md:ml-auto">
+      <div class="flex space-x-2 flex-shrink-0">
         <VxvButton
           v-if="showReset"
           variant="secondary"

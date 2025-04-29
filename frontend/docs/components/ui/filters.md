@@ -110,3 +110,61 @@ El componente `VxvFilters` proporciona una interfaz para filtrar datos, con un c
 - Cuando `immediate` es `true`, los cambios en los filtros se emiten inmediatamente, sin necesidad de hacer clic en el botón de aplicar.
 - Cuando `showLabels` es `true`, las etiquetas se muestran encima de sus respectivos inputs.
 - En pantallas pequeñas, cada filtro ocupa todo el ancho disponible y se apila verticalmente.
+
+## Manejo de Múltiples Filtros
+
+El componente está diseñado para manejar múltiples filtros con scroll horizontal cuando hay muchos:
+
+```vue
+<VxvFilters v-model:filters="filters" @filter-change="handleFilterChange">
+  <template #filters>
+    <!-- Primer filtro -->
+    <div class="w-[180px] flex-shrink-0">
+      <label v-if="showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+        Fecha desde
+      </label>
+      <VxvInput
+        v-model="filters.dateFrom"
+        :label="showLabels ? '' : 'Fecha desde'"
+        type="date"
+        size="sm"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Segundo filtro -->
+    <div class="w-[180px] flex-shrink-0">
+      <label v-if="showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+        Categoría
+      </label>
+      <div class="flex items-center space-x-2">
+        <VxvSelect
+          v-model="filters.category"
+          :label="showLabels ? '' : 'Categoría'"
+          :options="categoryOptions"
+          size="sm"
+          class="w-full"
+        />
+        <button
+          v-if="filters.category"
+          @click="clearCategoryFilter"
+          class="text-gray-400 hover:text-white flex-shrink-0"
+          title="Quitar filtro"
+        >
+          <!-- Icono para quitar filtro -->
+        </button>
+      </div>
+    </div>
+
+    <!-- Más filtros... -->
+  </template>
+</VxvFilters>
+```
+
+Esta estructura permite:
+
+1. Mostrar filtros en una línea horizontal con scroll cuando hay muchos
+2. Mantener la consistencia visual con etiquetas alineadas
+3. Soportar un número variable de filtros sin problemas de espacio
+4. Incluir botones para quitar filtros individuales
+5. En pantallas pequeñas, los filtros se apilan verticalmente

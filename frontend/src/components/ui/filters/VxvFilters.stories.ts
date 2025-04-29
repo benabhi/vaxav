@@ -605,7 +605,21 @@ export const WithoutLabels: Story = {
  * Filtros avanzados
  */
 export const AdvancedFilters: Story = {
-  render: () => ({
+  args: {
+    id: 'advanced-filters',
+    filters: { search: '' },
+    showSearch: true,
+    searchLabel: 'Búsqueda',
+    searchPlaceholder: 'Buscar productos...',
+    showApply: true,
+    applyLabel: 'Aplicar filtros',
+    showReset: true,
+    resetLabel: 'Limpiar filtros',
+    showLabels: true,
+    debounce: 300,
+    immediate: false,
+  },
+  render: (args) => ({
     components: { VxvFilters, VxvInput, VxvSelect, VxvCheckbox, VxvRange },
     setup() {
       const filters = ref({
@@ -631,6 +645,7 @@ export const AdvancedFilters: Story = {
       };
 
       return {
+        args,
         filters,
         categoryOptions,
         handleFilterChange
@@ -639,39 +654,67 @@ export const AdvancedFilters: Story = {
     template: `
       <div class="bg-gray-900 p-4">
         <VxvFilters
-          id="advanced-filters"
+          v-bind="args"
           v-model:filters="filters"
-          search-placeholder="Buscar productos..."
-          apply-label="Aplicar filtros"
-          reset-label="Limpiar filtros"
           @filter-change="handleFilterChange"
         >
           <template #filters>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
-              <VxvInput
-                v-model="filters.dateFrom"
-                label="Fecha desde"
-                type="date"
-                size="sm"
-              />
+              <div class="w-[180px] flex-shrink-0">
+                <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                  Fecha desde
+                </label>
+                <VxvInput
+                  v-model="filters.dateFrom"
+                  :label="args.showLabels ? '' : 'Fecha desde'"
+                  type="date"
+                  size="sm"
+                  class="w-full"
+                />
+              </div>
 
-              <VxvInput
-                v-model="filters.dateTo"
-                label="Fecha hasta"
-                type="date"
-                size="sm"
-              />
+              <div class="w-[180px] flex-shrink-0">
+                <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                  Fecha hasta
+                </label>
+                <VxvInput
+                  v-model="filters.dateTo"
+                  :label="args.showLabels ? '' : 'Fecha hasta'"
+                  type="date"
+                  size="sm"
+                  class="w-full"
+                />
+              </div>
 
-              <VxvSelect
-                v-model="filters.category"
-                label="Categorías"
-                :options="categoryOptions"
-                multiple
-                size="sm"
-              />
+              <div class="w-[180px] flex-shrink-0">
+                <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                  Categorías
+                </label>
+                <div class="flex items-center space-x-2">
+                  <VxvSelect
+                    v-model="filters.category"
+                    :label="args.showLabels ? '' : 'Categorías'"
+                    :options="categoryOptions"
+                    multiple
+                    size="sm"
+                    class="w-full"
+                  />
+                  <button
+                    v-if="filters.category && filters.category.length"
+                    @click="filters.category = []"
+                    class="text-gray-400 hover:text-white flex-shrink-0"
+                    title="Quitar filtro"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Rango de precio</label>
+              <div class="w-[250px] flex-shrink-0">
+                <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                  Rango de precio
+                </label>
                 <div class="flex items-center space-x-2">
                   <span class="text-gray-400 text-sm">{{ filters.priceRange[0] }}€</span>
                   <div class="flex-grow">
@@ -687,8 +730,10 @@ export const AdvancedFilters: Story = {
                 </div>
               </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Valoración mínima</label>
+              <div class="w-[250px] flex-shrink-0">
+                <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                  Valoración mínima
+                </label>
                 <div class="flex items-center space-x-1">
                   <VxvRange
                     v-model="filters.rating"
@@ -710,13 +755,12 @@ export const AdvancedFilters: Story = {
                 </div>
               </div>
 
-              <div class="flex items-end">
+              <div class="w-[180px] flex-shrink-0 flex items-end">
                 <VxvCheckbox
                   v-model="filters.inStock"
                   label="Solo productos en stock"
                 />
               </div>
-            </div>
           </template>
         </VxvFilters>
 
