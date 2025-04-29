@@ -1,34 +1,49 @@
 <template>
-  <header class="bg-gray-800 shadow-md">
+  <header class="bg-gray-800 shadow-md border-b border-gray-700">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center">
         <h1 class="text-xl font-bold text-blue-400">VAXAV</h1>
         <nav v-if="isLoggedIn" class="ml-8 hidden md:block">
           <ul class="flex space-x-6">
             <li>
-              <RouterLink to="/" class="text-gray-300 hover:text-white transition-colors">
-                Dashboard
-              </RouterLink>
+              <BaseNavLink
+                to="/"
+                label="Dashboard"
+                activeClass="bg-gray-700 text-blue-400"
+                inactiveClass="text-gray-300 hover:text-white"
+              />
             </li>
             <li>
-              <RouterLink to="/universe" class="text-gray-300 hover:text-white transition-colors">
-                Universo
-              </RouterLink>
+              <BaseNavLink
+                to="/universe"
+                label="Universo"
+                activeClass="bg-gray-700 text-blue-400"
+                inactiveClass="text-gray-300 hover:text-white"
+              />
             </li>
             <li>
-              <RouterLink to="/market" class="text-gray-300 hover:text-white transition-colors">
-                Mercado
-              </RouterLink>
+              <BaseNavLink
+                to="/market"
+                label="Mercado"
+                activeClass="bg-gray-700 text-blue-400"
+                inactiveClass="text-gray-300 hover:text-white"
+              />
             </li>
             <li>
-              <RouterLink to="/ships" class="text-gray-300 hover:text-white transition-colors">
-                Naves
-              </RouterLink>
+              <BaseNavLink
+                to="/ships"
+                label="Naves"
+                activeClass="bg-gray-700 text-blue-400"
+                inactiveClass="text-gray-300 hover:text-white"
+              />
             </li>
             <li v-if="isModerator">
-              <RouterLink to="/admin" class="text-gray-300 hover:text-white transition-colors">
-                Administración
-              </RouterLink>
+              <BaseNavLink
+                to="/admin"
+                label="Administración"
+                activeClass="bg-gray-700 text-blue-400"
+                inactiveClass="text-gray-300 hover:text-white"
+              />
             </li>
           </ul>
         </nav>
@@ -67,6 +82,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
 import BaseButton from '@/components/ui/buttons/BaseButton.vue';
+import BaseNavLink from '@/components/ui/navigation/BaseNavLink.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
