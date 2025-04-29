@@ -112,6 +112,87 @@ Authorization: Bearer {token}
 }
 ```
 
+### Obtener Perfil de Usuario
+
+**Endpoint:** `GET /api/auth/profile`
+
+**Descripción:** Obtiene la información detallada del perfil del usuario autenticado, incluyendo roles.
+
+**Encabezados Requeridos:**
+```
+Authorization: Bearer {token}
+```
+
+**Respuesta Exitosa:**
+```json
+{
+  "id": 1,
+  "name": "Nombre del Usuario",
+  "email": "usuario@ejemplo.com",
+  "roles": [
+    {
+      "id": 2,
+      "name": "Usuario",
+      "slug": "user"
+    }
+  ],
+  "created_at": "2023-01-01T00:00:00.000000Z",
+  "updated_at": "2023-01-01T00:00:00.000000Z",
+  "is_superadmin": false,
+  "is_admin": false,
+  "is_moderator": false
+}
+```
+
+### Actualizar Perfil de Usuario
+
+**Endpoint:** `PUT /api/auth/profile`
+
+**Descripción:** Actualiza la información del perfil del usuario autenticado.
+
+**Encabezados Requeridos:**
+```
+Authorization: Bearer {token}
+```
+
+**Parámetros:**
+```json
+{
+  "name": "Nuevo Nombre",
+  "email": "nuevo@ejemplo.com",
+  "password": "nueva-contraseña",
+  "password_confirmation": "nueva-contraseña"
+}
+```
+
+**Notas:**
+- Los campos `password` y `password_confirmation` son opcionales.
+- El campo `email` debe ser único en la base de datos.
+
+**Respuesta Exitosa:**
+```json
+{
+  "message": "Perfil actualizado correctamente",
+  "user": {
+    "id": 1,
+    "name": "Nuevo Nombre",
+    "email": "nuevo@ejemplo.com",
+    "roles": [
+      {
+        "id": 2,
+        "name": "Usuario",
+        "slug": "user"
+      }
+    ],
+    "created_at": "2023-01-01T00:00:00.000000Z",
+    "updated_at": "2023-01-01T00:00:00.000000Z",
+    "is_superadmin": false,
+    "is_admin": false,
+    "is_moderator": false
+  }
+}
+```
+
 ## Flujo de Autenticación
 
 ### Registro de Usuario

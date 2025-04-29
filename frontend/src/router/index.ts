@@ -90,6 +90,13 @@ const router = createRouter({
       component: () => import('../views/ships/ShipsView.vue'),
       meta: { requiresAuth: true }
     },
+    // Ruta de perfil
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/profile/ProfileView.vue'),
+      meta: { requiresAuth: true }
+    },
     // Rutas de administración
     {
       path: '/admin',

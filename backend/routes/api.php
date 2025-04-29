@@ -23,25 +23,31 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+
+    // Rutas de perfil
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show']);
+        Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update']);
+    });
 });
 
 // Ruta temporal para verificar roles
-Route::get('/debug/user-roles', function() {
+Route::get('/debug/user-roles', function () {
     $user = \App\Models\User::where('email', 'test@example.com')->first();
     if (!$user) {
         return response()->json(['error' => 'Usuario no encontrado'], 404);
     }
 
     return response()->json([
-        'user' => $user->name,
-        'email' => $user->email,
-        'roles' => $user->roles()->get(['id', 'name', 'slug']),
-        'has_role_superadmin' => $user->hasRole('superadmin'),
-        'has_role_admin' => $user->hasRole('admin'),
-        'has_role_moderator' => $user->hasRole('moderator'),
+        'user'                 => $user->name,
+        'email'                => $user->email,
+        'roles'                => $user->roles()->get(['id', 'name', 'slug']),
+        'has_role_superadmin'  => $user->hasRole('superadmin'),
+        'has_role_admin'       => $user->hasRole('admin'),
+        'has_role_moderator'   => $user->hasRole('moderator'),
         'is_superadmin_method' => $user->isSuperAdmin(),
-        'is_admin_method' => $user->isAdmin(),
-        'is_moderator_method' => $user->isModerator(),
+        'is_admin_method'      => $user->isAdmin(),
+        'is_moderator_method'  => $user->isModerator(),
     ]);
 });
 

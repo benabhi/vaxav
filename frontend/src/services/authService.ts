@@ -101,6 +101,22 @@ const authService = {
   },
 
   /**
+   * Obtener el perfil del usuario
+   */
+  getProfile: async () => {
+    const response = await api.get('/auth/profile');
+    return response.data;
+  },
+
+  /**
+   * Actualizar el perfil del usuario
+   */
+  updateProfile: async (profileData: Partial<User> & { password?: string, password_confirmation?: string }) => {
+    const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  },
+
+  /**
    * Inicializar el token desde localStorage (llamar al inicio de la app)
    */
   initToken: () => {

@@ -43,3 +43,4 @@ Para obtener más información sobre aspectos específicos del sistema, consulte
 - [Roles y Permisos](./roles-permissions.md): Detalles sobre el sistema de roles y permisos.
 - [Implementación Frontend](./frontend-implementation.md): Cómo se implementa la autenticación en el frontend.
 - [Implementación Backend](./backend-implementation.md): Cómo se implementa la autenticación en el backend.
+- [Perfil de Usuario](./user-profile.md): Gestión del perfil de usuario (visualización y actualización).
