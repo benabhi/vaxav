@@ -217,10 +217,10 @@ El componente `VxvSidebar` se utiliza en el layout de administración para propo
       </main>
     </div>
 
-    <!-- Sidebar móvil (sin overlay oscuro) -->
-    <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 lg:hidden" @click="closeMobileMenu">
+    <!-- Sidebar móvil con overlay mejorado -->
+    <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 lg:hidden mobile-sidebar-container" @click="closeMobileMenu">
       <!-- Sidebar móvil -->
-      <div class="fixed inset-y-0 left-0 w-64 bg-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out border-r border-gray-700" @click.stop>
+      <div class="fixed inset-y-0 left-0 w-64 bg-gray-800 shadow-xl transform transition-all duration-300 ease-in-out border-r border-gray-700 z-10" @click.stop>
         <VxvSidebar
           title="Panel Admin"
           :collapsible="false"
@@ -255,6 +255,18 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 </script>
+
+<style scoped>
+/* Estilo para el overlay del sidebar móvil */
+.mobile-sidebar-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(17, 24, 39, 0.25); /* bg-gray-900 con opacidad media */
+  backdrop-filter: blur(1px); /* Ligero desenfoque para mejorar el contraste */
+  pointer-events: none; /* Permite que los clics pasen a través del overlay */
+}
+</style>
 ```
 
 ## Notas de Implementación
@@ -264,4 +276,4 @@ const closeMobileMenu = () => {
 3. **Opcionalmente colapsable**: La funcionalidad de colapso está disponible pero deshabilitada por defecto.
 4. **Accesibilidad**: Se incluyen atributos ARIA y mensajes de screen reader para mejorar la accesibilidad.
 5. **Animaciones**: Se utilizan transiciones suaves para mejorar la experiencia de usuario en el modo móvil.
-6. **Sin overlay oscuro**: El sidebar móvil se despliega sin oscurecer el contenido detrás, permitiendo ver la página completa.
+6. **Overlay con contraste mejorado**: El sidebar móvil se despliega con un overlay semi-translúcido implementado como pseudo-elemento, proporcionando mejor contraste visual mientras permite ver el contenido detrás.

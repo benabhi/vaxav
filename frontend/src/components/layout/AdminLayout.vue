@@ -69,15 +69,15 @@
       </footer>
     </div>
 
-    <!-- Mobile sidebar (sin overlay oscuro) -->
+    <!-- Mobile sidebar con overlay alternativo -->
     <div
       v-if="isMobileMenuOpen"
-      class="fixed inset-0 z-50 lg:hidden"
+      class="fixed inset-0 z-50 lg:hidden mobile-sidebar-container"
       @click="closeMobileMenu"
     >
       <!-- Sidebar container with animation -->
       <div
-        class="fixed inset-y-0 left-0 flex flex-col w-64 bg-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out border-r border-gray-700"
+        class="fixed inset-y-0 left-0 flex flex-col w-64 bg-gray-800 shadow-xl transform transition-all duration-300 ease-in-out border-r border-gray-700 z-10"
         :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
         @click.stop
       >
@@ -153,3 +153,15 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 </script>
+
+<style scoped>
+/* Estilo para el overlay del sidebar móvil */
+.mobile-sidebar-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(17, 24, 39, 0.25); /* bg-gray-900 con opacidad media */
+  backdrop-filter: blur(1px); /* Ligero desenfoque para mejorar el contraste */
+  pointer-events: none; /* Permite que los clics pasen a través del overlay */
+}
+</style>
