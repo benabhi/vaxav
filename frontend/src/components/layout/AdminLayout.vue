@@ -69,18 +69,15 @@
       </footer>
     </div>
 
-    <!-- Mobile sidebar overlay -->
+    <!-- Mobile sidebar (sin overlay oscuro) -->
     <div
       v-if="isMobileMenuOpen"
       class="fixed inset-0 z-50 lg:hidden"
       @click="closeMobileMenu"
     >
-      <!-- Overlay -->
-      <div class="fixed inset-0 bg-gray-600 bg-opacity-75" aria-hidden="true"></div>
-
       <!-- Sidebar container with animation -->
       <div
-        class="fixed inset-y-0 left-0 flex flex-col w-64 bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out"
+        class="fixed inset-y-0 left-0 flex flex-col w-64 bg-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out border-r border-gray-700"
         :class="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
         @click.stop
       >

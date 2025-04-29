@@ -217,13 +217,10 @@ El componente `VxvSidebar` se utiliza en el layout de administración para propo
       </main>
     </div>
 
-    <!-- Sidebar móvil (overlay) -->
-    <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 lg:hidden">
-      <!-- Overlay de fondo -->
-      <div class="fixed inset-0 bg-gray-600 bg-opacity-75" @click="closeMobileMenu"></div>
-
+    <!-- Sidebar móvil (sin overlay oscuro) -->
+    <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 lg:hidden" @click="closeMobileMenu">
       <!-- Sidebar móvil -->
-      <div class="fixed inset-y-0 left-0 w-64 bg-gray-800 shadow-lg transform transition-transform">
+      <div class="fixed inset-y-0 left-0 w-64 bg-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out border-r border-gray-700" @click.stop>
         <VxvSidebar
           title="Panel Admin"
           :collapsible="false"
@@ -267,3 +264,4 @@ const closeMobileMenu = () => {
 3. **Opcionalmente colapsable**: La funcionalidad de colapso está disponible pero deshabilitada por defecto.
 4. **Accesibilidad**: Se incluyen atributos ARIA y mensajes de screen reader para mejorar la accesibilidad.
 5. **Animaciones**: Se utilizan transiciones suaves para mejorar la experiencia de usuario en el modo móvil.
+6. **Sin overlay oscuro**: El sidebar móvil se despliega sin oscurecer el contenido detrás, permitiendo ver la página completa.
