@@ -30,7 +30,11 @@ Los componentes UI están organizados en las siguientes categorías:
 - [SidebarGroup](./navigation.md#basesidebargroup): Grupos de navegación colapsables.
 - [NavLink](./navigation.md#basenavlink): Enlaces de navegación estilizados.
 - [Tabs](./navigation.md#tabs): Pestañas para cambiar entre diferentes vistas.
-- [Breadcrumbs](./navigation.md#breadcrumbs): Migas de pan para mostrar la ubicación actual.
+- [Breadcrumbs](./navigation.md#basebreadcrumb): Migas de pan para mostrar la ubicación actual.
+
+### Layout
+
+- [PageTitle](./layout.md#basepagetitle): Título de página con breadcrumb y acciones opcionales.
 
 ### Visualización de Datos
 
