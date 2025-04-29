@@ -28,7 +28,7 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
     <BaseNavLink to="/admin/users" label="Usuarios" />
     <BaseNavLink to="/admin/roles" label="Roles" />
   </BaseSidebarGroup>
-  
+
   <BaseNavLink to="/admin/settings" label="Configuración" />
 </BaseSidebar>
 ```
@@ -84,9 +84,9 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 ### Ejemplo de Uso
 
 ```vue
-<BaseNavLink 
-  to="/admin/users" 
-  label="Usuarios" 
+<BaseNavLink
+  to="/admin/users"
+  label="Usuarios"
   :icon="UserIcon"
 />
 ```
@@ -94,9 +94,9 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 Con clases personalizadas:
 
 ```vue
-<BaseNavLink 
-  to="/admin/settings" 
-  label="Configuración" 
+<BaseNavLink
+  to="/admin/settings"
+  label="Configuración"
   :icon="CogIcon"
   activeClass="bg-blue-600 text-white"
   inactiveClass="text-gray-400 hover:text-white"
@@ -104,19 +104,65 @@ Con clases personalizadas:
 />
 ```
 
-## Uso en el Layout de Administración
+## BaseBreadcrumb
 
-Estos componentes se utilizan en el layout de administración para proporcionar una barra lateral de navegación:
+`BaseBreadcrumb` es un componente que muestra una ruta de navegación jerárquica (breadcrumb) para indicar la ubicación actual del usuario dentro de la aplicación.
+
+**Archivo**: `/components/ui/navigation/BaseBreadcrumb.vue`
+
+### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `items` | `Array` | Requerido | Array de elementos del breadcrumb. Cada elemento debe tener una propiedad `text` y opcionalmente una propiedad `to` para el enlace |
+| `homeLink` | `String` | `'/'` | Ruta para el icono de inicio |
+| `homeText` | `String` | `'Inicio'` | Texto para el icono de inicio (para lectores de pantalla) |
+
+### Ejemplo de Uso
 
 ```vue
+<BaseBreadcrumb
+  :items="[
+    { text: 'Administración', to: '/admin' },
+    { text: 'Usuarios' }
+  ]"
+/>
+```
+
+Con enlace de inicio personalizado:
+
+```vue
+<BaseBreadcrumb
+  :items="[
+    { text: 'Usuarios' }
+  ]"
+  homeLink="/admin"
+  homeText="Panel de Administración"
+/>
+```
+
+## Uso en el Layout de Administración
+
+Estos componentes se utilizan en el layout de administración para proporcionar una barra lateral de navegación y breadcrumbs:
+
+```vue
+<!-- Sidebar -->
 <BaseSidebar title="Panel Admin">
   <BaseSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
     <BaseNavLink to="/admin/users" label="Usuarios" />
     <BaseNavLink to="/admin/roles" label="Roles" />
   </BaseSidebarGroup>
-  
+
   <BaseNavLink to="/admin/settings" label="Configuración" />
 </BaseSidebar>
+
+<!-- Breadcrumbs -->
+<BaseBreadcrumb
+  :items="[
+    { text: 'Usuarios' }
+  ]"
+  homeLink="/admin"
+/>
 ```
 
 ## Uso en el Header Principal
@@ -125,15 +171,15 @@ El componente `BaseNavLink` también puede utilizarse en el header principal par
 
 ```vue
 <nav class="flex space-x-4">
-  <BaseNavLink 
-    to="/" 
-    label="Dashboard" 
+  <BaseNavLink
+    to="/"
+    label="Dashboard"
     activeClass="text-blue-400"
     inactiveClass="text-gray-300 hover:text-white"
   />
-  <BaseNavLink 
-    to="/universe" 
-    label="Universo" 
+  <BaseNavLink
+    to="/universe"
+    label="Universo"
     activeClass="text-blue-400"
     inactiveClass="text-gray-300 hover:text-white"
   />
@@ -147,6 +193,7 @@ El componente `BaseNavLink` también puede utilizarse en el header principal par
 3. **Estados Activos Claros**: Asegúrate de que los enlaces activos sean claramente distinguibles de los inactivos.
 4. **Navegación Intuitiva**: Organiza los enlaces de navegación de manera lógica e intuitiva.
 5. **Accesibilidad**: Asegúrate de que la navegación sea accesible para todos los usuarios, incluyendo aquellos que utilizan lectores de pantalla.
+6. **Breadcrumbs Claros**: Utiliza `BaseBreadcrumb` para proporcionar una ruta de navegación clara y consistente en toda la aplicación.
 
 ## Personalización
 
@@ -155,3 +202,4 @@ Estos componentes pueden ser personalizados mediante props y clases CSS adiciona
 - `BaseSidebar` puede tener un título personalizado o ningún título.
 - `BaseSidebarGroup` puede estar colapsado o expandido por defecto.
 - `BaseNavLink` puede tener diferentes estilos para los estados activo e inactivo, así como iconos personalizados.
+- `BaseBreadcrumb` puede tener un enlace de inicio personalizado y elementos con o sin enlaces.
