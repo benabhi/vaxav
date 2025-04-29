@@ -3,7 +3,7 @@
     <input
       :id="checkboxId"
       type="checkbox"
-      :checked="modelValue"
+      :checked="isChecked"
       :value="value"
       :name="name"
       :disabled="disabled"
@@ -123,14 +123,25 @@ const emit = defineEmits(['update:modelValue', 'change']);
 // Generate a unique ID if not provided
 const checkboxId = computed(() => props.id || `checkbox-${Math.random().toString(36).substring(2, 9)}`);
 
+// Determine if the checkbox should be checked
+const isChecked = computed(() => {
+  if (Array.isArray(props.modelValue)) {
+    // If modelValue is an array, check if it includes the value
+    return props.modelValue.includes(props.value);
+  } else {
+    // For single checkbox
+    return props.modelValue === true;
+  }
+});
+
 // Handle checkbox change
 const handleChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  
+
   if (Array.isArray(props.modelValue)) {
     // If modelValue is an array (multiple checkboxes)
     const newValue = [...props.modelValue];
-    
+
     if (target.checked) {
       // Add value to array if not already present
       if (!newValue.includes(props.value)) {
@@ -143,13 +154,13 @@ const handleChange = (event: Event) => {
         newValue.splice(index, 1);
       }
     }
-    
+
     emit('update:modelValue', newValue);
   } else {
     // Single checkbox
     emit('update:modelValue', target.checked);
   }
-  
+
   emit('change', target.checked);
 };
 </script>
