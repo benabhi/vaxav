@@ -3,13 +3,19 @@
     <!-- Slot para acciones personalizadas -->
     <template #actions>
       <template v-if="isLoggedIn">
-        <div class="text-sm text-gray-300">
-          <span class="mr-2">{{ user?.name }}</span>
-          <span class="text-blue-400">{{ credits }} ISK</span>
-        </div>
-        <VxvButton variant="secondary" size="md" @click="logout">
-          Cerrar Sesión
-        </VxvButton>
+        <VxvDropdown menuClass="w-40">
+          <template #trigger>
+            <VxvButton variant="secondary" size="md">
+              {{ user?.name }}
+              <template #icon-right>
+                <ChevronDownIcon class="h-4 w-4" />
+              </template>
+            </VxvButton>
+          </template>
+
+          <VxvDropdownItem label="Perfil" to="/profile" />
+          <VxvDropdownItem label="Cerrar Sesión" @click="logout" />
+        </VxvDropdown>
       </template>
       <template v-else>
         <RouterLink to="/login" custom v-slot="{ navigate }">
@@ -34,6 +40,9 @@ import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvNavbar from '@/components/ui/navigation/VxvNavbar.vue';
+import VxvDropdown from '@/components/ui/navigation/VxvDropdown.vue';
+import VxvDropdownItem from '@/components/ui/navigation/VxvDropdownItem.vue';
+import { ChevronDownIcon } from '@heroicons/vue/24/outline';
 
 const router = useRouter();
 const authStore = useAuthStore();

@@ -37,6 +37,24 @@ El componente `VxvSidebar` es una barra lateral de navegación que se utiliza pr
 
 ## Componentes Relacionados
 
+### VxvSidebarSection
+
+El componente `VxvSidebarSection` se utiliza dentro de `VxvSidebar` para crear secciones colapsables con títulos y bordes.
+
+#### Propiedades
+
+| Nombre | Tipo | Por defecto | Descripción |
+|--------|------|-------------|-------------|
+| title | String | Requerido | Título de la sección |
+| collapsible | Boolean | `true` | Si la sección puede colapsarse |
+| defaultCollapsed | Boolean | `false` | Si la sección debe estar colapsada por defecto |
+
+#### Slots
+
+| Nombre | Descripción |
+|--------|-------------|
+| default | Contenido de la sección (enlaces y otros elementos) |
+
 ### VxvSidebarGroup
 
 El componente `VxvSidebarGroup` se utiliza dentro de `VxvSidebar` para agrupar enlaces relacionados bajo un título colapsable.

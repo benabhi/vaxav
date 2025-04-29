@@ -133,11 +133,9 @@ const buttonClasses = computed(() => {
 
 <style scoped>
 .button-icon {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  vertical-align: middle;
-  line-height: 1;
   margin: 0 0.375rem;
 }
 
@@ -151,13 +149,13 @@ const buttonClasses = computed(() => {
 
 .button-text {
   display: inline-block;
-  vertical-align: middle;
   line-height: 1;
 }
 
 /* Ensure SVG icons are properly aligned */
 .button-icon svg {
-  display: inline-block;
-  vertical-align: middle;
+  display: block;
+  width: 1em;
+  height: 1em;
 }
 </style>

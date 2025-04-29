@@ -503,13 +503,14 @@ export const Mobile: Story = {
       VxvNavLink: NavLinkStub
     },
     setup() {
-      const isMobileMenuOpen = ref(true);
+      const isMobileMenuOpen = ref(false);
 
       const closeMobileMenu = () => {
         isMobileMenuOpen.value = false;
-        setTimeout(() => {
-          isMobileMenuOpen.value = true;
-        }, 1000);
+      };
+
+      const openMobileMenu = () => {
+        isMobileMenuOpen.value = true;
       };
 
       return {
@@ -519,39 +520,49 @@ export const Mobile: Story = {
         SettingsIcon,
         ChartIcon,
         isMobileMenuOpen,
-        closeMobileMenu
+        closeMobileMenu,
+        openMobileMenu
       };
     },
     template: `
       <div class="h-[600px] w-full bg-gray-900 relative overflow-hidden">
+        <style>
+          /* Estilo para el overlay del sidebar móvil */
+          .mobile-sidebar-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(17, 24, 39, 0.25); /* bg-gray-900 con opacidad media */
+            backdrop-filter: blur(1px); /* Ligero desenfoque para mejorar el contraste */
+            pointer-events: none; /* Permite que los clics pasen a través del overlay */
+            z-index: 0; /* Asegura que esté detrás del sidebar */
+          }
+        </style>
+
         <!-- Main content -->
         <div class="p-6 bg-gray-800 h-full">
           <h1 class="text-2xl font-bold text-white mb-4">Dashboard</h1>
           <p class="text-gray-300">Bienvenido al panel de administración.</p>
           <p class="text-gray-300 mt-4">Este es un ejemplo de la barra lateral en modo móvil.</p>
-          <p class="text-gray-300 mt-4">La barra lateral se muestra como un overlay sobre el contenido.</p>
+          <p class="text-gray-300 mt-4">La barra lateral se muestra con un overlay semi-translúcido que permite ver el contenido detrás.</p>
           <button
             class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            @click="isMobileMenuOpen = true"
+            @click="openMobileMenu"
           >
             Abrir menú móvil
           </button>
         </div>
 
-        <!-- Mobile sidebar overlay -->
+        <!-- Mobile sidebar con overlay mejorado -->
         <div
           v-if="isMobileMenuOpen"
-          class="absolute inset-0 z-50"
+          class="absolute inset-0 z-50 mobile-sidebar-container"
+          @click="closeMobileMenu"
         >
-          <!-- Overlay -->
-          <div
-            class="absolute inset-0 bg-gray-600 bg-opacity-75"
-            @click="closeMobileMenu"
-          ></div>
-
           <!-- Sidebar container -->
           <div
-            class="absolute inset-y-0 left-0 flex flex-col w-64 bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out"
+            class="absolute inset-y-0 left-0 flex flex-col w-64 bg-gray-800 shadow-xl transform transition-all duration-300 ease-in-out border-r border-gray-700 z-10"
+            @click.stop
           >
             <VxvSidebar
               v-bind="args"
