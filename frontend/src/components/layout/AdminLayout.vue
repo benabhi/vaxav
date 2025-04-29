@@ -44,7 +44,7 @@
     </aside>
 
     <!-- Column 2: Content area with three rows -->
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col min-w-0">
       <!-- Row 1: Header -->
       <VxvPageTitle
         :title="title"
@@ -59,7 +59,7 @@
       <VxvNotification />
 
       <!-- Row 2: Main content - takes all available space -->
-      <main class="flex-1 overflow-auto p-4">
+      <main class="flex-1 overflow-y-auto p-4 w-full">
         <slot></slot>
       </main>
 

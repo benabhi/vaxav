@@ -51,6 +51,10 @@ const meta: Meta<typeof VxvFilters> = {
       description: 'Etiqueta para el botón de restablecer',
       control: { type: 'text' },
     },
+    showLabels: {
+      description: 'Muestra las etiquetas de los filtros',
+      control: { type: 'boolean' },
+    },
     debounce: {
       description: 'Tiempo de debounce para el campo de búsqueda en milisegundos',
       control: { type: 'number' },
@@ -75,12 +79,13 @@ export const Default: Story = {
     id: 'basic-filters',
     filters: { search: '' },
     showSearch: true,
-    searchLabel: '',
+    searchLabel: 'Búsqueda',
     searchPlaceholder: 'Buscar...',
     showApply: true,
     applyLabel: 'Aplicar',
     showReset: true,
     resetLabel: 'Restablecer',
+    showLabels: true,
     debounce: 300,
     immediate: false,
   },
@@ -88,27 +93,27 @@ export const Default: Story = {
     components: { VxvFilters },
     setup() {
       const filters = ref({ ...args.filters });
-      
+
       const handleFilterChange = (newFilters) => {
         filters.value = newFilters;
         args.onFilterChange(newFilters);
       };
-      
-      return { 
-        args, 
+
+      return {
+        args,
         filters,
         handleFilterChange
       };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvFilters 
+        <VxvFilters
           v-bind="args"
           v-model:filters="filters"
           @filter-change="handleFilterChange"
           @reset="args.onReset"
         />
-        
+
         <div class="bg-gray-800 p-4 rounded-lg mt-4">
           <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
           <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
@@ -130,24 +135,25 @@ export const WithoutSearch: Story = {
     applyLabel: 'Aplicar',
     showReset: true,
     resetLabel: 'Restablecer',
+    showLabels: true,
     debounce: 300,
     immediate: false,
   },
   render: (args) => ({
     components: { VxvFilters, VxvSelect },
     setup() {
-      const filters = ref({ 
+      const filters = ref({
         status: '',
         category: ''
       });
-      
+
       const statusOptions = [
         { value: '', label: 'Todos los estados' },
         { value: 'active', label: 'Activo' },
         { value: 'inactive', label: 'Inactivo' },
         { value: 'pending', label: 'Pendiente' }
       ];
-      
+
       const categoryOptions = [
         { value: '', label: 'Todas las categorías' },
         { value: 'technology', label: 'Tecnología' },
@@ -155,14 +161,14 @@ export const WithoutSearch: Story = {
         { value: 'health', label: 'Salud' },
         { value: 'education', label: 'Educación' }
       ];
-      
+
       const handleFilterChange = (newFilters) => {
         filters.value = newFilters;
         args.onFilterChange(newFilters);
       };
-      
-      return { 
-        args, 
+
+      return {
+        args,
         filters,
         statusOptions,
         categoryOptions,
@@ -171,31 +177,65 @@ export const WithoutSearch: Story = {
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvFilters 
+        <VxvFilters
           v-bind="args"
           v-model:filters="filters"
           @filter-change="handleFilterChange"
           @reset="args.onReset"
         >
           <template #filters>
-            <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
-              <VxvSelect
-                v-model="filters.status"
-                label="Estado"
-                :options="statusOptions"
-                size="sm"
-              />
-              
-              <VxvSelect
-                v-model="filters.category"
-                label="Categoría"
-                :options="categoryOptions"
-                size="sm"
-              />
+            <div class="w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Estado
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.status"
+                  :label="args.showLabels ? '' : 'Estado'"
+                  :options="statusOptions"
+                  size="sm"
+                  class="w-full"
+                />
+                <button
+                  v-if="filters.status"
+                  @click="filters.status = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Categoría
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.category"
+                  :label="args.showLabels ? '' : 'Categoría'"
+                  :options="categoryOptions"
+                  size="sm"
+                  class="w-full"
+                />
+                <button
+                  v-if="filters.category"
+                  @click="filters.category = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </template>
         </VxvFilters>
-        
+
         <div class="bg-gray-800 p-4 rounded-lg mt-4">
           <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
           <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
@@ -213,46 +253,47 @@ export const WithCustomFilters: Story = {
     id: 'custom-filters',
     filters: { search: '' },
     showSearch: true,
-    searchLabel: '',
+    searchLabel: 'Búsqueda',
     searchPlaceholder: 'Buscar usuarios...',
     showApply: true,
     applyLabel: 'Aplicar filtros',
     showReset: true,
     resetLabel: 'Limpiar filtros',
+    showLabels: true,
     debounce: 300,
     immediate: false,
   },
   render: (args) => ({
     components: { VxvFilters, VxvSelect, VxvCheckbox },
     setup() {
-      const filters = ref({ 
+      const filters = ref({
         search: '',
         role: '',
         status: '',
         active: false
       });
-      
+
       const roleOptions = [
         { value: '', label: 'Todos los roles' },
         { value: 'admin', label: 'Administrador' },
         { value: 'editor', label: 'Editor' },
         { value: 'user', label: 'Usuario' }
       ];
-      
+
       const statusOptions = [
         { value: '', label: 'Todos los estados' },
         { value: 'active', label: 'Activo' },
         { value: 'inactive', label: 'Inactivo' },
         { value: 'pending', label: 'Pendiente' }
       ];
-      
+
       const handleFilterChange = (newFilters) => {
         filters.value = newFilters;
         args.onFilterChange(newFilters);
       };
-      
-      return { 
-        args, 
+
+      return {
+        args,
         filters,
         roleOptions,
         statusOptions,
@@ -261,38 +302,72 @@ export const WithCustomFilters: Story = {
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvFilters 
+        <VxvFilters
           v-bind="args"
           v-model:filters="filters"
           @filter-change="handleFilterChange"
           @reset="args.onReset"
         >
           <template #filters>
-            <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
-              <VxvSelect
-                v-model="filters.role"
-                label="Rol"
-                :options="roleOptions"
-                size="sm"
-              />
-              
-              <VxvSelect
-                v-model="filters.status"
-                label="Estado"
-                :options="statusOptions"
-                size="sm"
-              />
-              
-              <div class="flex items-end">
-                <VxvCheckbox
-                  v-model="filters.active"
-                  label="Solo activos"
+            <div class="w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Rol
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.role"
+                  :label="args.showLabels ? '' : 'Rol'"
+                  :options="roleOptions"
+                  size="sm"
+                  class="w-full"
                 />
+                <button
+                  v-if="filters.role"
+                  @click="filters.role = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
               </div>
+            </div>
+
+            <div class="w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Estado
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.status"
+                  :label="args.showLabels ? '' : 'Estado'"
+                  :options="statusOptions"
+                  size="sm"
+                  class="w-full"
+                />
+                <button
+                  v-if="filters.status"
+                  @click="filters.status = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex-shrink-0 self-end">
+              <VxvCheckbox
+                v-model="filters.active"
+                label="Solo activos"
+              />
             </div>
           </template>
         </VxvFilters>
-        
+
         <div class="bg-gray-800 p-4 rounded-lg mt-4">
           <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
           <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
@@ -310,23 +385,24 @@ export const WithImmediateChanges: Story = {
     id: 'immediate-filters',
     filters: { search: '' },
     showSearch: true,
-    searchLabel: '',
+    searchLabel: 'Búsqueda',
     searchPlaceholder: 'Buscar...',
     showApply: false,
     showReset: true,
     resetLabel: 'Restablecer',
+    showLabels: true,
     debounce: 300,
     immediate: true,
   },
   render: (args) => ({
     components: { VxvFilters, VxvSelect, VxvRange },
     setup() {
-      const filters = ref({ 
+      const filters = ref({
         search: '',
         category: '',
         priceRange: 50
       });
-      
+
       const categoryOptions = [
         { value: '', label: 'Todas las categorías' },
         { value: 'electronics', label: 'Electrónica' },
@@ -334,14 +410,14 @@ export const WithImmediateChanges: Story = {
         { value: 'books', label: 'Libros' },
         { value: 'home', label: 'Hogar' }
       ];
-      
+
       const handleFilterChange = (newFilters) => {
         filters.value = newFilters;
         args.onFilterChange(newFilters);
       };
-      
-      return { 
-        args, 
+
+      return {
+        args,
         filters,
         categoryOptions,
         handleFilterChange
@@ -349,37 +425,175 @@ export const WithImmediateChanges: Story = {
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvFilters 
+        <VxvFilters
           v-bind="args"
           v-model:filters="filters"
           @filter-change="handleFilterChange"
           @reset="args.onReset"
         >
           <template #filters>
-            <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
-              <VxvSelect
-                v-model="filters.category"
-                label="Categoría"
-                :options="categoryOptions"
-                size="sm"
-              />
-              
-              <div class="w-48">
-                <VxvRange
-                  v-model="filters.priceRange"
-                  label="Precio máximo"
-                  :min="0"
-                  :max="100"
-                  :step="1"
-                  show-value
+            <div class="w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Categoría
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.category"
+                  :label="args.showLabels ? '' : 'Categoría'"
+                  :options="categoryOptions"
+                  size="sm"
+                  class="w-full"
                 />
+                <button
+                  v-if="filters.category"
+                  @click="filters.category = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Precio máximo
+              </label>
+              <VxvRange
+                v-model="filters.priceRange"
+                :label="args.showLabels ? '' : 'Precio máximo'"
+                :min="0"
+                :max="100"
+                :step="1"
+                show-value
+                class="w-full"
+              />
+            </div>
+          </template>
+        </VxvFilters>
+
+        <div class="bg-gray-800 p-4 rounded-lg mt-4">
+          <h3 class="text-white font-medium mb-2">Filtros aplicados (actualizados inmediatamente):</h3>
+          <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
+        </div>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Filtros sin etiquetas
+ */
+export const WithoutLabels: Story = {
+  args: {
+    id: 'no-labels-filters',
+    filters: { search: '' },
+    showSearch: true,
+    searchLabel: 'Búsqueda',
+    searchPlaceholder: 'Buscar...',
+    showApply: true,
+    applyLabel: 'Aplicar',
+    showReset: true,
+    resetLabel: 'Restablecer',
+    showLabels: false,
+    debounce: 300,
+    immediate: false,
+  },
+  render: (args) => ({
+    components: { VxvFilters, VxvSelect },
+    setup() {
+      const filters = ref({
+        search: '',
+        role: '',
+        status: ''
+      });
+
+      const roleOptions = [
+        { value: '', label: 'Todos los roles' },
+        { value: 'admin', label: 'Administrador' },
+        { value: 'editor', label: 'Editor' },
+        { value: 'user', label: 'Usuario' }
+      ];
+
+      const statusOptions = [
+        { value: '', label: 'Todos los estados' },
+        { value: 'active', label: 'Activo' },
+        { value: 'inactive', label: 'Inactivo' },
+        { value: 'pending', label: 'Pendiente' }
+      ];
+
+      const handleFilterChange = (newFilters) => {
+        filters.value = newFilters;
+        args.onFilterChange(newFilters);
+      };
+
+      return {
+        args,
+        filters,
+        roleOptions,
+        statusOptions,
+        handleFilterChange
+      };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvFilters
+          v-bind="args"
+          v-model:filters="filters"
+          @filter-change="handleFilterChange"
+          @reset="args.onReset"
+        >
+          <template #filters>
+            <div class="w-[180px] flex-shrink-0">
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.role"
+                  label="Rol"
+                  :options="roleOptions"
+                  size="sm"
+                  class="w-full"
+                />
+                <button
+                  v-if="filters.role"
+                  @click="filters.role = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="w-[180px] flex-shrink-0">
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.status"
+                  label="Estado"
+                  :options="statusOptions"
+                  size="sm"
+                  class="w-full"
+                />
+                <button
+                  v-if="filters.status"
+                  @click="filters.status = ''"
+                  class="text-gray-400 hover:text-white flex-shrink-0"
+                  title="Quitar filtro"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </button>
               </div>
             </div>
           </template>
         </VxvFilters>
-        
+
         <div class="bg-gray-800 p-4 rounded-lg mt-4">
-          <h3 class="text-white font-medium mb-2">Filtros aplicados (actualizados inmediatamente):</h3>
+          <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
           <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
         </div>
       </div>
@@ -394,7 +608,7 @@ export const AdvancedFilters: Story = {
   render: () => ({
     components: { VxvFilters, VxvInput, VxvSelect, VxvCheckbox, VxvRange },
     setup() {
-      const filters = ref({ 
+      const filters = ref({
         search: '',
         dateFrom: '',
         dateTo: '',
@@ -403,7 +617,7 @@ export const AdvancedFilters: Story = {
         inStock: true,
         rating: 3
       });
-      
+
       const categoryOptions = [
         { value: 'electronics', label: 'Electrónica' },
         { value: 'clothing', label: 'Ropa' },
@@ -411,12 +625,12 @@ export const AdvancedFilters: Story = {
         { value: 'home', label: 'Hogar' },
         { value: 'sports', label: 'Deportes' }
       ];
-      
+
       const handleFilterChange = (newFilters) => {
         filters.value = newFilters;
       };
-      
-      return { 
+
+      return {
         filters,
         categoryOptions,
         handleFilterChange
@@ -424,7 +638,7 @@ export const AdvancedFilters: Story = {
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvFilters 
+        <VxvFilters
           id="advanced-filters"
           v-model:filters="filters"
           search-placeholder="Buscar productos..."
@@ -440,14 +654,14 @@ export const AdvancedFilters: Story = {
                 type="date"
                 size="sm"
               />
-              
+
               <VxvInput
                 v-model="filters.dateTo"
                 label="Fecha hasta"
                 type="date"
                 size="sm"
               />
-              
+
               <VxvSelect
                 v-model="filters.category"
                 label="Categorías"
@@ -455,7 +669,7 @@ export const AdvancedFilters: Story = {
                 multiple
                 size="sm"
               />
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Rango de precio</label>
                 <div class="flex items-center space-x-2">
@@ -472,7 +686,7 @@ export const AdvancedFilters: Story = {
                   <span class="text-gray-400 text-sm">{{ filters.priceRange[1] }}€</span>
                 </div>
               </div>
-              
+
               <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Valoración mínima</label>
                 <div class="flex items-center space-x-1">
@@ -495,7 +709,7 @@ export const AdvancedFilters: Story = {
                   </div>
                 </div>
               </div>
-              
+
               <div class="flex items-end">
                 <VxvCheckbox
                   v-model="filters.inStock"
@@ -505,12 +719,12 @@ export const AdvancedFilters: Story = {
             </div>
           </template>
         </VxvFilters>
-        
+
         <div class="bg-gray-800 p-4 rounded-lg mt-4">
           <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
           <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
         </div>
-        
+
         <!-- Resultados simulados -->
         <div class="mt-6">
           <h3 class="text-xl font-semibold text-white mb-4">Resultados</h3>
@@ -533,7 +747,7 @@ export const AdvancedFilters: Story = {
                 <p class="text-blue-400 font-bold mt-2">45€</p>
               </div>
             </div>
-            
+
             <div class="bg-gray-800 rounded-lg overflow-hidden">
               <div class="h-40 bg-gray-700 flex items-center justify-center">
                 <span class="text-gray-400">Imagen del producto</span>
@@ -552,7 +766,7 @@ export const AdvancedFilters: Story = {
                 <p class="text-blue-400 font-bold mt-2">29€</p>
               </div>
             </div>
-            
+
             <div class="bg-gray-800 rounded-lg overflow-hidden">
               <div class="h-40 bg-gray-700 flex items-center justify-center">
                 <span class="text-gray-400">Imagen del producto</span>

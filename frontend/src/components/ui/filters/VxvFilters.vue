@@ -1,15 +1,27 @@
 <template>
   <div class="bg-gray-800 p-3 rounded-lg mb-4">
-    <div class="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3 items-center">
-      <!-- Search input -->
-      <div v-if="showSearch" class="flex-grow">
+    <!-- Filters container -->
+    <div class="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-4 md:space-y-0">
+      <!-- Search section -->
+      <div v-if="showSearch" class="w-full md:flex-grow">
+        <!-- Search label -->
+        <label
+          v-if="showLabels && searchLabel"
+          :for="`${id}-search`"
+          class="block text-sm font-medium text-gray-300 mb-1"
+        >
+          {{ searchLabel }}
+        </label>
+
+        <!-- Search input -->
         <VxvInput
           :id="`${id}-search`"
           v-model="localFilters.search"
-          :label="searchLabel"
+          :label="showLabels ? '' : searchLabel"
           :placeholder="searchPlaceholder"
           prefixIcon
           size="sm"
+          class="w-full"
           @update:modelValue="debouncedEmitChange"
         >
           <template #prefix>
@@ -20,11 +32,14 @@
         </VxvInput>
       </div>
 
-      <!-- Filter slots -->
-      <slot name="filters"></slot>
+      <!-- Custom filters wrapper -->
+      <div class="w-full md:w-auto md:flex md:space-x-4">
+        <!-- Custom filters -->
+        <slot name="filters"></slot>
+      </div>
 
       <!-- Action buttons -->
-      <div class="flex space-x-2 md:self-end">
+      <div class="flex space-x-2 md:ml-auto">
         <VxvButton
           v-if="showReset"
           variant="secondary"
@@ -129,6 +144,13 @@ const props = defineProps({
   immediate: {
     type: Boolean,
     default: false
+  },
+  /**
+   * Whether to show labels in a separate row above inputs
+   */
+  showLabels: {
+    type: Boolean,
+    default: true
   }
 });
 

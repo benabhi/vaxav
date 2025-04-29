@@ -20,9 +20,17 @@
   >
     <!-- Custom filters -->
     <template #filters>
-      <div class="w-full md:w-auto">
+      <div class="w-full md:w-[180px]">
+        <!-- Role label -->
+        <label
+          for="role-filter"
+          class="block text-sm font-medium text-gray-300 mb-1"
+        >
+          Rol
+        </label>
+
+        <!-- Role selector with clear button -->
         <div class="flex items-center space-x-2">
-          <span class="text-sm text-gray-300">Rol:</span>
           <VxvSelect
             id="role-filter"
             v-model="filters.role"
@@ -37,6 +45,16 @@
             class="block w-full"
             @update:modelValue="handleRoleChange"
           />
+          <button
+            v-if="filters.role"
+            @click="clearRoleFilter"
+            class="text-gray-400 hover:text-white flex-shrink-0"
+            title="Quitar filtro"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
     </template>
@@ -214,6 +232,9 @@ import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 import { useNotificationStore } from '@/stores/notification';
 import { useUsers } from '@/composables/useUsers';
 
+// Mostrar etiquetas de filtros
+const showFilterLabels = true;
+
 const router = useRouter();
 const notificationStore = useNotificationStore();
 
@@ -236,10 +257,10 @@ const {
 
 // Table columns
 const columns = [
-  { key: 'name', label: 'Usuario', sortable: true },
-  { key: 'roles', label: 'Roles' },
-  { key: 'status', label: 'Estado' },
-  { key: 'created_at', label: 'Fecha de registro', sortable: true }
+  { key: 'name', label: 'Usuario', sortable: true, width: '30%' },
+  { key: 'roles', label: 'Roles', width: '30%' },
+  { key: 'status', label: 'Estado', width: '15%' },
+  { key: 'created_at', label: 'Fecha de registro', sortable: true, width: '25%' }
 ];
 
 // User form
@@ -285,6 +306,12 @@ const roleBadgeVariants = {
 // Handle role change
 const handleRoleChange = (value) => {
   filters.role = value;
+  updateFilters(filters);
+};
+
+// Clear role filter
+const clearRoleFilter = () => {
+  filters.role = '';
   updateFilters(filters);
 };
 

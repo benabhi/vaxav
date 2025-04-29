@@ -1,37 +1,38 @@
 <template>
-  <div class="overflow-x-auto">
-    <div class="inline-block min-w-full align-middle">
-      <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 rounded-lg">
-        <table class="min-w-full divide-y divide-gray-700">
+  <div class="overflow-x-auto rounded-lg">
+    <div class="w-full align-middle">
+      <div class="shadow-sm ring-1 ring-black ring-opacity-5 rounded-lg">
+        <table class="w-full min-w-[800px] divide-y divide-gray-700">
           <thead class="bg-gray-800">
             <tr>
               <th
-                v-for="(column, index) in columns"
-                :key="index"
-                scope="col"
-                :class="[
-                  'px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider',
-                  column.class || '',
-                  column.sortable ? 'cursor-pointer' : ''
-                ]"
-                @click="column.sortable ? $emit('sort', column.key) : null"
-              >
-                <div class="flex items-center group">
-                  <span>{{ column.label }}</span>
-                  <span v-if="column.sortable" class="ml-1">
-                    <template v-if="sortKey === column.key">
-                      <svg v-if="sortOrder === 'asc'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                      </svg>
-                      <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                      </svg>
-                    </template>
-                    <svg v-else class="w-4 h-4 opacity-30 group-hover:opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4"></path>
+              v-for="(column, index) in columns"
+              :key="index"
+              scope="col"
+              :class="[
+                'px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider whitespace-nowrap',
+                column.class || '',
+                column.sortable ? 'cursor-pointer' : ''
+              ]"
+              :style="column.width ? { width: column.width } : {}"
+              @click="column.sortable ? $emit('sort', column.key) : null"
+            >
+              <div class="flex items-center group">
+                <span>{{ column.label }}</span>
+                <span v-if="column.sortable" class="ml-1">
+                  <template v-if="sortKey === column.key">
+                    <svg v-if="sortOrder === 'asc'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
                     </svg>
-                  </span>
-                </div>
+                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </template>
+                  <svg v-else class="w-4 h-4 opacity-30 group-hover:opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4"></path>
+                  </svg>
+                </span>
+              </div>
               </th>
               <th v-if="$slots.actions" scope="col" class="relative px-6 py-3">
                 <span class="sr-only">Acciones</span>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="overflow-hidden w-full">
     <!-- Header section with title and create button -->
     <div v-if="showHeader" class="flex justify-between items-center mb-4">
       <h2 v-if="title" class="text-xl font-bold text-white">{{ title }}</h2>
@@ -27,14 +27,24 @@
       :search-label="searchLabel"
       :search-placeholder="searchPlaceholder"
       :immediate="immediateSearch"
+      :show-labels="showFilterLabels"
       @filter-change="handleFilterChange"
       @reset="handleFilterReset"
     >
       <template #filters>
         <!-- Per page selector -->
-        <div v-if="showPerPage" class="w-full md:w-auto">
-          <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-300">{{ perPageLabel }}:</span>
+        <div v-if="showPerPage" class="w-full md:w-[150px]">
+          <!-- Per page label -->
+          <label
+            :for="`${id}-per-page`"
+            class="block text-sm font-medium text-gray-300 mb-1"
+          >
+            {{ perPageLabel }}
+          </label>
+
+          <!-- Per page selector -->
+          <div class="flex items-center space-x-2" v-if="!showFilterLabels">
+            <span class="text-sm text-gray-300">{{ perPageLabel }}</span>
             <VxvSelect
               :id="`${id}-per-page`"
               v-model="localPerPage"
@@ -43,6 +53,14 @@
               @update:modelValue="handlePerPageChange"
             />
           </div>
+          <VxvSelect
+            v-else
+            :id="`${id}-per-page`"
+            v-model="localPerPage"
+            :options="perPageOptionsFormatted"
+            size="sm"
+            @update:modelValue="handlePerPageChange"
+          />
         </div>
 
         <!-- Custom filter slots -->
@@ -244,6 +262,13 @@ const props = defineProps({
    * Whether to emit search changes immediately
    */
   immediateSearch: {
+    type: Boolean,
+    default: true
+  },
+  /**
+   * Whether to show filter labels in a separate row
+   */
+  showFilterLabels: {
     type: Boolean,
     default: true
   },

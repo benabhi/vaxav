@@ -65,6 +65,10 @@ const meta: Meta<typeof VxvDataTable> = {
       description: 'Muestra el selector de elementos por página',
       control: { type: 'boolean' },
     },
+    showFilterLabels: {
+      description: 'Muestra las etiquetas de los filtros',
+      control: { type: 'boolean' },
+    },
     onCreate: { action: 'create' },
     onRowClick: { action: 'row-click' },
     onPageChange: { action: 'page-change' },
@@ -91,7 +95,7 @@ const sampleItems = Array.from({ length: 25 }, (_, i) => {
   const id = i + 1;
   const roles = ['Administrador', 'Editor', 'Usuario'];
   const statuses = ['Activo', 'Inactivo', 'Pendiente'];
-  
+
   return {
     id,
     name: `Usuario ${id}`,
@@ -119,6 +123,7 @@ export const Default: Story = {
     showSearch: true,
     showPagination: true,
     showPerPage: true,
+    showFilterLabels: true,
     currentPage: 1,
     totalPages: 3,
     total: 25,
@@ -130,7 +135,7 @@ export const Default: Story = {
       return { args };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         @create="args.onCreate"
         @row-click="args.onRowClick"
@@ -180,7 +185,7 @@ export const CustomCells: Story = {
       return { args };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         @create="args.onCreate"
         @row-click="args.onRowClick"
@@ -192,19 +197,19 @@ export const CustomCells: Story = {
         <template #cell(email)="{ value }">
           <a :href="'mailto:' + value" class="text-blue-400 hover:underline">{{ value }}</a>
         </template>
-        
+
         <template #cell(status)="{ value }">
-          <vxv-badge 
+          <vxv-badge
             :variant="
-              value === 'Activo' ? 'success' : 
-              value === 'Inactivo' ? 'danger' : 
+              value === 'Activo' ? 'success' :
+              value === 'Inactivo' ? 'danger' :
               'warning'
             "
           >
             {{ value }}
           </vxv-badge>
         </template>
-        
+
         <template #actions="{ item }">
           <div class="flex space-x-2">
             <vxv-button size="sm" variant="info">Ver</vxv-button>
@@ -246,7 +251,7 @@ export const Loading: Story = {
       return { args };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         @create="args.onCreate"
         @row-click="args.onRowClick"
@@ -295,7 +300,7 @@ export const Empty: Story = {
       return { args };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         @create="args.onCreate"
         @row-click="args.onRowClick"
@@ -357,7 +362,7 @@ export const ClickableRows: Story = {
       return { args };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         @create="args.onCreate"
         @row-click="args.onRowClick"
@@ -367,10 +372,10 @@ export const ClickableRows: Story = {
         @filter-change="args.onFilterChange"
       >
         <template #cell(status)="{ value }">
-          <vxv-badge 
+          <vxv-badge
             :variant="
-              value === 'Activo' ? 'success' : 
-              value === 'Inactivo' ? 'danger' : 
+              value === 'Activo' ? 'success' :
+              value === 'Inactivo' ? 'danger' :
               'warning'
             "
           >
@@ -411,7 +416,7 @@ export const WithoutFilters: Story = {
       return { args };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         @create="args.onCreate"
         @row-click="args.onRowClick"
@@ -463,14 +468,14 @@ export const CustomFilters: Story = {
         role: '',
         status: ''
       });
-      
-      return { 
+
+      return {
         args,
         filters
       };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         v-bind="args"
         :filters="filters"
         @create="args.onCreate"
@@ -478,8 +483,8 @@ export const CustomFilters: Story = {
         @page-change="args.onPageChange"
         @per-page-change="args.onPerPageChange"
         @sort-change="args.onSortChange"
-        @filter-change="(newFilters) => { 
-          filters = { ...filters, ...newFilters }; 
+        @filter-change="(newFilters) => {
+          filters = { ...filters, ...newFilters };
           args.onFilterChange(filters);
         }"
       >
@@ -493,7 +498,7 @@ export const CustomFilters: Story = {
               <option value="Usuario">Usuario</option>
             </select>
           </div>
-          
+
           <div class="w-full md:w-auto">
             <label class="block text-sm text-gray-300 mb-1">Estado</label>
             <select v-model="filters.status" class="w-full md:w-auto bg-gray-700 text-white border border-gray-600 rounded-md py-1.5 pl-3 pr-10 text-sm">
@@ -504,7 +509,7 @@ export const CustomFilters: Story = {
             </select>
           </div>
         </template>
-        
+
         <template #actions="{ item }">
           <div class="flex space-x-2">
             <vxv-button size="sm" variant="info">Ver</vxv-button>
@@ -531,28 +536,28 @@ export const Interactive: Story = {
         sort_field: 'name',
         sort_direction: 'asc'
       });
-      
+
       // Filtrar y paginar los datos
       const filteredItems = computed(() => {
         let result = [...sampleItems];
-        
+
         // Aplicar búsqueda
         if (filters.value.search) {
           const search = filters.value.search.toLowerCase();
-          result = result.filter(item => 
-            item.name.toLowerCase().includes(search) || 
+          result = result.filter(item =>
+            item.name.toLowerCase().includes(search) ||
             item.email.toLowerCase().includes(search) ||
             item.role.toLowerCase().includes(search) ||
             item.status.toLowerCase().includes(search)
           );
         }
-        
+
         // Aplicar ordenación
         if (filters.value.sort_field) {
           result.sort((a, b) => {
             const aValue = a[filters.value.sort_field];
             const bValue = b[filters.value.sort_field];
-            
+
             if (filters.value.sort_direction === 'asc') {
               return aValue > bValue ? 1 : -1;
             } else {
@@ -560,48 +565,48 @@ export const Interactive: Story = {
             }
           });
         }
-        
+
         return result;
       });
-      
+
       const paginatedItems = computed(() => {
         const start = (currentPage.value - 1) * perPage.value;
         const end = start + perPage.value;
         return filteredItems.value.slice(start, end);
       });
-      
+
       const totalPages = computed(() => {
         return Math.ceil(filteredItems.value.length / perPage.value) || 1;
       });
-      
+
       // Manejadores de eventos
       const handlePageChange = (page) => {
         currentPage.value = page;
       };
-      
+
       const handlePerPageChange = (value) => {
         perPage.value = value;
         currentPage.value = 1; // Reset to first page
       };
-      
+
       const handleFilterChange = (newFilters) => {
         filters.value = { ...filters.value, ...newFilters };
         currentPage.value = 1; // Reset to first page
       };
-      
+
       const handleSortChange = ({ key, order }) => {
         filters.value.sort_field = key;
         filters.value.sort_direction = order;
       };
-      
+
       const handleRowClick = (item) => {
         alert(`Clicked on user: ${item.name}`);
       };
-      
+
       const handleCreate = () => {
         alert('Create new user clicked');
       };
-      
+
       return {
         currentPage,
         perPage,
@@ -619,7 +624,7 @@ export const Interactive: Story = {
       };
     },
     template: `
-      <vxv-data-table 
+      <vxv-data-table
         title="Usuarios"
         :columns="sampleColumns"
         :items="paginatedItems"
@@ -640,19 +645,19 @@ export const Interactive: Story = {
         <template #cell(email)="{ value }">
           <a :href="'mailto:' + value" class="text-blue-400 hover:underline">{{ value }}</a>
         </template>
-        
+
         <template #cell(status)="{ value }">
-          <vxv-badge 
+          <vxv-badge
             :variant="
-              value === 'Activo' ? 'success' : 
-              value === 'Inactivo' ? 'danger' : 
+              value === 'Activo' ? 'success' :
+              value === 'Inactivo' ? 'danger' :
               'warning'
             "
           >
             {{ value }}
           </vxv-badge>
         </template>
-        
+
         <template #actions="{ item }">
           <div class="flex space-x-2">
             <vxv-button size="sm" variant="info">Ver</vxv-button>

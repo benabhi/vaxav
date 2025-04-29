@@ -7,7 +7,7 @@
       />
     </template>
 
-    <div class="py-6">
+    <div class="py-6 overflow-hidden w-full">
       <VxvDataTable
         :title="tableTitle"
         :columns="columns"
@@ -22,6 +22,7 @@
         :search-placeholder="searchPlaceholder"
         :item-name="itemName"
         :show-create-button="showCreateButton"
+        :show-filter-labels="showFilterLabels"
         @page-change="onPageChange"
         @per-page-change="onPerPageChange"
         @filter-change="onFilterChange"
@@ -155,6 +156,14 @@ const props = defineProps({
    * Si se debe mostrar el botón de crear
    */
   showCreateButton: {
+    type: Boolean,
+    default: true
+  },
+
+  /**
+   * Si se deben mostrar las etiquetas de los filtros en una fila separada
+   */
+  showFilterLabels: {
     type: Boolean,
     default: true
   }
