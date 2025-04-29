@@ -2,11 +2,11 @@
 
 Los componentes de feedback proporcionan retroalimentación visual a los usuarios sobre el resultado de sus acciones o sobre el estado del sistema.
 
-## Alert
+## BaseAlert
 
-`Alert` es un componente que muestra mensajes de alerta con diferentes variantes visuales.
+`BaseAlert` es un componente que muestra mensajes de alerta con diferentes variantes visuales.
 
-**Archivo**: `/components/ui/feedback/Alert.vue`
+**Archivo**: `/components/ui/feedback/BaseAlert.vue`
 
 ### Props
 
@@ -44,15 +44,15 @@ Los componentes de feedback proporcionan retroalimentación visual a los usuario
 />
 ```
 
-## Notification
+## BaseNotification
 
-`Notification` es un componente que gestiona múltiples alertas en forma de notificaciones.
+`BaseNotification` es un componente que gestiona múltiples alertas en forma de notificaciones.
 
-**Archivo**: `/components/ui/feedback/Notification.vue`
+**Archivo**: `/components/ui/feedback/BaseNotification.vue`
 
 ### Descripción
 
-Este componente muestra notificaciones en la esquina superior derecha de la pantalla. Utiliza el componente `Alert` para mostrar cada notificación y el store `notification` para gestionar el estado de las notificaciones.
+Este componente muestra notificaciones en la esquina superior derecha de la pantalla. Utiliza el componente `BaseAlert` para mostrar cada notificación y el store `notification` para gestionar el estado de las notificaciones.
 
 ### Ejemplo de Uso
 
@@ -61,7 +61,7 @@ Este componente muestra notificaciones en la esquina superior derecha de la pant
 <template>
   <div>
     <!-- Contenido de la aplicación -->
-    <Notification />
+    <BaseNotification />
   </div>
 </template>
 ```
@@ -163,7 +163,7 @@ En la vista de roles, las notificaciones se muestran cuando:
 
 ## Personalización
 
-El componente `Alert` puede ser personalizado mediante las siguientes props:
+El componente `BaseAlert` puede ser personalizado mediante las siguientes props:
 
 - `className`: Clases CSS adicionales para personalizar el estilo.
 - `icon`: Componente de icono personalizado.

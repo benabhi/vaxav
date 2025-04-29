@@ -18,7 +18,7 @@ Los componentes UI están organizados en las siguientes categorías:
 
 ### Feedback
 
-- [Alertas y Notificaciones](./feedback.md): Componentes para mostrar mensajes de éxito, error, advertencia e información.
+- [Alertas y Notificaciones](./feedback.md): Componentes `BaseAlert` y `BaseNotification` para mostrar mensajes de éxito, error, advertencia e información.
 
 ### Modales y Diálogos
 

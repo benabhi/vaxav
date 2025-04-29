@@ -13,8 +13,8 @@ module.exports = {
     {
       name: 'vaxav-frontend',
       cwd: './frontend',
-      script: 'yarn',
-      args: 'dev --port 5173',
+      script: 'npm',
+      args: 'run dev',
       watch: false,
       env: {
         NODE_ENV: 'development',
