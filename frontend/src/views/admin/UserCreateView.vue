@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout>
+  <AdminLayout title="Crear Usuario">
     <template #breadcrumbs>
       <BaseBreadcrumb
         :items="[

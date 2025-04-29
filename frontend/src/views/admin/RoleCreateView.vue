@@ -1,5 +1,5 @@
 <template>
-  <AdminLayout>
+  <AdminLayout title="Crear Rol">
     <template #breadcrumbs>
       <BaseBreadcrumb
         :items="[
