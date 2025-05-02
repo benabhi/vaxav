@@ -2,19 +2,23 @@
   <div class="py-6">
     <VxvCard
       :title="title"
-      :has-border="true"
+      :has-border="hasBorder"
       :max-width="maxWidth"
       centered
     >
+      <!-- Slot para alertas -->
+      <slot name="alert"></slot>
+
       <form @submit.prevent="onSubmit">
         <slot></slot>
 
-        <div class="flex space-x-3">
+        <div v-if="showSubmit" class="flex space-x-3">
           <VxvButton
             type="submit"
             variant="primary"
-            :full-width="false"
+            :full-width="fullWidthSubmit"
             :loading="loading"
+            :disabled="disabled"
           >
             {{ submitText }}
           </VxvButton>
@@ -28,6 +32,9 @@
             {{ cancelText }}
           </VxvButton>
         </div>
+
+        <!-- Slot para contenido debajo de los botones -->
+        <slot name="footer"></slot>
       </form>
     </VxvCard>
   </div>
@@ -61,6 +68,22 @@ const props = defineProps({
   maxWidth: {
     type: String,
     default: '3xl'
+  },
+  hasBorder: {
+    type: Boolean,
+    default: true
+  },
+  fullWidthSubmit: {
+    type: Boolean,
+    default: false
+  },
+  showSubmit: {
+    type: Boolean,
+    default: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 });
 

@@ -1,11 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-12">
-    <VxvCard
-      title="Verificación de Email"
-      max-width="md"
-      centered
-      :hasBorder="false"
-    >
+    <div class="max-w-md mx-auto">
       <VxvAlert
         v-if="message"
         :variant="alertVariant"
@@ -14,7 +9,13 @@
         class="mb-6"
       />
 
-      <div v-if="!verified" class="mb-6">
+      <VxvForm
+        v-if="!verified"
+        title="Verificación de Email"
+        :has-border="false"
+        :show-cancel="false"
+        max-width="md"
+      >
         <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-6">
           <h2 class="text-lg font-semibold text-blue-400 mb-2">Acceso Restringido</h2>
           <p class="text-gray-300">
@@ -61,21 +62,30 @@
             Reenviar correo de verificación
           </VxvButton>
         </div>
-      </div>
+      </VxvForm>
 
-      <div v-else class="text-center">
-        <div class="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 mb-6">
-          <p class="text-green-400 font-semibold">¡Tu dirección de correo electrónico ha sido verificada!</p>
-          <p class="text-gray-300 mt-2">Ahora puedes acceder a todas las funciones de VAXAV.</p>
+      <VxvForm
+        v-else
+        title="Verificación de Email"
+        :has-border="false"
+        :show-cancel="false"
+        :show-submit="false"
+        max-width="md"
+      >
+        <div class="text-center">
+          <div class="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 mb-6">
+            <p class="text-green-400 font-semibold">¡Tu dirección de correo electrónico ha sido verificada!</p>
+            <p class="text-gray-300 mt-2">Ahora puedes acceder a todas las funciones de VAXAV.</p>
+          </div>
+
+          <RouterLink to="/" custom v-slot="{ navigate }">
+            <VxvButton variant="primary" @click="navigate">
+              Ir al inicio
+            </VxvButton>
+          </RouterLink>
         </div>
-
-        <RouterLink to="/" custom v-slot="{ navigate }">
-          <VxvButton variant="primary" @click="navigate">
-            Ir al inicio
-          </VxvButton>
-        </RouterLink>
-      </div>
-    </VxvCard>
+      </VxvForm>
+    </div>
   </div>
 </template>
 
@@ -86,7 +96,7 @@ import { useAuthStore } from '@/stores/auth';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
-import VxvCard from '@/components/ui/layout/VxvCard.vue';
+import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import api from '@/services/api';
 
 // Recibir props de la ruta

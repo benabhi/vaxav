@@ -4,6 +4,7 @@ import VxvForm from './VxvForm.vue';
 import VxvInput from './VxvInput.vue';
 import VxvSelect from './VxvSelect.vue';
 import VxvCheckbox from './VxvCheckbox.vue';
+import VxvAlert from '../feedback/VxvAlert.vue';
 import VxvTextarea from './VxvTextarea.vue';
 
 /**
@@ -39,6 +40,22 @@ const meta: Meta<typeof VxvForm> = {
       description: 'Ancho máximo del formulario',
       control: { type: 'select', options: ['sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', 'full'] },
     },
+    hasBorder: {
+      description: 'Muestra el borde en el título del card',
+      control: { type: 'boolean' },
+    },
+    fullWidthSubmit: {
+      description: 'El botón de envío ocupa todo el ancho disponible',
+      control: { type: 'boolean' },
+    },
+    showSubmit: {
+      description: 'Muestra el botón de envío',
+      control: { type: 'boolean' },
+    },
+    disabled: {
+      description: 'Deshabilita el botón de envío',
+      control: { type: 'boolean' },
+    },
     onSubmit: { action: 'submit' },
     onCancel: { action: 'cancel' },
   },
@@ -56,8 +73,11 @@ export const Default: Story = {
     submitText: 'Enviar',
     cancelText: 'Cancelar',
     showCancel: true,
+    showSubmit: true,
     loading: false,
+    disabled: false,
     maxWidth: '3xl',
+    hasBorder: true,
   },
   render: (args) => ({
     components: { VxvForm, VxvInput, VxvTextarea },
@@ -67,12 +87,12 @@ export const Default: Story = {
         email: '',
         message: ''
       });
-      
+
       return { args, form };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           v-bind="args"
           @submit="args.onSubmit"
           @cancel="args.onCancel"
@@ -84,7 +104,7 @@ export const Default: Story = {
               placeholder="Ingrese su nombre"
               required
             />
-            
+
             <VxvInput
               v-model="form.email"
               label="Correo electrónico"
@@ -92,7 +112,7 @@ export const Default: Story = {
               placeholder="ejemplo@dominio.com"
               required
             />
-            
+
             <VxvTextarea
               v-model="form.message"
               label="Mensaje"
@@ -127,12 +147,12 @@ export const Loading: Story = {
         email: 'juan@ejemplo.com',
         message: 'Este es un mensaje de prueba para el formulario de contacto.'
       });
-      
+
       return { args, form };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           v-bind="args"
           @submit="args.onSubmit"
           @cancel="args.onCancel"
@@ -144,7 +164,7 @@ export const Loading: Story = {
               placeholder="Ingrese su nombre"
               required
             />
-            
+
             <VxvInput
               v-model="form.email"
               label="Correo electrónico"
@@ -152,7 +172,7 @@ export const Loading: Story = {
               placeholder="ejemplo@dominio.com"
               required
             />
-            
+
             <VxvTextarea
               v-model="form.message"
               label="Mensaje"
@@ -185,12 +205,12 @@ export const WithoutCancel: Story = {
         email: '',
         acceptTerms: false
       });
-      
+
       return { args, form };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           v-bind="args"
           @submit="args.onSubmit"
         >
@@ -202,7 +222,7 @@ export const WithoutCancel: Story = {
               placeholder="ejemplo@dominio.com"
               required
             />
-            
+
             <VxvCheckbox
               v-model="form.acceptTerms"
               label="Acepto los términos y condiciones"
@@ -238,18 +258,18 @@ export const CustomText: Story = {
         role: '',
         acceptTerms: false
       });
-      
+
       const roles = [
         { value: 'user', label: 'Usuario' },
         { value: 'editor', label: 'Editor' },
         { value: 'admin', label: 'Administrador' }
       ];
-      
+
       return { args, form, roles };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           v-bind="args"
           @submit="args.onSubmit"
           @cancel="args.onCancel"
@@ -261,7 +281,7 @@ export const CustomText: Story = {
               placeholder="Ingrese un nombre de usuario"
               required
             />
-            
+
             <VxvInput
               v-model="form.email"
               label="Correo electrónico"
@@ -269,7 +289,7 @@ export const CustomText: Story = {
               placeholder="ejemplo@dominio.com"
               required
             />
-            
+
             <VxvInput
               v-model="form.password"
               label="Contraseña"
@@ -277,7 +297,7 @@ export const CustomText: Story = {
               placeholder="Ingrese una contraseña"
               required
             />
-            
+
             <VxvInput
               v-model="form.confirmPassword"
               label="Confirmar contraseña"
@@ -285,7 +305,7 @@ export const CustomText: Story = {
               placeholder="Confirme su contraseña"
               required
             />
-            
+
             <VxvSelect
               v-model="form.role"
               label="Rol"
@@ -293,10 +313,63 @@ export const CustomText: Story = {
               placeholder="Seleccione un rol"
               required
             />
-            
+
             <VxvCheckbox
               v-model="form.acceptTerms"
               label="Acepto los términos y condiciones"
+              required
+            />
+          </div>
+        </VxvForm>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Formulario sin borde en el título
+ */
+export const WithoutBorder: Story = {
+  args: {
+    title: 'Formulario sin Borde',
+    submitText: 'Guardar',
+    cancelText: 'Cancelar',
+    showCancel: true,
+    loading: false,
+    maxWidth: '3xl',
+    hasBorder: false,
+    fullWidthSubmit: false,
+  },
+  render: (args) => ({
+    components: { VxvForm, VxvInput },
+    setup() {
+      const form = ref({
+        name: '',
+        email: ''
+      });
+
+      return { args, form };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvForm
+          v-bind="args"
+          @submit="args.onSubmit"
+          @cancel="args.onCancel"
+        >
+          <div class="space-y-4 mb-6">
+            <VxvInput
+              v-model="form.name"
+              label="Nombre"
+              placeholder="Ingrese su nombre"
+              required
+            />
+
+            <VxvInput
+              v-model="form.email"
+              label="Correo electrónico"
+              type="email"
+              placeholder="ejemplo@dominio.com"
               required
             />
           </div>
@@ -325,12 +398,12 @@ export const CustomWidth: Story = {
         name: '',
         email: ''
       });
-      
+
       return { args, form };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           v-bind="args"
           @submit="args.onSubmit"
           @cancel="args.onCancel"
@@ -342,7 +415,7 @@ export const CustomWidth: Story = {
               placeholder="Ingrese su nombre"
               required
             />
-            
+
             <VxvInput
               v-model="form.email"
               label="Correo electrónico"
@@ -369,16 +442,16 @@ export const WithValidation: Story = {
         email: '',
         message: ''
       });
-      
+
       const errors = ref({
         name: '',
         email: '',
         message: ''
       });
-      
+
       const validateForm = () => {
         let isValid = true;
-        
+
         // Validar nombre
         if (!form.value.name) {
           errors.value.name = 'El nombre es requerido';
@@ -389,7 +462,7 @@ export const WithValidation: Story = {
         } else {
           errors.value.name = '';
         }
-        
+
         // Validar email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!form.value.email) {
@@ -401,7 +474,7 @@ export const WithValidation: Story = {
         } else {
           errors.value.email = '';
         }
-        
+
         // Validar mensaje
         if (!form.value.message) {
           errors.value.message = 'El mensaje es requerido';
@@ -412,25 +485,25 @@ export const WithValidation: Story = {
         } else {
           errors.value.message = '';
         }
-        
+
         return isValid;
       };
-      
+
       const handleSubmit = () => {
         if (validateForm()) {
           alert('Formulario enviado correctamente');
         }
       };
-      
-      return { 
-        form, 
-        errors, 
-        handleSubmit 
+
+      return {
+        form,
+        errors,
+        handleSubmit
       };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           title="Formulario con Validación"
           submitText="Enviar"
           @submit="handleSubmit"
@@ -443,7 +516,7 @@ export const WithValidation: Story = {
               required
               :error="errors.name"
             />
-            
+
             <VxvInput
               v-model="form.email"
               label="Correo electrónico"
@@ -452,7 +525,7 @@ export const WithValidation: Story = {
               required
               :error="errors.email"
             />
-            
+
             <VxvTextarea
               v-model="form.message"
               label="Mensaje"
@@ -461,6 +534,245 @@ export const WithValidation: Story = {
               required
               :error="errors.message"
             />
+          </div>
+        </VxvForm>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Formulario con botón de ancho completo y contenido en el footer
+ */
+export const WithFooterAndFullWidthButton: Story = {
+  args: {
+    title: 'Iniciar Sesión',
+    submitText: 'Iniciar Sesión',
+    showCancel: false,
+    loading: false,
+    maxWidth: '3xl',
+    hasBorder: false,
+    fullWidthSubmit: true,
+  },
+  render: (args) => ({
+    components: { VxvForm, VxvInput },
+    setup() {
+      const form = ref({
+        email: '',
+        password: ''
+      });
+
+      return { args, form };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvForm
+          v-bind="args"
+          @submit="args.onSubmit"
+        >
+          <div class="space-y-4 mb-6">
+            <VxvInput
+              v-model="form.email"
+              label="Email"
+              type="email"
+              placeholder="ejemplo@dominio.com"
+              required
+            />
+
+            <VxvInput
+              v-model="form.password"
+              label="Contraseña"
+              type="password"
+              placeholder="Ingrese su contraseña"
+              required
+            />
+          </div>
+
+          <template #footer>
+            <div class="mt-4 text-center text-gray-400">
+              ¿No tienes una cuenta?
+              <a href="#" class="text-blue-400 hover:underline">Regístrate</a>
+            </div>
+
+            <div class="mt-2 text-center text-gray-400">
+              <a href="#" class="text-blue-400 hover:underline text-sm">¿Olvidaste tu contraseña?</a>
+            </div>
+          </template>
+        </VxvForm>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Formulario con alerta de error
+ */
+export const WithErrorAlert: Story = {
+  args: {
+    title: 'Iniciar Sesión',
+    submitText: 'Iniciar Sesión',
+    showCancel: false,
+    showSubmit: true,
+    fullWidthSubmit: true,
+    maxWidth: 'md',
+    hasBorder: false,
+  },
+  render: (args) => ({
+    components: { VxvForm, VxvInput, VxvAlert },
+    setup() {
+      const form = ref({
+        email: '',
+        password: ''
+      });
+
+      return { args, form };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvForm
+          v-bind="args"
+        >
+          <template #alert>
+            <div class="mb-6">
+              <VxvAlert
+                variant="error"
+                message="Credenciales incorrectas. Por favor, verifica tu email y contraseña."
+                :dismissible="false"
+              />
+            </div>
+          </template>
+
+          <div class="mb-4">
+            <VxvInput
+              v-model="form.email"
+              label="Email"
+              type="email"
+              placeholder="ejemplo@dominio.com"
+              required
+            />
+          </div>
+
+          <div class="mb-6">
+            <VxvInput
+              v-model="form.password"
+              label="Contraseña"
+              type="password"
+              placeholder="Ingrese su contraseña"
+              required
+            />
+          </div>
+
+          <template #footer>
+            <div class="mt-6 text-center text-gray-400">
+              ¿No tienes una cuenta?
+              <a href="#" class="text-blue-400 hover:underline">Regístrate</a>
+            </div>
+
+            <div class="mt-2 text-center text-gray-400">
+              <a href="#" class="text-blue-400 hover:underline text-sm">¿Olvidaste tu contraseña?</a>
+            </div>
+          </template>
+        </VxvForm>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Formulario con botón deshabilitado
+ */
+export const WithDisabledButton: Story = {
+  args: {
+    title: 'Crear Piloto',
+    submitText: 'Crear Piloto',
+    showCancel: false,
+    showSubmit: true,
+    disabled: true,
+    fullWidthSubmit: true,
+    maxWidth: 'md',
+    hasBorder: false,
+  },
+  render: (args) => ({
+    components: { VxvForm, VxvInput, VxvSelect },
+    setup() {
+      const form = ref({
+        name: 'Nombre del Piloto',
+        race: ''
+      });
+
+      return { args, form };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvForm
+          v-bind="args"
+        >
+          <div class="mb-4">
+            <VxvInput
+              v-model="form.name"
+              label="Nombre del Piloto"
+              type="text"
+              required
+            />
+          </div>
+
+          <div class="mb-6">
+            <VxvSelect
+              v-model="form.race"
+              label="Raza"
+              required
+              placeholder="Selecciona una raza"
+              :options="[
+                { value: 'Humano', label: 'Humano' },
+                { value: 'Cyborg', label: 'Cyborg' },
+                { value: 'Alienígena', label: 'Alienígena' },
+                { value: 'Sintético', label: 'Sintético' }
+              ]"
+            />
+          </div>
+
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Bonificaciones de Raza</h3>
+            <div class="text-gray-400 italic">
+              Selecciona una raza para ver sus bonificaciones
+            </div>
+          </div>
+        </VxvForm>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Formulario sin botón de envío
+ */
+export const WithoutSubmitButton: Story = {
+  args: {
+    title: 'Información',
+    showSubmit: false,
+    showCancel: false,
+    maxWidth: '3xl',
+    hasBorder: false,
+  },
+  render: (args) => ({
+    components: { VxvForm, VxvInput },
+    setup() {
+      return { args };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvForm
+          v-bind="args"
+        >
+          <div class="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 mb-6">
+            <p class="text-green-400 font-semibold">¡Tu dirección de correo electrónico ha sido verificada!</p>
+            <p class="text-gray-300 mt-2">Ahora puedes acceder a todas las funciones de VAXAV.</p>
+          </div>
+
+          <div class="text-center">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              Ir al inicio
+            </button>
           </div>
         </VxvForm>
       </div>
@@ -493,19 +805,19 @@ export const MultiColumn: Story = {
         state: '',
         zipCode: ''
       });
-      
+
       const states = [
         { value: 'madrid', label: 'Madrid' },
         { value: 'barcelona', label: 'Barcelona' },
         { value: 'valencia', label: 'Valencia' },
         { value: 'sevilla', label: 'Sevilla' }
       ];
-      
+
       return { args, form, states };
     },
     template: `
       <div class="bg-gray-900 p-4">
-        <VxvForm 
+        <VxvForm
           v-bind="args"
           @submit="args.onSubmit"
           @cancel="args.onCancel"
@@ -518,7 +830,7 @@ export const MultiColumn: Story = {
                 placeholder="Ingrese su nombre"
                 required
               />
-              
+
               <VxvInput
                 v-model="form.lastName"
                 label="Apellidos"
@@ -526,7 +838,7 @@ export const MultiColumn: Story = {
                 required
               />
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <VxvInput
                 v-model="form.email"
@@ -535,21 +847,21 @@ export const MultiColumn: Story = {
                 placeholder="ejemplo@dominio.com"
                 required
               />
-              
+
               <VxvInput
                 v-model="form.phone"
                 label="Teléfono"
                 placeholder="+34 600 000 000"
               />
             </div>
-            
+
             <VxvInput
               v-model="form.address"
               label="Dirección"
               placeholder="Calle, número, piso"
               required
             />
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <VxvInput
                 v-model="form.city"
@@ -557,7 +869,7 @@ export const MultiColumn: Story = {
                 placeholder="Ingrese su ciudad"
                 required
               />
-              
+
               <VxvSelect
                 v-model="form.state"
                 label="Provincia"
@@ -565,7 +877,7 @@ export const MultiColumn: Story = {
                 placeholder="Seleccione una provincia"
                 required
               />
-              
+
               <VxvInput
                 v-model="form.zipCode"
                 label="Código Postal"

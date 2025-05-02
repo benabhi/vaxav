@@ -55,6 +55,19 @@ const router = createRouter({
       meta: { requiresGuest: true }
     },
     {
+      path: '/forgot-password',
+      name: 'password.request',
+      component: () => import('../views/auth/ForgotPasswordView.vue'),
+      meta: { requiresGuest: true }
+    },
+    {
+      path: '/reset-password/:token',
+      name: 'password.reset',
+      component: () => import('../views/auth/ResetPasswordView.vue'),
+      props: true,
+      meta: { requiresGuest: true }
+    },
+    {
       path: '/email/verify',
       name: 'verification.notice',
       component: () => import('../views/auth/VerifyEmailView.vue'),

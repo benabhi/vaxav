@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\VerifyEmailController;
 use App\Http\Controllers\VerifyEmailWithCodeController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 
@@ -28,6 +29,15 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+
+    // Rutas de restablecimiento de contraseña
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail'])
+        ->middleware(['guest', 'throttle:6,1'])
+        ->name('password.email');
+
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+        ->middleware(['guest'])
+        ->name('password.update');
 
     // Rutas de verificación de email
     Route::middleware('auth:sanctum')->group(function () {

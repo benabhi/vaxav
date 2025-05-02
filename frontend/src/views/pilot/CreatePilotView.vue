@@ -1,11 +1,25 @@
 <template>
   <div class="container mx-auto px-4 py-12">
-    <VxvCard title="Crear Piloto" max-width="md" centered>
-      <div v-if="pilotStore.error" class="bg-red-900/50 text-red-200 p-3 rounded-md mb-4">
-        {{ pilotStore.error }}
-      </div>
-
-      <form @submit.prevent="handleSubmit">
+    <div class="max-w-md mx-auto">
+      <VxvForm
+        title="Crear Piloto"
+        :has-border="false"
+        submitText="Crear Piloto"
+        :show-cancel="false"
+        :full-width-submit="true"
+        :loading="pilotStore.loading"
+        :disabled="!form.race"
+        @submit="handleSubmit"
+      >
+        <template #alert>
+          <VxvAlert
+            v-if="pilotStore.error"
+            variant="error"
+            :message="pilotStore.error"
+            :dismissible="false"
+            class="mb-6"
+          />
+        </template>
         <div class="mb-4">
           <VxvInput
             id="name"
@@ -56,18 +70,8 @@
             Selecciona una raza para ver sus bonificaciones
           </div>
         </div>
-
-        <VxvButton
-          type="submit"
-          variant="primary"
-          :full-width="true"
-          :loading="pilotStore.loading"
-          :disabled="!form.race"
-        >
-          Crear Piloto
-        </VxvButton>
-      </form>
-    </VxvCard>
+      </VxvForm>
+    </div>
   </div>
 </template>
 
@@ -75,10 +79,10 @@
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePilotStore } from '@/stores/pilot';
-import VxvCard from '@/components/ui/layout/VxvCard.vue';
-import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
+import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 
 const router = useRouter();
 const pilotStore = usePilotStore();
