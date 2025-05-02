@@ -59,13 +59,8 @@ const router = createRouter({
       path: '/email/verify',
       name: 'verification.notice',
       component: () => import('../views/auth/VerifyEmailView.vue'),
-      meta: { requiresAuth: true }
-    },
-    // Ruta para manejar la verificación de email desde el enlace
-    {
-      path: '/email/verify',
-      name: 'verification.verify',
-      component: () => import('../views/auth/VerifyEmailView.vue'),
+      meta: { requiresAuth: true },
+      // Pasar los parámetros de verificación si están presentes en la URL
       props: route => ({
         id: route.query.id,
         hash: route.query.hash,
@@ -226,15 +221,16 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Si el usuario está autenticado pero no ha verificado su email
-  if (authStore.user &&
-    !authStore.isEmailVerified &&
-    to.name !== 'verification.notice' &&
-    to.name !== 'login' &&
-    to.name !== 'register' &&
-    to.name !== 'password.request' &&
-    to.name !== 'password.reset') {
-    // Redirigir a la página de verificación de email para cualquier ruta
-    return next({ name: 'verification.notice' });
+  if (authStore.user && !authStore.isEmailVerified) {
+    // Permitir solo acceso a la página de verificación y rutas de autenticación
+    if (to.name !== 'verification.notice' &&
+      to.name !== 'login' &&
+      to.name !== 'register' &&
+      to.name !== 'password.request' &&
+      to.name !== 'password.reset') {
+      // Redirigir a la página de verificación de email para cualquier otra ruta
+      return next({ name: 'verification.notice' });
+    }
   }
 
   // Si el usuario está autenticado, ha verificado su email, pero no tiene un piloto
