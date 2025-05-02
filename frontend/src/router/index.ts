@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePilotStore } from '@/stores/pilot'
 import HomeView from '../views/HomeView.vue'
 
 // Helper function to check if user has required role
@@ -247,6 +248,31 @@ router.beforeEach(async (to, from, next) => {
     to.name !== 'password.reset') {
     // Redirigir a la página de verificación de email para cualquier ruta
     return next({ name: 'verification.notice' });
+  }
+
+  // Si el usuario está autenticado, ha verificado su email, pero no tiene un piloto
+  if (authStore.user &&
+    authStore.isEmailVerified &&
+    to.name !== 'create-pilot' &&
+    to.name !== 'login' &&
+    to.name !== 'register' &&
+    to.name !== 'password.request' &&
+    to.name !== 'password.reset') {
+
+    // Cargar el piloto del usuario si no se ha cargado aún
+    const pilotStore = usePilotStore();
+    if (!pilotStore.hasPilot && !pilotStore.loading) {
+      try {
+        await pilotStore.fetchCurrentPilot();
+      } catch (error) {
+        console.error('Error fetching pilot:', error);
+      }
+    }
+
+    // Si después de intentar cargar, el usuario no tiene un piloto, redirigir a la página de creación de piloto
+    if (!pilotStore.hasPilot && to.name !== 'home') {
+      return next({ name: 'create-pilot' });
+    }
   }
 
   next();

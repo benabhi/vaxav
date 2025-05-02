@@ -44,16 +44,29 @@ onMounted(async () => {
 
     <div v-else-if="hasPilot" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <VxvCard title="Estado del Piloto" has-border>
-        <div v-if="pilotStore.loading">Cargando...</div>
-        <div v-else>
-          <p><span class="text-gray-400">Nombre:</span> {{ pilotStore.pilotName }}</p>
-          <p><span class="text-gray-400">Raza:</span> {{ pilotStore.pilotRace }}</p>
-          <p><span class="text-gray-400">Créditos:</span> {{ pilotStore.pilotCredits.toLocaleString() }} ISK</p>
+        <div v-if="pilotStore.loading" class="flex justify-center py-4">
+          <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+        <div v-else class="space-y-2">
+          <p><span class="text-gray-400">Nombre:</span> <span class="text-white font-medium">{{ pilotStore.pilotName }}</span></p>
+          <p><span class="text-gray-400">Raza:</span> <span class="text-white font-medium">{{ pilotStore.pilotRace }}</span></p>
+          <p><span class="text-gray-400">Créditos:</span> <span class="text-white font-medium">{{ pilotStore.pilotCredits.toLocaleString() }} ISK</span></p>
+          <p class="mt-4 text-sm text-gray-400">Ubicación actual:</p>
+          <div class="bg-gray-700/50 p-3 rounded-md">
+            <p class="text-blue-400 font-medium">Sistema Nexus Prime</p>
+            <p class="text-xs text-gray-300">Seguridad: Alta</p>
+          </div>
         </div>
       </VxvCard>
 
       <VxvCard title="Actividad Reciente" has-border>
-        <p class="text-gray-300">No hay actividad reciente.</p>
+        <div class="space-y-3">
+          <div class="bg-gray-700/30 p-3 rounded-md">
+            <p class="text-sm text-gray-300">Has creado tu piloto</p>
+            <p class="text-xs text-gray-400">Hace unos momentos</p>
+          </div>
+          <p class="text-sm text-gray-400 italic">No hay más actividad reciente.</p>
+        </div>
       </VxvCard>
 
       <VxvCard title="Acciones Rápidas" has-border>
