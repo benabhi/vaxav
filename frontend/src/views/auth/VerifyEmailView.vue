@@ -12,6 +12,14 @@
       />
 
       <div v-if="!verified" class="mb-6">
+        <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-6">
+          <h2 class="text-lg font-semibold text-blue-400 mb-2">Acceso Restringido</h2>
+          <p class="text-gray-300">
+            Para acceder a todas las funciones de VAXAV, debes verificar tu dirección de correo electrónico.
+            No podrás navegar por la aplicación hasta que completes este paso.
+          </p>
+        </div>
+
         <p class="text-gray-300 mb-4">
           Gracias por registrarte. Antes de comenzar, ¿podrías verificar tu dirección de correo electrónico haciendo clic en el enlace que acabamos de enviar? Si no recibiste el correo, con gusto te enviaremos otro.
         </p>
@@ -20,7 +28,7 @@
         <div class="mt-6 border-t border-gray-700 pt-6">
           <h2 class="text-lg font-semibold mb-4">Verificar con código</h2>
           <p class="text-gray-300 mb-4">
-            Puedes solicitar un código de verificación para verificar tu email:
+            Ingresa el código de 6 dígitos que recibiste en tu correo electrónico:
           </p>
           <div class="flex space-x-2">
             <VxvInput
@@ -37,7 +45,6 @@
               Verificar
             </VxvButton>
           </div>
-
         </div>
 
         <div class="mt-6 text-center">
@@ -54,7 +61,11 @@
       </div>
 
       <div v-else class="text-center">
-        <p class="text-green-400 mb-6">¡Tu dirección de correo electrónico ha sido verificada!</p>
+        <div class="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 mb-6">
+          <p class="text-green-400 font-semibold">¡Tu dirección de correo electrónico ha sido verificada!</p>
+          <p class="text-gray-300 mt-2">Ahora puedes acceder a todas las funciones de VAXAV.</p>
+        </div>
+
         <RouterLink to="/" custom v-slot="{ navigate }">
           <VxvButton variant="primary" @click="navigate">
             Ir al inicio

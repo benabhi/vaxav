@@ -49,14 +49,20 @@ const authStore = useAuthStore();
 const pilotStore = usePilotStore();
 
 const isLoggedIn = computed(() => authStore.isLoggedIn);
+const isEmailVerified = computed(() => authStore.isEmailVerified);
 const user = computed(() => authStore.currentUser);
 const credits = computed(() => pilotStore.pilotCredits.toLocaleString());
 const isModerator = computed(() => authStore.isModerator);
 
-// Enlaces de navegación dinámicos basados en el estado de autenticación y permisos
+// Enlaces de navegación dinámicos basados en el estado de autenticación, verificación y permisos
 const navLinks = computed(() => {
+  // Si no está autenticado, no mostrar enlaces
   if (!isLoggedIn.value) return [];
 
+  // Si está autenticado pero no ha verificado su email, no mostrar enlaces
+  if (!isEmailVerified.value) return [];
+
+  // Si está autenticado y verificado, mostrar enlaces normales
   const links = [
     { to: '/', label: 'Dashboard', exact: true },
     { to: '/universe', label: 'Universo' },

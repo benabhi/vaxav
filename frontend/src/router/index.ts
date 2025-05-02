@@ -224,12 +224,15 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // Si la ruta requiere verificación de email y el usuario no está verificado
-  if (to.meta.requiresAuth &&
-    authStore.user &&
+  // Si el usuario está autenticado pero no ha verificado su email
+  if (authStore.user &&
     !authStore.isEmailVerified &&
     to.name !== 'verification.notice' &&
-    to.name !== 'home') { // Permitir acceso a la página de inicio incluso sin verificación
+    to.name !== 'login' &&
+    to.name !== 'register' &&
+    to.name !== 'password.request' &&
+    to.name !== 'password.reset') {
+    // Redirigir a la página de verificación de email para cualquier ruta
     return next({ name: 'verification.notice' });
   }
 
