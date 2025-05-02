@@ -67,6 +67,8 @@ El componente `VxvSidebarGroup` se utiliza dentro de `VxvSidebar` para agrupar e
 | defaultCollapsed | Boolean | `false` | Si el grupo debe estar colapsado por defecto |
 | isSidebarCollapsed | Boolean | `false` | Si la barra lateral está colapsada |
 | isMobile | Boolean | `false` | Si la barra lateral está en modo móvil |
+| basePath | String | `''` | Ruta base para determinar si el grupo está activo |
+| additionalPaths | Array | `[]` | Rutas adicionales que activan este grupo (útil para submenús)
 
 #### Slots
 
@@ -113,7 +115,10 @@ El componente `VxvNavLink` se utiliza dentro de `VxvSidebar` o `VxvSidebarGroup`
 <VxvSidebar title="Panel Admin">
   <VxvNavLink to="/dashboard" label="Dashboard" :icon="HomeIcon" />
 
-  <VxvSidebarGroup title="Gestión de Usuarios">
+  <VxvSidebarGroup
+    title="Gestión de Usuarios"
+    basePath="/users"
+    :additional-paths="['/roles']">
     <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
     <VxvNavLink to="/roles" label="Roles" :icon="UserGroupIcon" />
   </VxvSidebarGroup>
@@ -212,7 +217,10 @@ El componente `VxvSidebar` se utiliza en el layout de administración para propo
         :is-mobile="false"
       >
         <!-- Contenido del sidebar -->
-        <VxvSidebarGroup title="Gestión de Usuarios">
+        <VxvSidebarGroup
+          title="Gestión de Usuarios"
+          basePath="/admin/users"
+          :additional-paths="['/admin/roles']">
           <VxvNavLink to="/admin/users" label="Usuarios" />
           <VxvNavLink to="/admin/roles" label="Roles" />
         </VxvSidebarGroup>
@@ -246,7 +254,10 @@ El componente `VxvSidebar` se utiliza en el layout de administración para propo
           @close="closeMobileMenu"
         >
           <!-- Contenido del sidebar móvil -->
-          <VxvSidebarGroup title="Gestión de Usuarios">
+          <VxvSidebarGroup
+            title="Gestión de Usuarios"
+            basePath="/admin/users"
+            :additional-paths="['/admin/roles']">
             <VxvNavLink to="/admin/users" label="Usuarios" />
             <VxvNavLink to="/admin/roles" label="Roles" />
           </VxvSidebarGroup>

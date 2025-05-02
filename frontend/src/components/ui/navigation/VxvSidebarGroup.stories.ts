@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3';
-import { ref } from 'vue';
+import { ref, provide } from 'vue';
 import VxvSidebarGroup from './VxvSidebarGroup.vue';
 
 /**
@@ -19,6 +19,14 @@ const meta: Meta<typeof VxvSidebarGroup> = {
       description: 'Si el grupo debe estar colapsado por defecto',
       control: { type: 'boolean' },
     },
+    basePath: {
+      description: 'Ruta base para determinar si el grupo está activo',
+      control: { type: 'text' },
+    },
+    additionalPaths: {
+      description: 'Rutas adicionales que activan este grupo (útil para submenús)',
+      control: { type: 'array' },
+    },
   },
   parameters: {
     docs: {
@@ -29,7 +37,11 @@ Se utiliza dentro de VxvSidebar para organizar los enlaces de navegación.
 
 \`\`\`vue
 <template>
-  <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="false">
+  <VxvSidebarGroup
+    title="Gestión de Usuarios"
+    :default-collapsed="false"
+    basePath="/admin/users"
+    :additional-paths="['/admin/roles']">
     <VxvNavLink to="/admin/users" label="Usuarios" />
     <VxvNavLink to="/admin/roles" label="Roles" />
   </VxvSidebarGroup>
@@ -48,8 +60,8 @@ type Story = StoryObj<typeof VxvSidebarGroup>;
 const NavLinkStub = {
   props: ['to', 'label', 'icon'],
   template: `
-    <a 
-      :href="to" 
+    <a
+      :href="to"
       class="block px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
     >
       <div class="flex items-center">
@@ -90,12 +102,12 @@ export const Default: Story = {
     defaultCollapsed: false,
   },
   render: (args) => ({
-    components: { 
+    components: {
       VxvSidebarGroup,
       VxvNavLink: NavLinkStub
     },
     setup() {
-      return { 
+      return {
         args,
         UsersIcon
       };
@@ -121,12 +133,12 @@ export const Collapsed: Story = {
     defaultCollapsed: true,
   },
   render: (args) => ({
-    components: { 
+    components: {
       VxvSidebarGroup,
       VxvNavLink: NavLinkStub
     },
     setup() {
-      return { 
+      return {
         args,
         UsersIcon
       };
@@ -148,12 +160,12 @@ export const Collapsed: Story = {
  */
 export const MultipleGroups: Story = {
   render: () => ({
-    components: { 
+    components: {
       VxvSidebarGroup,
       VxvNavLink: NavLinkStub
     },
     setup() {
-      return { 
+      return {
         UsersIcon,
         ChartIcon
       };
@@ -165,7 +177,7 @@ export const MultipleGroups: Story = {
           <VxvNavLink to="/roles" label="Roles" />
           <VxvNavLink to="/permissions" label="Permisos" />
         </VxvSidebarGroup>
-        
+
         <VxvSidebarGroup title="Reportes" :default-collapsed="true">
           <VxvNavLink to="/reports/sales" label="Ventas" :icon="ChartIcon" />
           <VxvNavLink to="/reports/traffic" label="Tráfico" />
@@ -181,18 +193,18 @@ export const MultipleGroups: Story = {
  */
 export const Interactive: Story = {
   render: () => ({
-    components: { 
+    components: {
       VxvSidebarGroup,
       VxvNavLink: NavLinkStub
     },
     setup() {
       const isCollapsed = ref(false);
-      
+
       const toggleCollapsed = () => {
         isCollapsed.value = !isCollapsed.value;
       };
-      
-      return { 
+
+      return {
         UsersIcon,
         isCollapsed,
         toggleCollapsed
@@ -201,15 +213,86 @@ export const Interactive: Story = {
     template: `
       <div class="w-64 bg-gray-800 p-4">
         <div class="mb-4">
-          <button 
-            @click="toggleCollapsed" 
+          <button
+            @click="toggleCollapsed"
             class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
           >
             {{ isCollapsed ? 'Expandir' : 'Colapsar' }} grupo
           </button>
         </div>
-        
+
         <VxvSidebarGroup title="Gestión de Usuarios" :default-collapsed="isCollapsed">
+          <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
+          <VxvNavLink to="/roles" label="Roles" />
+          <VxvNavLink to="/permissions" label="Permisos" />
+        </VxvSidebarGroup>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Grupo de navegación con rutas adicionales
+ */
+export const WithAdditionalPaths: Story = {
+  args: {
+    title: 'Gestión de Usuarios',
+    defaultCollapsed: false,
+    basePath: '/users',
+    additionalPaths: ['/roles', '/permissions'],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `
+Este ejemplo muestra cómo usar la propiedad \`additionalPaths\` para activar un grupo cuando se navega a cualquiera de sus rutas secundarias.
+
+En este caso, el grupo "Gestión de Usuarios" se activará cuando la ruta sea:
+- /users (ruta base)
+- /users/... (cualquier subruta)
+- /roles (ruta adicional)
+- /roles/... (cualquier subruta)
+- /permissions (ruta adicional)
+- /permissions/... (cualquier subruta)
+
+**Nota**: En Storybook, no podemos simular completamente el comportamiento de activación basado en rutas, ya que no hay un router real. En la aplicación real, el grupo se activará automáticamente cuando la ruta coincida con cualquiera de las rutas especificadas.
+        `,
+      },
+    },
+  },
+  render: (args) => ({
+    components: {
+      VxvSidebarGroup,
+      VxvNavLink: NavLinkStub
+    },
+    setup() {
+      // Simular el objeto route para Storybook
+      const route = {
+        path: '/users'
+      };
+
+      // Proporcionar el objeto route simulado al componente
+      provide('route', route);
+
+      return {
+        args,
+        UsersIcon
+      };
+    },
+    template: `
+      <div class="w-64 bg-gray-800 p-4">
+        <div class="mb-4 text-white text-sm">
+          <p>Este grupo se activará cuando la ruta sea:</p>
+          <ul class="list-disc pl-5 mt-2">
+            <li>/users (ruta base)</li>
+            <li>/users/... (cualquier subruta)</li>
+            <li>/roles (ruta adicional)</li>
+            <li>/roles/... (cualquier subruta)</li>
+            <li>/permissions (ruta adicional)</li>
+            <li>/permissions/... (cualquier subruta)</li>
+          </ul>
+        </div>
+        <VxvSidebarGroup v-bind="args">
           <VxvNavLink to="/users" label="Usuarios" :icon="UsersIcon" />
           <VxvNavLink to="/roles" label="Roles" />
           <VxvNavLink to="/permissions" label="Permisos" />
@@ -228,12 +311,12 @@ export const WithManyItems: Story = {
     defaultCollapsed: false,
   },
   render: (args) => ({
-    components: { 
+    components: {
       VxvSidebarGroup,
       VxvNavLink: NavLinkStub
     },
     setup() {
-      return { 
+      return {
         args
       };
     },

@@ -3,7 +3,10 @@
     <!-- Group header (collapsible) -->
     <button
       type="button"
-      class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md"
+      class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md"
+      :class="[
+        isActive ? 'text-blue-400 bg-gray-700' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+      ]"
       @click="toggleCollapsed"
     >
       <!-- Title (hidden when sidebar is collapsed) -->
@@ -51,7 +54,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch, inject } from 'vue';
+import { useRoute } from 'vue-router';
+
+// Intentar obtener la ruta del router o del inject (para Storybook)
+let route;
+try {
+  route = useRoute();
+} catch (e) {
+  // En Storybook, useRoute() puede fallar
+  route = inject('route', { path: '' });
+}
 
 const props = defineProps({
   title: {
@@ -69,10 +82,49 @@ const props = defineProps({
   isMobile: {
     type: Boolean,
     default: false
+  },
+  // Rutas base para determinar si el grupo está activo
+  basePath: {
+    type: String,
+    default: ''
+  },
+  // Rutas adicionales que activan este grupo (opcional)
+  additionalPaths: {
+    type: Array,
+    default: () => []
   }
 });
 
-const isCollapsed = ref(props.defaultCollapsed);
+// Determinar si alguna ruta dentro del grupo está activa
+const isActive = computed(() => {
+  if (!props.basePath) return false;
+
+  // Verificar si la ruta actual coincide con la ruta base o comienza con ella
+  const basePathMatch = route.path === props.basePath || route.path.startsWith(`${props.basePath}/`);
+
+  // Si hay coincidencia con la ruta base, retornar true inmediatamente
+  if (basePathMatch) return true;
+
+  // Verificar rutas adicionales
+  if (props.additionalPaths && props.additionalPaths.length > 0) {
+    // Comprobar si alguna de las rutas adicionales coincide con la ruta actual
+    return props.additionalPaths.some(path =>
+      route.path === path || route.path.startsWith(`${path}/`)
+    );
+  }
+
+  return false;
+});
+
+// Inicialmente colapsado según la prop, pero expandido si está activo
+const isCollapsed = ref(props.defaultCollapsed && !isActive.value);
+
+// Observar cambios en isActive para expandir automáticamente cuando se activa
+watch(isActive, (newValue) => {
+  if (newValue && isCollapsed.value) {
+    isCollapsed.value = false;
+  }
+});
 
 const toggleCollapsed = () => {
   isCollapsed.value = !isCollapsed.value;

@@ -45,6 +45,8 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 |--------|------|------------------|-------------|
 | `title` | `String` | Requerido | Título del grupo |
 | `defaultCollapsed` | `Boolean` | `false` | Si el grupo debe estar colapsado por defecto |
+| `basePath` | `String` | `''` | Ruta base para determinar si el grupo está activo |
+| `additionalPaths` | `Array` | `[]` | Rutas adicionales que activan este grupo (útil para submenús) |
 
 ### Slots
 
@@ -55,7 +57,11 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 ### Ejemplo de Uso
 
 ```vue
-<vxv-sidebar-group title="Gestión de Usuarios" :default-collapsed="false">
+<vxv-sidebar-group
+  title="Gestión de Usuarios"
+  :default-collapsed="false"
+  basePath="/admin/users"
+  :additional-paths="['/admin/roles']">
   <vxv-nav-link to="/admin/users" label="Usuarios" />
   <vxv-nav-link to="/admin/roles" label="Roles" />
 </vxv-sidebar-group>
@@ -152,7 +158,11 @@ Estos componentes se utilizan en el layout de administración para proporcionar 
 ```vue
 <!-- Sidebar -->
 <vxv-sidebar title="Panel Admin">
-  <vxv-sidebar-group title="Gestión de Usuarios" :default-collapsed="false">
+  <vxv-sidebar-group
+    title="Gestión de Usuarios"
+    :default-collapsed="false"
+    basePath="/admin/users"
+    :additional-paths="['/admin/roles']">
     <vxv-nav-link to="/admin/users" label="Usuarios" />
     <vxv-nav-link to="/admin/roles" label="Roles" />
   </vxv-sidebar-group>
@@ -193,11 +203,12 @@ El componente `VxvNavLink` también puede utilizarse en el header principal para
 ## Mejores Prácticas
 
 1. **Estructura Jerárquica**: Utiliza `VxvSidebarGroup` para agrupar enlaces relacionados bajo un título descriptivo.
-2. **Iconos Consistentes**: Si utilizas iconos, mantén un estilo consistente en toda la aplicación.
-3. **Estados Activos Claros**: Asegúrate de que los enlaces activos sean claramente distinguibles de los inactivos.
-4. **Navegación Intuitiva**: Organiza los enlaces de navegación de manera lógica e intuitiva.
-5. **Accesibilidad**: Asegúrate de que la navegación sea accesible para todos los usuarios, incluyendo aquellos que utilizan lectores de pantalla.
-6. **Breadcrumbs Claros**: Utiliza `VxvBreadcrumb` para proporcionar una ruta de navegación clara y consistente en toda la aplicación.
+2. **Rutas Adicionales**: Utiliza la propiedad `additionalPaths` en `VxvSidebarGroup` para asegurar que el grupo permanezca activo cuando se navega a cualquiera de sus submenús.
+3. **Iconos Consistentes**: Si utilizas iconos, mantén un estilo consistente en toda la aplicación.
+4. **Estados Activos Claros**: Asegúrate de que los enlaces activos sean claramente distinguibles de los inactivos.
+5. **Navegación Intuitiva**: Organiza los enlaces de navegación de manera lógica e intuitiva.
+6. **Accesibilidad**: Asegúrate de que la navegación sea accesible para todos los usuarios, incluyendo aquellos que utilizan lectores de pantalla.
+7. **Breadcrumbs Claros**: Utiliza `VxvBreadcrumb` para proporcionar una ruta de navegación clara y consistente en toda la aplicación.
 
 ## Personalización
 

@@ -64,8 +64,8 @@ const navLinks = computed(() => {
 
   // Si está autenticado y verificado, mostrar enlaces normales
   const links = [
-    { to: '/', label: 'Dashboard', exact: true },
-    { to: '/universe', label: 'Universo' },
+    { to: '/', label: 'Piloto', exact: false }, // No exacto para que se active con submenús
+    { to: '/universe', label: 'Universo', exact: false }, // No exacto para que se active con submenús
     { to: '/market', label: 'Mercado' },
     { to: '/ships', label: 'Naves' }
   ];

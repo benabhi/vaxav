@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
 import VxvNotification from './components/ui/feedback/VxvNotification.vue'
 import VxvPageTitle from './components/ui/layout/VxvPageTitle.vue'
 import VxvSidebar from './components/ui/navigation/VxvSidebar.vue'
+import VxvSidebarGroup from './components/ui/navigation/VxvSidebarGroup.vue'
 import VxvNavLink from './components/ui/navigation/VxvNavLink.vue'
 import { useAuthStore } from './stores/auth'
 import authService from './services/authService'
@@ -17,50 +18,79 @@ const route = useRoute()
 const pageTitle = ref('Dashboard')
 const showPageTitle = ref(true)
 
+// Estado para los menús secundarios
+const currentSection = ref('')
+const pilotMenuItems = [
+  { to: '/', label: 'Vista General', exact: true }, // Mantener exact: true para la vista general
+  { to: '/skills', label: 'Habilidades', exact: false }
+]
+const universeMenuItems = [
+  { to: '/universe', label: 'Galaxia', exact: true }, // Mantener exact: true para la vista de galaxia
+  { to: '/universe/solar-system', label: 'Sistema Solar', exact: false }
+]
+
 // Estado para el menú móvil
 const isMobileMenuOpen = ref(false)
+const isMobileView = ref(false)
+
+// Detectar si estamos en vista móvil
+onMounted(() => {
+  const checkMobileView = () => {
+    isMobileView.value = window.innerWidth < 768 // md breakpoint en Tailwind
+  }
+
+  // Comprobar inicialmente
+  checkMobileView()
+
+  // Añadir listener para cambios de tamaño
+  window.addEventListener('resize', checkMobileView)
+
+  // Limpiar listener al desmontar
+  onUnmounted(() => {
+    window.removeEventListener('resize', checkMobileView)
+  })
+})
 
 // Verificar si el usuario es moderador
 const isModerator = computed(() => {
   return authStore.isModerator || authStore.isAdmin || authStore.isSuperAdmin
 })
 
-// Actualizar el título de la página basado en la ruta
-watch(() => route.name, (newRouteName) => {
-  if (newRouteName) {
-    // Convertir el nombre de la ruta a un título legible
-    const routeNameStr = String(newRouteName)
+// Actualizar el título de la página y la sección actual basado en la ruta
+watch(() => route.path, (newPath) => {
+  // Convertir el nombre de la ruta a un título legible
+  const routeNameStr = String(route.name || '')
 
-    // Ocultar el título en ciertas páginas o en rutas de admin
-    if (routeNameStr === 'login' ||
-        routeNameStr === 'register' ||
-        routeNameStr === 'verification.notice' ||
-        route.path.startsWith('/admin')) {
-      showPageTitle.value = false
+  // Ocultar el título en ciertas páginas o en rutas de admin
+  if (routeNameStr === 'login' ||
+      routeNameStr === 'register' ||
+      routeNameStr === 'verification.notice' ||
+      newPath.startsWith('/admin')) {
+    showPageTitle.value = false
+    currentSection.value = ''
+  } else {
+    showPageTitle.value = true
+
+    // Determinar la sección actual basada en la ruta
+    if (newPath === '/' || newPath.startsWith('/skills')) {
+      currentSection.value = 'pilot'
+      pageTitle.value = 'Piloto'
+    } else if (newPath.startsWith('/universe')) {
+      currentSection.value = 'universe'
+      pageTitle.value = 'Universo'
+    } else if (newPath.startsWith('/market')) {
+      currentSection.value = 'market'
+      pageTitle.value = 'Mercado'
+    } else if (newPath.startsWith('/ships')) {
+      currentSection.value = 'ships'
+      pageTitle.value = 'Naves'
+    } else if (routeNameStr === 'create-pilot') {
+      currentSection.value = ''
+      pageTitle.value = 'Crear Piloto'
     } else {
-      showPageTitle.value = true
-
-      // Asignar título según la ruta
-      switch (routeNameStr) {
-        case 'home':
-          pageTitle.value = 'Dashboard'
-          break
-        case 'universe':
-          pageTitle.value = 'Universo'
-          break
-        case 'market':
-          pageTitle.value = 'Mercado'
-          break
-        case 'ships':
-          pageTitle.value = 'Naves'
-          break
-        case 'create-pilot':
-          pageTitle.value = 'Crear Piloto'
-          break
-        default:
-          // Capitalizar el nombre de la ruta
-          pageTitle.value = routeNameStr.charAt(0).toUpperCase() + routeNameStr.slice(1).replace(/\./g, ' ')
-      }
+      currentSection.value = ''
+      // Capitalizar el nombre de la ruta
+      pageTitle.value = routeNameStr.charAt(0).toUpperCase() + routeNameStr.slice(1).replace(/\./g, ' ')
     }
   }
 }, { immediate: true })
@@ -95,12 +125,39 @@ onMounted(async () => {
   <div class="flex flex-col min-h-screen bg-gray-900 text-white">
     <AppHeader />
 
-    <!-- Título de página con botón hamburger -->
+    <!-- Título de página con botón hamburger y menús secundarios -->
     <VxvPageTitle
       v-if="showPageTitle"
       :title="pageTitle"
+      :is-mobile="isMobileView"
       @mobile-menu-click="openMobileMenu"
-    ></VxvPageTitle>
+    >
+      <!-- Menú secundario para la sección de Piloto -->
+      <template v-if="currentSection === 'pilot'" #menu>
+        <VxvNavLink
+          v-for="item in pilotMenuItems"
+          :key="item.to"
+          :to="item.to"
+          :label="item.label"
+          :exact="item.exact"
+          simple
+          horizontal
+        />
+      </template>
+
+      <!-- Menú secundario para la sección de Universo -->
+      <template v-if="currentSection === 'universe'" #menu>
+        <VxvNavLink
+          v-for="item in universeMenuItems"
+          :key="item.to"
+          :to="item.to"
+          :label="item.label"
+          :exact="item.exact"
+          simple
+          horizontal
+        />
+      </template>
+    </VxvPageTitle>
 
     <main class="flex-grow">
       <RouterView />
@@ -114,7 +171,7 @@ onMounted(async () => {
     <!-- Mobile sidebar con overlay -->
     <div
       v-if="isMobileMenuOpen"
-      class="fixed inset-0 z-50 lg:hidden mobile-sidebar-container"
+      class="fixed inset-0 z-50 md:hidden mobile-sidebar-container"
       @click="closeMobileMenu"
     >
       <!-- Sidebar container with animation -->
@@ -130,18 +187,28 @@ onMounted(async () => {
           :is-mobile="true"
           @close="closeMobileMenu"
         >
-          <VxvNavLink
-            to="/"
-            label="Dashboard"
-            :is-sidebar-collapsed="false"
-            :is-mobile="true"
-          />
-          <VxvNavLink
-            to="/universe"
-            label="Universo"
-            :is-sidebar-collapsed="false"
-            :is-mobile="true"
-          />
+          <!-- Piloto y sus submenús -->
+          <VxvSidebarGroup title="Piloto" :is-mobile="true" basePath="/" :additional-paths="['/skills']">
+            <VxvNavLink
+              v-for="item in pilotMenuItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              :exact="item.exact"
+              :is-mobile="true"
+            />
+          </VxvSidebarGroup>
+          <!-- Universo y sus submenús -->
+          <VxvSidebarGroup title="Universo" :is-mobile="true" basePath="/universe">
+            <VxvNavLink
+              v-for="item in universeMenuItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              :exact="item.exact"
+              :is-mobile="true"
+            />
+          </VxvSidebarGroup>
           <VxvNavLink
             to="/market"
             label="Mercado"
