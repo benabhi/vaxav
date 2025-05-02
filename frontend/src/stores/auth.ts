@@ -28,12 +28,7 @@ export const useAuthStore = defineStore('auth', {
     hasRole: (state) => (role: string) => {
       if (!state.user) return false;
 
-      // Check direct role properties first
-      if (role === 'superadmin' && state.user.is_superadmin) return true;
-      if (role === 'admin' && state.user.is_admin) return true;
-      if (role === 'moderator' && state.user.is_moderator) return true;
-
-      // Fallback to checking roles array
+      // Check roles array
       if (state.user.roles) {
         return state.user.roles.some(r => r.slug === role);
       }
@@ -43,12 +38,7 @@ export const useAuthStore = defineStore('auth', {
     hasAnyRole: (state) => (roles: string[]) => {
       if (!state.user) return false;
 
-      // Check direct role properties first
-      if (roles.includes('superadmin') && state.user.is_superadmin) return true;
-      if (roles.includes('admin') && state.user.is_admin) return true;
-      if (roles.includes('moderator') && state.user.is_moderator) return true;
-
-      // Fallback to checking roles array
+      // Check roles array
       if (state.user.roles) {
         return state.user.roles.some(r => roles.includes(r.slug));
       }
@@ -57,15 +47,22 @@ export const useAuthStore = defineStore('auth', {
     },
     isSuperAdmin: (state) => {
       if (!state.user) return false;
-      return state.user.is_superadmin === true;
+      return state.user.roles && state.user.roles.some(r => r.slug === 'superadmin');
     },
     isAdmin: (state) => {
       if (!state.user) return false;
-      return state.user.is_admin === true;
+      return state.user.roles && (
+        state.user.roles.some(r => r.slug === 'admin') ||
+        state.user.roles.some(r => r.slug === 'superadmin')
+      );
     },
     isModerator: (state) => {
       if (!state.user) return false;
-      return state.user.is_moderator === true;
+      return state.user.roles && (
+        state.user.roles.some(r => r.slug === 'moderator') ||
+        state.user.roles.some(r => r.slug === 'admin') ||
+        state.user.roles.some(r => r.slug === 'superadmin')
+      );
     },
   },
 
@@ -154,26 +151,7 @@ export const useAuthStore = defineStore('auth', {
             user.is_moderator = user.is_moderator === 'true' || user.is_moderator === '1';
           }
 
-          // Si el usuario tiene el rol superadmin en el array de roles, asegurarnos de que is_superadmin sea true
-          if (user.roles && Array.isArray(user.roles)) {
-            const hasSuperadminRole = user.roles.some((role: any) => role.slug === 'superadmin');
-            if (hasSuperadminRole) {
-              user.is_superadmin = true;
-              user.is_admin = true;
-              user.is_moderator = true;
-            }
-
-            const hasAdminRole = user.roles.some((role: any) => role.slug === 'admin');
-            if (hasAdminRole) {
-              user.is_admin = true;
-              user.is_moderator = true;
-            }
-
-            const hasModeratorRole = user.roles.some((role: any) => role.slug === 'moderator');
-            if (hasModeratorRole) {
-              user.is_moderator = true;
-            }
-          }
+          // No necesitamos procesar los roles aquí, ya que usamos directamente el array de roles
         }
 
         this.user = user;

@@ -25,7 +25,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'is_superadmin',
     ];
 
     /**
@@ -48,7 +47,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
-            'is_superadmin'     => 'boolean',
         ];
     }
 
@@ -103,7 +101,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isSuperAdmin(): bool
     {
-        return $this->is_superadmin || $this->hasRole('superadmin');
+        return $this->hasRole('superadmin');
     }
 
     /**
@@ -113,7 +111,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isAdmin(): bool
     {
-        return $this->is_superadmin || $this->hasRole('admin') || $this->hasRole('superadmin');
+        return $this->hasRole('admin') || $this->hasRole('superadmin');
     }
 
     /**
@@ -123,7 +121,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isModerator(): bool
     {
-        return $this->is_superadmin || $this->hasRole('moderator') || $this->hasRole('admin') || $this->hasRole('superadmin');
+        return $this->hasRole('moderator') || $this->hasRole('admin') || $this->hasRole('superadmin');
     }
 
 

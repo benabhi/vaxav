@@ -129,7 +129,7 @@ const {
 
 // Check if user is superadmin
 const isSuperAdmin = computed(() => {
-  return authStore.user?.is_superadmin === true || authStore.user?.roles?.some(role => role.slug === 'superadmin') || false;
+  return authStore.user?.roles?.some(role => role.slug === 'superadmin') || false;
 });
 
 // Table columns

@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('constellations', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->decimal('security_level', 3, 2)->default(1.0);
+            $table->foreignId('region_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

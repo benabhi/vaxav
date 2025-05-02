@@ -7,19 +7,6 @@ import HomeView from '../views/HomeView.vue'
 const hasRole = (user: any, requiredRoles: string[]): boolean => {
   if (!user) return false;
 
-  // Check direct role properties first (is_superadmin, is_admin, is_moderator)
-  if (requiredRoles.includes('superadmin') && user.is_superadmin === true) {
-    return true;
-  }
-
-  if (requiredRoles.includes('admin') && user.is_admin === true) {
-    return true;
-  }
-
-  if (requiredRoles.includes('moderator') && user.is_moderator === true) {
-    return true;
-  }
-
   // Check roles array
   if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
     const hasRequiredRole = user.roles.some((role: any) => {

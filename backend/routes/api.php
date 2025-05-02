@@ -89,6 +89,7 @@ Route::get('/debug/user-roles', function () {
 Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     // Rutas de roles
     Route::apiResource('roles', RoleController::class);
+    Route::get('/permissions', [RoleController::class, 'permissions']);
 
     // Rutas de usuarios
     Route::apiResource('users', UserController::class);
