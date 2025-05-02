@@ -63,6 +63,11 @@ const isModerator = computed(() => {
   return authStore.isModerator || authStore.isAdmin || authStore.isSuperAdmin
 })
 
+// Verificar si el usuario está autenticado y tiene un piloto
+const hasAuthenticatedPilot = computed(() => {
+  return authStore.isAuthenticated && authStore.user?.pilot !== null
+})
+
 // Actualizar el título de la página y la sección actual basado en la ruta
 watch(() => route.path, (newPath) => {
   // Convertir el nombre de la ruta a un título legible
@@ -152,7 +157,7 @@ onMounted(async () => {
 
     <!-- Título de página con botón hamburger y menús secundarios -->
     <VxvPageTitle
-      v-if="showPageTitle"
+      v-if="showPageTitle && hasAuthenticatedPilot"
       :title="pageTitle"
       :is-mobile="isMobileView"
       @mobile-menu-click="openMobileMenu"
@@ -188,8 +193,9 @@ onMounted(async () => {
       <RouterView />
     </main>
 
-    <!-- Barra de estado con cronómetro de acción -->
+    <!-- Barra de estado con cronómetro de acción (solo visible con piloto autenticado) -->
     <VxvStatusBar
+      v-if="hasAuthenticatedPilot"
       :timer-duration="timerDuration"
       :timer-remaining-time="timerRemainingTime"
       :timer-action="timerAction"

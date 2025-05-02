@@ -1,6 +1,6 @@
 # VxvActionTimer
 
-El componente `VxvActionTimer` es un cronómetro con barra de progreso horizontal que muestra una acción en curso y el tiempo restante para completarla. Está diseñado para ser utilizado dentro del componente `VxvStatusBar`.
+El componente `VxvActionTimer` es un cronómetro con barra de progreso horizontal que muestra una acción en curso y el tiempo restante para completarla. Está diseñado para ser utilizado dentro del componente `VxvStatusBar`, que solo se muestra cuando hay un usuario autenticado con un piloto creado.
 
 ## Características
 
