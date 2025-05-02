@@ -94,7 +94,8 @@ const handleSubmit = async () => {
   await authStore.register(form);
 
   if (authStore.isLoggedIn) {
-    router.push('/create-pilot');
+    // Redirigir a la página de verificación de email en lugar de create-pilot
+    router.push({ name: 'verification.notice' });
   }
 };
 </script>
