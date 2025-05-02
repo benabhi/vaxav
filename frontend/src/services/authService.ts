@@ -43,6 +43,13 @@ export interface EmailVerificationStatus {
   message: string;
 }
 
+export interface PasswordResetData {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  token: string;
+}
+
 const authService = {
   /**
    * Iniciar sesión con credenciales
@@ -155,6 +162,22 @@ const authService = {
   },
 
 
+
+  /**
+   * Solicitar enlace de restablecimiento de contraseña
+   */
+  forgotPassword: async (email: string) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  /**
+   * Restablecer contraseña con token
+   */
+  resetPassword: async (data: PasswordResetData) => {
+    const response = await api.post('/auth/reset-password', data);
+    return response.data;
+  },
 
   /**
    * Inicializar el token desde localStorage (llamar al inicio de la app)

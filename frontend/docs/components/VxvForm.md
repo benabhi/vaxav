@@ -10,8 +10,12 @@ El componente `VxvForm` es un contenedor para formularios que proporciona un est
 | submitText | String | `'Guardar'` | Texto del botón de envío |
 | cancelText | String | `'Cancelar'` | Texto del botón de cancelación |
 | showCancel | Boolean | `true` | Si es `true`, muestra el botón de cancelación |
+| showSubmit | Boolean | `true` | Si es `true`, muestra el botón de envío |
 | loading | Boolean | `false` | Si es `true`, muestra un indicador de carga en el botón de envío |
+| disabled | Boolean | `false` | Si es `true`, deshabilita el botón de envío |
 | maxWidth | String | `'3xl'` | Ancho máximo del formulario (xs, sm, md, lg, xl, 2xl, 3xl, 4xl, 5xl, 6xl, 7xl, full) |
+| hasBorder | Boolean | `true` | Si es `true`, muestra un borde en el título del card |
+| fullWidthSubmit | Boolean | `false` | Si es `true`, el botón de envío ocupa todo el ancho disponible |
 
 ## Eventos
 
@@ -25,6 +29,8 @@ El componente `VxvForm` es un contenedor para formularios que proporciona un est
 | Nombre | Descripción |
 |--------|-------------|
 | default | Contenido del formulario (campos, validaciones, etc.) |
+| alert | Contenido que se muestra entre el título y el formulario (alertas, mensajes de error, etc.) |
+| footer | Contenido que se muestra debajo de los botones de acción (enlaces, texto adicional, etc.) |
 
 ## Ejemplos de uso
 
@@ -200,5 +206,58 @@ const goBack = () => {
   @cancel="goBack"
 >
   <!-- Contenido del formulario -->
+</VxvForm>
+```
+
+### Formulario sin borde en el título
+
+```vue
+<VxvForm
+  title="Iniciar Sesión"
+  :has-border="false"
+  submitText="Iniciar Sesión"
+  :show-cancel="false"
+  @submit="handleSubmit"
+>
+  <!-- Contenido del formulario -->
+</VxvForm>
+```
+
+### Formulario con contenido en el footer y botón de ancho completo
+
+```vue
+<VxvForm
+  title="Iniciar Sesión"
+  :has-border="false"
+  submitText="Iniciar Sesión"
+  :show-cancel="false"
+  :full-width-submit="true"
+  @submit="handleSubmit"
+>
+  <!-- Contenido del formulario -->
+  <div class="mb-6">
+    <VxvInput
+      id="email"
+      v-model="form.email"
+      label="Email"
+      type="email"
+      required
+    />
+  </div>
+
+  <template #footer>
+    <div class="mt-4 text-center text-gray-400">
+      ¿No tienes una cuenta?
+      <RouterLink to="/register" class="text-blue-400 hover:underline">
+        Regístrate
+      </RouterLink>
+    </div>
+
+    <div class="mt-2 text-center text-gray-400">
+      <RouterLink to="/forgot-password" class="text-blue-400 hover:underline text-sm">
+        ¿Olvidaste tu contraseña?
+      </RouterLink>
+    </div>
+  </template>
 </VxvForm>
 ```

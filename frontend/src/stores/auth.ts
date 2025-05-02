@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import authService from '@/services/authService';
-import type { User, LoginCredentials, RegisterData } from '@/services/authService';
+import type { User, LoginCredentials, RegisterData, PasswordResetData } from '@/services/authService';
 
 interface AuthState {
   user: User | null;
@@ -252,6 +252,51 @@ export const useAuthStore = defineStore('auth', {
       } catch (error: any) {
         this.error = error.response?.data?.message || 'Error al generar el código de verificación';
         throw error;
+      }
+    },
+
+    /**
+     * Solicitar enlace de restablecimiento de contraseña
+     */
+    async forgotPassword(email: string) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await authService.forgotPassword(email);
+        return response;
+      } catch (error: any) {
+        this.error = error.response?.data?.message || 'Error al solicitar el restablecimiento de contraseña';
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
+     * Restablecer contraseña con token
+     */
+    async resetPassword(data: PasswordResetData) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await authService.resetPassword(data);
+        return response;
+      } catch (error: any) {
+        if (error.response?.data?.errors) {
+          const errorMessages = Object.values(error.response.data.errors);
+          if (errorMessages.length > 0) {
+            this.error = Array.isArray(errorMessages[0]) ? errorMessages[0][0] : errorMessages[0];
+          } else {
+            this.error = 'Error al restablecer la contraseña';
+          }
+        } else {
+          this.error = error.response?.data?.message || 'Error al restablecer la contraseña';
+        }
+        throw error;
+      } finally {
+        this.loading = false;
       }
     },
 
