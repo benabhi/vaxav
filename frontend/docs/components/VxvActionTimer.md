@@ -68,7 +68,7 @@ const updateRemainingTime = (time) => {
 
 ## Uso con VxvStatusBar
 
-El componente `VxvActionTimer` está diseñado para ser utilizado dentro del componente `VxvStatusBar`, que proporciona un contenedor para mostrar información de estado en la aplicación:
+El componente `VxvActionTimer` está diseñado para ser utilizado dentro del componente `VxvStatusBar`, que proporciona un contenedor para mostrar información de estado en la aplicación. El `VxvStatusBar` permanece fijo en la parte inferior de la pantalla mientras se hace scroll y se acopla automáticamente encima del footer cuando este es visible:
 
 ```vue
 <template>

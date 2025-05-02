@@ -134,6 +134,8 @@ const startActionTimer = (action, duration = 120) => {
   timerIsActive.value = true
 }
 
+
+
 onMounted(async () => {
   // Inicializar el token desde localStorage
   const hasToken = authService.initToken()

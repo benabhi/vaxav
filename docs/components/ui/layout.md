@@ -53,7 +53,7 @@ El componente `VxvPageTitle` es una versión mejorada del `BasePageTitle` que in
 
 ## VxvStatusBar
 
-El componente `VxvStatusBar` es una barra de estado que se coloca encima del footer y es visible solo cuando hay un usuario autenticado con un piloto creado. Proporciona un espacio para mostrar información de estado y un cronómetro de acción en el centro.
+El componente `VxvStatusBar` es una barra de estado que se coloca encima del footer y es visible solo cuando hay un usuario autenticado con un piloto creado. Permanece fija en la parte inferior de la pantalla mientras se hace scroll, pero se acopla automáticamente encima del footer cuando este es visible. Proporciona un espacio para mostrar información de estado y un cronómetro de acción en el centro.
 
 ### Props
 
