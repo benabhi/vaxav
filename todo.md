@@ -1,5 +1,4 @@
-- [ ] Borrar SetLocale.php si no se usa.
-- [ ] En caso de error en el envio de email de verificacion no se deberia guardar el email del usuario en la base de datos.
-- [ ] Colocar el codigo de verificacion claro en el correo.
-- [ ] Sigue preguntando por la verificacion en las vistas cuando ya fue verificado el email.
-- [ ] Verificar el campo de la base de datos "is superadmin"
+- [ ] Hacer fixed con posibilidad de pegado al footer el statusbar
+- [ ] hacer que tanto los menues (salvo piloto) del navbar como el pagetitle entero no se muestren hasta que este creado el piloto.
+
+
