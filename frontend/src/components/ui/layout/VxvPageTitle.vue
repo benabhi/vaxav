@@ -1,6 +1,6 @@
 <template>
   <header class="bg-gray-800 border-b border-gray-700 flex-shrink-0">
-    <div class="flex justify-between items-center px-4 py-3 border-b border-gray-700">
+    <div class="flex justify-between items-center px-4 py-3" :class="{ 'border-b border-gray-700': $slots.breadcrumbs }">
       <h1 class="text-xl font-semibold text-white">{{ title }}</h1>
 
       <!-- Mobile menu button - only visible on small screens -->
@@ -32,7 +32,7 @@ defineProps({
     type: String,
     required: true
   },
-  
+
   /**
    * Whether to show the mobile menu button
    */
