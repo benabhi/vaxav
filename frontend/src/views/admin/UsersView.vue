@@ -108,88 +108,6 @@
 
     <!-- Modals -->
     <template #modals>
-      <!-- User form modal (create/edit) -->
-      <VxvModal :show="showUserModal" :title="editingUser ? 'Editar Usuario' : 'Crear Usuario'" color="blue"
-        @close="closeUserModal">
-        <form @submit.prevent="saveUser">
-          <!-- Name -->
-          <div class="mb-4">
-            <VxvInput
-              id="name"
-              v-model="userForm.name"
-              label="Nombre"
-              type="text"
-              required
-              :error="formErrors.name"
-              labelClass="text-lg font-bold text-white"
-            />
-          </div>
-
-          <!-- Email -->
-          <div class="mb-4">
-            <VxvInput
-              id="email"
-              v-model="userForm.email"
-              label="Correo electrónico"
-              type="email"
-              required
-              :error="formErrors.email"
-              labelClass="text-lg font-bold text-white"
-            />
-          </div>
-
-          <!-- Password (only for new users) -->
-          <div v-if="!editingUser" class="mb-4">
-            <VxvInput
-              id="password"
-              v-model="userForm.password"
-              label="Contraseña"
-              type="password"
-              required
-              :error="formErrors.password"
-              labelClass="text-lg font-bold text-white"
-            />
-          </div>
-
-          <!-- Password Confirmation (only for new users) -->
-          <div v-if="!editingUser" class="mb-4">
-            <VxvInput
-              id="password_confirmation"
-              v-model="userForm.password_confirmation"
-              label="Confirmar contraseña"
-              type="password"
-              required
-              labelClass="text-lg font-bold text-white"
-            />
-          </div>
-
-          <!-- Roles -->
-          <div class="mb-6">
-            <label class="block text-lg font-bold text-white mb-2">Roles</label>
-            <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-40 overflow-y-auto">
-              <div v-for="role in availableRoles" :key="role.id" class="mb-2 last:mb-0">
-                <VxvCheckbox
-                  :id="`role-${role.id}`"
-                  :value="role.id"
-                  v-model="userForm.roles"
-                  :label="role.name"
-                />
-              </div>
-            </div>
-            <p v-if="formErrors.roles" class="mt-1 text-sm text-red-500">{{ formErrors.roles }}</p>
-          </div>
-
-          <div class="flex space-x-3">
-            <VxvButton type="submit" variant="primary" :full-width="true" :loading="saving">
-              {{ editingUser ? 'Guardar cambios' : 'Crear usuario' }}
-            </VxvButton>
-            <VxvButton type="button" variant="secondary" :full-width="true" @click="closeUserModal">
-              Cancelar
-            </VxvButton>
-          </div>
-        </form>
-      </VxvModal>
-
       <!-- Delete confirmation modal -->
       <VxvModal :show="showDeleteModal" title="Eliminar usuario" color="red" @close="closeDeleteModal">
         <div class="text-center">
@@ -220,13 +138,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminCrudView from '@/components/admin/AdminCrudView.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
-import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
-import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 import { useNotificationStore } from '@/stores/notification';
@@ -246,8 +162,6 @@ const {
   pagination,
   filters,
   fetchUsers,
-  createUser,
-  updateUser,
   deleteUser: deleteUserApi,
   changePage,
   changePerPage,
@@ -262,24 +176,6 @@ const columns = [
   { key: 'status', label: 'Estado', width: '15%' },
   { key: 'created_at', label: 'Fecha de registro', sortable: true, width: '25%' }
 ];
-
-// User form
-const showUserModal = ref(false);
-const editingUser = ref(null);
-const userForm = reactive({
-  name: '',
-  email: '',
-  password: '',
-  password_confirmation: '',
-  roles: []
-});
-const formErrors = reactive({
-  name: '',
-  email: '',
-  password: '',
-  roles: ''
-});
-const saving = ref(false);
 
 // Delete confirmation
 const showDeleteModal = ref(false);
@@ -333,50 +229,6 @@ const goToCreateUser = () => {
 // Navigate to edit user page
 const editUser = (user) => {
   router.push(`/admin/users/${user.id}/edit`);
-};
-
-// Close user modal
-const closeUserModal = () => {
-  showUserModal.value = false;
-};
-
-// Clear form errors
-const clearFormErrors = () => {
-  formErrors.name = '';
-  formErrors.email = '';
-  formErrors.password = '';
-  formErrors.roles = '';
-};
-
-// Save user
-const saveUser = async () => {
-  saving.value = true;
-  clearFormErrors();
-
-  try {
-    if (editingUser.value) {
-      // Update existing user
-      await updateUser(editingUser.value.id, userForm);
-    } else {
-      // Create new user
-      await createUser(userForm);
-    }
-
-    closeUserModal();
-  } catch (error) {
-    console.error('Error saving user:', error);
-
-    // Handle validation errors
-    if (error.response && error.response.data && error.response.data.errors) {
-      const errors = error.response.data.errors;
-      if (errors.name) formErrors.name = errors.name[0];
-      if (errors.email) formErrors.email = errors.email[0];
-      if (errors.password) formErrors.password = errors.password[0];
-      if (errors.roles) formErrors.roles = errors.roles[0];
-    }
-  } finally {
-    saving.value = false;
-  }
 };
 
 // Confirm delete user

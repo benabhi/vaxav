@@ -66,75 +66,6 @@
 
     <!-- Modals -->
     <template #modals>
-      <!-- Role form modal (create/edit) -->
-      <VxvModal :show="showRoleModal" :title="editingRole ? 'Editar Rol' : 'Crear Rol'" color="blue"
-        @close="closeRoleModal">
-        <form @submit.prevent="saveRole">
-          <!-- Name -->
-          <div class="mb-4">
-            <VxvInput
-              id="name"
-              v-model="roleForm.name"
-              label="Nombre"
-              type="text"
-              required
-              :error="formErrors.name"
-              labelClass="text-lg font-bold text-white"
-            />
-          </div>
-
-          <!-- Slug -->
-          <div class="mb-4">
-            <VxvInput
-              id="slug"
-              v-model="roleForm.slug"
-              label="Slug"
-              type="text"
-              required
-              :error="formErrors.slug"
-              labelClass="text-lg font-bold text-white"
-              :disabled="editingRole && ['superadmin', 'admin', 'moderator', 'user'].includes(editingRole.slug)"
-            />
-          </div>
-
-          <!-- Description -->
-          <div class="mb-4">
-            <label for="description" class="block text-lg font-bold text-white mb-2">Descripción</label>
-            <textarea id="description" v-model="roleForm.description" rows="3"
-              class="w-full bg-gray-700 text-white border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:border-blue-500"></textarea>
-            <p v-if="formErrors.description" class="mt-1 text-sm text-red-500">{{ formErrors.description }}</p>
-          </div>
-
-          <!-- Permissions -->
-          <div class="mb-6">
-            <label class="block text-lg font-bold text-white mb-2">Permisos</label>
-            <div class="bg-gray-700 border border-gray-600 rounded-md p-4 max-h-60 overflow-y-auto">
-              <div class="space-y-2">
-                <div v-for="permission in availablePermissions" :key="permission.id" class="mb-1">
-                  <VxvCheckbox
-                    :id="`permission-${permission.id}`"
-                    :value="permission.id"
-                    v-model="roleForm.permissions"
-                    :label="permission.name"
-                    labelClass="text-sm text-gray-200"
-                  />
-                </div>
-              </div>
-            </div>
-            <p v-if="formErrors.permissions" class="mt-1 text-sm text-red-500">{{ formErrors.permissions }}</p>
-          </div>
-
-          <div class="flex space-x-3">
-            <VxvButton type="submit" variant="primary" :full-width="true" :loading="saving">
-              {{ editingRole ? 'Guardar cambios' : 'Crear rol' }}
-            </VxvButton>
-            <VxvButton type="button" variant="secondary" :full-width="true" @click="closeRoleModal">
-              Cancelar
-            </VxvButton>
-          </div>
-        </form>
-      </VxvModal>
-
       <!-- Delete confirmation modal -->
       <VxvModal :show="showDeleteModal" title="Eliminar rol" color="red" @close="closeDeleteModal">
         <div class="text-center">
@@ -167,12 +98,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminCrudView from '@/components/admin/AdminCrudView.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
-import VxvInput from '@/components/ui/forms/VxvInput.vue';
-import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -191,8 +120,6 @@ const {
   pagination,
   filters,
   fetchRoles,
-  createRole,
-  updateRole,
   deleteRole: deleteRoleApi,
   changePage,
   changePerPage,
@@ -212,37 +139,6 @@ const columns = [
   { key: 'description', label: 'Descripción' },
   { key: 'permissions', label: 'Permisos' }
 ];
-
-// Role form
-const showRoleModal = ref(false);
-const editingRole = ref(null);
-const roleForm = reactive({
-  name: '',
-  slug: '',
-  description: '',
-  permissions: []
-});
-const formErrors = reactive({
-  name: '',
-  slug: '',
-  description: '',
-  permissions: ''
-});
-const saving = ref(false);
-
-// Generate slug from name
-const generateSlug = (name) => {
-  return name.toLowerCase()
-    .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-');
-};
-
-// Watch for name changes to auto-generate slug
-watch(() => roleForm.name, (newName) => {
-  if (!editingRole.value) {
-    roleForm.slug = generateSlug(newName);
-  }
-});
 
 // Delete confirmation
 const showDeleteModal = ref(false);
@@ -276,71 +172,6 @@ const goToCreateRole = () => {
 // Navigate to edit role page
 const editRole = (role) => {
   router.push(`/admin/roles/${role.id}/edit`);
-};
-
-// Close role modal
-const closeRoleModal = () => {
-  showRoleModal.value = false;
-};
-
-// Clear form errors
-const clearFormErrors = () => {
-  formErrors.name = '';
-  formErrors.slug = '';
-  formErrors.description = '';
-  formErrors.permissions = '';
-};
-
-// Save role
-const saveRole = async () => {
-  saving.value = true;
-  clearFormErrors();
-
-  // Validate form
-  let isValid = true;
-
-  if (!roleForm.name) {
-    formErrors.name = 'El nombre es obligatorio';
-    isValid = false;
-  }
-
-  if (!roleForm.slug) {
-    formErrors.slug = 'El slug es obligatorio';
-    isValid = false;
-  } else if (!/^[a-z0-9-]+$/.test(roleForm.slug)) {
-    formErrors.slug = 'El slug solo puede contener letras minúsculas, números y guiones';
-    isValid = false;
-  }
-
-  if (!isValid) {
-    saving.value = false;
-    return;
-  }
-
-  try {
-    if (editingRole.value) {
-      // Update existing role
-      await updateRole(editingRole.value.id, roleForm);
-    } else {
-      // Create new role
-      await createRole(roleForm);
-    }
-
-    closeRoleModal();
-  } catch (error) {
-    console.error('Error saving role:', error);
-
-    // Handle validation errors
-    if (error.response && error.response.data && error.response.data.errors) {
-      const errors = error.response.data.errors;
-      if (errors.name) formErrors.name = errors.name[0];
-      if (errors.slug) formErrors.slug = errors.slug[0];
-      if (errors.description) formErrors.description = errors.description[0];
-      if (errors.permissions) formErrors.permissions = errors.permissions[0];
-    }
-  } finally {
-    saving.value = false;
-  }
 };
 
 // Confirm delete role
