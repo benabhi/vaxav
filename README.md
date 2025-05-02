@@ -82,6 +82,10 @@ pm2 status
 
 El sistema utiliza autenticación basada en tokens (Laravel Sanctum) para la comunicación entre el frontend y el backend. Para más detalles, consulta la [documentación de autenticación](./docs/api/authentication.md).
 
+### Verificación de Email
+
+El sistema incluye verificación de email con soporte para verificación por enlace y por código. Para más detalles, consulta la [documentación de verificación de email](./docs/email-verification.md).
+
 ### Credenciales de prueba
 
 - **Email**: test@example.com
