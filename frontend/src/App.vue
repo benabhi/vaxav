@@ -10,9 +10,11 @@ import VxvSidebar from './components/ui/navigation/VxvSidebar.vue'
 import VxvSidebarGroup from './components/ui/navigation/VxvSidebarGroup.vue'
 import VxvNavLink from './components/ui/navigation/VxvNavLink.vue'
 import { useAuthStore } from './stores/auth'
+import { usePilotStore } from './stores/pilot'
 import authService from './services/authService'
 
 const authStore = useAuthStore()
+const pilotStore = usePilotStore()
 const route = useRoute()
 
 // Estado para el título de la página
@@ -65,7 +67,7 @@ const isModerator = computed(() => {
 
 // Verificar si el usuario está autenticado y tiene un piloto
 const hasAuthenticatedPilot = computed(() => {
-  return authStore.isAuthenticated && authStore.user?.pilot !== null
+  return authStore.isAuthenticated && authStore.isEmailVerified && pilotStore.hasPilot
 })
 
 // Actualizar el título de la página y la sección actual basado en la ruta
@@ -77,7 +79,10 @@ watch(() => route.path, (newPath) => {
   if (routeNameStr === 'login' ||
       routeNameStr === 'register' ||
       routeNameStr === 'verification.notice' ||
-      newPath.startsWith('/admin')) {
+      routeNameStr === 'create-pilot' ||
+      newPath.startsWith('/admin') ||
+      !authStore.isEmailVerified ||
+      !pilotStore.hasPilot) {
     showPageTitle.value = false
     currentSection.value = ''
   } else {
@@ -144,6 +149,15 @@ onMounted(async () => {
   if (hasToken) {
     try {
       await authStore.fetchUser()
+
+      // Si el usuario está autenticado y verificado, intentar cargar su piloto
+      if (authStore.isAuthenticated && authStore.isEmailVerified) {
+        try {
+          await pilotStore.fetchCurrentPilot()
+        } catch (error) {
+          console.error('Error al cargar el piloto:', error)
+        }
+      }
     } catch (error) {
       console.error('Error al cargar el usuario:', error)
       // Si hay error, limpiamos el token
