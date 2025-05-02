@@ -17,6 +17,8 @@
             :default-collapsed="false"
             :is-sidebar-collapsed="false"
             :is-mobile="false"
+            basePath="/admin/users"
+            :additional-paths="['/admin/roles']"
           >
             <VxvNavLink
               to="/admin/users"
@@ -94,6 +96,8 @@
             :default-collapsed="false"
             :is-sidebar-collapsed="false"
             :is-mobile="true"
+            basePath="/admin/users"
+            :additional-paths="['/admin/roles']"
           >
             <VxvNavLink
               to="/admin/users"

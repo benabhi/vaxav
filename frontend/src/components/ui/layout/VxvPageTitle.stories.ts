@@ -1,14 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/vue3';
+import { provide } from 'vue';
 import VxvPageTitle from './VxvPageTitle.vue';
 import VxvBreadcrumb from '../navigation/VxvBreadcrumb.vue';
+import VxvNavLink from '../navigation/VxvNavLink.vue';
 
 /**
- * VxvPageTitle es un componente que muestra el título de la página y opcionalmente breadcrumbs.
+ * VxvPageTitle es un componente que muestra el título de la página y opcionalmente breadcrumbs y menús de navegación.
  * También puede mostrar un botón de menú móvil en pantallas pequeñas.
  *
  * El componente está diseñado para adaptarse a diferentes contextos:
- * - Sin breadcrumbs: Muestra solo el título y el botón de menú móvil en una sola fila
+ * - Sin breadcrumbs ni menús: Muestra solo el título y el botón de menú móvil en una sola fila
  * - Con breadcrumbs: Muestra el título y el botón en la primera fila, y los breadcrumbs en una segunda fila
+ * - Con menús: Muestra el título y los menús de navegación en la misma fila, y el botón de menú móvil en pantallas pequeñas
+ * - Con breadcrumbs y menús: Muestra el título, los menús y el botón en la primera fila, y los breadcrumbs en una segunda fila
  */
 const meta: Meta<typeof VxvPageTitle> = {
   title: 'UI/Layout/VxvPageTitle',
@@ -136,11 +140,105 @@ export const WithLongTitle: Story = {
 };
 
 /**
- * Título de página en un layout de aplicación
+ * Título de página con menús de navegación
+ */
+export const WithMenu: Story = {
+  args: {
+    title: 'Piloto',
+    showMobileMenuButton: true,
+  },
+  render: (args) => ({
+    components: { VxvPageTitle, VxvNavLink },
+    setup() {
+      const menuItems = [
+        { to: '/', label: 'Vista General', exact: true, active: true },
+        { to: '/skills', label: 'Habilidades', active: false }
+      ];
+
+      return { args, menuItems };
+    },
+    template: `
+      <div class="bg-gray-900">
+        <VxvPageTitle
+          v-bind="args"
+          @mobile-menu-click="args.onMobileMenuClick"
+        >
+          <template #menu>
+            <VxvNavLink
+              v-for="item in menuItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              :exact="item.exact"
+              :active="item.active"
+              :current-path="'/'"
+              simple
+              horizontal
+            />
+          </template>
+        </VxvPageTitle>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Título de página con breadcrumbs y menús
+ */
+export const WithBreadcrumbsAndMenu: Story = {
+  args: {
+    title: 'Universo',
+    showMobileMenuButton: true,
+  },
+  render: (args) => ({
+    components: { VxvPageTitle, VxvBreadcrumb, VxvNavLink },
+    setup() {
+      const breadcrumbItems = [
+        { text: 'Inicio', to: '/' },
+        { text: 'Universo' }
+      ];
+
+      const menuItems = [
+        { to: '/universe', label: 'Galaxia', exact: true, active: true },
+        { to: '/universe/solar-system', label: 'Sistema Solar', active: false }
+      ];
+
+      return { args, breadcrumbItems, menuItems };
+    },
+    template: `
+      <div class="bg-gray-900">
+        <VxvPageTitle
+          v-bind="args"
+          @mobile-menu-click="args.onMobileMenuClick"
+        >
+          <template #breadcrumbs>
+            <VxvBreadcrumb :items="breadcrumbItems" />
+          </template>
+          <template #menu>
+            <VxvNavLink
+              v-for="item in menuItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              :exact="item.exact"
+              :active="item.active"
+              :current-path="'/universe'"
+              simple
+              horizontal
+            />
+          </template>
+        </VxvPageTitle>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Título de página en un layout de aplicación completo
  */
 export const InAppLayout: Story = {
   render: () => ({
-    components: { VxvPageTitle, VxvBreadcrumb },
+    components: { VxvPageTitle, VxvBreadcrumb, VxvNavLink },
     setup() {
       const breadcrumbItems = [
         { text: 'Dashboard', to: '/dashboard' },
@@ -148,7 +246,13 @@ export const InAppLayout: Story = {
         { text: 'Detalles de Usuario' },
       ];
 
-      return { breadcrumbItems };
+      const menuItems = [
+        { to: '/dashboard/users/1/profile', label: 'Perfil', exact: true, active: true },
+        { to: '/dashboard/users/1/security', label: 'Seguridad', active: false },
+        { to: '/dashboard/users/1/permissions', label: 'Permisos', active: false }
+      ];
+
+      return { breadcrumbItems, menuItems };
     },
     template: `
       <div class="flex flex-col h-[600px] bg-gray-900">
@@ -159,6 +263,19 @@ export const InAppLayout: Story = {
         >
           <template #breadcrumbs>
             <VxvBreadcrumb :items="breadcrumbItems" />
+          </template>
+          <template #menu>
+            <VxvNavLink
+              v-for="item in menuItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              :exact="item.exact"
+              :active="item.active"
+              :current-path="'/dashboard/users/1/profile'"
+              simple
+              horizontal
+            />
           </template>
         </VxvPageTitle>
 
