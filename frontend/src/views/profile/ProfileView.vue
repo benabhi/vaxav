@@ -12,7 +12,11 @@
           title="Editar Perfil"
           submitText="Guardar cambios"
           :loading="submitting"
+          :show-cancel="true"
+          cancel-text="Cancelar"
+          :has-border="false"
           @submit="handleSubmit"
+          @cancel="goToHome"
         >
           <!-- Name -->
           <div class="mb-4">
@@ -84,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
@@ -146,7 +150,7 @@ const {
       }
 
       // Update user profile
-      const response = await api.put('/auth/profile', userData);
+      await api.put('/auth/profile', userData);
 
       // Update user in auth store
       await authStore.fetchUser();
@@ -160,11 +164,11 @@ const {
       if (error.response?.data?.errors) {
         const apiErrors: Record<string, string> = {};
         const errorData = error.response.data.errors;
-        
+
         Object.keys(errorData).forEach(key => {
           apiErrors[key] = errorData[key][0];
         });
-        
+
         setErrors(apiErrors);
       } else {
         // Show generic error notification
@@ -172,7 +176,7 @@ const {
           error.response?.data?.message || 'Ha ocurrido un error al actualizar tu perfil.'
         );
       }
-      
+
       throw error;
     }
   }
@@ -192,14 +196,19 @@ const getRoleBadgeColor = (roleSlug: string) => {
   }
 };
 
+// Navigate to home page
+const goToHome = () => {
+  router.push('/');
+};
+
 // Load user data
 onMounted(async () => {
   try {
     // Ensure we have the latest user data
     await authStore.fetchUser();
-    
+
     const user = authStore.currentUser;
-    
+
     if (user) {
       // Set form values
       setValues({
@@ -208,7 +217,7 @@ onMounted(async () => {
         password: '',
         password_confirmation: ''
       });
-      
+
       // Set user roles
       if (user.roles && Array.isArray(user.roles)) {
         userRoles.value = user.roles;

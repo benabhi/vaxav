@@ -1,11 +1,8 @@
 <template>
-  <div v-if="show" class="fixed z-50 inset-0 overflow-y-auto">
+  <div v-if="show" class="fixed z-50 inset-0 overflow-y-auto modal-container" @click.self="closeOnClickOutside && $emit('close')">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <!-- Overlay -->
-      <div class="fixed inset-0 bg-black bg-opacity-75" @click="closeOnClickOutside && $emit('close')"></div>
-
       <!-- Modal -->
-      <div class="relative bg-gray-800 rounded-lg max-w-lg w-full mx-auto p-6 border-4" :class="`border-${color}-500`">
+      <div class="relative bg-gray-800 rounded-lg max-w-lg w-full mx-auto p-6 border-4 z-10" :class="`border-${color}-500`">
         <!-- Header -->
         <div class="text-center mb-6">
           <h2 class="text-2xl font-bold text-white">
@@ -27,6 +24,20 @@
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Estilo para el overlay del modal con blur */
+.modal-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(17, 24, 39, 0.75); /* bg-gray-900 con opacidad alta */
+  backdrop-filter: blur(3px); /* Mayor desenfoque para reducir visibilidad del fondo */
+  z-index: 0;
+}
+
+
+</style>
 
 <script setup>
 defineProps({
