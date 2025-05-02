@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\VerifyEmailController;
+use App\Http\Controllers\VerifyEmailWithCodeController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 
@@ -17,12 +19,38 @@ use App\Http\Controllers\Admin\UserController;
 |
 */
 
+// Ruta directa para verificación manual (solo para desarrollo)
+// Ruta de verificación manual eliminada
+
 // Rutas de autenticación
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+
+    // Rutas de verificación de email
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
+            ->name('verification.verify');
+
+        Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
+            ->middleware(['throttle:6,1'])
+            ->name('verification.send');
+
+        Route::get('/email/verify', [VerifyEmailController::class, 'notice'])
+            ->name('verification.notice');
+
+        Route::post('/email/verify-code', [VerifyEmailWithCodeController::class, 'verify'])
+            ->middleware(['throttle:6,1'])
+            ->name('verification.code');
+
+        Route::post('/email/generate-code', [VerifyEmailWithCodeController::class, 'generateCode'])
+            ->middleware(['throttle:3,1'])
+            ->name('verification.generate-code');
+
+
+    });
 
     // Rutas de perfil
     Route::middleware('auth:sanctum')->group(function () {
@@ -39,80 +67,35 @@ Route::get('/debug/user-roles', function () {
     }
 
     return response()->json([
-        'user'                 => $user->name,
-        'email'                => $user->email,
-        'roles'                => $user->roles()->get(['id', 'name', 'slug']),
-        'has_role_superadmin'  => $user->hasRole('superadmin'),
-        'has_role_admin'       => $user->hasRole('admin'),
-        'has_role_moderator'   => $user->hasRole('moderator'),
-        'is_superadmin_method' => $user->isSuperAdmin(),
-        'is_admin_method'      => $user->isAdmin(),
-        'is_moderator_method'  => $user->isModerator(),
+        'user'          => $user->only(['id', 'name', 'email']),
+        'roles'         => $user->roles,
+        'is_superadmin' => $user->is_superadmin,
+        'is_admin'      => $user->is_admin,
+        'is_moderator'  => $user->is_moderator,
     ]);
 });
 
-// Pilot routes
-Route::prefix('pilots')->group(function () {
-    Route::get('/', function () {
-        return response()->json(['message' => 'Pilots API endpoint']);
-    });
-});
-
-// Universe routes
-Route::prefix('universe')->group(function () {
-    // Regions
-    Route::get('/regions', function () {
-        return response()->json(['message' => 'Regions API endpoint']);
-    });
-
-    // Constellations
-    Route::get('/constellations', function () {
-        return response()->json(['message' => 'Constellations API endpoint']);
-    });
-
-    // Solar Systems
-    Route::get('/systems', function () {
-        return response()->json(['message' => 'Solar Systems API endpoint']);
-    });
-});
-
-// Ships routes
-Route::prefix('ships')->group(function () {
-    Route::get('/', function () {
-        return response()->json(['message' => 'Ships API endpoint']);
-    });
-});
-
-// Market routes
-Route::prefix('market')->group(function () {
-    Route::get('/', function () {
-        return response()->json(['message' => 'Market API endpoint']);
-    });
-});
-
-// Corporations routes
-Route::prefix('corporations')->group(function () {
-    Route::get('/', function () {
-        return response()->json(['message' => 'Corporations API endpoint']);
-    });
-});
-
-// Admin routes
+// Rutas de administración
 Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
-    // Users management
-    Route::apiResource('users', UserController::class)->middleware([
-        'permission:users.view',     // Para index y show
-        'permission:users.create',   // Para store
-        'permission:users.edit',     // Para update
-        'permission:users.delete'    // Para destroy
-    ]);
+    // Rutas de roles
+    Route::apiResource('roles', RoleController::class);
 
-    // Roles management
-    Route::apiResource('roles', RoleController::class)->middleware([
-        'permission:roles.view',     // Para index y show
-        'permission:roles.create',   // Para store
-        'permission:roles.edit',     // Para update
-        'permission:roles.delete'    // Para destroy
-    ]);
-    Route::get('permissions', [RoleController::class, 'permissions'])->middleware('permission:roles.view');
+    // Rutas de usuarios
+    Route::apiResource('users', UserController::class);
+    Route::post('/users/{user}/roles', [UserController::class, 'syncRoles']);
+});
+
+// Rutas de universo
+Route::prefix('universe')->middleware(['auth:sanctum'])->group(function () {
+    // Aquí irán las rutas relacionadas con el universo
+});
+
+// Rutas de mercado
+Route::prefix('market')->middleware(['auth:sanctum'])->group(function () {
+    // Aquí irán las rutas relacionadas con el mercado
+});
+
+// Rutas de naves
+Route::prefix('ships')->middleware(['auth:sanctum'])->group(function () {
+    // Aquí irán las rutas relacionadas con las naves
 });

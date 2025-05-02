@@ -62,6 +62,24 @@ const router = createRouter({
       component: () => import('../views/auth/RegisterView.vue'),
       meta: { requiresGuest: true }
     },
+    {
+      path: '/email/verify',
+      name: 'verification.notice',
+      component: () => import('../views/auth/VerifyEmailView.vue'),
+      meta: { requiresAuth: true }
+    },
+    // Ruta para manejar la verificación de email desde el enlace
+    {
+      path: '/email/verify',
+      name: 'verification.verify',
+      component: () => import('../views/auth/VerifyEmailView.vue'),
+      props: route => ({
+        id: route.query.id,
+        hash: route.query.hash,
+        expires: route.query.expires,
+        signature: route.query.signature
+      })
+    },
     // Rutas de piloto
     {
       path: '/create-pilot',
@@ -228,6 +246,18 @@ router.beforeEach(async (to, from, next) => {
     } else {
       console.log('Usuario tiene los roles requeridos:', to.meta.requiresRoles);
     }
+  }
+
+  // Si la ruta requiere verificación de email y el usuario no está verificado
+  if (to.meta.requiresAuth &&
+    authStore.user &&
+    !authStore.isEmailVerified &&
+    to.name !== 'verification.notice' &&
+    to.name !== 'home') { // Permitir acceso a la página de inicio incluso sin verificación
+    console.log('Usuario no verificado, redirigiendo a verificación de email');
+    console.log('Ruta actual:', to.path, 'Nombre de la ruta:', to.name);
+    console.log('Estado de verificación:', authStore.isEmailVerified);
+    return next({ name: 'verification.notice' });
   }
 
   next();

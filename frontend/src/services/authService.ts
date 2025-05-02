@@ -31,10 +31,16 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  email_verified_at?: string;
   roles?: Role[];
   is_superadmin?: boolean;
   is_admin?: boolean;
   is_moderator?: boolean;
+}
+
+export interface EmailVerificationStatus {
+  verified: boolean;
+  message: string;
 }
 
 const authService = {
@@ -115,6 +121,40 @@ const authService = {
     const response = await api.put('/auth/profile', profileData);
     return response.data;
   },
+
+  /**
+   * Verificar el estado de verificación del email
+   */
+  getEmailVerificationStatus: async () => {
+    const response = await api.get('/auth/email/verify');
+    return response.data;
+  },
+
+  /**
+   * Reenviar el email de verificación
+   */
+  resendVerificationEmail: async () => {
+    const response = await api.post('/auth/email/verification-notification');
+    return response.data;
+  },
+
+  /**
+   * Verificar email con código
+   */
+  verifyEmailWithCode: async (code: string) => {
+    const response = await api.post('/auth/email/verify-code', { code });
+    return response.data;
+  },
+
+  /**
+   * Generar un nuevo código de verificación
+   */
+  generateVerificationCode: async () => {
+    const response = await api.post('/auth/email/generate-code');
+    return response.data;
+  },
+
+
 
   /**
    * Inicializar el token desde localStorage (llamar al inicio de la app)

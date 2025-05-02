@@ -1,5 +1,5 @@
-- [ ] Quitar css innecesario
-- [ ] Crear componente BaseCard (mirar como se ven los formularios de nuvo usuario o rol)
-- [ ] Editar en la vista de usuarios y roles sigue siendo un modal.
-- [ ] Cambiar AdminCrudView a otro nombre?
-- [ ] vale la pena un componente form?
+- [ ] Borrar SetLocale.php si no se usa.
+- [ ] En caso de error en el envio de email de verificacion no se deberia guardar el email del usuario en la base de datos.
+- [ ] Colocar el codigo de verificacion claro en el correo.
+- [ ] Sigue preguntando por la verificacion en las vistas cuando ya fue verificado el email.
+- [ ] Verificar el campo de la base de datos "is superadmin"
