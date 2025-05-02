@@ -6,6 +6,12 @@ import VxvButton from '../buttons/VxvButton.vue';
 /**
  * VxvModal es un componente para mostrar contenido en una ventana modal superpuesta.
  * Se utiliza para interacciones que requieren atención del usuario antes de continuar.
+ *
+ * Características:
+ * - Overlay translúcido con blur que permite ver el contenido detrás
+ * - Diseño centrado en la pantalla
+ * - Colores personalizables para el borde y elementos decorativos
+ * - Opción para cerrar al hacer clic fuera o solo mediante botones
  */
 const meta: Meta<typeof VxvModal> = {
   title: 'UI/Modals/VxvModal',
@@ -231,6 +237,95 @@ export const ColorVariants: Story = {
           <template #footer>
             <div class="flex justify-end">
               <vxv-button @click="closeModal">Cerrar</vxv-button>
+            </div>
+          </template>
+        </vxv-modal>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Modal con overlay opaco y efecto blur
+ */
+export const WithBlurredOverlay: Story = {
+  render: () => ({
+    components: { VxvModal, VxvButton },
+    setup() {
+      const showModal = ref(false);
+
+      const openModal = () => {
+        showModal.value = true;
+      };
+
+      const closeModal = () => {
+        showModal.value = false;
+      };
+
+      return { showModal, openModal, closeModal };
+    },
+    template: `
+      <div class="p-8 min-h-[400px] bg-gray-800" style="background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px); background-size: 20px 20px;">
+        <div class="mb-4">
+          <h3 class="text-xl font-bold text-white mb-2">Contenido detrás del modal</h3>
+          <p class="text-gray-300 mb-2">Este contenido será visible a través del overlay translúcido con blur.</p>
+          <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="bg-blue-500 h-20 rounded-md flex items-center justify-center text-white font-bold">Elemento 1</div>
+            <div class="bg-green-500 h-20 rounded-md flex items-center justify-center text-white font-bold">Elemento 2</div>
+            <div class="bg-purple-500 h-20 rounded-md flex items-center justify-center text-white font-bold">Elemento 3</div>
+          </div>
+
+          <div class="flex space-x-4 mb-4">
+            <div class="w-1/2 bg-gray-700 p-4 rounded-md">
+              <h4 class="text-lg font-bold text-white mb-2">Panel de información</h4>
+              <p class="text-gray-300">Este contenido será visible a través del overlay con blur, demostrando cómo el usuario puede mantener el contexto de la página.</p>
+            </div>
+            <div class="w-1/2 bg-gray-700 p-4 rounded-md">
+              <h4 class="text-lg font-bold text-white mb-2">Estadísticas</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="bg-blue-900/50 p-2 rounded">
+                  <div class="text-2xl font-bold text-white">128</div>
+                  <div class="text-xs text-gray-300">Usuarios</div>
+                </div>
+                <div class="bg-green-900/50 p-2 rounded">
+                  <div class="text-2xl font-bold text-white">85%</div>
+                  <div class="text-xs text-gray-300">Completado</div>
+                </div>
+                <div class="bg-yellow-900/50 p-2 rounded">
+                  <div class="text-2xl font-bold text-white">42</div>
+                  <div class="text-xs text-gray-300">Pendientes</div>
+                </div>
+                <div class="bg-red-900/50 p-2 rounded">
+                  <div class="text-2xl font-bold text-white">7</div>
+                  <div class="text-xs text-gray-300">Errores</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <vxv-button variant="primary" @click="openModal">Abrir Modal con Overlay Blur</vxv-button>
+
+        <vxv-modal
+          :show="showModal"
+          title="Modal con Overlay Blur"
+          color="blue"
+          @close="closeModal"
+        >
+          <p class="text-white mb-4">
+            Este modal tiene un overlay con alta opacidad y efecto de blur que reduce la visibilidad del contenido detrás.
+            Este diseño mejora el contraste visual y ayuda al usuario a enfocarse en el contenido del modal.
+          </p>
+
+          <p class="text-gray-300 mb-4">
+            El efecto se implementa usando un pseudo-elemento <code class="bg-gray-700 px-1 py-0.5 rounded">::before</code> con
+            <code class="bg-gray-700 px-1 py-0.5 rounded">backdrop-filter: blur(3px)</code> y un fondo con opacidad alta
+            <code class="bg-gray-700 px-1 py-0.5 rounded">rgba(17, 24, 39, 0.75)</code> para reducir las distracciones.
+          </p>
+
+          <template #footer>
+            <div class="flex justify-end">
+              <vxv-button variant="primary" @click="closeModal">Cerrar</vxv-button>
             </div>
           </template>
         </vxv-modal>
