@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\VerificationCode;
-use App\Notifications\VerificationCodeNotification;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,8 +120,8 @@ class VerifyEmailWithCodeController extends Controller
             'expires_at' => now()->addMinutes(30), // Expira en 30 minutos
         ]);
 
-        // Enviar el código por email
-        $user->notify(new VerificationCodeNotification($code));
+        // Enviar el email de verificación estándar
+        $user->sendEmailVerificationNotification();
 
         return response()->json([
             'message' => 'Se ha enviado un código de verificación a tu dirección de correo electrónico.',

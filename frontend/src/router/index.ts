@@ -6,22 +6,16 @@ import HomeView from '../views/HomeView.vue'
 const hasRole = (user: any, requiredRoles: string[]): boolean => {
   if (!user) return false;
 
-  console.log('Checking roles for user:', user);
-  console.log('Required roles:', requiredRoles);
-
   // Check direct role properties first (is_superadmin, is_admin, is_moderator)
   if (requiredRoles.includes('superadmin') && user.is_superadmin === true) {
-    console.log('User has superadmin role via is_superadmin property');
     return true;
   }
 
   if (requiredRoles.includes('admin') && user.is_admin === true) {
-    console.log('User has admin role via is_admin property');
     return true;
   }
 
   if (requiredRoles.includes('moderator') && user.is_moderator === true) {
-    console.log('User has moderator role via is_moderator property');
     return true;
   }
 
@@ -32,12 +26,10 @@ const hasRole = (user: any, requiredRoles: string[]): boolean => {
     });
 
     if (hasRequiredRole) {
-      console.log('User has required role via roles array');
       return true;
     }
   }
 
-  console.log('User does not have any of the required roles');
   return false;
 }
 
@@ -202,9 +194,7 @@ router.beforeEach(async (to, from, next) => {
   if (token && !authStore.user) {
     try {
       await authStore.fetchUser();
-      console.log('Usuario cargado en router guard:', authStore.user);
     } catch (error) {
-      console.error('Error al cargar usuario en router guard:', error);
       // Si la ruta requiere autenticación, redirigir al login
       if (to.meta.requiresAuth) {
         localStorage.removeItem('auth_token'); // Token inválido o expirado
@@ -215,7 +205,6 @@ router.beforeEach(async (to, from, next) => {
 
   // Si la ruta requiere autenticación y no hay token o usuario
   if (to.meta.requiresAuth && (!token || !authStore.user)) {
-    console.log('Ruta requiere autenticación y no hay token o usuario');
     return next({ name: 'login' });
   }
 
@@ -226,25 +215,12 @@ router.beforeEach(async (to, from, next) => {
 
   // Si la ruta requiere roles específicos
   if (to.meta.requiresRoles && Array.isArray(to.meta.requiresRoles) && authStore.user) {
-    console.log('Ruta requiere roles:', to.path, to.meta.requiresRoles);
-    console.log('Estado de autenticación:', authStore.isLoggedIn);
-    console.log('Usuario actual:', authStore.user);
-
     // Verificar si el usuario tiene alguno de los roles requeridos
     const userHasRole = hasRole(authStore.user, to.meta.requiresRoles as string[]);
-    console.log('¿Usuario tiene rol requerido?', userHasRole);
 
     if (!userHasRole) {
-      console.log('Usuario no tiene los roles requeridos:', to.meta.requiresRoles);
-      console.log('Roles del usuario:', authStore.user?.roles);
-      console.log('is_superadmin:', authStore.user?.is_superadmin);
-      console.log('is_admin:', authStore.user?.is_admin);
-      console.log('is_moderator:', authStore.user?.is_moderator);
-
       // Redirigir a la página principal
       return next({ name: 'home' });
-    } else {
-      console.log('Usuario tiene los roles requeridos:', to.meta.requiresRoles);
     }
   }
 
@@ -254,9 +230,6 @@ router.beforeEach(async (to, from, next) => {
     !authStore.isEmailVerified &&
     to.name !== 'verification.notice' &&
     to.name !== 'home') { // Permitir acceso a la página de inicio incluso sin verificación
-    console.log('Usuario no verificado, redirigiendo a verificación de email');
-    console.log('Ruta actual:', to.path, 'Nombre de la ruta:', to.name);
-    console.log('Estado de verificación:', authStore.isEmailVerified);
     return next({ name: 'verification.notice' });
   }
 

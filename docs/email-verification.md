@@ -9,6 +9,30 @@ El sistema de verificación de email en VAXAV permite confirmar que los usuarios
 1. **Enlace de verificación**: El usuario puede hacer clic en un enlace enviado a su correo electrónico.
 2. **Código de verificación**: El usuario puede ingresar un código de 6 dígitos enviado en el mismo correo.
 
+## Diagrama de Flujo del Proceso
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Usuario se │     │ Se envía el │     │ Usuario     │
+│  registra   ├────►│ email de    ├────►│ recibe el   │
+│             │     │ verificación│     │ email       │
+└─────────────┘     └─────────────┘     └──────┬──────┘
+                                               │
+                                               ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Usuario     │     │ Backend     │     │ Usuario     │
+│ verifica su ◄─────┤ verifica y  │◄────┤ hace clic   │
+│ cuenta      │     │ actualiza DB│     │ en el enlace│
+└─────────────┘     └─────────────┘     └─────────────┘
+       ▲                                       ▲
+       │                                       │
+       │           ┌─────────────┐             │
+       │           │ Usuario     │             │
+       └───────────┤ ingresa el  │─────────────┘
+                   │ código      │
+                   └─────────────┘
+```
+
 ## Implementación Técnica
 
 ### Componentes Principales
@@ -93,43 +117,185 @@ Esta URL se utiliza para construir los enlaces de verificación que se envían e
 El correo de verificación se personaliza en el método `boot()` de `AppServiceProvider`:
 
 ```php
-VerifyEmail::toMailUsing(function ($notifiable, $url) {
-    // Extraer los parámetros de la URL
-    $parsedUrl = parse_url($url);
-    $path = $parsedUrl['path'] ?? '';
-    $query = $parsedUrl['query'] ?? '';
-    
-    // Extraer id y hash del path
-    preg_match('/\/email\/verify\/(\d+)\/([^\/]+)/', $path, $matches);
-    $id = $matches[1] ?? '';
-    $hash = $matches[2] ?? '';
-    
-    // Construir la URL del frontend
-    $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
-    $verificationUrl = $frontendUrl . "/email/verify?id={$id}&hash={$hash}&{$query}";
-    
-    // Generar un código de verificación de 6 dígitos
-    $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-    
-    // Guardar el código en la base de datos
-    VerificationCode::where('user_id', $notifiable->id)->delete();
-    VerificationCode::create([
-        'user_id' => $notifiable->id,
-        'code' => $code,
-        'expires_at' => now()->addMinutes(30) // Expira en 30 minutos
+// En backend/app/Providers/AppServiceProvider.php
+public function boot(): void
+{
+    // Personalizar el email de verificación
+    VerifyEmail::toMailUsing(function ($notifiable, $url) {
+        // Extraer los parámetros de la URL
+        $parsedUrl = parse_url($url);
+        $path = $parsedUrl['path'] ?? '';
+        $query = $parsedUrl['query'] ?? '';
+
+        // Extraer id y hash del path
+        preg_match('/\/email\/verify\/(\d+)\/([^\/]+)/', $path, $matches);
+        $id = $matches[1] ?? '';
+        $hash = $matches[2] ?? '';
+
+        // Construir la URL del frontend
+        $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
+        $verificationUrl = $frontendUrl . "/email/verify?id={$id}&hash={$hash}&{$query}";
+
+        // Generar un código de verificación de 6 dígitos
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Guardar el código en la base de datos
+        VerificationCode::where('user_id', $notifiable->id)->delete();
+        VerificationCode::create([
+            'user_id' => $notifiable->id,
+            'code' => $code,
+            'expires_at' => now()->addMinutes(30) // Expira en 30 minutos
+        ]);
+
+        return (new MailMessage)
+            ->subject('Verifica tu Dirección de Email - VAXAV')
+            ->greeting('¡Hola ' . $notifiable->name . '!')
+            ->line('Gracias por registrarte en VAXAV. Por favor, verifica tu dirección de email haciendo clic en el botón de abajo.')
+            ->action('Verificar Email', $verificationUrl)
+            ->line('Alternativamente, puedes usar el siguiente código de verificación en la página de verificación:')
+            ->line('Tu código de verificación es: **' . $code . '**')
+            ->line('Este código expirará en 30 minutos.')
+            ->line('Si no creaste una cuenta, no es necesario realizar ninguna acción.')
+            ->salutation('Saludos, El Equipo de VAXAV');
+    });
+}
+```
+
+## Ejemplos de Código
+
+### Verificación por Enlace (Backend)
+
+```php
+// En backend/app/Http/Controllers/VerifyEmailController.php
+public function verify(Request $request, $id, $hash): JsonResponse
+{
+    // Buscar el usuario por ID
+    $user = \App\Models\User::find($id);
+
+    if (!$user) {
+        return response()->json([
+            'message'  => 'Usuario no encontrado.',
+            'verified' => false,
+        ], 404);
+    }
+
+    // Verificar si el email ya está verificado
+    if ($user->hasVerifiedEmail()) {
+        return response()->json([
+            'message'  => 'El correo electrónico ya ha sido verificado.',
+            'verified' => true,
+        ]);
+    }
+
+    // Verificar el hash
+    $actualHash = sha1($user->getEmailForVerification());
+    if ($hash !== $actualHash) {
+        return response()->json([
+            'message'  => 'El enlace de verificación es inválido.',
+            'verified' => false,
+        ], 403);
+    }
+
+    // Verificar directamente el email
+    $user->email_verified_at = now();
+    $user->save();
+
+    // Disparar el evento de verificación
+    event(new Verified($user));
+
+    return response()->json([
+        'message'  => 'Correo electrónico verificado correctamente.',
+        'verified' => true,
+    ]);
+}
+```
+
+### Verificación por Código (Backend)
+
+```php
+// En backend/app/Http/Controllers/VerifyEmailWithCodeController.php
+public function verify(Request $request): JsonResponse
+{
+    $request->validate([
+        'code' => 'required|string',
     ]);
 
-    return (new MailMessage)
-        ->subject('Verifica tu Dirección de Email - VAXAV')
-        ->greeting('¡Hola ' . $notifiable->name . '!')
-        ->line('Gracias por registrarte en VAXAV. Por favor, verifica tu dirección de email haciendo clic en el botón de abajo.')
-        ->action('Verificar Email', $verificationUrl)
-        ->line('Alternativamente, puedes usar el siguiente código de verificación en la página de verificación:')
-        ->line('Tu código de verificación es: **' . $code . '**')
-        ->line('Este código expirará en 30 minutos.')
-        ->line('Si no creaste una cuenta, no es necesario realizar ninguna acción.')
-        ->salutation('Saludos, El Equipo de VAXAV');
-});
+    $user = $request->user();
+
+    // Verificar si el usuario está bloqueado por demasiados intentos
+    $key = 'verification_attempts_' . $user->id;
+    $attempts = Cache::get($key, 0);
+
+    if ($attempts >= 5) {
+        return response()->json([
+            'message'  => 'Demasiados intentos fallidos. Inténtalo de nuevo en 15 minutos.',
+            'verified' => false,
+            'locked'   => true,
+        ], 429);
+    }
+
+    // Buscar el código de verificación válido
+    $verificationCode = VerificationCode::where('user_id', $user->id)
+        ->where('code', $request->code)
+        ->where('expires_at', '>', now())
+        ->latest()
+        ->first();
+
+    if ($verificationCode) {
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+            $verificationCode->delete();
+            Cache::forget($key);
+        }
+
+        return response()->json([
+            'message'  => 'Correo electrónico verificado correctamente.',
+            'verified' => true,
+        ]);
+    }
+
+    // Incrementar el contador de intentos fallidos
+    Cache::put($key, $attempts + 1, now()->addMinutes(15));
+
+    return response()->json([
+        'message'  => 'El código de verificación es inválido o ha expirado.',
+        'verified' => false,
+    ], 422);
+}
+```
+
+### Verificación en el Frontend (Vue.js)
+
+```javascript
+// En frontend/src/views/auth/VerifyEmailView.vue
+const verifyWithCode = async () => {
+  if (!verificationCode.value) {
+    message.value = 'Por favor, ingresa un código de verificación.';
+    alertVariant.value = 'error';
+    return;
+  }
+
+  verifyingCode.value = true;
+  message.value = '';
+
+  try {
+    const result = await authStore.verifyEmailWithCode(verificationCode.value);
+
+    if (result.verified) {
+      verified.value = true;
+      message.value = result.message || 'Email verificado correctamente.';
+      alertVariant.value = 'success';
+    } else {
+      message.value = result.message || 'Código de verificación inválido.';
+      alertVariant.value = 'error';
+    }
+  } catch (error) {
+    message.value = error.response?.data?.message || 'Código de verificación inválido.';
+    alertVariant.value = 'error';
+  } finally {
+    verifyingCode.value = false;
+  }
+};
 ```
 
 ## Problemas Comunes y Soluciones
