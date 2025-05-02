@@ -105,6 +105,14 @@ Route::prefix('market')->middleware(['auth:sanctum'])->group(function () {
     // Aquí irán las rutas relacionadas con el mercado
 });
 
+// Rutas de pilotos
+Route::prefix('pilots')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/current', [App\Http\Controllers\PilotController::class, 'current']);
+    Route::post('/', [App\Http\Controllers\PilotController::class, 'store']);
+    Route::get('/{id}', [App\Http\Controllers\PilotController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\PilotController::class, 'update']);
+});
+
 // Rutas de naves
 Route::prefix('ships')->middleware(['auth:sanctum'])->group(function () {
     // Aquí irán las rutas relacionadas con las naves

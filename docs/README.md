@@ -17,6 +17,12 @@ Bienvenido a la documentación de Vaxav, un MMO espacial en navegador web. Esta 
 - [Frontend (Vue.js)](./architecture/frontend.md) - Detalles sobre el frontend
 - [Base de Datos](./architecture/database.md) - Esquema y relaciones de la base de datos
 
+### Mecánicas de Juego
+
+- [Visión General](./game/README.md) - Visión general de las mecánicas de juego
+- [Sistema de Pilotos](./game/pilots.md) - Creación y gestión de pilotos
+- [Flujo de Navegación](./game/navigation-flow.md) - Secuencia de navegación y restricciones de acceso
+
 ### Diseño y Estilo
 
 - [Guía de Estilo](./design/style-guide.md) - Guía completa de estilo para mantener la coherencia visual
