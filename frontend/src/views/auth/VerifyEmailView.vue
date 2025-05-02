@@ -1,8 +1,11 @@
 <template>
   <div class="container mx-auto px-4 py-12">
-    <div class="max-w-md mx-auto card p-6">
-      <h1 class="text-2xl font-bold mb-6 text-center">Verificación de Email</h1>
-
+    <VxvCard
+      title="Verificación de Email"
+      max-width="md"
+      centered
+      :hasBorder="false"
+    >
       <VxvAlert
         v-if="message"
         :variant="alertVariant"
@@ -72,7 +75,7 @@
           </VxvButton>
         </RouterLink>
       </div>
-    </div>
+    </VxvCard>
   </div>
 </template>
 
@@ -83,6 +86,7 @@ import { useAuthStore } from '@/stores/auth';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
+import VxvCard from '@/components/ui/layout/VxvCard.vue';
 import api from '@/services/api';
 
 // Recibir props de la ruta
@@ -103,7 +107,6 @@ const message = ref('');
 const alertVariant = ref('info');
 const verificationCode = ref('');
 const verifyingCode = ref(false);
-const generatingCode = ref(false);
 
 
 // Función para verificar el email con los parámetros de la URL
@@ -237,20 +240,5 @@ const verifyWithCode = async () => {
   }
 };
 
-// Generar código de verificación
-const generateCode = async () => {
-  generatingCode.value = true;
-  message.value = '';
 
-  try {
-    const result = await authStore.generateVerificationCode();
-    message.value = result.message || 'Se ha enviado un código de verificación a tu email.';
-    alertVariant.value = 'success';
-  } catch (error: any) {
-    message.value = error.response?.data?.message || 'Error al generar el código de verificación.';
-    alertVariant.value = 'error';
-  } finally {
-    generatingCode.value = false;
-  }
-};
 </script>
