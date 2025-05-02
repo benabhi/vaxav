@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('corporations', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
+            $table->string('ticker', 5)->unique();
+            $table->text('description')->nullable();
+            $table->foreignId('founder_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('headquarters_id')->nullable();
+            $table->decimal('tax_rate', 5, 2)->default(0.00);
             $table->timestamps();
         });
     }

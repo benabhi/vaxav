@@ -199,19 +199,18 @@ export function usePermissions() {
     try {
       const response = await api.get('/admin/permissions');
 
-      let permissionsData = [];
-
-      if (response.data && response.data.data) {
-        permissionsData = response.data.data;
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
       } else if (response.data) {
-        permissionsData = response.data;
+        return response.data;
       } else {
-
+        console.error('Unexpected API response format:', response.data);
+        return [];
       }
-
-      return permissionsData;
     } catch (error) {
-
+      console.error('Error fetching permissions:', error);
       return [];
     }
   };

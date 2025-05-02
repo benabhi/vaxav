@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
         // Seed roles and permissions
         $this->call(RolesAndPermissionsSeeder::class);
 
+        // Seed additional permissions
+        $this->call(PermissionsSeeder::class);
+
         // Seed solar systems
         $this->call(SolarSystemSeeder::class);
     }
