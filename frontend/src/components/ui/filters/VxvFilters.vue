@@ -3,7 +3,7 @@
     <!-- Filters container -->
     <div class="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-4 md:space-y-0">
       <!-- Search section -->
-      <div v-if="showSearch" class="w-full md:flex-grow">
+      <div v-if="showSearch" class="w-full md:flex-grow md:min-w-[250px]">
         <!-- Search label -->
         <label
           v-if="showLabels && searchLabel"
@@ -32,8 +32,13 @@
         </VxvInput>
       </div>
 
-      <!-- Custom filters -->
-      <slot name="filters"></slot>
+      <!-- Custom filters wrapper with horizontal scroll -->
+      <div class="w-full md:w-auto overflow-x-auto">
+        <div class="flex flex-col w-full md:flex-row md:space-x-4 space-y-4 md:space-y-0 md:items-end">
+          <!-- Custom filters -->
+          <slot name="filters"></slot>
+        </div>
+      </div>
 
       <!-- Action buttons -->
       <div class="flex space-x-2 flex-shrink-0">

@@ -309,7 +309,7 @@ export const WithCustomFilters: Story = {
           @reset="args.onReset"
         >
           <template #filters>
-            <div class="w-[180px] flex-shrink-0">
+            <div class="w-full md:w-[180px] flex-shrink-0">
               <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                 Rol
               </label>
@@ -334,7 +334,7 @@ export const WithCustomFilters: Story = {
               </div>
             </div>
 
-            <div class="w-[180px] flex-shrink-0">
+            <div class="w-full md:w-[180px] flex-shrink-0">
               <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                 Estado
               </label>
@@ -359,7 +359,7 @@ export const WithCustomFilters: Story = {
               </div>
             </div>
 
-            <div class="flex-shrink-0 self-end">
+            <div class="w-full md:w-auto flex-shrink-0 self-end">
               <VxvCheckbox
                 v-model="filters.active"
                 label="Solo activos"
@@ -432,7 +432,7 @@ export const WithImmediateChanges: Story = {
           @reset="args.onReset"
         >
           <template #filters>
-            <div class="w-[180px] flex-shrink-0">
+            <div class="w-full md:w-[180px] flex-shrink-0">
               <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                 Categoría
               </label>
@@ -457,7 +457,7 @@ export const WithImmediateChanges: Story = {
               </div>
             </div>
 
-            <div class="w-[180px] flex-shrink-0">
+            <div class="w-full md:w-[180px] flex-shrink-0">
               <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                 Precio máximo
               </label>
@@ -546,7 +546,7 @@ export const WithoutLabels: Story = {
           @reset="args.onReset"
         >
           <template #filters>
-            <div class="w-[180px] flex-shrink-0">
+            <div class="w-full md:w-[180px] flex-shrink-0">
               <div class="flex items-center space-x-2">
                 <VxvSelect
                   v-model="filters.role"
@@ -568,7 +568,7 @@ export const WithoutLabels: Story = {
               </div>
             </div>
 
-            <div class="w-[180px] flex-shrink-0">
+            <div class="w-full md:w-[180px] flex-shrink-0">
               <div class="flex items-center space-x-2">
                 <VxvSelect
                   v-model="filters.status"
@@ -659,7 +659,7 @@ export const AdvancedFilters: Story = {
           @filter-change="handleFilterChange"
         >
           <template #filters>
-              <div class="w-[180px] flex-shrink-0">
+              <div class="w-full md:w-[180px] flex-shrink-0">
                 <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                   Fecha desde
                 </label>
@@ -672,7 +672,7 @@ export const AdvancedFilters: Story = {
                 />
               </div>
 
-              <div class="w-[180px] flex-shrink-0">
+              <div class="w-full md:w-[180px] flex-shrink-0">
                 <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                   Fecha hasta
                 </label>
@@ -685,7 +685,7 @@ export const AdvancedFilters: Story = {
                 />
               </div>
 
-              <div class="w-[180px] flex-shrink-0">
+              <div class="w-full md:w-[180px] flex-shrink-0">
                 <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                   Categorías
                 </label>
@@ -711,7 +711,7 @@ export const AdvancedFilters: Story = {
                 </div>
               </div>
 
-              <div class="w-[250px] flex-shrink-0">
+              <div class="w-full md:w-[250px] flex-shrink-0">
                 <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                   Rango de precio
                 </label>
@@ -730,7 +730,7 @@ export const AdvancedFilters: Story = {
                 </div>
               </div>
 
-              <div class="w-[250px] flex-shrink-0">
+              <div class="w-full md:w-[250px] flex-shrink-0">
                 <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
                   Valoración mínima
                 </label>
@@ -755,7 +755,7 @@ export const AdvancedFilters: Story = {
                 </div>
               </div>
 
-              <div class="w-[180px] flex-shrink-0 flex items-end">
+              <div class="w-full md:w-[180px] flex-shrink-0 flex items-end">
                 <VxvCheckbox
                   v-model="filters.inStock"
                   label="Solo productos en stock"

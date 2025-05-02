@@ -119,7 +119,7 @@ El componente está diseñado para manejar múltiples filtros con scroll horizon
 <VxvFilters v-model:filters="filters" @filter-change="handleFilterChange">
   <template #filters>
     <!-- Primer filtro -->
-    <div class="w-[180px] flex-shrink-0">
+    <div class="w-full md:w-[180px] flex-shrink-0">
       <label v-if="showLabels" class="block text-sm font-medium text-gray-300 mb-1">
         Fecha desde
       </label>
@@ -133,7 +133,7 @@ El componente está diseñado para manejar múltiples filtros con scroll horizon
     </div>
 
     <!-- Segundo filtro -->
-    <div class="w-[180px] flex-shrink-0">
+    <div class="w-full md:w-[180px] flex-shrink-0">
       <label v-if="showLabels" class="block text-sm font-medium text-gray-300 mb-1">
         Categoría
       </label>
@@ -163,8 +163,8 @@ El componente está diseñado para manejar múltiples filtros con scroll horizon
 
 Esta estructura permite:
 
-1. Mostrar filtros en una línea horizontal con scroll cuando hay muchos
-2. Mantener la consistencia visual con etiquetas alineadas
-3. Soportar un número variable de filtros sin problemas de espacio
-4. Incluir botones para quitar filtros individuales
-5. En pantallas pequeñas, los filtros se apilan verticalmente
+1. La barra de búsqueda toma todo el ancho disponible por defecto
+2. La barra de búsqueda tiene un ancho mínimo en pantallas grandes (250px)
+3. Si hay muchos filtros y el espacio se reduce, aparece un scroll horizontal solo para los filtros
+4. Los botones siempre quedan visibles (sin scroll)
+5. En modo responsivo (pantallas pequeñas), los filtros ocupan todo el ancho disponible
