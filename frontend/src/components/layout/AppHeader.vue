@@ -62,7 +62,17 @@ const navLinks = computed(() => {
   // Si está autenticado pero no ha verificado su email, no mostrar enlaces
   if (!isEmailVerified.value) return [];
 
-  // Si está autenticado y verificado, mostrar enlaces normales
+  // Verificar si el usuario tiene un piloto
+  const hasPilot = pilotStore.hasPilot;
+
+  // Si está autenticado, verificado pero no tiene piloto, solo mostrar enlace a Piloto
+  if (!hasPilot) {
+    return [
+      { to: '/', label: 'Piloto', exact: false }
+    ];
+  }
+
+  // Si está autenticado, verificado y tiene piloto, mostrar todos los enlaces
   const links = [
     { to: '/', label: 'Piloto', exact: false }, // No exacto para que se active con submenús
     { to: '/universe', label: 'Universo', exact: false }, // No exacto para que se active con submenús
