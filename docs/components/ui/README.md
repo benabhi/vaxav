@@ -48,6 +48,11 @@ Los componentes UI están organizados en las siguientes categorías:
 ### Layout
 
 - [PageTitle](./layout.md#vxvpagetitle): Título de página con breadcrumb y acciones opcionales.
+- [StatusBar](./layout.md#vxvstatusbar): Barra de estado que se muestra encima del footer con información y cronómetro de acción.
+
+### Timers
+
+- [ActionTimer](./timers.md): Cronómetro con barra de progreso que muestra una acción en curso y el tiempo restante.
 
 ### Visualización de Datos
 
