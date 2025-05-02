@@ -3,6 +3,7 @@ import { RouterView, useRoute } from 'vue-router'
 import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
+import VxvStatusBar from './components/ui/layout/VxvStatusBar.vue'
 import VxvNotification from './components/ui/feedback/VxvNotification.vue'
 import VxvPageTitle from './components/ui/layout/VxvPageTitle.vue'
 import VxvSidebar from './components/ui/navigation/VxvSidebar.vue'
@@ -32,6 +33,12 @@ const universeMenuItems = [
 // Estado para el menú móvil
 const isMobileMenuOpen = ref(false)
 const isMobileView = ref(false)
+
+// Estado para el cronómetro de acción
+const timerDuration = ref(300) // 5 minutos para prueba
+const timerRemainingTime = ref(300)
+const timerAction = ref('Prueba de 5 minutos')
+const timerIsActive = ref(true)
 
 // Detectar si estamos en vista móvil
 onMounted(() => {
@@ -104,6 +111,24 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
 }
 
+// Métodos para el cronómetro de acción
+const onTimerComplete = () => {
+  console.log('Cronómetro completado')
+  // Aquí puedes realizar acciones cuando el cronómetro llega a cero
+}
+
+const updateTimerRemainingTime = (time) => {
+  timerRemainingTime.value = time
+}
+
+// Método para iniciar un nuevo cronómetro con una acción específica
+const startActionTimer = (action, duration = 120) => {
+  timerAction.value = action
+  timerDuration.value = duration
+  timerRemainingTime.value = duration
+  timerIsActive.value = true
+}
+
 onMounted(async () => {
   // Inicializar el token desde localStorage
   const hasToken = authService.initToken()
@@ -162,6 +187,32 @@ onMounted(async () => {
     <main class="flex-grow">
       <RouterView />
     </main>
+
+    <!-- Barra de estado con cronómetro de acción -->
+    <VxvStatusBar
+      :timer-duration="timerDuration"
+      :timer-remaining-time="timerRemainingTime"
+      :timer-action="timerAction"
+      :timer-is-active="timerIsActive"
+      @timer-complete="onTimerComplete"
+      @update:timer-remaining-time="updateTimerRemainingTime"
+    >
+      <!-- Contenido personalizado para la sección izquierda -->
+      <template #left>
+        <div class="status-item">
+          <span class="status-label">Créditos:</span>
+          <span class="status-value">1,250,000 ISK</span>
+        </div>
+      </template>
+
+      <!-- Contenido personalizado para la sección derecha -->
+      <template #right>
+        <div class="status-item">
+          <span class="status-label">Sistema:</span>
+          <span class="status-value">Alpha Centauri</span>
+        </div>
+      </template>
+    </VxvStatusBar>
 
     <AppFooter />
 
@@ -243,5 +294,24 @@ onMounted(async () => {
   background-color: rgba(17, 24, 39, 0.25); /* bg-gray-900 con opacidad media */
   backdrop-filter: blur(1px); /* Ligero desenfoque para mejorar el contraste */
   pointer-events: none; /* Permite que los clics pasen a través del overlay */
+}
+
+/* Estilos para los elementos de estado */
+.status-item {
+  display: flex;
+  align-items: center;
+  margin: 0 0.5rem;
+}
+
+.status-label {
+  font-size: 0.75rem;
+  color: #9ca3af; /* text-gray-400 */
+  margin-right: 0.25rem;
+}
+
+.status-value {
+  font-size: 0.875rem;
+  color: #e5e7eb; /* text-gray-200 */
+  font-weight: 500;
 }
 </style>
