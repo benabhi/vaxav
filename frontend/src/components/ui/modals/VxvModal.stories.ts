@@ -68,8 +68,10 @@ export const Default: Story = {
       return { args, showModal, closeModal };
     },
     template: `
-      <div>
-        <vxv-button @click="showModal = true">Abrir Modal</vxv-button>
+      <div class="min-h-[500px] flex flex-col">
+        <vxv-button @click="showModal = true" class="mb-4">Abrir Modal</vxv-button>
+
+        <div class="flex-grow"></div>
 
         <vxv-modal
           :show="showModal"
@@ -112,8 +114,10 @@ export const ConfirmationModal: Story = {
       return { showModal, openModal, closeModal };
     },
     template: `
-      <div>
-        <vxv-button variant="danger" @click="openModal">Eliminar elemento</vxv-button>
+      <div class="min-h-[500px] flex flex-col">
+        <vxv-button variant="danger" @click="openModal" class="mb-4">Eliminar elemento</vxv-button>
+
+        <div class="flex-grow"></div>
 
         <vxv-modal
           :show="showModal"
@@ -155,8 +159,10 @@ export const FormModal: Story = {
       return { showModal, openModal, closeModal };
     },
     template: `
-      <div>
-        <vxv-button variant="primary" @click="openModal">Crear nuevo usuario</vxv-button>
+      <div class="min-h-[500px] flex flex-col">
+        <vxv-button variant="primary" @click="openModal" class="mb-4">Crear nuevo usuario</vxv-button>
+
+        <div class="flex-grow"></div>
 
         <vxv-modal
           :show="showModal"
@@ -217,12 +223,16 @@ export const ColorVariants: Story = {
       return { activeModal, openModal, closeModal };
     },
     template: `
-      <div class="space-x-2">
-        <vxv-button variant="primary" @click="openModal('blue')">Modal Azul</vxv-button>
-        <vxv-button variant="danger" @click="openModal('red')">Modal Rojo</vxv-button>
-        <vxv-button variant="success" @click="openModal('green')">Modal Verde</vxv-button>
-        <vxv-button variant="warning" @click="openModal('yellow')">Modal Amarillo</vxv-button>
-        <vxv-button variant="secondary" @click="openModal('gray')">Modal Gris</vxv-button>
+      <div class="min-h-[500px] flex flex-col">
+        <div class="space-x-2 mb-4">
+          <vxv-button variant="primary" @click="openModal('blue')">Modal Azul</vxv-button>
+          <vxv-button variant="danger" @click="openModal('red')">Modal Rojo</vxv-button>
+          <vxv-button variant="success" @click="openModal('green')">Modal Verde</vxv-button>
+          <vxv-button variant="warning" @click="openModal('yellow')">Modal Amarillo</vxv-button>
+          <vxv-button variant="secondary" @click="openModal('gray')">Modal Gris</vxv-button>
+        </div>
+
+        <div class="flex-grow"></div>
 
         <vxv-modal
           v-for="color in ['blue', 'red', 'green', 'yellow', 'gray']"
@@ -265,7 +275,7 @@ export const WithBlurredOverlay: Story = {
       return { showModal, openModal, closeModal };
     },
     template: `
-      <div class="p-8 min-h-[400px] bg-gray-800" style="background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px); background-size: 20px 20px;">
+      <div class="p-8 min-h-[600px] flex flex-col bg-gray-800" style="background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px); background-size: 20px 20px;">
         <div class="mb-4">
           <h3 class="text-xl font-bold text-white mb-2">Contenido detrás del modal</h3>
           <p class="text-gray-300 mb-2">Este contenido será visible a través del overlay translúcido con blur.</p>
@@ -304,7 +314,9 @@ export const WithBlurredOverlay: Story = {
           </div>
         </div>
 
-        <vxv-button variant="primary" @click="openModal">Abrir Modal con Overlay Blur</vxv-button>
+        <vxv-button variant="primary" @click="openModal" class="mb-4">Abrir Modal con Overlay Blur</vxv-button>
+
+        <div class="flex-grow"></div>
 
         <vxv-modal
           :show="showModal"
@@ -354,8 +366,10 @@ export const NoCloseOnClickOutside: Story = {
       return { showModal, openModal, closeModal };
     },
     template: `
-      <div>
-        <vxv-button variant="warning" @click="openModal">Abrir Modal Persistente</vxv-button>
+      <div class="min-h-[500px] flex flex-col">
+        <vxv-button variant="warning" @click="openModal" class="mb-4">Abrir Modal Persistente</vxv-button>
+
+        <div class="flex-grow"></div>
 
         <vxv-modal
           :show="showModal"

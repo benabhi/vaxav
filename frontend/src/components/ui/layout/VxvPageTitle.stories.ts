@@ -5,6 +5,10 @@ import VxvBreadcrumb from '../navigation/VxvBreadcrumb.vue';
 /**
  * VxvPageTitle es un componente que muestra el título de la página y opcionalmente breadcrumbs.
  * También puede mostrar un botón de menú móvil en pantallas pequeñas.
+ *
+ * El componente está diseñado para adaptarse a diferentes contextos:
+ * - Sin breadcrumbs: Muestra solo el título y el botón de menú móvil en una sola fila
+ * - Con breadcrumbs: Muestra el título y el botón en la primera fila, y los breadcrumbs en una segunda fila
  */
 const meta: Meta<typeof VxvPageTitle> = {
   title: 'UI/Layout/VxvPageTitle',
@@ -41,7 +45,7 @@ export const Default: Story = {
     },
     template: `
       <div class="bg-gray-900">
-        <VxvPageTitle 
+        <VxvPageTitle
           v-bind="args"
           @mobile-menu-click="args.onMobileMenuClick"
         />
@@ -65,7 +69,7 @@ export const WithoutMobileMenu: Story = {
     },
     template: `
       <div class="bg-gray-900">
-        <VxvPageTitle 
+        <VxvPageTitle
           v-bind="args"
         />
       </div>
@@ -89,12 +93,12 @@ export const WithBreadcrumbs: Story = {
         { text: 'Usuarios', to: '/dashboard/users' },
         { text: 'Detalles de Usuario' },
       ];
-      
+
       return { args, breadcrumbItems };
     },
     template: `
       <div class="bg-gray-900">
-        <VxvPageTitle 
+        <VxvPageTitle
           v-bind="args"
           @mobile-menu-click="args.onMobileMenuClick"
         >
@@ -122,7 +126,7 @@ export const WithLongTitle: Story = {
     },
     template: `
       <div class="bg-gray-900">
-        <VxvPageTitle 
+        <VxvPageTitle
           v-bind="args"
           @mobile-menu-click="args.onMobileMenuClick"
         />
@@ -143,13 +147,13 @@ export const InAppLayout: Story = {
         { text: 'Usuarios', to: '/dashboard/users' },
         { text: 'Detalles de Usuario' },
       ];
-      
+
       return { breadcrumbItems };
     },
     template: `
       <div class="flex flex-col h-[600px] bg-gray-900">
         <!-- Header -->
-        <VxvPageTitle 
+        <VxvPageTitle
           title="Detalles de Usuario"
           @mobile-menu-click="() => {}"
         >
@@ -157,28 +161,28 @@ export const InAppLayout: Story = {
             <VxvBreadcrumb :items="breadcrumbItems" />
           </template>
         </VxvPageTitle>
-        
+
         <!-- Main content -->
         <div class="flex-1 p-6 bg-gray-800">
           <div class="bg-gray-700 p-6 rounded-lg">
             <h2 class="text-xl font-semibold text-white mb-4">Información del Usuario</h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 class="text-sm font-medium text-gray-400">Nombre</h3>
                 <p class="text-white">Juan Pérez</p>
               </div>
-              
+
               <div>
                 <h3 class="text-sm font-medium text-gray-400">Correo electrónico</h3>
                 <p class="text-white">juan@ejemplo.com</p>
               </div>
-              
+
               <div>
                 <h3 class="text-sm font-medium text-gray-400">Rol</h3>
                 <p class="text-white">Administrador</p>
               </div>
-              
+
               <div>
                 <h3 class="text-sm font-medium text-gray-400">Estado</h3>
                 <p class="text-white">Activo</p>
