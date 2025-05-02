@@ -37,16 +37,7 @@
               Verificar
             </VxvButton>
           </div>
-          <div class="mt-4">
-            <VxvButton
-              @click="generateCode"
-              variant="secondary"
-              :loading="generatingCode"
-              class="w-full"
-            >
-              Solicitar código de verificación
-            </VxvButton>
-          </div>
+
         </div>
 
         <div class="mt-6 text-center">
@@ -59,8 +50,6 @@
           >
             Reenviar correo de verificación
           </VxvButton>
-
-
         </div>
       </div>
 

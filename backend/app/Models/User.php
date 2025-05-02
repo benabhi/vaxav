@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -124,4 +125,6 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->is_superadmin || $this->hasRole('moderator') || $this->hasRole('admin') || $this->hasRole('superadmin');
     }
+
+
 }

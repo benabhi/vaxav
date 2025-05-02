@@ -126,10 +126,14 @@ class VerifyEmailController extends Controller
             ]);
         }
 
+        // Enviar el email de verificación
         $request->user()->sendEmailVerificationNotification();
 
+        // Generar un nuevo código de verificación (esto ocurre automáticamente en el AppServiceProvider)
+        // No necesitamos hacer nada más aquí, ya que el código se genera al enviar el email
+
         return response()->json([
-            'message' => 'Se ha enviado un nuevo enlace de verificación a tu dirección de correo electrónico.',
+            'message' => 'Se ha enviado un nuevo correo de verificación a tu dirección de email. Contiene tanto un enlace como un código de verificación.',
         ]);
     }
 
