@@ -79,14 +79,14 @@ Route::get('/debug/user-roles', function () {
     return response()->json([
         'user'          => $user->only(['id', 'name', 'email']),
         'roles'         => $user->roles,
-        'is_superadmin' => $user->is_superadmin,
-        'is_admin'      => $user->is_admin,
-        'is_moderator'  => $user->is_moderator,
+        'is_superadmin' => $user->isSuperAdmin(),
+        'is_admin'      => $user->isAdmin(),
+        'is_moderator'  => $user->isModerator(),
     ]);
 });
 
 // Rutas de administración
-Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|superadmin'])->group(function () {
     // Rutas de roles
     Route::apiResource('roles', RoleController::class);
     Route::get('/permissions', [RoleController::class, 'permissions']);
