@@ -160,8 +160,9 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
       message.value = '¡Email verificado correctamente! Redirigiendo a la página principal...';
 
       // Redirigir al usuario a la página principal después de verificar
+      // Añadimos el parámetro 'verified=true' para indicar que acaba de verificar su email
       setTimeout(() => {
-        router.push('/');
+        router.push({ path: '/', query: { verified: 'true' } });
       }, 2000);
     } else {
       message.value = 'El email no se marcó como verificado. Por favor, contacta al soporte.';
@@ -180,11 +181,30 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
 onMounted(async () => {
   // Verificar si el usuario ya está verificado
   try {
-    const response = await api.get('/auth/email/verify');
-    verified.value = response.data.verified;
+    // Verificar el estado de verificación del email con el backend
+    await authStore.checkEmailVerification();
 
-    if (verified.value) {
-      message.value = 'Tu dirección de correo electrónico ya ha sido verificada.';
+    // Si el usuario ya está verificado y no hay parámetros de verificación en la URL,
+    // redirigir a la página principal
+    const id = props.id || route.query.id as string;
+    const hash = props.hash || route.query.hash as string;
+    const justVerified = route.query.verified === 'true';
+
+    if (authStore.isEmailVerified && !id && !hash && !justVerified) {
+      // El usuario ya está verificado y no viene de un proceso de verificación,
+      // redirigir a la página principal
+      router.push('/');
+      return;
+    }
+
+    // Actualizar el estado local
+    verified.value = authStore.isEmailVerified;
+
+    // Solo mostrar el mensaje de éxito si:
+    // 1. El usuario acaba de verificar su email (parámetro 'verified' en la URL)
+    // 2. O si hay parámetros de verificación en la URL (viene desde un enlace de verificación)
+    if (verified.value && (justVerified || (id && hash))) {
+      message.value = 'Tu dirección de correo electrónico ha sido verificada.';
       alertVariant.value = 'success';
     }
   } catch (error: any) {
@@ -238,6 +258,12 @@ const verifyWithCode = async () => {
       verified.value = true;
       message.value = result.message || 'Email verificado correctamente.';
       alertVariant.value = 'success';
+
+      // Redirigir al usuario a la página principal después de un breve retraso
+      // Añadimos el parámetro 'verified=true' para indicar que acaba de verificar su email
+      setTimeout(() => {
+        router.push({ path: '/', query: { verified: 'true' } });
+      }, 2000);
     } else {
       message.value = result.message || 'Código de verificación inválido.';
       alertVariant.value = 'error';
