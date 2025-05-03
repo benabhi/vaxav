@@ -24,7 +24,7 @@ module.exports = {
       name: 'vaxav-storybook',
       cwd: './frontend',
       script: 'npm',
-      args: 'run storybook -- --port 6006 --host 0.0.0.0',
+      args: 'run storybook -- --port 6006 --host 0.0.0.0 --no-open',
       watch: false,
       env: {
         NODE_ENV: 'development',
