@@ -34,6 +34,56 @@ Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])
     ->name('password.update');
 ```
 
+### Notificación Personalizada
+
+Para integrar correctamente el backend con el frontend, se utiliza una notificación personalizada `ResetPasswordNotification` que genera la URL correcta para el frontend:
+
+```php
+// app/Notifications/ResetPasswordNotification.php
+class ResetPasswordNotification extends Notification
+{
+    public $token;
+
+    public function __construct($token)
+    {
+        $this->token = $token;
+    }
+
+    // ...
+
+    protected function resetUrl($notifiable)
+    {
+        // Usar la URL del frontend en lugar de la URL generada por Laravel
+        $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
+        return $frontendUrl . '/reset-password/' . $this->token . '?email=' . urlencode($notifiable->getEmailForPasswordReset());
+    }
+}
+```
+
+El modelo `User` debe sobrescribir el método `sendPasswordResetNotification` para utilizar esta notificación personalizada:
+
+```php
+// app/Models/User.php
+public function sendPasswordResetNotification($token)
+{
+    $this->notify(new ResetPasswordNotification($token));
+}
+```
+
+### Configuración
+
+Para que la notificación personalizada funcione correctamente, se debe configurar la URL del frontend en el archivo `.env`:
+
+```
+APP_FRONTEND_URL=http://localhost:5173
+```
+
+Y en el archivo `config/app.php`:
+
+```php
+'frontend_url' => env('APP_FRONTEND_URL', 'http://localhost:5173'),
+```
+
 ### Base de Datos
 
 Laravel utiliza la tabla `password_reset_tokens` para almacenar los tokens de restablecimiento de contraseña. Esta tabla ya está incluida en la migración predeterminada de Laravel.
@@ -44,6 +94,36 @@ Laravel utiliza la tabla `password_reset_tokens` para almacenar los tokens de re
 
 - `ForgotPasswordView.vue`: Formulario para solicitar un enlace de restablecimiento de contraseña.
 - `ResetPasswordView.vue`: Formulario para establecer una nueva contraseña utilizando el token recibido.
+
+### Estructura de los Formularios
+
+Los formularios de recuperación de contraseña utilizan el componente `VxvForm` con un slot `#alert` para mostrar mensajes de éxito o error debajo del título:
+
+```vue
+<!-- ForgotPasswordView.vue -->
+<VxvForm
+  title="Recuperar Contraseña"
+  :has-border="false"
+  submitText="Enviar enlace"
+  cancelText="Volver al login"
+  :loading="loading"
+  @submit="handleSubmit"
+  @cancel="goToLogin"
+>
+  <template #alert>
+    <VxvAlert
+      v-if="message"
+      :variant="alertVariant"
+      :message="message"
+      class="mb-6"
+    />
+  </template>
+
+  <!-- Campos del formulario -->
+</VxvForm>
+```
+
+Esta estructura garantiza que los mensajes de alerta aparezcan en una posición consistente en todos los formularios de la aplicación.
 
 ### Rutas
 
@@ -93,3 +173,27 @@ El servicio `authService` proporciona métodos para interactuar con la API de re
 - Se aplica limitación de tasa (throttling) para prevenir ataques de fuerza bruta.
 - Las contraseñas se validan para garantizar que cumplan con los requisitos mínimos de seguridad.
 - Los tokens son de un solo uso y se eliminan después de ser utilizados.
+
+## Solución de Problemas Comunes
+
+### Error "Route [password.reset] not defined"
+
+Este error ocurre cuando Laravel intenta generar una URL para la ruta "password.reset", pero esta ruta no está definida en el backend. Para solucionar este problema:
+
+1. **Implementar una notificación personalizada**: Crear una clase `ResetPasswordNotification` que sobrescriba el método `resetUrl` para generar la URL correcta del frontend.
+
+2. **Sobrescribir el método en el modelo User**: Asegurarse de que el modelo `User` sobrescriba el método `sendPasswordResetNotification` para utilizar la notificación personalizada.
+
+3. **Configurar la URL del frontend**: Definir la variable `APP_FRONTEND_URL` en el archivo `.env` y utilizarla en la configuración de la aplicación.
+
+4. **Verificar las rutas del frontend**: Asegurarse de que las rutas del frontend para la recuperación de contraseña estén correctamente definidas y coincidan con las URL generadas por la notificación personalizada.
+
+### Problemas con la Visualización de Alertas
+
+Si las alertas no se muestran correctamente en los formularios:
+
+1. **Verificar la estructura del formulario**: Asegurarse de que el componente `VxvAlert` esté dentro del slot `#alert` del componente `VxvForm`.
+
+2. **Verificar el estado de los mensajes**: Comprobar que las variables `message` y `alertVariant` se estén actualizando correctamente en el componente.
+
+3. **Comprobar los estilos**: Verificar que las clases CSS aplicadas al componente `VxvAlert` no estén siendo sobrescritas por otros estilos.

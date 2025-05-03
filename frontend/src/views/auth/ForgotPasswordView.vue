@@ -1,13 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-12">
     <div class="max-w-md mx-auto">
-      <VxvAlert
-        v-if="message"
-        :variant="alertVariant"
-        :message="message"
-        class="mb-6"
-      />
-
       <VxvForm
         title="Recuperar Contraseña"
         :has-border="false"
@@ -17,6 +10,14 @@
         @submit="handleSubmit"
         @cancel="goToLogin"
       >
+        <template #alert>
+          <VxvAlert
+            v-if="message"
+            :variant="alertVariant"
+            :message="message"
+            class="mb-6"
+          />
+        </template>
         <p class="text-gray-300 mb-6">
           Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
         </p>
