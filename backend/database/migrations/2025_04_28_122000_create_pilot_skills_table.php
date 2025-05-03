@@ -10,21 +10,36 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('skills', function (Blueprint $table) {
+        Schema::create('skills_categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('category');
+            $table->string('name');
+            $table->text('description');
             $table->timestamps();
         });
 
-        Schema::create('pilot_skills', function (Blueprint $table) {
+        Schema::create('skills', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_category_id')->constrained('skills_categories')->onDelete('cascade');
+            $table->string('name');
+            $table->text('description');
+            $table->unsignedTinyInteger('multiplier');
+            $table->timestamps();
+        });
+
+        Schema::create('skills_prerequisites', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('skill_id')->constrained('skills')->onDelete('cascade');
+            $table->foreignId('prerequisite_id')->constrained('skills')->onDelete('cascade');
+            $table->unsignedTinyInteger('prerequisite_level');
+            $table->timestamps();
+        });
+
+        Schema::create('pilots_skills', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pilot_id')->constrained()->onDelete('cascade');
             $table->foreignId('skill_id')->constrained()->onDelete('cascade');
-            $table->integer('level')->default(1);
-            $table->decimal('experience_points', 10, 2)->default(0);
+            $table->unsignedBigInteger('xp')->default(0);
+            $table->unsignedTinyInteger('current_level')->default(0);
             $table->timestamps();
         });
     }
@@ -34,7 +49,9 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('pilot_skills');
+        Schema::dropIfExists('pilots_skills');
+        Schema::dropIfExists('skills_prerequisites');
         Schema::dropIfExists('skills');
+        Schema::dropIfExists('skills_categories');
     }
 };

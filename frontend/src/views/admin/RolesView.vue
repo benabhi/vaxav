@@ -17,6 +17,7 @@
     @per-page-change="changePerPage"
     @filter-change="updateFilters"
     @sort-change="updateSort"
+    @reset="handleReset"
   >
     <template #cell(name)="{ item }">
       <div class="text-sm font-medium text-white">{{ item.name }}</div>
@@ -172,6 +173,15 @@ const goToCreateRole = () => {
 // Navigate to edit role page
 const editRole = (role) => {
   router.push(`/admin/roles/${role.id}/edit`);
+};
+
+// Handle reset event
+const handleReset = () => {
+  console.log('Evento reset recibido en RolesView');
+
+  // Los filtros y la paginación ya han sido restablecidos por AdminCrudView
+  // Solo necesitamos forzar una recarga de los datos
+  fetchRoles();
 };
 
 // Confirm delete role

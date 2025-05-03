@@ -205,24 +205,39 @@ const applyFilters = () => {
 
 // Reset filters
 const resetFilters = () => {
-  // Reset search
-  localFilters.search = '';
+  // Crear una copia de los filtros locales
+  const resetFilters = { ...localFilters };
 
-  // Reset other filters
-  Object.keys(localFilters).forEach(key => {
-    if (key !== 'search') {
-      if (Array.isArray(localFilters[key])) {
-        localFilters[key] = [];
-      } else if (typeof localFilters[key] === 'object' && localFilters[key] !== null) {
-        localFilters[key] = {};
-      } else {
-        localFilters[key] = '';
+  // Restablecer todos los filtros excepto sort_field y sort_direction
+  Object.keys(resetFilters).forEach(key => {
+    if (key !== 'sort_field' && key !== 'sort_direction') {
+      if (typeof resetFilters[key] === 'string') {
+        resetFilters[key] = '';
+      } else if (Array.isArray(resetFilters[key])) {
+        resetFilters[key] = [];
+      } else if (typeof resetFilters[key] === 'object' && resetFilters[key] !== null) {
+        resetFilters[key] = {};
+      } else if (typeof resetFilters[key] === 'number') {
+        resetFilters[key] = 0;
+      } else if (typeof resetFilters[key] === 'boolean') {
+        resetFilters[key] = false;
       }
     }
   });
 
-  emit('update:filters', { ...localFilters });
-  emit('filter-change', { ...localFilters });
+  // Actualizar los filtros locales
+  Object.keys(resetFilters).forEach(key => {
+    localFilters[key] = resetFilters[key];
+  });
+
+  console.log('Filtros restablecidos en VxvFilters:', resetFilters);
+
+  // Emitir eventos con una copia de los filtros para asegurar que se detecten los cambios
+  emit('update:filters', { ...resetFilters });
+  emit('filter-change', { ...resetFilters });
+
+  // Emitir un evento de reset para que los componentes padres puedan realizar acciones adicionales
+  // Este evento es importante para que VxvDataTable pueda restablecer el valor de perPage
   emit('reset');
 };
 

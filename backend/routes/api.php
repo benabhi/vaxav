@@ -8,6 +8,9 @@ use App\Http\Controllers\VerifyEmailWithCodeController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SkillController;
+use App\Http\Controllers\Admin\SkillCategoryController;
+use App\Http\Controllers\PilotSkillController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +97,13 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|superadmin'])->g
     // Rutas de usuarios
     Route::apiResource('users', UserController::class);
     Route::post('/users/{user}/roles', [UserController::class, 'syncRoles']);
+
+    // Rutas de categorías de habilidades
+    Route::apiResource('skill-categories', SkillCategoryController::class);
+
+    // Rutas de habilidades
+    Route::apiResource('skills', SkillController::class);
+    Route::get('/skills-dropdown', [SkillController::class, 'getSkillsForDropdown']);
 });
 
 // Rutas de universo
@@ -112,6 +122,18 @@ Route::prefix('pilots')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/', [App\Http\Controllers\PilotController::class, 'store']);
     Route::get('/{id}', [App\Http\Controllers\PilotController::class, 'show']);
     Route::put('/{id}', [App\Http\Controllers\PilotController::class, 'update']);
+
+    // Rutas de habilidades de pilotos
+    Route::get('/current/skills', [PilotSkillController::class, 'getCurrentPilotSkills']);
+    Route::get('/{pilotId}/skills', [PilotSkillController::class, 'getPilotSkills']);
+});
+
+// Rutas de habilidades
+Route::prefix('skills')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/', [PilotSkillController::class, 'getAllSkills']);
+    Route::get('/categories', [PilotSkillController::class, 'getSkillCategories']);
+    Route::get('/categories/{categoryId}', [PilotSkillController::class, 'getSkillsByCategory']);
+    Route::get('/{skillId}', [PilotSkillController::class, 'getSkillDetails']);
 });
 
 // Rutas de naves
