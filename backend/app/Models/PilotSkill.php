@@ -27,6 +27,7 @@ class PilotSkill extends Model
         'skill_id',
         'xp',
         'current_level',
+        'active',
     ];
 
     /**

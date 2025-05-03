@@ -40,6 +40,7 @@ return new class extends Migration {
             $table->foreignId('skill_id')->constrained()->onDelete('cascade');
             $table->unsignedBigInteger('xp')->default(0);
             $table->unsignedTinyInteger('current_level')->default(0);
+            $table->boolean('active')->default(false);
             $table->timestamps();
         });
     }
