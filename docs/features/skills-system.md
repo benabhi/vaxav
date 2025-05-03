@@ -59,6 +59,7 @@ Almacena las habilidades que posee cada piloto. Es una tabla intermedia que rela
 - `skill_id` - Clave foránea a la tabla skills
 - `xp` - Experiencia acumulada en la habilidad
 - `current_level` - Nivel actual de la habilidad para el piloto
+- `active` - Indica si la habilidad está activa (booleano, por defecto false)
 - `timestamps` - Fechas de creación y actualización
 
 ## Modelos
@@ -122,7 +123,7 @@ public function pilots()
         'pilots_skills',
         'skill_id',
         'pilot_id'
-    )->withPivot('xp', 'current_level');
+    )->withPivot('xp', 'current_level', 'active');
 }
 ```
 
@@ -324,6 +325,77 @@ La vista `SkillEditView` proporciona un formulario para editar habilidades exist
 6. El controlador `SkillController` procesa la petición y elimina la habilidad.
 7. El composable muestra una notificación de éxito y actualiza la lista de habilidades.
 
+## Sistema de Activación de Habilidades
+
+El sistema de habilidades incluye un mecanismo de activación que requiere que los jugadores activen explícitamente las habilidades que desean utilizar, incluso después de cumplir con los prerrequisitos. Esto añade una capa estratégica al juego, ya que los jugadores deben decidir qué habilidades mantener activas.
+
+### Implementación de la Activación
+
+La activación de habilidades se implementa a través del campo `active` en la tabla `pilots_skills`. Este campo es un booleano que indica si la habilidad está activa (true) o inactiva (false).
+
+Por defecto, todas las habilidades se asignan como inactivas (false) cuando un piloto se crea. Las habilidades deben ser activadas explícitamente por el jugador.
+
+### Flujo de Activación
+
+1. El jugador cumple con los prerrequisitos para una habilidad (tiene las habilidades prerrequisito al nivel requerido).
+2. El jugador activa la habilidad a través de la interfaz de usuario.
+3. El sistema actualiza el campo `active` en la tabla `pilots_skills`.
+4. La habilidad ahora está disponible para su uso en el juego.
+
+### Controlador para Activación
+
+```php
+// Ejemplo de método para activar/desactivar una habilidad
+public function toggleSkillActivation(Request $request, $skillId)
+{
+    $user = $request->user();
+    $pilot = $user->pilot;
+
+    if (!$pilot) {
+        return response()->json(['message' => 'El usuario no tiene un piloto'], 404);
+    }
+
+    $pilotSkill = PilotSkill::where('pilot_id', $pilot->id)
+        ->where('skill_id', $skillId)
+        ->first();
+
+    if (!$pilotSkill) {
+        return response()->json(['message' => 'El piloto no tiene esta habilidad'], 404);
+    }
+
+    // Verificar si el piloto cumple con los prerrequisitos
+    $skill = Skill::with('prerequisites')->find($skillId);
+    $canActivate = true;
+
+    foreach ($skill->prerequisites as $prerequisite) {
+        $prereqLevel = $prerequisite->pivot->prerequisite_level;
+        $pilotPrereq = PilotSkill::where('pilot_id', $pilot->id)
+            ->where('skill_id', $prerequisite->id)
+            ->first();
+
+        if (!$pilotPrereq || $pilotPrereq->current_level < $prereqLevel) {
+            $canActivate = false;
+            break;
+        }
+    }
+
+    if (!$canActivate) {
+        return response()->json([
+            'message' => 'No cumples con los prerrequisitos para activar esta habilidad'
+        ], 400);
+    }
+
+    // Activar o desactivar la habilidad
+    $pilotSkill->active = !$pilotSkill->active;
+    $pilotSkill->save();
+
+    return response()->json([
+        'message' => $pilotSkill->active ? 'Habilidad activada' : 'Habilidad desactivada',
+        'active' => $pilotSkill->active
+    ]);
+}
+```
+
 ## Problemas Comunes y Soluciones
 
 ### Prerrequisitos no se muestran correctamente
@@ -339,7 +411,7 @@ foreach ($skills as $skill) {
     $prerequisites = DB::table('skills_prerequisites')
         ->where('skill_id', $skill->id)
         ->get();
-    
+
     // Formatear los prerrequisitos con la información completa
     $formattedPrerequisites = [];
     foreach ($prerequisites as $prereq) {
@@ -356,7 +428,7 @@ foreach ($skills as $skill) {
             ];
         }
     }
-    
+
     // Asignar los prerrequisitos formateados a la habilidad
     $skill->prerequisites = $formattedPrerequisites;
 }
@@ -374,7 +446,7 @@ const handleReset = () => {
   // Asegurarnos de que el valor del multiplicador se limpie correctamente
   // Establecer a cadena vacía para que el placeholder "Todos" se muestre
   filters.multiplier = '';
-  
+
   // También limpiar el filtro de categoría
   filters.category_id = '';
 
@@ -394,7 +466,7 @@ const handleReset = () => {
 const isValidPrerequisite = (prerequisite) => {
   // Con la nueva estructura, un prerrequisito válido debe tener un objeto prerequisite
   // con al menos un id y un name
-  return prerequisite && 
+  return prerequisite &&
          prerequisite.prerequisite &&
          prerequisite.prerequisite.id &&
          prerequisite.prerequisite.name;
@@ -407,7 +479,7 @@ const getPrerequisiteName = (prerequisite) => {
   if (prerequisite && prerequisite.prerequisite && prerequisite.prerequisite.name) {
     return `${prerequisite.prerequisite.name} (Nv.${prerequisite.prerequisite_level || '?'})`;
   }
-  
+
   return 'Prerrequisito no disponible';
 };
 ```

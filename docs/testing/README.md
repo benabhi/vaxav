@@ -1,29 +1,92 @@
-# Documentación de Testing para VAXAV
+# Estrategia de Testing en Vaxav
 
-Esta carpeta contiene la documentación relacionada con las prácticas de testing en el proyecto VAXAV.
+Esta sección documenta la estrategia de testing implementada en Vaxav, incluyendo las herramientas, enfoques y mejores prácticas.
 
-## Contenido
+## Índice
 
-- [Mejores Prácticas](./best-practices.md): Principios generales y mejores prácticas para escribir tests efectivos.
-- [Testing de Componentes Vue](./vue-component-testing.md): Guía específica para el testing de componentes Vue.
-- [Solución de Problemas](./troubleshooting.md): Soluciones a problemas comunes en los tests.
-- [Solución de Problemas con Vitest](./testing-vitest.md): Guía específica para resolver problemas con la caché de Vitest.
+- [Enfoque General](#enfoque-general)
+- [Testing de Backend](#testing-de-backend)
+- [Testing de Frontend](#testing-de-frontend)
+- [Herramientas Utilizadas](#herramientas-utilizadas)
+- [Ejecución de Tests](#ejecución-de-tests)
+- [Mejores Prácticas](./best-practices.md)
+- [Testing de Componentes Vue](./vue-component-testing.md)
+- [Solución de Problemas](./troubleshooting.md)
+- [Solución de Problemas con Vitest](./testing-vitest.md)
 
-## Resumen de Principios Clave
+## Enfoque General
 
-1. **Enfocarse en la funcionalidad básica e importante**
-2. **Evitar dependencias del DOM**
-3. **Mantener los tests simples y robustos**
-4. **Probar la lógica de negocio, no la implementación**
-5. **Ejecutar siempre los tests con `--no-cache` o usar el script `test-clean.sh`**
+La estrategia de testing de Vaxav se basa en los siguientes principios:
 
-## Comandos Útiles
+1. **Enfocarse en la funcionalidad básica e importante**: Priorizamos el testing de la lógica de negocio crítica.
+2. **Evitar dependencias del DOM**: Minimizamos las dependencias del DOM en los tests de frontend.
+3. **Mantener los tests simples y robustos**: Preferimos tests simples que sean fáciles de mantener.
+4. **Probar la lógica de negocio, no la implementación**: Nos centramos en el comportamiento, no en los detalles de implementación.
+5. **Ejecutar siempre los tests con `--no-cache` o usar el script `test-clean.sh`**: Evitamos problemas con la caché de Vitest.
 
-### Script de Limpieza de Caché (Recomendado)
+## Testing de Backend
+
+El backend de Vaxav utiliza el framework de testing integrado en Laravel. Los tests están organizados en:
+
+- **Tests Unitarios**: Prueban componentes individuales aislados.
+- **Tests de Características**: Prueban funcionalidades completas, incluyendo controladores y modelos.
+- **Tests de API**: Prueban los endpoints de la API.
+
+Para más detalles, consulta la [documentación de testing de backend](./backend-testing.md).
+
+## Testing de Frontend
+
+El frontend de Vaxav utiliza Vitest y Vue Test Utils para el testing. Los tests están organizados en:
+
+- **Tests Unitarios**: Prueban componentes, composables y utilidades de forma aislada.
+- **Tests de Integración**: Prueban la interacción entre componentes.
+- **Tests de Vistas**: Prueban las vistas completas con sus dependencias.
+
+Para más detalles, consulta la [documentación de testing de frontend](./frontend-testing.md).
+
+## Herramientas Utilizadas
+
+### Backend
+- **PHPUnit**: Framework de testing para PHP
+- **Laravel Testing**: Herramientas de testing específicas de Laravel
+- **Mockery**: Biblioteca para crear mocks en PHP
+
+### Frontend
+- **Vitest**: Framework de testing para JavaScript/TypeScript
+- **Vue Test Utils**: Utilidades de testing para Vue.js
+- **Testing Library**: Utilidades para testing centrado en el usuario
+- **Jest DOM**: Extensiones de Jest para el DOM
+
+## Ejecución de Tests
+
+### Backend (Laravel)
+
+Para ejecutar los tests del backend:
+
+```bash
+# Navegar al directorio del backend
+cd backend
+
+# Ejecutar todos los tests
+php artisan test
+
+# Ejecutar un test específico
+php artisan test --filter=UserTest
+
+# Ejecutar tests con cobertura (requiere Xdebug)
+php artisan test --coverage
+```
+
+### Frontend (Vue.js)
+
+#### Script de Limpieza de Caché (Recomendado)
 
 Hemos creado un script `test-clean.sh` que automatiza la limpieza de caché y la ejecución de tests:
 
 ```bash
+# Navegar al directorio del frontend
+cd frontend
+
 # Ejecutar todos los tests con limpieza de caché
 ./test-clean.sh
 
@@ -39,11 +102,14 @@ Este script:
 - Ejecuta los tests con la configuración optimizada
 - Proporciona feedback visual sobre el resultado
 
-### Comandos Manuales
+#### Comandos Manuales
 
 También puedes ejecutar los tests manualmente:
 
 ```bash
+# Navegar al directorio del frontend
+cd frontend
+
 # Ejecutar todos los tests
 npm run test:unit -- --no-cache
 

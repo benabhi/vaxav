@@ -64,7 +64,7 @@ Los componentes de layout definen la estructura y organización de la aplicació
 ```vue
 <AppHeader :transparent="isHomePage">
   <template #actions>
-    <BaseButton variant="secondary" size="sm">Contacto</BaseButton>
+    <VxvButton variant="secondary" size="sm">Contacto</VxvButton>
   </template>
 </AppHeader>
 ```
@@ -220,9 +220,9 @@ Los componentes de layout definen la estructura y organización de la aplicació
 #### Ejemplos de Uso
 
 ```vue
-<Section 
-  id="features" 
-  title="Características" 
+<Section
+  id="features"
+  title="Características"
   subtitle="Descubre todo lo que Vaxav puede hacer por ti"
   background="gray-50"
 >
@@ -281,7 +281,7 @@ Los componentes de layout definen la estructura y organización de la aplicació
   <Section title="Sección 1">
     <p>Contenido de la sección 1...</p>
   </Section>
-  
+
   <Section title="Sección 2" background="gray-50">
     <p>Contenido de la sección 2...</p>
   </Section>
@@ -298,7 +298,7 @@ Los componentes de layout definen la estructura y organización de la aplicació
         <h1>Contenido Principal</h1>
         <p>Contenido principal de la página...</p>
       </GridItem>
-      
+
       <GridItem :span="{ default: 12, md: 4 }">
         <h2>Barra Lateral</h2>
         <p>Contenido de la barra lateral...</p>
@@ -315,7 +315,7 @@ Los componentes de layout definen la estructura y organización de la aplicació
   <template #sidebar>
     <AdminSidebar :items="sidebarItems" />
   </template>
-  
+
   <Section title="Dashboard">
     <AdminDashboard :stats="stats" />
   </Section>

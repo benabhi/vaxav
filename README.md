@@ -2,6 +2,17 @@
 
 Vaxav es un juego multijugador masivo (MMO) basado en navegador con ambientación sci-fi retro. Los jugadores controlan pilotos en una galaxia sandbox donde pueden explorar, comerciar, minar recursos, participar en batallas y formar corporaciones.
 
+## Concepto del Juego
+
+Vaxav se inspira en juegos como EVE Online, pero con una estética retro y una interfaz basada en navegador. El juego presenta:
+
+- **Universo Persistente**: Una galaxia con múltiples sistemas solares conectados por puertas estelares
+- **Economía Impulsada por Jugadores**: Mercado dinámico donde los jugadores comercian recursos y equipamiento
+- **Sistema de Seguridad**: Zonas con diferentes niveles de seguridad (seguro, inseguro, nulo)
+- **Permadeath de Naves**: Las naves destruidas se pierden permanentemente
+- **Corporaciones**: Organizaciones de jugadores que pueden controlar territorio y recursos
+- **Sistema de Habilidades**: Progresión de personajes a través de habilidades con prerrequisitos
+
 ## Documentación
 
 Para una documentación más detallada, consulta la [carpeta docs](./docs/README.md).
@@ -10,7 +21,7 @@ Para una documentación más detallada, consulta la [carpeta docs](./docs/README
 
 Para mantener la coherencia visual y estructural en toda la aplicación, consulta nuestra [Guía de Estilo](./docs/design/style-guide.md) que incluye información sobre componentes, estructura, paleta de colores y mejores prácticas.
 
-Para visualizar y documentar los componentes de UI, utilizamos [Storybook](./frontend/docs/storybook.md).
+Para visualizar y documentar los componentes de UI, utilizamos [Storybook](./docs/pm2-usage.md#storybook).
 
 ## Visión General
 

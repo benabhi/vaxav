@@ -1,72 +1,104 @@
 # Documentación de Vaxav
 
-Bienvenido a la documentación de Vaxav, un MMO espacial en navegador web. Esta documentación está organizada en secciones para facilitar la navegación.
+Bienvenido a la documentación oficial de Vaxav, un MMO espacial en navegador web. Esta documentación está organizada en secciones para facilitar la navegación y comprensión del proyecto.
 
-## Índice
+## Estructura de la Documentación
 
-### Guías de Inicio
+La documentación está organizada en las siguientes secciones principales:
 
-- [Instalación](./installation.md) - Cómo instalar y configurar el proyecto
-- [Puesta en Marcha](./getting-started.md) - Cómo ejecutar el proyecto
-- [Uso de PM2](./pm2-usage.md) - Guía detallada sobre el uso de PM2
+### 1. Guías de Inicio
+Documentación para comenzar a trabajar con el proyecto:
+- [Instalación](./installation.md) - Instrucciones detalladas de instalación
+- [Puesta en Marcha](./getting-started.md) - Cómo ejecutar el proyecto localmente
+- [Uso de PM2](./pm2-usage.md) - Gestión de servicios con PM2
 
-### Arquitectura
+### 2. Arquitectura
+Documentación sobre la estructura y diseño técnico:
+- [Estructura del Proyecto](./architecture/project-structure.md) - Organización de directorios y archivos
+- [Backend (Laravel)](./architecture/backend.md) - Arquitectura del backend
+- [Frontend (Vue.js)](./architecture/frontend.md) - Arquitectura del frontend
+- [Base de Datos](./architecture/database.md) - Esquema y relaciones
 
-- [Estructura del Proyecto](./architecture/project-structure.md) - Organización general del proyecto
-- [Backend (Laravel API)](./architecture/backend.md) - Detalles sobre el backend
-- [Frontend (Vue.js)](./architecture/frontend.md) - Detalles sobre el frontend
-- [Base de Datos](./architecture/database.md) - Esquema y relaciones de la base de datos
+### 3. Características del Juego
+Documentación sobre las características implementadas:
+- [Sistema de Habilidades](./features/skills-system.md) - Implementación del sistema de habilidades
+- [Sistema de Pilotos](./features/pilots.md) - Creación y gestión de pilotos
 
-### Mecánicas de Juego
+### 4. Mecánicas de Juego
+Documentación sobre las mecánicas y reglas del juego:
+- [Visión General](./game/README.md) - Conceptos fundamentales del juego
+- [Flujo de Navegación](./game/navigation-flow.md) - Secuencia de navegación y restricciones
 
-- [Visión General](./game/README.md) - Visión general de las mecánicas de juego
-- [Sistema de Pilotos](./game/pilots.md) - Creación y gestión de pilotos
-- [Flujo de Navegación](./game/navigation-flow.md) - Secuencia de navegación y restricciones de acceso
+### 5. Componentes UI
+Documentación sobre los componentes de interfaz de usuario:
+- [Visión General](./components/README.md) - Sistema de componentes
+- [Componentes UI](./components/ui/README.md) - Componentes básicos de UI
+- [Componentes de Layout](./components/layout/layout.md) - Componentes de estructura
 
-### Diseño y Estilo
+### 6. API y Autenticación
+Documentación sobre la API y el sistema de autenticación:
+- [Autenticación](./auth/README.md) - Sistema de autenticación
+- [Verificación de Email](./email-verification.md) - Sistema de verificación de email
+- [Roles y Permisos](./auth/roles-permissions.md) - Sistema de autorización
+- [Endpoints de API](./api/README.md) - Documentación de la API REST
 
-- [Guía de Estilo](./design/style-guide.md) - Guía completa de estilo para mantener la coherencia visual
-- [Diseño y Estilo](./design/README.md) - Visión general del diseño de Vaxav
-- [Sistema de Componentes](./components/README.md) - Documentación del sistema de componentes
+### 7. Testing
+Documentación sobre pruebas y calidad:
+- [Estrategia de Testing](./testing/README.md) - Enfoque general de testing
+- [Tests de Backend](./testing/backend-testing.md) - Testing en Laravel
+- [Tests de Frontend](./testing/frontend-testing.md) - Testing en Vue.js
+- [Vitest](./testing/testing-vitest.md) - Uso de Vitest para tests de frontend
 
-### API y Autenticación
-
-- [Autenticación y Autorización](./auth/README.md) - Sistema completo de autenticación y autorización
-  - [Roles y Permisos](./auth/roles-permissions.md) - Sistema de roles y permisos
-  - [Implementación Frontend](./auth/frontend-implementation.md) - Autenticación en el frontend
-  - [Implementación Backend](./auth/backend-implementation.md) - Autenticación en el backend
-  - [Mejoras Realizadas](./auth/improvements.md) - Mejoras en el sistema de autenticación
-- [Pilotos](./api/pilots.md) - Endpoints relacionados con pilotos
-- [Universo](./api/universe.md) - Endpoints relacionados con el universo
-- [Naves](./api/ships.md) - Endpoints relacionados con naves
-- [Mercado](./api/market.md) - Endpoints relacionados con el mercado
-
-### Testing
-
-- [Estrategia de Testing](./testing/testing-strategy.md) - Visión general de la estrategia de testing
-- [Testing Frontend](./testing/frontend-testing.md) - Guía para escribir y ejecutar tests en el frontend
-- [Testing Backend](./testing/backend-testing.md) - Guía para escribir y ejecutar tests en el backend
-
-### Guías de Desarrollo
-
-- [Contribución](./development/contributing.md) - Cómo contribuir al proyecto
-- [Estándares de Código](./development/code-standards.md) - Estándares y convenciones de código
-
-### Solución de Problemas
-
+### 8. Guías y Solución de Problemas
+Documentación adicional para desarrolladores:
+- [Separación de Responsabilidades](./guides/separation-of-concerns.md) - Principios de diseño
+- [Uso de Composables](./guides/using-composables.md) - Patrones con composables de Vue
 - [Problemas Comunes](./troubleshooting/common-issues.md) - Soluciones a problemas frecuentes
-- [Logs y Depuración](./troubleshooting/logging-debugging.md) - Cómo usar logs para depurar
 
-### Despliegue
+## Estado Actual del Proyecto
 
-- [Entorno de Producción](./deployment/production.md) - Configuración para producción
-- [CI/CD](./deployment/ci-cd.md) - Integración y despliegue continuos
+El proyecto Vaxav actualmente incluye las siguientes características implementadas:
+
+- ✅ Sistema de autenticación y autorización completo
+- ✅ Verificación de email con enlace y código
+- ✅ Sistema de roles y permisos
+- ✅ Creación y gestión de pilotos
+- ✅ Sistema de habilidades con prerrequisitos y niveles
+- ✅ Interfaz de usuario con componentes reutilizables
+- ✅ Pruebas automatizadas para backend y frontend
+
+Características en desarrollo:
+- 🔄 Sistema de naves y combate
+- 🔄 Universo navegable con sistemas solares
+- 🔄 Mercado y economía
+- 🔄 Corporaciones de jugadores
+
+## Convenciones de Documentación
+
+Para mantener la documentación consistente, seguimos estas convenciones:
+
+1. **Estructura de Archivos**:
+   - Cada sección principal tiene su propia carpeta
+   - Cada característica importante tiene su propio archivo
+   - Los nombres de archivos usan kebab-case (ej. `project-structure.md`)
+
+2. **Formato de Documentos**:
+   - Todos los documentos usan Markdown
+   - Cada documento comienza con un título principal (# Título)
+   - Las secciones usan encabezados de segundo nivel (## Sección)
+   - Las subsecciones usan encabezados de tercer nivel (### Subsección)
+   - El código se formatea en bloques de código con el lenguaje especificado
+
+3. **Enlaces**:
+   - Los enlaces internos usan rutas relativas (ej. `./features/skills.md`)
+   - Los enlaces externos incluyen el protocolo (ej. `https://example.com`)
 
 ## Contribuir a la Documentación
 
-Si deseas contribuir a esta documentación, por favor sigue estas pautas:
+Si deseas contribuir a esta documentación:
 
-1. Usa Markdown para formatear los documentos
-2. Mantén un estilo consistente
+1. Sigue las convenciones de documentación descritas anteriormente
+2. Asegúrate de que la documentación refleje el estado actual del código
 3. Incluye ejemplos prácticos cuando sea posible
-4. Actualiza el índice cuando agregues nuevos documentos
+4. Actualiza el índice principal cuando agregues nuevos documentos
+5. Verifica que todos los enlaces funcionen correctamente

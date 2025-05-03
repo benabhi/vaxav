@@ -2,6 +2,16 @@
 
 PM2 es un gestor de procesos para Node.js que nos permite ejecutar y mantener aplicaciones en segundo plano. Esta guía te ayudará a utilizar PM2 para gestionar los servicios de Vaxav.
 
+## Índice
+
+- [Instalación de PM2](#instalación-de-pm2)
+- [Comandos Básicos](#comandos-básicos-de-pm2)
+- [Configuración con ecosystem.config.js](#configuración-avanzada-con-ecosystemconfigjs)
+- [Storybook](#storybook)
+- [Monitoreo con PM2](#monitoreo-con-pm2)
+- [Inicio Automático](#configuración-para-inicio-automático)
+- [Solución de Problemas](#solución-de-problemas-con-pm2)
+
 ## Instalación de PM2
 
 Antes de comenzar, necesitas instalar PM2 globalmente:
@@ -165,6 +175,43 @@ Para iniciar en modo producción:
 ```bash
 pm2 start ecosystem.config.js --env production
 ```
+
+## Storybook
+
+Vaxav utiliza Storybook para documentar y visualizar componentes de UI. PM2 puede gestionar el servicio de Storybook junto con el backend y frontend.
+
+### Iniciar Storybook con PM2
+
+Storybook ya está configurado en el archivo `ecosystem.config.js`:
+
+```javascript
+{
+  name: 'vaxav-storybook',
+  cwd: './frontend',
+  script: 'npm',
+  args: 'run storybook -- --port 6006 --host 0.0.0.0 --no-open',
+  watch: false,
+  env: {
+    NODE_ENV: 'development',
+  },
+}
+```
+
+Para iniciar solo Storybook:
+
+```bash
+pm2 start ecosystem.config.js --only vaxav-storybook
+```
+
+### Acceder a Storybook
+
+Una vez iniciado, puedes acceder a Storybook en:
+
+```
+http://localhost:6006
+```
+
+Si estás accediendo desde otra máquina en la misma red, usa la IP del servidor en lugar de localhost.
 
 ## Monitoreo con PM2
 
