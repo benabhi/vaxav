@@ -2,11 +2,11 @@
 
 Esta documentación describe los componentes de tablas de datos disponibles en Vaxav.
 
-## BaseDataTable
+## VxvDataTable
 
-`BaseDataTable` es un componente completo para mostrar, filtrar, ordenar y paginar datos tabulares.
+`VxvDataTable` es un componente completo para mostrar, filtrar, ordenar y paginar datos tabulares.
 
-**Archivo**: `/components/ui/tables/BaseDataTable.vue`
+**Archivo**: `/components/ui/tables/VxvDataTable.vue`
 
 ### Props
 
@@ -75,7 +75,7 @@ Esta documentación describe los componentes de tablas de datos disponibles en V
 
 ```vue
 <template>
-  <BaseDataTable
+  <VxvDataTable
     :columns="columns"
     :items="users"
     :loading="loading"
@@ -90,7 +90,7 @@ Esta documentación describe los componentes de tablas de datos disponibles en V
 
 <script setup>
 import { ref, reactive } from 'vue';
-import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
+import VxvDataTable from '@/components/ui/tables/VxvDataTable.vue';
 
 const columns = [
   { key: 'name', label: 'Nombre', sortable: true },
@@ -144,7 +144,7 @@ fetchUsers();
 
 ```vue
 <template>
-  <BaseDataTable
+  <VxvDataTable
     title="Gestión de Usuarios"
     :columns="columns"
     :items="users"
@@ -186,12 +186,12 @@ fetchUsers();
         Eliminar
       </button>
     </template>
-  </BaseDataTable>
+  </VxvDataTable>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
+import VxvDataTable from '@/components/ui/tables/VxvDataTable.vue';
 
 const users = ref([]);
 const loading = ref(false);
@@ -232,7 +232,7 @@ const fetchUsers = async (page = 1) => {
 
 ```vue
 <template>
-  <BaseDataTable
+  <VxvDataTable
     :columns="columns"
     :items="users"
     :loading="loading"
@@ -273,7 +273,7 @@ const fetchUsers = async (page = 1) => {
         </select>
       </div>
     </template>
-  </BaseDataTable>
+  </VxvDataTable>
 </template>
 
 <script setup>
@@ -291,11 +291,11 @@ const handleFilterChange = (newFilters) => {
 </script>
 ```
 
-## BaseFilters
+## VxvFilters
 
-`BaseFilters` es un componente para crear formularios de filtrado con un diseño consistente.
+`VxvFilters` es un componente para crear formularios de filtrado con un diseño consistente.
 
-**Archivo**: `/components/ui/filters/BaseFilters.vue`
+**Archivo**: `/components/ui/filters/VxvFilters.vue`
 
 ### Props
 
@@ -333,7 +333,7 @@ const handleFilterChange = (newFilters) => {
 
 ```vue
 <template>
-  <BaseFilters
+  <VxvFilters
     v-model:filters="filters"
     search-label="Buscar usuarios"
     search-placeholder="Nombre, correo electrónico..."
@@ -343,7 +343,7 @@ const handleFilterChange = (newFilters) => {
 
 <script setup>
 import { reactive } from 'vue';
-import BaseFilters from '@/components/ui/filters/BaseFilters.vue';
+import VxvFilters from '@/components/ui/filters/VxvFilters.vue';
 
 const filters = reactive({
   search: ''
@@ -359,7 +359,7 @@ const handleFilterChange = (newFilters) => {
 
 ```vue
 <template>
-  <BaseFilters
+  <VxvFilters
     v-model:filters="filters"
     @filter-change="handleFilterChange"
     @reset="handleReset"
@@ -393,28 +393,28 @@ const handleFilterChange = (newFilters) => {
         />
       </div>
     </template>
-  </BaseFilters>
+  </VxvFilters>
 </template>
 ```
 
 ## Integración de Componentes
 
-Los componentes `BaseDataTable`, `BaseTable`, `BasePaginator` y `BaseFilters` están diseñados para trabajar juntos de manera integrada. El componente `BaseDataTable` encapsula esta integración, proporcionando una solución completa para mostrar, filtrar, ordenar y paginar datos tabulares.
+Los componentes `VxvDataTable`, `VxvTable`, `VxvPaginator` y `VxvFilters` están diseñados para trabajar juntos de manera integrada. El componente `VxvDataTable` encapsula esta integración, proporcionando una solución completa para mostrar, filtrar, ordenar y paginar datos tabulares.
 
 ### Flujo de Datos
 
-1. El usuario interactúa con los filtros en `BaseFilters`
-2. `BaseDataTable` emite eventos de cambio de filtros
+1. El usuario interactúa con los filtros en `VxvFilters`
+2. `VxvDataTable` emite eventos de cambio de filtros
 3. La aplicación realiza una llamada a la API con los filtros actualizados
-4. Los datos filtrados se muestran en `BaseTable`
+4. Los datos filtrados se muestran en `VxvTable`
 5. El usuario puede ordenar los datos haciendo clic en los encabezados de columna
-6. El usuario puede navegar entre páginas usando `BasePaginator`
+6. El usuario puede navegar entre páginas usando `VxvPaginator`
 
 ### Ejemplo de Integración con API
 
 ```vue
 <template>
-  <BaseDataTable
+  <VxvDataTable
     :columns="columns"
     :items="items"
     :loading="loading"
@@ -429,12 +429,12 @@ Los componentes `BaseDataTable`, `BaseTable`, `BasePaginator` y `BaseFilters` es
     @filter-change="handleFilterChange"
   >
     <!-- Slots personalizados aquí -->
-  </BaseDataTable>
+  </VxvDataTable>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import BaseDataTable from '@/components/ui/tables/BaseDataTable.vue';
+import VxvDataTable from '@/components/ui/tables/VxvDataTable.vue';
 import api from '@/services/api';
 
 const columns = [
