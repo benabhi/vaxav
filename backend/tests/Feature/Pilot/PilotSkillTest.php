@@ -196,4 +196,42 @@ class PilotSkillTest extends TestCase
         // Verificar la respuesta
         $response->assertStatus(200);
     }
+
+    /**
+     * Test que el campo 'active' se incluye en las habilidades del piloto.
+     */
+    public function test_pilot_skills_include_active_field()
+    {
+        // Asignar una habilidad al piloto con el campo 'active'
+        $skill = Skill::where('name', 'Armas Láser Básicas')->first();
+        $this->pilot->skills()->attach($skill->id, [
+            'current_level' => 2,
+            'xp'            => 2000,
+            'active'        => true,
+        ]);
+
+        // Hacer la solicitud
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->getJson('/api/pilots/current/skills');
+
+        // Verificar la respuesta
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                '*' => [
+                    'id',
+                    'name',
+                    'description',
+                    'skill_category_id',
+                    'multiplier',
+                    'pivot' => [
+                        'pilot_id',
+                        'skill_id',
+                        'xp',
+                        'current_level',
+                        'active',
+                    ],
+                ],
+            ]);
+    }
 }

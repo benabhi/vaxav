@@ -67,7 +67,7 @@ class Pilot extends Model
             'pilots_skills',
             'pilot_id',
             'skill_id'
-        )->withPivot('xp', 'current_level');
+        )->withPivot('xp', 'current_level', 'active');
     }
 
     /**

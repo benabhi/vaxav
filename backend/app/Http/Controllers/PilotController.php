@@ -67,6 +67,7 @@ class PilotController extends Controller
                 'skill_id'      => $skill->id,
                 'xp'            => 0,
                 'current_level' => 0,
+                'active'        => false,
             ]);
         }
 
