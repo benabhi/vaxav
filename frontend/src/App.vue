@@ -25,7 +25,7 @@ const showPageTitle = ref(true)
 const currentSection = ref('')
 const pilotMenuItems = [
   { to: '/', label: 'Vista General', exact: true }, // Mantener exact: true para la vista general
-  { to: '/skills', label: 'Habilidades', exact: false }
+  { to: '/pilot/skills', label: 'Habilidades', exact: false }
 ]
 const universeMenuItems = [
   { to: '/universe', label: 'Galaxia', exact: true }, // Mantener exact: true para la vista de galaxia
@@ -70,8 +70,8 @@ const hasAuthenticatedPilot = computed(() => {
   return authStore.isAuthenticated && authStore.isEmailVerified && pilotStore.hasPilot
 })
 
-// Actualizar el título de la página y la sección actual basado en la ruta
-watch(() => route.path, (newPath) => {
+// Actualizar el título de la página y la sección actual basado en la ruta y el estado de autenticación
+watch([() => route.path, () => hasAuthenticatedPilot.value], ([newPath]) => {
   // Convertir el nombre de la ruta a un título legible
   const routeNameStr = String(route.name || '')
 
@@ -89,7 +89,7 @@ watch(() => route.path, (newPath) => {
     showPageTitle.value = true
 
     // Determinar la sección actual basada en la ruta
-    if (newPath === '/' || newPath.startsWith('/skills')) {
+    if (newPath === '/' || newPath.startsWith('/pilot/skills')) {
       currentSection.value = 'pilot'
       pageTitle.value = 'Piloto'
     } else if (newPath.startsWith('/universe')) {
@@ -154,6 +154,13 @@ onMounted(async () => {
       if (authStore.isAuthenticated && authStore.isEmailVerified) {
         try {
           await pilotStore.fetchCurrentPilot()
+
+          // Forzar una actualización de la sección actual después de cargar el piloto
+          if (route.path === '/' || route.path.startsWith('/pilot/skills')) {
+            currentSection.value = 'pilot'
+            pageTitle.value = 'Piloto'
+            showPageTitle.value = true
+          }
         } catch (error) {
           console.error('Error al cargar el piloto:', error)
         }
@@ -261,7 +268,7 @@ onMounted(async () => {
           @close="closeMobileMenu"
         >
           <!-- Piloto y sus submenús -->
-          <VxvSidebarGroup title="Piloto" :is-mobile="true" basePath="/" :additional-paths="['/skills']">
+          <VxvSidebarGroup title="Piloto" :is-mobile="true" basePath="/" :additional-paths="['/pilot/skills']">
             <VxvNavLink
               v-for="item in pilotMenuItems"
               :key="item.to"

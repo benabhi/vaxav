@@ -33,5 +33,11 @@ class DatabaseSeeder extends Seeder
 
         // Seed skills
         $this->call(SkillSeeder::class);
+
+        // Assign skill permissions to roles
+        $this->call(AssignSkillPermissionsSeeder::class);
+
+        // Assign skills to test pilot
+        $this->call(PilotSkillsSeeder::class);
     }
 }

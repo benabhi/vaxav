@@ -39,13 +39,10 @@ const meta = {
       description: {
         component: `
 El componente VxvStatusBar es una barra de estado que se coloca en la parte inferior de la pantalla.
-Permanece fija mientras se hace scroll y se acopla automáticamente encima del footer cuando este es visible.
 
 ## Características
 
-- Permanece fija en la parte inferior de la pantalla mientras se hace scroll
-- Se acopla automáticamente encima del footer cuando este es visible
-- Vuelve a flotar cuando el footer deja de ser visible
+- Permanece fija en la parte inferior de la pantalla
 - Incluye tres secciones personalizables: izquierda, centro y derecha
 - La sección central muestra por defecto un cronómetro de acción (VxvActionTimer)
         `
@@ -58,16 +55,10 @@ Permanece fija mientras se hace scroll y se acopla automáticamente encima del f
       components: { story },
       template: `
         <div style="height: 100vh; display: flex; flex-direction: column; background-color: #111827; position: relative;">
-          <div style="flex-grow: 1; overflow: auto; padding: 20px;">
-            <div style="min-height: 200vh; display: flex; flex-direction: column; justify-content: space-between;">
-              <div style="padding: 20px; background-color: #1F2937; border-radius: 8px; margin-bottom: 20px;">
-                <h2 style="color: white; margin-top: 0;">Contenido de la página</h2>
-                <p style="color: #9CA3AF;">Haz scroll hacia abajo para ver cómo la barra de estado se acopla al footer cuando este es visible.</p>
-              </div>
-              <div style="padding: 20px; background-color: #1F2937; border-radius: 8px; margin-top: 20px;">
-                <h2 style="color: white; margin-top: 0;">Contenido al final de la página</h2>
-                <p style="color: #9CA3AF;">Cuando llegas aquí, la barra de estado debería acoplarse al footer.</p>
-              </div>
+          <div style="flex-grow: 1; padding: 20px;">
+            <div style="padding: 20px; background-color: #1F2937; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: white; margin-top: 0;">Contenido de la página</h2>
+              <p style="color: #9CA3AF;">Visualización de la barra de estado</p>
             </div>
           </div>
           <story />
@@ -102,44 +93,11 @@ export const Default: Story = {
         timerRemainingTime.value = time;
       };
 
-      // Añadir un mensaje para explicar cómo ver el comportamiento
-      const mounted = () => {
-        setTimeout(() => {
-          const message = document.createElement('div');
-          message.style.position = 'fixed';
-          message.style.top = '10px';
-          message.style.left = '50%';
-          message.style.transform = 'translateX(-50%)';
-          message.style.backgroundColor = 'rgba(31, 41, 55, 0.9)';
-          message.style.color = 'white';
-          message.style.padding = '10px 20px';
-          message.style.borderRadius = '8px';
-          message.style.zIndex = '1000';
-          message.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-          message.style.fontSize = '14px';
-          message.style.textAlign = 'center';
-          message.innerHTML = '👇 Haz scroll hacia abajo para ver cómo la barra se acopla al footer 👇';
-          document.body.appendChild(message);
-
-          setTimeout(() => {
-            message.style.opacity = '0';
-            message.style.transition = 'opacity 1s ease';
-            setTimeout(() => {
-              document.body.removeChild(message);
-            }, 1000);
-          }, 5000);
-        }, 1000);
-      };
-
       return {
         ...args,
         timerRemainingTime,
-        updateTimerRemainingTime,
-        mounted
+        updateTimerRemainingTime
       };
-    },
-    mounted() {
-      this.mounted();
     },
     template: `
       <VxvStatusBar
@@ -206,125 +164,7 @@ export const WithoutTimer: Story = {
   })
 };
 
-// Historia específica para demostrar el comportamiento de acoplamiento
-export const DockingBehavior: Story = {
-  args: {
-    showActionTimer: true,
-    timerDuration: 300,
-    timerRemainingTime: 300,
-    timerAction: 'Demostración de acoplamiento',
-    timerIsActive: true
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Esta historia demuestra cómo la barra de estado se acopla automáticamente al footer cuando este es visible. Haz scroll hacia abajo para ver el comportamiento.'
-      }
-    }
-  },
-  render: (args) => ({
-    components: { VxvStatusBar },
-    setup() {
-      const timerRemainingTime = ref(args.timerRemainingTime || args.timerDuration);
 
-      const updateTimerRemainingTime = (time: number) => {
-        timerRemainingTime.value = time;
-      };
-
-      // Añadir un mensaje para explicar cómo ver el comportamiento
-      const mounted = () => {
-        setTimeout(() => {
-          const message = document.createElement('div');
-          message.style.position = 'fixed';
-          message.style.top = '10px';
-          message.style.left = '50%';
-          message.style.transform = 'translateX(-50%)';
-          message.style.backgroundColor = 'rgba(31, 41, 55, 0.9)';
-          message.style.color = 'white';
-          message.style.padding = '10px 20px';
-          message.style.borderRadius = '8px';
-          message.style.zIndex = '1000';
-          message.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-          message.style.fontSize = '14px';
-          message.style.textAlign = 'center';
-          message.innerHTML = '<strong>DEMOSTRACIÓN DE ACOPLAMIENTO</strong><br>👇 Haz scroll hacia abajo para ver cómo la barra se acopla al footer 👇';
-          document.body.appendChild(message);
-
-          // Iniciar scroll automático después de 2 segundos
-          setTimeout(() => {
-            const scrollHeight = document.documentElement.scrollHeight;
-            const viewportHeight = window.innerHeight;
-            const scrollDistance = scrollHeight - viewportHeight;
-
-            // Scroll suave hacia abajo
-            let currentScroll = 0;
-            const scrollStep = 5;
-            const scrollInterval = setInterval(() => {
-              if (currentScroll >= scrollDistance) {
-                clearInterval(scrollInterval);
-
-                // Después de 2 segundos, scroll hacia arriba
-                setTimeout(() => {
-                  let upScroll = scrollDistance;
-                  const upScrollInterval = setInterval(() => {
-                    if (upScroll <= 0) {
-                      clearInterval(upScrollInterval);
-                      message.style.opacity = '0';
-                      message.style.transition = 'opacity 1s ease';
-                      setTimeout(() => {
-                        document.body.removeChild(message);
-                      }, 1000);
-                    } else {
-                      upScroll -= scrollStep;
-                      window.scrollTo(0, upScroll);
-                    }
-                  }, 10);
-                }, 2000);
-              } else {
-                currentScroll += scrollStep;
-                window.scrollTo(0, currentScroll);
-              }
-            }, 10);
-          }, 2000);
-        }, 1000);
-      };
-
-      return {
-        ...args,
-        timerRemainingTime,
-        updateTimerRemainingTime,
-        mounted
-      };
-    },
-    mounted() {
-      this.mounted();
-    },
-    template: `
-      <VxvStatusBar
-        :showActionTimer="showActionTimer"
-        :timerDuration="timerDuration"
-        :timerRemainingTime="timerRemainingTime"
-        :timerAction="timerAction"
-        :timerIsActive="timerIsActive"
-        @update:timer-remaining-time="updateTimerRemainingTime"
-      >
-        <template #left>
-          <div class="status-item">
-            <span class="status-label">Modo:</span>
-            <span class="status-value">Demostración</span>
-          </div>
-        </template>
-
-        <template #right>
-          <div class="status-item">
-            <span class="status-label">Estado:</span>
-            <span class="status-value" style="color: #10B981;">Activo</span>
-          </div>
-        </template>
-      </VxvStatusBar>
-    `
-  })
-};
 
 // Historia con múltiples elementos en las secciones laterales
 export const WithMultipleItems: Story = {

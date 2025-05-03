@@ -44,6 +44,18 @@ class PermissionsSeeder extends Seeder
         $this->createPermission('Ver Mercado', 'market.view', 'Permite ver el mercado');
         $this->createPermission('Crear Órdenes', 'market.create', 'Permite crear órdenes de compra y venta');
         $this->createPermission('Cancelar Órdenes', 'market.cancel', 'Permite cancelar órdenes propias');
+
+        // Permisos de habilidades
+        $this->createPermission('Ver Habilidades', 'skills.view', 'Permite ver la lista de habilidades y detalles de habilidades individuales');
+        $this->createPermission('Crear Habilidades', 'skills.create', 'Permite crear nuevas habilidades');
+        $this->createPermission('Editar Habilidades', 'skills.edit', 'Permite editar habilidades existentes');
+        $this->createPermission('Eliminar Habilidades', 'skills.delete', 'Permite eliminar habilidades');
+
+        // Permisos de categorías de habilidades
+        $this->createPermission('Ver Categorías de Habilidades', 'skill_categories.view', 'Permite ver la lista de categorías de habilidades');
+        $this->createPermission('Crear Categorías de Habilidades', 'skill_categories.create', 'Permite crear nuevas categorías de habilidades');
+        $this->createPermission('Editar Categorías de Habilidades', 'skill_categories.edit', 'Permite editar categorías de habilidades existentes');
+        $this->createPermission('Eliminar Categorías de Habilidades', 'skill_categories.delete', 'Permite eliminar categorías de habilidades');
     }
 
     /**
@@ -54,7 +66,7 @@ class PermissionsSeeder extends Seeder
         Permission::firstOrCreate(
             ['slug' => $slug],
             [
-                'name' => $name,
+                'name'        => $name,
                 'description' => $description,
             ]
         );
