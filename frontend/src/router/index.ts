@@ -283,14 +283,25 @@ router.beforeEach(async (to, from, next) => {
 
   // Si el usuario está autenticado pero no ha verificado su email
   if (authStore.user && !authStore.isEmailVerified) {
-    // Permitir solo acceso a la página de verificación y rutas de autenticación
-    if (to.name !== 'verification.notice' &&
-      to.name !== 'login' &&
-      to.name !== 'register' &&
-      to.name !== 'password.request' &&
-      to.name !== 'password.reset') {
-      // Redirigir a la página de verificación de email para cualquier otra ruta
-      return next({ name: 'verification.notice' });
+    // Verificar explícitamente el estado de verificación del email
+    try {
+      const verificationStatus = await authStore.checkEmailVerification();
+
+      // Si después de verificar, el email sigue sin estar verificado
+      if (!authStore.isEmailVerified) {
+        // Permitir solo acceso a la página de verificación y rutas de autenticación
+        if (to.name !== 'verification.notice' &&
+          to.name !== 'login' &&
+          to.name !== 'register' &&
+          to.name !== 'password.request' &&
+          to.name !== 'password.reset') {
+          // Redirigir a la página de verificación de email para cualquier otra ruta
+          return next({ name: 'verification.notice' });
+        }
+      }
+    } catch (error) {
+      console.error('Error al verificar el estado del email:', error);
+      // En caso de error, permitir continuar pero registrar el error
     }
   }
 

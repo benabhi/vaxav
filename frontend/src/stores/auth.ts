@@ -76,6 +76,14 @@ export const useAuthStore = defineStore('auth', {
         this.user = response.user;
         this.token = response.token;
         this.isAuthenticated = true;
+
+        // Verificar explícitamente si el email está verificado
+        if (this.user && this.user.email_verified_at) {
+          this.emailVerified = true;
+        }
+
+        // Verificar el estado de verificación del email con el backend
+        await this.checkEmailVerification();
       } catch (error: any) {
         this.error = error.response?.data?.message || 'Error al iniciar sesión';
         this.isAuthenticated = false;
