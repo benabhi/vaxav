@@ -75,6 +75,12 @@ const router = createRouter({
       component: () => import('../views/pilot/CreatePilotView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/pilot/skills',
+      name: 'pilot-skills',
+      component: () => import('../views/pilot/PilotSkillsView.vue'),
+      meta: { requiresAuth: true }
+    },
     // Rutas del universo
     {
       path: '/universe',

@@ -11,6 +11,16 @@ use Illuminate\Support\Facades\Log;
 class SkillCategoryController extends Controller
 {
     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->middleware('permission:skill_categories.view')->only(['index', 'show']);
+        $this->middleware('permission:skill_categories.create')->only(['store']);
+        $this->middleware('permission:skill_categories.edit')->only(['update']);
+        $this->middleware('permission:skill_categories.delete')->only(['destroy']);
+    }
+    /**
      * Display a listing of the skill categories.
      */
     public function index(Request $request): JsonResponse
@@ -44,7 +54,7 @@ class SkillCategoryController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:skills_categories,name',
+            'name'        => 'required|string|max:255|unique:skills_categories,name',
             'description' => 'required|string',
         ]);
 
@@ -70,7 +80,7 @@ class SkillCategoryController extends Controller
         $category = SkillCategory::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:skills_categories,name,' . $id,
+            'name'        => 'required|string|max:255|unique:skills_categories,name,' . $id,
             'description' => 'required|string',
         ]);
 

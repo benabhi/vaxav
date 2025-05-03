@@ -13,6 +13,16 @@ use Illuminate\Support\Facades\Log;
 class SkillController extends Controller
 {
     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->middleware('permission:skills.view')->only(['index', 'show', 'getSkillsForDropdown']);
+        $this->middleware('permission:skills.create')->only(['store']);
+        $this->middleware('permission:skills.edit')->only(['update']);
+        $this->middleware('permission:skills.delete')->only(['destroy']);
+    }
+    /**
      * Display a listing of the skills.
      */
     public function index(Request $request): JsonResponse
