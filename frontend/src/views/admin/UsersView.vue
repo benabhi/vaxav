@@ -17,6 +17,7 @@
     @filter-change="updateFilters"
     @sort-change="updateSort"
     @create="goToCreateUser"
+    @reset="handleReset"
   >
     <!-- Custom filters -->
     <template #filters>
@@ -209,6 +210,15 @@ const handleRoleChange = (value) => {
 const clearRoleFilter = () => {
   filters.role = '';
   updateFilters(filters);
+};
+
+// Handle reset event
+const handleReset = () => {
+  console.log('Evento reset recibido en UsersView');
+
+  // Los filtros y la paginación ya han sido restablecidos por AdminCrudView
+  // Solo necesitamos forzar una recarga de los datos
+  fetchUsers();
 };
 
 // Format date

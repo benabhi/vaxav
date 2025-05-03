@@ -7,7 +7,6 @@ use App\Models\SolarSystem;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-
 class PilotController extends Controller
 {
     /**
@@ -49,17 +48,27 @@ class PilotController extends Controller
         ]);
 
         // Get a default starting location (first solar system)
-        $startingLocation = SolarSystem::first();
-        $locationId = $startingLocation ? $startingLocation->id : null;
+        $locationId = SolarSystem::first()?->id;
 
         // Create the pilot
         $pilot = Pilot::create([
-            'name' => $validated['name'],
-            'race' => $validated['race'],
-            'user_id' => $user->id,
-            'credits' => 10000, // Starting credits
+            'name'        => $validated['name'],
+            'race'        => $validated['race'],
+            'user_id'     => $user->id,
+            'credits'     => 10000, // Starting credits
             'location_id' => $locationId,
         ]);
+
+        // Initialize pilot skills (all skills at level 0)
+        $skills = \App\Models\Skill::all();
+        foreach ($skills as $skill) {
+            \App\Models\PilotSkill::create([
+                'pilot_id'      => $pilot->id,
+                'skill_id'      => $skill->id,
+                'xp'            => 0,
+                'current_level' => 0,
+            ]);
+        }
 
         return response()->json($pilot, 201);
     }
@@ -73,10 +82,10 @@ class PilotController extends Controller
     public function show($id): JsonResponse
     {
         $pilot = Pilot::findOrFail($id);
-        
+
         // Check if the user is authorized to view this pilot
         $this->authorize('view', $pilot);
-        
+
         return response()->json($pilot);
     }
 
@@ -90,17 +99,17 @@ class PilotController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $pilot = Pilot::findOrFail($id);
-        
+
         // Check if the user is authorized to update this pilot
         $this->authorize('update', $pilot);
-        
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'race' => 'sometimes|required|string|in:Humano,Cyborg,Alienígena,Sintético',
         ]);
-        
+
         $pilot->update($validated);
-        
+
         return response()->json($pilot);
     }
 }

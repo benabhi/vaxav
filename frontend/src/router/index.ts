@@ -176,6 +176,61 @@ const router = createRouter({
         requiresRoles: ['superadmin', 'admin']
       }
     },
+    // Rutas de habilidades
+    {
+      path: '/admin/skills',
+      name: 'admin-skills',
+      component: () => import('../views/admin/skills/SkillsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/skills/create',
+      name: 'admin-skills-create',
+      component: () => import('../views/admin/skills/SkillCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/skills/:id/edit',
+      name: 'admin-skills-edit',
+      component: () => import('../views/admin/skills/SkillEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/skill-categories',
+      name: 'admin-skill-categories',
+      component: () => import('../views/admin/skills/SkillCategoriesView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/skill-categories/create',
+      name: 'admin-skill-categories-create',
+      component: () => import('../views/admin/skills/SkillCategoryCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/skill-categories/:id/edit',
+      name: 'admin-skill-categories-edit',
+      component: () => import('../views/admin/skills/SkillCategoryEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
   ],
 })
 

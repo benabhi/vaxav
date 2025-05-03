@@ -52,9 +52,22 @@ class Pilot extends Model
     /**
      * Get the skills of the pilot.
      */
-    public function skills(): HasMany
+    public function pilotSkills(): HasMany
     {
         return $this->hasMany(PilotSkill::class);
+    }
+
+    /**
+     * Get the skills that the pilot has.
+     */
+    public function skills()
+    {
+        return $this->belongsToMany(
+            Skill::class,
+            'pilots_skills',
+            'pilot_id',
+            'skill_id'
+        )->withPivot('xp', 'current_level');
     }
 
     /**

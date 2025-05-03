@@ -27,5 +27,11 @@ class DatabaseSeeder extends Seeder
 
         // Seed solar systems
         $this->call(SolarSystemSeeder::class);
+
+        // Seed skill categories
+        $this->call(SkillCategorySeeder::class);
+
+        // Seed skills
+        $this->call(SkillSeeder::class);
     }
 }

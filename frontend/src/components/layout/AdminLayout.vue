@@ -34,6 +34,29 @@
             />
           </VxvSidebarGroup>
 
+          <!-- Skills Management Group -->
+          <VxvSidebarGroup
+            title="Gestión de Habilidades"
+            :default-collapsed="false"
+            :is-sidebar-collapsed="false"
+            :is-mobile="false"
+            basePath="/admin/skills"
+            :additional-paths="['/admin/skill-categories']"
+          >
+            <VxvNavLink
+              to="/admin/skills"
+              label="Habilidades"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+            />
+            <VxvNavLink
+              to="/admin/skill-categories"
+              label="Categorías"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+            />
+          </VxvSidebarGroup>
+
           <!-- Other menu items -->
           <VxvNavLink
             to="/admin/settings"
@@ -108,6 +131,29 @@
             <VxvNavLink
               to="/admin/roles"
               label="Roles"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+            />
+          </VxvSidebarGroup>
+
+          <!-- Skills Management Group -->
+          <VxvSidebarGroup
+            title="Gestión de Habilidades"
+            :default-collapsed="false"
+            :is-sidebar-collapsed="false"
+            :is-mobile="true"
+            basePath="/admin/skills"
+            :additional-paths="['/admin/skill-categories']"
+          >
+            <VxvNavLink
+              to="/admin/skills"
+              label="Habilidades"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+            />
+            <VxvNavLink
+              to="/admin/skill-categories"
+              label="Categorías"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
             />

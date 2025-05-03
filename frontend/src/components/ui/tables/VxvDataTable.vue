@@ -351,7 +351,8 @@ const emit = defineEmits([
   'row-click',
   'create',
   'edit',
-  'delete'
+  'delete',
+  'reset' // Añadir el evento reset
 ]);
 
 // Local state
@@ -409,8 +410,12 @@ const handlePageChange = (page: number) => {
 
 // Handle per page change
 const handlePerPageChange = () => {
-  emit('update:perPage', localPerPage.value);
-  emit('per-page-change', localPerPage.value);
+  // Asegurarse de que localPerPage sea un número
+  const perPageNumber = Number(localPerPage.value);
+  localPerPage.value = perPageNumber;
+
+  emit('update:perPage', perPageNumber);
+  emit('per-page-change', perPageNumber);
 };
 
 // Handle filter change
@@ -421,13 +426,59 @@ const handleFilterChange = (filters: any) => {
 
 // Handle filter reset
 const handleFilterReset = () => {
-  emit('update:filters', { search: '' });
-  emit('filter-change', { search: '' });
+  // Crear un nuevo objeto de filtros con todos los valores restablecidos
+  const resetFilters = { ...localFilters };
+
+  // Restablecer todos los filtros excepto sort_field y sort_direction
+  Object.keys(resetFilters).forEach(key => {
+    if (key !== 'sort_field' && key !== 'sort_direction') {
+      if (typeof resetFilters[key] === 'string') {
+        resetFilters[key] = '';
+      } else if (Array.isArray(resetFilters[key])) {
+        resetFilters[key] = [];
+      } else if (typeof resetFilters[key] === 'object' && resetFilters[key] !== null) {
+        resetFilters[key] = {};
+      } else if (typeof resetFilters[key] === 'number') {
+        resetFilters[key] = 0;
+      } else if (typeof resetFilters[key] === 'boolean') {
+        resetFilters[key] = false;
+      }
+    }
+  });
+
+  // Actualizar los filtros locales
+  Object.keys(resetFilters).forEach(key => {
+    localFilters[key] = resetFilters[key];
+  });
+
+  // Asegurarse de que se emita un evento de cambio de filtros
+  // con un objeto que contenga todos los filtros restablecidos
+  emit('update:filters', { ...resetFilters });
+  emit('filter-change', { ...resetFilters });
+
+  // Emitir un evento de reset para que los componentes padres puedan realizar acciones adicionales
+  emit('reset');
+
+  // Restablecer el valor de perPage a su valor por defecto y emitir el evento
+  // Importante: Esto debe hacerse después de emitir los eventos de filtros
+  // para que el componente padre pueda manejar correctamente el cambio
+  const currentPerPage = Number(localPerPage.value);
+  const defaultPerPage = Number(props.perPage);
+
+  if (currentPerPage !== defaultPerPage) {
+    console.log('Restableciendo perPage de', currentPerPage, 'a', defaultPerPage);
+    localPerPage.value = defaultPerPage;
+    emit('update:perPage', defaultPerPage);
+    emit('per-page-change', defaultPerPage);
+  }
+
+  console.log('Filtros restablecidos en VxvDataTable, perPage:', localPerPage.value);
 };
 
 // Watch for changes in props
 watch(() => props.perPage, (newValue) => {
-  localPerPage.value = newValue;
+  // Asegurarse de que el nuevo valor sea un número
+  localPerPage.value = Number(newValue);
 });
 
 watch(() => props.filters, (newValue) => {
@@ -442,8 +493,8 @@ onMounted(() => {
   sortKey.value = props.initialSortKey;
   sortOrder.value = props.initialSortOrder;
 
-  // Set initial per page
-  localPerPage.value = props.perPage;
+  // Set initial per page (asegurarse de que sea un número)
+  localPerPage.value = Number(props.perPage);
 
   // Initialize sort filters if they don't exist
   if (!localFilters.sort_field) {
