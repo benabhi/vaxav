@@ -53,9 +53,30 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'name'               => 'required|string|min:3|max:12|regex:/^[a-zA-Z0-9]+$/',
+            'email'              => 'required|string|email|max:255|unique:users',
+            'email_confirmation' => 'required|string|same:email',
+            'password'           => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/'
+            ],
+        ], [
+            'name.required'               => 'El nombre es obligatorio',
+            'name.min'                    => 'El nombre debe tener al menos 3 caracteres',
+            'name.max'                    => 'El nombre no puede tener más de 12 caracteres',
+            'name.regex'                  => 'El nombre solo puede contener letras y números',
+            'email.required'              => 'El email es obligatorio',
+            'email.email'                 => 'El email debe tener un formato válido',
+            'email.unique'                => 'Este email ya está en uso',
+            'email_confirmation.required' => 'La confirmación de email es obligatoria',
+            'email_confirmation.same'     => 'Los emails no coinciden',
+            'password.required'           => 'La contraseña es obligatoria',
+            'password.min'                => 'La contraseña debe tener al menos 8 caracteres',
+            'password.regex'              => 'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial',
+            'password.confirmed'          => 'Las contraseñas no coinciden',
         ]);
 
         $user = User::create([

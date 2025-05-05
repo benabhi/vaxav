@@ -1,14 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-12">
     <div class="max-w-md mx-auto">
-      <VxvAlert
-        v-if="message"
-        :variant="alertVariant"
-        :message="message"
-        :dismissible="false"
-        class="mb-6"
-      />
-
       <VxvForm
         v-if="!verified"
         title="Verificación de Email"
@@ -16,6 +8,15 @@
         :show-cancel="false"
         max-width="md"
       >
+        <template #alert>
+          <VxvAlert
+            v-if="message"
+            :variant="alertVariant"
+            :message="message"
+            :dismissible="false"
+            class="mb-6"
+          />
+        </template>
         <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-6">
           <h2 class="text-lg font-semibold text-blue-400 mb-2">Acceso Restringido</h2>
           <p class="text-gray-300">
@@ -72,6 +73,15 @@
         :show-submit="false"
         max-width="md"
       >
+        <template #alert>
+          <VxvAlert
+            v-if="message && verified"
+            :variant="alertVariant"
+            :message="message"
+            :dismissible="false"
+            class="mb-6"
+          />
+        </template>
         <div class="text-center">
           <div class="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 mb-6">
             <p class="text-green-400 font-semibold">¡Tu dirección de correo electrónico ha sido verificada!</p>
