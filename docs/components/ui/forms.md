@@ -346,6 +346,51 @@ Similar a `BaseCheckbox` pero para selecciones de radio.
 <BaseRadio v-model="gender" value="other" label="Otro" name="gender" />
 ```
 
+### VxvToggleSwitch
+
+`VxvToggleSwitch` es un componente de interruptor de palanca (toggle switch) que permite al usuario alternar entre dos estados: activo e inactivo.
+
+**Archivo**: `/components/ui/forms/VxvToggleSwitch.vue`
+
+**Documentación detallada**: [VxvToggleSwitch](./forms/VxvToggleSwitch.md)
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `modelValue` | `Boolean` | - | Estado actual del toggle (true = activo, false = inactivo) |
+| `activeText` | `String` | `'Activo'` | Texto para el estado activo |
+| `inactiveText` | `String` | `'Inactivo'` | Texto para el estado inactivo |
+| `activeColor` | `String` | `'bg-green-500'` | Color de fondo para el estado activo |
+| `inactiveColor` | `String` | `'bg-gray-600'` | Color de fondo para el estado inactivo |
+| `disabled` | `Boolean` | `false` | Si el toggle está deshabilitado |
+| `showLabel` | `Boolean` | `true` | Si se debe mostrar la etiqueta de texto |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `update:modelValue` | Se emite cuando cambia el valor |
+| `change` | Se emite cuando cambia el estado |
+
+#### Ejemplos de Uso
+
+```vue
+<VxvToggleSwitch v-model="isActive" />
+```
+
+```vue
+<VxvToggleSwitch
+  v-model="isEnabled"
+  activeText="Habilitado"
+  inactiveText="Deshabilitado"
+  activeColor="bg-blue-500"
+  inactiveColor="bg-red-500"
+/>
+```
+
 ### VxvSwitch
 
 `VxvSwitch` es un componente para alternar entre dos estados.

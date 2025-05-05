@@ -80,6 +80,8 @@
       :sort-key="sortKey"
       :sort-order="sortOrder"
       @sort="handleSort"
+      @update:sortKey="sortKey = $event"
+      @update:sortOrder="sortOrder = $event"
       @row-click="$emit('row-click', $event)"
     >
       <!-- Loading slot -->
@@ -378,21 +380,14 @@ const perPageOptionsFormatted = computed(() => {
 });
 
 // Handle sort
-const handleSort = (key: string) => {
-  if (sortKey.value === key) {
-    // Toggle sort order if the same key is clicked
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    // Set new sort key and reset sort order to asc
-    sortKey.value = key;
-    sortOrder.value = 'asc';
-  }
+const handleSort = (sortData: { key: string, order: string }) => {
+  // Los valores de sortKey y sortOrder ya se actualizan a través de los eventos @update:sortKey y @update:sortOrder
 
   // Update filters with sort information
   const updatedFilters = {
     ...localFilters,
-    sort_field: sortKey.value,
-    sort_direction: sortOrder.value
+    sort_field: sortData.key,
+    sort_direction: sortData.order
   };
 
   // Update local filters
@@ -403,9 +398,7 @@ const handleSort = (key: string) => {
     }
   });
 
-  emit('update:sortKey', sortKey.value);
-  emit('update:sortOrder', sortOrder.value);
-  emit('sort-change', { key: sortKey.value, order: sortOrder.value });
+  emit('sort-change', sortData);
   emit('update:filters', updatedFilters);
   emit('filter-change', updatedFilters);
 };

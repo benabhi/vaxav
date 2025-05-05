@@ -8,9 +8,9 @@
   >
     <!-- Barra de progreso circular -->
     <VxvProgressCircular
-      :value="Number(level) >= 5 ? 100 : currentXP"
-      :min="Number(level) >= 5 ? 0 : minXP"
-      :max="Number(level) >= 5 ? 100 : maxXP"
+      :value="Number(level) >= 5 ? 100 : progressPercentage"
+      :min="0"
+      :max="100"
       :size="size"
       :thickness="thickness"
       :color="progressColor"
@@ -37,13 +37,17 @@
 
         <!-- Experiencia actual / siguiente nivel (animado) -->
         <span class="text-xs text-gray-500 mt-1">
+          <template v-if="Number(level) >= 5">
+            <span class="text-green-400 font-medium">NIVEL MÁXIMO</span>
+          </template>
           <VxvAnimatedCounter
+            v-else
             ref="xpCounter"
             :initialValue="0"
-            :finalValue="currentXP"
+            :finalValue="getCurrentXPProgress()"
             :duration="animationDuration"
             :autoStart="false"
-            :suffix="xpSuffix"
+            :suffix="getXPSuffix()"
             :thousandsSeparator="','"
             key="xp-counter"
             class="text-xs"
@@ -209,22 +213,33 @@ const progressPercentage = computed(() => {
     return 100;
   }
 
-  // Calcular el porcentaje basado en la experiencia actual, mínima y máxima
+  // Obtener la experiencia necesaria para el siguiente nivel
+  const levelRequirements = {
+    0: 50,    // Para nivel 1
+    1: 150,   // Para nivel 2
+    2: 300,   // Para nivel 3
+    3: 600,   // Para nivel 4
+    4: 1000,  // Para nivel 5
+  };
+
+  const level = Number(props.level);
+  const multiplier = Number(props.multiplier) || 1;
+
+  // Calcular el porcentaje basado en la experiencia actual y la necesaria para el siguiente nivel
   const currentXP = Number(props.currentXP) || 0;
   const minXP = Number(props.minXP) || 0;
-  const maxXP = Number(props.maxXP) || 0;
 
-  // Si no hay diferencia entre min y max, mostrar 0%
-  if (maxXP <= minXP) {
-    return 0;
+  // Si el nivel es válido, calcular el porcentaje
+  if (level >= 0 && level < 5 && levelRequirements[level]) {
+    const xpNeeded = levelRequirements[level] * multiplier;
+    const xpProgress = currentXP - minXP;
+
+    // Calcular el porcentaje (asegurarse de que esté entre 0 y 100)
+    const percentage = Math.min(100, Math.max(0, Math.round((xpProgress / xpNeeded) * 100)));
+    return percentage;
   }
 
-  // Calcular el porcentaje de progreso
-  const xpProgress = currentXP - minXP;
-  const xpNeeded = maxXP - minXP;
-  const percentage = Math.min(100, Math.max(0, Math.round((xpProgress / xpNeeded) * 100)));
-
-  return percentage;
+  return 0;
 });
 
 // Clase CSS para el color del texto del nivel
@@ -239,6 +254,49 @@ const levelTextClass = computed(() => {
     return 'text-gray-400';
   }
 });
+
+// Función para obtener la experiencia actual progresada en el nivel actual
+const getCurrentXPProgress = () => {
+  // Si la habilidad está en nivel 5 (nivel máximo), mostrar 0
+  if (Number(props.level) >= 5) {
+    return 0;
+  }
+
+  // Calcular la experiencia progresada en el nivel actual
+  const currentXP = Number(props.currentXP) || 0;
+  const minXP = Number(props.minXP) || 0;
+
+  // La experiencia progresada es la diferencia entre la experiencia actual y la mínima para el nivel
+  return Math.max(0, currentXP - minXP);
+};
+
+// Función para obtener el sufijo de experiencia
+const getXPSuffix = () => {
+  // Si la habilidad está en nivel 5 (nivel máximo), mostrar "MAX"
+  if (Number(props.level) >= 5) {
+    return ' MAX';
+  }
+
+  // Obtener la experiencia necesaria para el siguiente nivel
+  const levelRequirements = {
+    0: 50,    // Para nivel 1
+    1: 150,   // Para nivel 2
+    2: 300,   // Para nivel 3
+    3: 600,   // Para nivel 4
+    4: 1000,  // Para nivel 5
+  };
+
+  const level = Number(props.level);
+  const multiplier = Number(props.multiplier) || 1;
+
+  // Si el nivel es válido, calcular la experiencia necesaria
+  if (level >= 0 && level < 5 && levelRequirements[level]) {
+    const xpNeeded = levelRequirements[level] * multiplier;
+    return `/${xpNeeded} XP`;
+  }
+
+  return props.xpSuffix || '/0 XP';
+};
 
 // Función para iniciar todas las animaciones de forma sincronizada
 const startAnimations = () => {

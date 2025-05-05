@@ -3,9 +3,14 @@
  * @description Este archivo contiene las constantes y configuraciones relacionadas con
  * los niveles de habilidades, experiencia requerida y multiplicadores.
  * @module config/skillLevels
+ *
+ * @deprecated Las funciones relacionadas con la experiencia y el índice de progresión
+ * están siendo migradas al composable useSkillExperience. Se recomienda usar ese composable
+ * para nuevas implementaciones.
  */
 
 import api from '@/services/api';
+import { useSkillExperience } from '@/composables/useSkillExperience';
 
 /**
  * Tipo para los requisitos de experiencia base
@@ -72,45 +77,25 @@ const DEFAULT_XP_REQUIREMENTS: XPRequirements = {
 /**
  * Obtiene los requisitos de XP desde la API
  * @returns Promesa que resuelve a los requisitos de XP
+ *
+ * @deprecated Use useSkillExperience().fetchXPRequirements en su lugar
  */
 export async function fetchXPRequirements(): Promise<XPRequirements> {
-  try {
-    const response = await api.get('/admin/settings/name/x1xp');
-    if (response.data && response.data.value) {
-      try {
-        const xpData = JSON.parse(response.data.value);
-        if (Array.isArray(xpData) && xpData.length === 5) {
-          // Convertir el array a un objeto con índices como claves
-          const requirements: XPRequirements = {};
-          xpData.forEach((value, index) => {
-            requirements[index] = value;
-          });
-          return requirements;
-        }
-      } catch (e) {
-        console.error('Error parsing XP requirements:', e);
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching XP requirements:', error);
-  }
-
-  // Si hay algún error, devolver los valores por defecto
-  return DEFAULT_XP_REQUIREMENTS;
+  // Usar el composable para obtener los requisitos de XP
+  const { fetchXPRequirements: fetchXP } = useSkillExperience();
+  return fetchXP();
 }
-
-// Variable para almacenar en caché los requisitos de XP
-let cachedXPRequirements: XPRequirements | null = null;
 
 /**
  * Obtiene los requisitos de XP, utilizando la caché si está disponible
  * @returns Requisitos de XP
+ *
+ * @deprecated Use useSkillExperience().fetchXPRequirements en su lugar
  */
 export async function getXPRequirements(): Promise<XPRequirements> {
-  if (!cachedXPRequirements) {
-    cachedXPRequirements = await fetchXPRequirements();
-  }
-  return cachedXPRequirements;
+  // Usar el composable para obtener los requisitos de XP
+  const { fetchXPRequirements: fetchXP } = useSkillExperience();
+  return fetchXP();
 }
 
 /**
@@ -264,60 +249,13 @@ export function getMultiplierName(multiplier: number): string {
  *
  * @param stats - Objeto con estadísticas del piloto
  * @returns Índice de progresión y sus componentes
+ *
+ * @deprecated Use useSkillExperience().calculateProgressionIndex en su lugar
  */
-export function calculateProgressionIndex(stats: ProgressionStats): ProgressionResult {
-  try {
-    // HS = Porcentaje de Habilidades Aprendidas (0-100%)
-    const HS = stats.totalSkills > 0 ? (stats.learnedSkills / stats.totalSkills) * 100 : 0;
-
-    // AL = Nivel Promedio (0-5)
-    let AL = 0;
-    if (stats.learnedSkills > 0) {
-      const totalLevels = stats.skillsByLevel.reduce((sum, count, level) => sum + (count * level), 0);
-      AL = totalLevels / stats.learnedSkills;
-    }
-
-    // XP = Experiencia Total Acumulada
-    const XP = stats.totalXP;
-
-    // AS = Porcentaje de Habilidades Activas (0-100%)
-    const AS = stats.learnedSkills > 0 ? (stats.activeSkills / stats.learnedSkills) * 100 : 0;
-
-    // MP = Multiplicador Promedio (1-5)
-    let MP = 0;
-    if (stats.learnedSkills > 0) {
-      const totalMultipliers = Object.entries(stats.multiplierStats).reduce(
-        (sum, [mult, count]) => sum + (Number(mult) * count), 0
-      );
-      MP = totalMultipliers / stats.learnedSkills;
-    }
-
-    // Calcular el Índice de Progresión
-    const progressionIndex = Math.round((HS * 10) + (AL * 25) + (XP / 100) + (AS * 15) + (MP * 5));
-
-    return {
-      progressionIndex,
-      progressionComponents: {
-        HS,
-        AL,
-        XP,
-        AS,
-        MP
-      }
-    };
-  } catch (error) {
-    console.error('Error al calcular el Índice de Progresión:', error);
-    return {
-      progressionIndex: 0,
-      progressionComponents: {
-        HS: 0,
-        AL: 0,
-        XP: 0,
-        AS: 0,
-        MP: 0
-      }
-    };
-  }
+export async function calculateProgressionIndex(stats: ProgressionStats): Promise<ProgressionResult> {
+  // Usar el composable para calcular el índice de progresión
+  const { calculateProgressionIndex: calcPI } = useSkillExperience();
+  return calcPI(stats);
 }
 
 // Exportar un objeto con todas las funciones y constantes

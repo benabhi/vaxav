@@ -62,6 +62,8 @@ Los pilotos ganan experiencia (XP) en habilidades a través de diversas activida
 2. **Entrenamiento Activo**: Los pilotos ganan XP adicional al usar activamente una habilidad (combate, minería, etc.).
 3. **Implantes y Bonificaciones**: Ciertos implantes o bonificaciones de raza pueden aumentar la velocidad de entrenamiento.
 
+Para más detalles sobre el sistema de experiencia, consulte la [documentación del sistema de experiencia para habilidades](./skill-experience-system.md).
+
 ## Prerrequisitos
 
 Las habilidades más avanzadas requieren que el piloto tenga otras habilidades en cierto nivel:

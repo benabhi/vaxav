@@ -297,18 +297,31 @@ function getXPSuffix() {
   const minXP = Number(props.skill.minXP) || 0;
   const maxXP = Number(props.skill.maxXP) || 0;
 
-  // Si ya está en nivel 5 (nivel máximo), mostrar el total de XP
+  // Si ya está en nivel 5 (nivel máximo), mostrar "MAX" en lugar de XP
   if (Number(props.skill.level) >= 5) {
-    return `/${currentXP} XP`;
+    return ' MAX';
   }
 
-  // Calcular la diferencia (experiencia necesaria para subir de nivel)
-  const nextLevelXP = maxXP - minXP;
+  // Obtener la experiencia necesaria para el siguiente nivel
+  // Estos son los valores fijos según el nivel y multiplicador
+  const levelRequirements = {
+    0: 50,    // Para nivel 1
+    1: 150,   // Para nivel 2
+    2: 300,   // Para nivel 3
+    3: 600,   // Para nivel 4
+    4: 1000,  // Para nivel 5
+  };
 
-  // Asegurarse de que el valor sea positivo
-  const formattedXP = Math.max(0, nextLevelXP);
+  const level = Number(props.skill.level);
+  const multiplier = Number(props.skill.multiplier) || 1;
 
-  return `/${formattedXP} XP`;
+  // Si el nivel es válido, calcular la experiencia necesaria
+  if (level >= 0 && level < 5 && levelRequirements[level]) {
+    const xpNeeded = levelRequirements[level] * multiplier;
+    return `/${xpNeeded} XP`;
+  }
+
+  return '/0 XP';
 }
 </script>
 

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\SkillCategoryController;
 use App\Http\Controllers\Admin\PilotController as AdminPilotController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\PilotSkillController;
+use App\Http\Controllers\SkillConfigController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,6 +151,12 @@ Route::prefix('skills')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/categories', [PilotSkillController::class, 'getSkillCategories']);
     Route::get('/categories/{categoryId}', [PilotSkillController::class, 'getSkillsByCategory']);
     Route::get('/{skillId}', [PilotSkillController::class, 'getSkillDetails']);
+});
+
+// Rutas de configuración de habilidades
+Route::prefix('skill-config')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/xp-requirements', [SkillConfigController::class, 'getXpRequirements']);
+    Route::post('/progression-index', [SkillConfigController::class, 'calculateProgressionIndex']);
 });
 
 // Rutas de naves

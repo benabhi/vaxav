@@ -406,8 +406,8 @@ onMounted(async () => {
     // Aplicar filtros iniciales (mostrar todas las habilidades)
     applyFilters();
 
-    // Actualizar estadísticas
-    updateStats();
+    // Actualizar estadísticas (ahora es async)
+    await updateStats();
 
     // Iniciar animaciones después de cargar los datos
     // Primero asegurarse de que las animaciones estén detenidas
@@ -741,10 +741,10 @@ const getCategoryName = (categoryId: number): string => {
 };
 
 // Función para actualizar las estadísticas
-const updateStats = () => {
+const updateStats = async () => {
   try {
     // Actualizar las estadísticas utilizando la función getSkillStats
-    const newStats = getSkillStats();
+    const newStats = await getSkillStats();
 
     // Actualizar el estado reactivo
     stats.value = newStats;
@@ -754,7 +754,7 @@ const updateStats = () => {
 };
 
 // Función para calcular estadísticas de habilidades
-const getSkillStats = () => {
+const getSkillStats = async () => {
   try {
     // Estadísticas básicas
     const totalSkills = allSkills.value.length;
@@ -825,7 +825,9 @@ const getSkillStats = () => {
       multiplierStats
     };
 
-    const { progressionIndex, progressionComponents } = calculateProgressionIndex(statsForPI);
+    // Llamar a la función asíncrona y esperar el resultado
+    const progressionResult = await calculateProgressionIndex(statsForPI);
+    const { progressionIndex, progressionComponents } = progressionResult;
 
     return {
       totalSkills,

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Pilot;
 use App\Models\PilotSkill;
-use App\Models\Setting;
 use App\Models\Skill;
 use App\Models\SkillPrerequisite;
 use Illuminate\Support\Facades\Log;
@@ -32,16 +31,16 @@ class SkillService
             if (!$pilotSkill || $pilotSkill->current_level < $requiredLevel || !$pilotSkill->active) {
                 $canActivate = false;
                 $missingPrerequisites[] = [
-                    'skill' => $prerequisite,
+                    'skill'          => $prerequisite,
                     'required_level' => $requiredLevel,
-                    'current_level' => $pilotSkill ? $pilotSkill->current_level : 0,
-                    'active' => $pilotSkill ? $pilotSkill->active : false
+                    'current_level'  => $pilotSkill ? $pilotSkill->current_level : 0,
+                    'active'         => $pilotSkill ? $pilotSkill->active : false
                 ];
             }
         }
 
         return [
-            'can_activate' => $canActivate,
+            'can_activate'          => $canActivate,
             'missing_prerequisites' => $missingPrerequisites
         ];
     }
@@ -78,7 +77,7 @@ class SkillService
         }
 
         return [
-            'can_deactivate' => $canDeactivate,
+            'can_deactivate'   => $canDeactivate,
             'dependent_skills' => $dependentSkills
         ];
     }
@@ -110,8 +109,8 @@ class SkillService
                 if ($pilotSkill) {
                     $canReduce = false;
                     $dependentSkills[] = [
-                        'skill' => Skill::find($prerequisite->skill_id),
-                        'level' => $pilotSkill->current_level,
+                        'skill'          => Skill::find($prerequisite->skill_id),
+                        'level'          => $pilotSkill->current_level,
                         'required_level' => $prerequisite->prerequisite_level
                     ];
                 }
@@ -119,7 +118,7 @@ class SkillService
         }
 
         return [
-            'can_reduce' => $canReduce,
+            'can_reduce'       => $canReduce,
             'dependent_skills' => $dependentSkills
         ];
     }
@@ -178,7 +177,7 @@ class SkillService
 
         foreach ($directDependencies as $dependency) {
             $dependentSkills[] = [
-                'skill' => $dependency->skill,
+                'skill'          => $dependency->skill,
                 'required_level' => $dependency->prerequisite_level
             ];
         }
@@ -193,28 +192,7 @@ class SkillService
      */
     public function getXpRequirements(): array
     {
-        // Intentar obtener de la configuración
-        $xpSetting = Setting::where('name', 'x1xp')->first();
-
-        if ($xpSetting && $xpSetting->type === 'json') {
-            try {
-                $xpRequirements = json_decode($xpSetting->value, true);
-
-                // Validar la estructura
-                if (is_array($xpRequirements) &&
-                    isset($xpRequirements[0]) &&
-                    isset($xpRequirements[1]) &&
-                    isset($xpRequirements[2]) &&
-                    isset($xpRequirements[3]) &&
-                    isset($xpRequirements[4])) {
-                    return $xpRequirements;
-                }
-            } catch (\Exception $e) {
-                Log::error('Error parsing XP requirements: ' . $e->getMessage());
-            }
-        }
-
-        // Valores por defecto si la configuración no existe o es inválida
+        // Valores hardcodeados para los requisitos de XP
         return [
             0 => 50,   // Nivel 0 -> 1
             1 => 150,  // Nivel 1 -> 2
@@ -289,8 +267,8 @@ class SkillService
     {
         if ($level < 0 || $level > 4) {
             return [
-                'current' => 0,
-                'required' => 0,
+                'current'    => 0,
+                'required'   => 0,
                 'percentage' => 100,
             ];
         }
@@ -303,9 +281,84 @@ class SkillService
         $percentage = $requiredXp > 0 ? min(100, floor(($currentLevelXp / $requiredXp) * 100)) : 100;
 
         return [
-            'current' => $currentLevelXp,
-            'required' => $requiredXp,
+            'current'    => $currentLevelXp,
+            'required'   => $requiredXp,
             'percentage' => $percentage,
         ];
+    }
+
+    /**
+     * Calcula el Índice de Progresión (I.P.) para un piloto
+     *
+     * Fórmula: PI = (HS × 10) + (AL × 25) + (XP ÷ 100) + (AS × 15) + (MP × 5)
+     *
+     * Donde:
+     * - HS = Porcentaje de Habilidades Aprendidas (0-100%)
+     * - AL = Nivel Promedio (0-5)
+     * - XP = Experiencia Total Acumulada
+     * - AS = Porcentaje de Habilidades Activas (0-100%)
+     * - MP = Multiplicador Promedio (1-5)
+     *
+     * @param array $stats Estadísticas del piloto
+     * @return array Índice de progresión y sus componentes
+     */
+    public function calculateProgressionIndex(array $stats): array
+    {
+        try {
+            // HS = Porcentaje de Habilidades Aprendidas (0-100%)
+            $HS = $stats['totalSkills'] > 0 ? ($stats['learnedSkills'] / $stats['totalSkills']) * 100 : 0;
+
+            // AL = Nivel Promedio (0-5)
+            $AL = 0;
+            if ($stats['learnedSkills'] > 0) {
+                $totalLevels = 0;
+                foreach ($stats['skillsByLevel'] as $level => $count) {
+                    $totalLevels += $level * $count;
+                }
+                $AL = $totalLevels / $stats['learnedSkills'];
+            }
+
+            // XP = Experiencia Total Acumulada
+            $XP = $stats['totalXP'];
+
+            // AS = Porcentaje de Habilidades Activas (0-100%)
+            $AS = $stats['learnedSkills'] > 0 ? ($stats['activeSkills'] / $stats['learnedSkills']) * 100 : 0;
+
+            // MP = Multiplicador Promedio (1-5)
+            $MP = 0;
+            if ($stats['learnedSkills'] > 0) {
+                $totalMultipliers = 0;
+                foreach ($stats['multiplierStats'] as $mult => $count) {
+                    $totalMultipliers += (int) $mult * $count;
+                }
+                $MP = $totalMultipliers / $stats['learnedSkills'];
+            }
+
+            // Calcular el Índice de Progresión
+            $progressionIndex = round(($HS * 10) + ($AL * 25) + ($XP / 100) + ($AS * 15) + ($MP * 5));
+
+            return [
+                'progressionIndex'      => $progressionIndex,
+                'progressionComponents' => [
+                    'HS' => $HS,
+                    'AL' => $AL,
+                    'XP' => $XP,
+                    'AS' => $AS,
+                    'MP' => $MP
+                ]
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error al calcular el Índice de Progresión: ' . $e->getMessage());
+            return [
+                'progressionIndex'      => 0,
+                'progressionComponents' => [
+                    'HS' => 0,
+                    'AL' => 0,
+                    'XP' => 0,
+                    'AS' => 0,
+                    'MP' => 0
+                ]
+            ];
+        }
     }
 }

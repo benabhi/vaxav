@@ -15,13 +15,13 @@
                 column.sortable ? 'cursor-pointer' : ''
               ]"
               :style="column.width ? { width: column.width } : {}"
-              @click="column.sortable ? $emit('sort', column.key) : null"
+              @click="column.sortable ? handleSort(column.key) : null"
             >
               <div class="flex items-center group">
                 <span>{{ column.label }}</span>
                 <span v-if="column.sortable" class="ml-1">
-                  <template v-if="sortKey === column.key">
-                    <svg v-if="sortOrder === 'asc'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <template v-if="internalSortKey === column.key">
+                    <svg v-if="internalSortOrder === 'asc'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
                     </svg>
                     <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 // Define props
 const props = defineProps({
@@ -159,7 +159,39 @@ const props = defineProps({
 });
 
 // Define emits
-const emit = defineEmits(['sort', 'row-click']);
+const emit = defineEmits(['sort', 'row-click', 'update:sortKey', 'update:sortOrder']);
+
+// Internal state for sort key and order
+const internalSortKey = ref(props.sortKey);
+const internalSortOrder = ref(props.sortOrder);
+
+// Watch for changes in props
+watch(() => props.sortKey, (newValue) => {
+  internalSortKey.value = newValue;
+});
+
+watch(() => props.sortOrder, (newValue) => {
+  internalSortOrder.value = newValue;
+});
+
+/**
+ * Handle sort when a sortable column header is clicked
+ */
+const handleSort = (key: string) => {
+  if (internalSortKey.value === key) {
+    // Toggle sort order if the same key is clicked
+    internalSortOrder.value = internalSortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Set new sort key and reset sort order to asc
+    internalSortKey.value = key;
+    internalSortOrder.value = 'asc';
+  }
+
+  // Emit events
+  emit('update:sortKey', internalSortKey.value);
+  emit('update:sortOrder', internalSortOrder.value);
+  emit('sort', { key: internalSortKey.value, order: internalSortOrder.value });
+};
 
 /**
  * Get value from item by key
