@@ -38,7 +38,9 @@ Documentación sobre los componentes de interfaz de usuario:
 ### 6. API y Autenticación
 Documentación sobre la API y el sistema de autenticación:
 - [Autenticación](./auth/README.md) - Sistema de autenticación
-- [Verificación de Email](./email-verification.md) - Sistema de verificación de email
+- [Validaciones de Registro](./auth/registration-validation.md) - Validaciones del formulario de registro
+- [Verificación de Email](./auth/email-verification.md) - Sistema de verificación de email
+- [Recuperación de Contraseña](./auth/password-reset.md) - Sistema de recuperación de contraseña
 - [Roles y Permisos](./auth/roles-permissions.md) - Sistema de autorización
 - [Endpoints de API](./api/README.md) - Documentación de la API REST
 
