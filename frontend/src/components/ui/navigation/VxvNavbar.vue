@@ -72,7 +72,7 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  
+
   // Propiedades del logo
   logoSize: {
     type: String,
@@ -82,13 +82,13 @@ const props = defineProps({
     type: String,
     default: '/'
   },
-  
+
   // Propiedades de los enlaces
   links: {
     type: Array as () => NavLink[],
     default: () => []
   },
-  
+
   // Clases para los enlaces
   activeClass: {
     type: String,

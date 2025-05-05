@@ -88,7 +88,7 @@ const handleSubmit = async () => {
     // Dejar que el middleware de navegación maneje la redirección según el estado del usuario
     // Si el usuario no ha verificado su email, será redirigido a la página de verificación
     // Si el usuario ha verificado su email pero no tiene piloto, será redirigido a la página de creación de piloto
-    router.push({ name: 'home' });
+    router.push({ name: 'pilot-overview' });
   }
 };
 </script>

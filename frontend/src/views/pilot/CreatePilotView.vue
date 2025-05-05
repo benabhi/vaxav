@@ -149,7 +149,7 @@ const form = reactive({
 // Método para cerrar el modal y navegar a la página principal
 const closeWelcomeModal = () => {
   showWelcomeModal.value = false;
-  router.push('/');
+  router.push('/pilot/overview');
 };
 
 const handleSubmit = async () => {

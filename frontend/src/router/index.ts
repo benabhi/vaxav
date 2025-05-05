@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePilotStore } from '@/stores/pilot'
-import HomeView from '../views/HomeView.vue'
+import PilotOverviewView from '../views/pilot/PilotOverviewView.vue'
 
 // Helper function to check if user has required role
 const hasRole = (user: any, requiredRoles: string[]): boolean => {
@@ -26,8 +26,17 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      redirect: '/pilot/overview'
+    },
+    // Rutas de piloto
+    {
+      path: '/pilot',
+      redirect: '/pilot/overview'
+    },
+    {
+      path: '/pilot/overview',
+      name: 'pilot-overview',
+      component: PilotOverviewView,
     },
     // Rutas de autenticación
     {
@@ -68,7 +77,7 @@ const router = createRouter({
         signature: route.query.signature
       })
     },
-    // Rutas de piloto
+    // Rutas de creación de piloto
     {
       path: '/create-pilot',
       name: 'create-pilot',
@@ -84,7 +93,18 @@ const router = createRouter({
     // Rutas del universo
     {
       path: '/universe',
-      name: 'universe',
+      redirect: '/universe/galaxy',
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/universe/galaxy',
+      name: 'universe-galaxy',
+      component: () => import('../views/universe/UniverseView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/universe/solar-system',
+      name: 'universe-solar-system',
       component: () => import('../views/universe/UniverseView.vue'),
       meta: { requiresAuth: true }
     },
@@ -267,7 +287,7 @@ router.beforeEach(async (to, from, next) => {
 
   // Si la ruta es solo para invitados y el usuario está autenticado
   if (to.meta.requiresGuest && authStore.isLoggedIn) {
-    return next({ name: 'home' });
+    return next({ name: 'pilot-overview' });
   }
 
   // Si la ruta requiere roles específicos
@@ -277,7 +297,7 @@ router.beforeEach(async (to, from, next) => {
 
     if (!userHasRole) {
       // Redirigir a la página principal
-      return next({ name: 'home' });
+      return next({ name: 'pilot-overview' });
     }
   }
 
@@ -325,8 +345,13 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Si después de intentar cargar, el usuario no tiene un piloto, redirigir a la página de creación de piloto
-    if (!pilotStore.hasPilot && to.name !== 'home') {
+    if (!pilotStore.hasPilot && to.name !== 'pilot-overview') {
       return next({ name: 'create-pilot' });
+    }
+
+    // Redirección para mantener compatibilidad con enlaces antiguos
+    if (to.path === '/' && pilotStore.hasPilot) {
+      return next({ name: 'pilot-overview' });
     }
   }
 

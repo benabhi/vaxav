@@ -25,10 +25,11 @@ class UserFlowTest extends TestCase
 
         // 2. Registrar un nuevo usuario
         $registrationResponse = $this->postJson('/api/auth/register', [
-            'name'                  => 'Test User',
+            'name'                  => 'TestUser123',
             'email'                 => 'test@example.com',
-            'password'              => 'password',
-            'password_confirmation' => 'password',
+            'email_confirmation'    => 'test@example.com',
+            'password'              => 'Password123!',
+            'password_confirmation' => 'Password123!',
         ]);
 
         $registrationResponse->assertStatus(200)
@@ -44,7 +45,7 @@ class UserFlowTest extends TestCase
         // Verificar que el usuario se creó correctamente
         $this->assertDatabaseHas('users', [
             'id'    => $userId,
-            'name'  => 'Test User',
+            'name'  => 'TestUser123',
             'email' => 'test@example.com',
         ]);
 

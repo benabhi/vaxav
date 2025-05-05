@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-blue-400">Universo Galáctico</h1>
+      <h1 class="text-3xl font-bold mb-6 text-blue-400">{{ pageTitle }}</h1>
 
     <VxvCard title="Mapa Estelar" class="mb-6">
       <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 h-96 flex items-center justify-center">
@@ -38,6 +38,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import VxvCard from '@/components/ui/layout/VxvCard.vue';
-// Lógica para cargar datos del universo
+
+const route = useRoute();
+
+// Determinar el título de la página según la ruta actual
+const pageTitle = computed(() => {
+  if (route.path.includes('/universe/solar-system')) {
+    return 'Sistema Solar';
+  } else if (route.path.includes('/universe/planet')) {
+    return 'Planeta';
+  } else if (route.path.includes('/universe/station')) {
+    return 'Estación';
+  } else {
+    return 'Universo Galáctico';
+  }
+});
 </script>

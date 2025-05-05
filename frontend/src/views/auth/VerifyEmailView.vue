@@ -88,7 +88,7 @@
             <p class="text-gray-300 mt-2">Ahora puedes acceder a todas las funciones de VAXAV.</p>
           </div>
 
-          <RouterLink to="/" custom v-slot="{ navigate }">
+          <RouterLink to="/pilot/overview" custom v-slot="{ navigate }">
             <VxvButton variant="primary" @click="navigate">
               Ir al inicio
             </VxvButton>
@@ -180,7 +180,7 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
 
       // Redirigir al usuario a la página principal después de verificar
       setTimeout(() => {
-        router.push('/');
+        router.push('/pilot/overview');
       }, 2000);
     } else {
       message.value = 'El email no se marcó como verificado. Por favor, contacta al soporte.';
@@ -210,7 +210,7 @@ onMounted(async () => {
     if (authStore.isEmailVerified && !id && !hash) {
       // El usuario ya está verificado y no viene de un proceso de verificación,
       // redirigir a la página principal
-      router.push('/');
+      router.push('/pilot/overview');
       return;
     }
 
@@ -283,7 +283,7 @@ const verifyWithCode = async () => {
 
       // Redirigir al usuario a la página principal después de un breve retraso
       setTimeout(() => {
-        router.push('/');
+        router.push('/pilot/overview');
       }, 2000);
     } else {
       message.value = result.message || 'Código de verificación inválido.';

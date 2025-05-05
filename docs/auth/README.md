@@ -44,3 +44,5 @@ Para obtener más información sobre aspectos específicos del sistema, consulte
 - [Implementación Frontend](./frontend-implementation.md): Cómo se implementa la autenticación en el frontend.
 - [Implementación Backend](./backend-implementation.md): Cómo se implementa la autenticación en el backend.
 - [Perfil de Usuario](./user-profile.md): Gestión del perfil de usuario (visualización y actualización).
+- [Validación de Contraseñas](./password-validation.md): Detalles sobre el sistema de validación de contraseñas.
+- [Validaciones del Registro](./registration-validation.md): Detalles sobre las validaciones del formulario de registro.

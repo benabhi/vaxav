@@ -25,12 +25,14 @@
               label="Usuarios"
               :is-sidebar-collapsed="false"
               :is-mobile="false"
+              active-class="text-blue-400"
             />
             <VxvNavLink
               to="/admin/roles"
               label="Roles"
               :is-sidebar-collapsed="false"
               :is-mobile="false"
+              active-class="text-blue-400"
             />
           </VxvSidebarGroup>
 
@@ -48,12 +50,14 @@
               label="Habilidades"
               :is-sidebar-collapsed="false"
               :is-mobile="false"
+              active-class="text-blue-400"
             />
             <VxvNavLink
               to="/admin/skill-categories"
               label="Categorías"
               :is-sidebar-collapsed="false"
               :is-mobile="false"
+              active-class="text-blue-400"
             />
           </VxvSidebarGroup>
 
@@ -63,6 +67,7 @@
             label="Configuración"
             :is-sidebar-collapsed="false"
             :is-mobile="false"
+            active-class="text-blue-400"
           />
         </VxvSidebar>
       </div>
@@ -127,12 +132,14 @@
               label="Usuarios"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
+              active-class="text-blue-400"
             />
             <VxvNavLink
               to="/admin/roles"
               label="Roles"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
+              active-class="text-blue-400"
             />
           </VxvSidebarGroup>
 
@@ -150,12 +157,14 @@
               label="Habilidades"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
+              active-class="text-blue-400"
             />
             <VxvNavLink
               to="/admin/skill-categories"
               label="Categorías"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
+              active-class="text-blue-400"
             />
           </VxvSidebarGroup>
 
@@ -165,6 +174,7 @@
             label="Configuración"
             :is-sidebar-collapsed="false"
             :is-mobile="true"
+            active-class="text-blue-400"
           />
         </VxvSidebar>
       </div>

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
 import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
-import AppHeader from './components/layout/AppHeader.vue'
-import AppFooter from './components/layout/AppFooter.vue'
-import VxvStatusBar from './components/ui/layout/VxvStatusBar.vue'
-import VxvNotification from './components/ui/feedback/VxvNotification.vue'
 import VxvPageTitle from './components/ui/layout/VxvPageTitle.vue'
 import VxvSidebar from './components/ui/navigation/VxvSidebar.vue'
 import VxvSidebarGroup from './components/ui/navigation/VxvSidebarGroup.vue'
 import VxvNavLink from './components/ui/navigation/VxvNavLink.vue'
+import AppHeader from './components/layout/AppHeader.vue'
+import AppFooter from './components/layout/AppFooter.vue'
+import VxvStatusBar from './components/ui/layout/VxvStatusBar.vue'
+import VxvNotification from './components/ui/feedback/VxvNotification.vue'
 import { useAuthStore } from './stores/auth'
 import { usePilotStore } from './stores/pilot'
 import authService from './services/authService'
@@ -24,12 +24,16 @@ const showPageTitle = ref(true)
 // Estado para los menús secundarios
 const currentSection = ref('')
 const pilotMenuItems = [
-  { to: '/', label: 'Vista General', exact: true }, // Mantener exact: true para la vista general
-  { to: '/pilot/skills', label: 'Habilidades', exact: false }
+  { to: '/pilot/overview', label: 'Vista General', exact: true }, // Mantener exact: true para la vista general
+  { to: '/pilot/skills', label: 'Habilidades', exact: false },
+  { to: '/pilot/inventory', label: 'Inventario', exact: false },
+  { to: '/pilot/profile', label: 'Perfil', exact: false }
 ]
 const universeMenuItems = [
-  { to: '/universe', label: 'Galaxia', exact: true }, // Mantener exact: true para la vista de galaxia
-  { to: '/universe/solar-system', label: 'Sistema Solar', exact: false }
+  { to: '/universe/galaxy', label: 'Galaxia', exact: true }, // Mantener exact: true para la vista de galaxia
+  { to: '/universe/solar-system', label: 'Sistema Solar', exact: false },
+  { to: '/universe/planet', label: 'Planeta', exact: false },
+  { to: '/universe/station', label: 'Estación', exact: false }
 ]
 
 // Estado para el menú móvil
@@ -89,7 +93,7 @@ watch([() => route.path, () => hasAuthenticatedPilot.value], ([newPath]) => {
     showPageTitle.value = true
 
     // Determinar la sección actual basada en la ruta
-    if (newPath === '/' || newPath.startsWith('/pilot/skills')) {
+    if (newPath.startsWith('/pilot')) {
       currentSection.value = 'pilot'
       pageTitle.value = 'Piloto'
     } else if (newPath.startsWith('/universe')) {
@@ -127,20 +131,9 @@ const onTimerComplete = () => {
   // Aquí puedes realizar acciones cuando el cronómetro llega a cero
 }
 
-const updateTimerRemainingTime = (time) => {
+const updateTimerRemainingTime = (time: number) => {
   timerRemainingTime.value = time
 }
-
-// Método para iniciar un nuevo cronómetro con una acción específica
-const startActionTimer = (action, duration = 120) => {
-  timerAction.value = action
-  timerDuration.value = duration
-  timerRemainingTime.value = duration
-  timerIsActive.value = true
-}
-
-
-
 onMounted(async () => {
   // Inicializar el token desde localStorage
   const hasToken = authService.initToken()
@@ -156,7 +149,7 @@ onMounted(async () => {
           await pilotStore.fetchCurrentPilot()
 
           // Forzar una actualización de la sección actual después de cargar el piloto
-          if (route.path === '/' || route.path.startsWith('/pilot/skills')) {
+          if (route.path.startsWith('/pilot')) {
             currentSection.value = 'pilot'
             pageTitle.value = 'Piloto'
             showPageTitle.value = true
@@ -193,7 +186,8 @@ onMounted(async () => {
           :to="item.to"
           :label="item.label"
           :exact="item.exact"
-          simple
+          pageNav
+          parentSegment="pilot"
           horizontal
         />
       </template>
@@ -206,7 +200,8 @@ onMounted(async () => {
           :to="item.to"
           :label="item.label"
           :exact="item.exact"
-          simple
+          pageNav
+          parentSegment="universe"
           horizontal
         />
       </template>
@@ -268,7 +263,7 @@ onMounted(async () => {
           @close="closeMobileMenu"
         >
           <!-- Piloto y sus submenús -->
-          <VxvSidebarGroup title="Piloto" :is-mobile="true" basePath="/" :additional-paths="['/pilot/skills']">
+          <VxvSidebarGroup title="Piloto" :is-mobile="true" basePath="/pilot">
             <VxvNavLink
               v-for="item in pilotMenuItems"
               :key="item.to"
@@ -276,6 +271,7 @@ onMounted(async () => {
               :label="item.label"
               :exact="item.exact"
               :is-mobile="true"
+              active-class=""
             />
           </VxvSidebarGroup>
           <!-- Universo y sus submenús -->
@@ -287,6 +283,7 @@ onMounted(async () => {
               :label="item.label"
               :exact="item.exact"
               :is-mobile="true"
+              active-class=""
             />
           </VxvSidebarGroup>
           <VxvNavLink
@@ -294,12 +291,14 @@ onMounted(async () => {
             label="Mercado"
             :is-sidebar-collapsed="false"
             :is-mobile="true"
+            active-class=""
           />
           <VxvNavLink
             to="/ships"
             label="Naves"
             :is-sidebar-collapsed="false"
             :is-mobile="true"
+            active-class=""
           />
           <VxvNavLink
             v-if="isModerator"
@@ -307,6 +306,7 @@ onMounted(async () => {
             label="Administración"
             :is-sidebar-collapsed="false"
             :is-mobile="true"
+            active-class=""
           />
         </VxvSidebar>
       </div>

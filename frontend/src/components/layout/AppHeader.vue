@@ -68,14 +68,14 @@ const navLinks = computed(() => {
   // Si está autenticado, verificado pero no tiene piloto, solo mostrar enlace a Piloto
   if (!hasPilot) {
     return [
-      { to: '/', label: 'Piloto', exact: false }
+      { to: '/pilot/overview', label: 'Piloto', exact: false }
     ];
   }
 
   // Si está autenticado, verificado y tiene piloto, mostrar todos los enlaces
   const links = [
-    { to: '/', label: 'Piloto', exact: false }, // No exacto para que se active con submenús
-    { to: '/universe', label: 'Universo', exact: false }, // No exacto para que se active con submenús
+    { to: '/pilot/overview', label: 'Piloto', exact: false }, // No exacto para que se active con submenús
+    { to: '/universe/galaxy', label: 'Universo', exact: false }, // No exacto para que se active con submenús
     { to: '/market', label: 'Mercado' },
     { to: '/ships', label: 'Naves' }
   ];

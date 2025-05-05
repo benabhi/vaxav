@@ -96,8 +96,8 @@ class ProfileControllerTest extends TestCase
         $updatedData = [
             'name'                  => $user->name,
             'email'                 => $user->email,
-            'password'              => 'newpassword123',
-            'password_confirmation' => 'newpassword123',
+            'password'              => 'Newpassword123!',
+            'password_confirmation' => 'Newpassword123!',
         ];
 
         // Update user profile

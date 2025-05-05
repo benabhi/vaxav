@@ -20,7 +20,8 @@
       <!-- Icon for collapsed sidebar -->
       <slot v-if="isSidebarCollapsed && !isMobile" name="icon">
         <svg
-          class="h-5 w-5 mx-auto text-gray-400"
+          class="h-5 w-5 mx-auto"
+          :class="isActive ? 'text-blue-400' : 'text-gray-400'"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
@@ -44,7 +45,7 @@
 
     <!-- Group items (links) - hidden when collapsed or sidebar is collapsed -->
     <div
-      v-show="(!isCollapsed && !isSidebarCollapsed) || (!isCollapsed && isSidebarCollapsed && isMobile)"
+      v-show="(!isCollapsed && !isSidebarCollapsed) || (!isCollapsed && isSidebarCollapsed && isMobile) || (isActive && isSidebarCollapsed && isMobile)"
       class="mt-1 space-y-1 transition-all duration-200"
       :class="{ 'pl-2': !isSidebarCollapsed || isMobile }"
     >
@@ -98,6 +99,17 @@ const props = defineProps({
 // Determinar si alguna ruta dentro del grupo está activa
 const isActive = computed(() => {
   if (!props.basePath) return false;
+
+  // Enfoque genérico para determinar si un grupo está activo
+  // Extraer el segmento principal de la ruta actual
+  const currentPathSegments = route.path.split('/').filter(Boolean);
+  const basePathSegments = props.basePath.split('/').filter(Boolean);
+
+  // Si es una ruta principal (como /pilot, /universe, etc.)
+  if (basePathSegments.length === 1) {
+    // Verificar si la ruta actual comienza con el mismo segmento principal
+    return currentPathSegments.length > 0 && currentPathSegments[0] === basePathSegments[0];
+  }
 
   // Verificar si la ruta actual coincide con la ruta base o comienza con ella
   const basePathMatch = route.path === props.basePath || route.path.startsWith(`${props.basePath}/`);

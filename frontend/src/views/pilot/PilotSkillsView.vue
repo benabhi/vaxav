@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold text-blue-400 mb-3">Habilidades de Piloto</h1>
+      <h1 class="text-2xl font-bold text-blue-400 mb-3">Habilidades de Piloto</h1>
 
     <!-- Descripción detallada de la vista -->
     <div class="bg-gray-800/70 border border-blue-900/50 rounded-lg p-4 mb-4 text-gray-300 leading-relaxed">

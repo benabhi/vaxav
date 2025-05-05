@@ -234,7 +234,7 @@ Las rutas de perfil están definidas en el grupo de autenticación y protegidas 
 // routes/api.php
 Route::prefix('auth')->group(function () {
     // ... otras rutas de autenticación ...
-    
+
     // Rutas de perfil
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show']);
@@ -299,3 +299,4 @@ Para obtener más información sobre aspectos relacionados, consulte los siguien
 - [Autenticación y Autorización](./README.md): Visión general del sistema de autenticación y autorización.
 - [Implementación Frontend](./frontend-implementation.md): Cómo se implementa la autenticación en el frontend.
 - [Implementación Backend](./backend-implementation.md): Cómo se implementa la autenticación en el backend.
+- [Validación de Contraseñas](./password-validation.md): Detalles sobre el sistema de validación de contraseñas en el perfil.

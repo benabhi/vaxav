@@ -40,15 +40,30 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
+            'name'     => 'required|string|max:255',
+            'email'    => [
                 'required',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-            'password' => ['nullable', 'confirmed', Password::defaults()],
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/'
+            ],
+        ], [
+            'name.required'      => 'El nombre es obligatorio',
+            'name.max'           => 'El nombre no puede tener más de 255 caracteres',
+            'email.required'     => 'El email es obligatorio',
+            'email.email'        => 'El email debe tener un formato válido',
+            'email.unique'       => 'Este email ya está en uso',
+            'password.min'       => 'La contraseña debe tener al menos 8 caracteres',
+            'password.regex'     => 'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial',
+            'password.confirmed' => 'Las contraseñas no coinciden',
         ]);
 
         // Update user data
@@ -73,7 +88,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',
-            'user' => $userData
+            'user'    => $userData
         ]);
     }
 }

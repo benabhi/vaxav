@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-white">
     <div class="container mx-auto py-8 px-4">
-      <h1 class="text-3xl font-bold mb-8">Mi Perfil</h1>
+
 
       <div v-if="loading" class="flex justify-center my-8">
         <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -115,9 +115,12 @@ const validationRules = {
     value => value && !/\S+@\S+\.\S+/.test(value) ? 'El correo electrónico no es válido' : null
   ],
   password: [
-    value => value && value.length < 8 && value.length > 0 ? 'La contraseña debe tener al menos 8 caracteres' : null
+    value => value && value.length < 8 && value.length > 0 ? 'La contraseña debe tener al menos 8 caracteres' : null,
+    value => value && value.length > 0 && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value) ?
+      'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial' : null
   ],
   password_confirmation: [
+    (value, values) => values.password && !value ? 'La confirmación de contraseña es obligatoria' : null,
     (value, values) => values.password && value !== values.password ? 'Las contraseñas no coinciden' : null
   ]
 };
@@ -147,6 +150,23 @@ const {
       if (!userData.password) {
         delete userData.password;
         delete userData.password_confirmation;
+      } else {
+        // Validate password manually before sending to backend
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(userData.password)) {
+          setErrors({
+            password: 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial'
+          });
+          throw new Error('Contraseña inválida');
+        }
+
+        // Validate password confirmation
+        if (userData.password !== userData.password_confirmation) {
+          setErrors({
+            password_confirmation: 'Las contraseñas no coinciden'
+          });
+          throw new Error('Las contraseñas no coinciden');
+        }
       }
 
       // Update user profile
@@ -157,6 +177,9 @@ const {
 
       // Show success notification
       notificationStore.success('Tu perfil ha sido actualizado correctamente.');
+
+      // Redirect to pilot overview page
+      router.push('/pilot/overview');
     } catch (error: any) {
       console.error('Error updating profile:', error);
 
@@ -196,9 +219,9 @@ const getRoleBadgeColor = (roleSlug: string) => {
   }
 };
 
-// Navigate to home page
+// Navigate to pilot overview page
 const goToHome = () => {
-  router.push('/');
+  router.push('/pilot/overview');
 };
 
 // Load user data
