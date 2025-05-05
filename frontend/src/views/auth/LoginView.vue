@@ -59,15 +59,21 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { reactive, onMounted } from 'vue';
+import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
+
+// No necesitamos verificar si el usuario viene de restablecer su contraseña
+// ya que la notificación se muestra en la página de restablecimiento
 
 const form = reactive({
   email: '',

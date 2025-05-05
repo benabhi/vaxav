@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { onMounted, computed, ref } from 'vue';
+import { onMounted, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
+import { useNotificationStore } from '@/stores/notification';
 import VxvCard from '@/components/ui/layout/VxvCard.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
-import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 
 const authStore = useAuthStore();
 const pilotStore = usePilotStore();
+const notificationStore = useNotificationStore();
 const route = useRoute();
 
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const hasPilot = computed(() => pilotStore.hasPilot);
-const showVerificationSuccess = ref(false);
 
 onMounted(async () => {
   if (authStore.isLoggedIn) {
@@ -21,12 +21,12 @@ onMounted(async () => {
 
     // Verificar si el usuario acaba de verificar su email (parámetro 'verified=true' en la URL)
     if (route.query.verified === 'true') {
-      showVerificationSuccess.value = true;
-
-      // Ocultar el mensaje después de 5 segundos
-      setTimeout(() => {
-        showVerificationSuccess.value = false;
-      }, 5000);
+      // Mostrar una notificación de éxito
+      notificationStore.success(
+        '¡Tu dirección de correo electrónico ha sido verificada correctamente!',
+        'Verificación completada',
+        7000
+      );
     }
   }
 });
@@ -34,15 +34,6 @@ onMounted(async () => {
 
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Mensaje de éxito de verificación de email -->
-    <VxvAlert
-      v-if="showVerificationSuccess"
-      variant="success"
-      message="¡Tu dirección de correo electrónico ha sido verificada correctamente!"
-      class="mb-6"
-      dismissible
-    />
-
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-blue-400 mb-4">Bienvenido a VAXAV</h1>
       <p class="text-xl text-gray-300 max-w-3xl mx-auto">
