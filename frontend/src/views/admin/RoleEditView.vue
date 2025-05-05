@@ -101,7 +101,7 @@ import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvTextarea from '@/components/ui/forms/VxvTextarea.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 import { useForm } from '@/composables/useForm';
 import { useRoles } from '@/composables/useRoles';
 import { usePermissions } from '@/composables/usePermissions';
@@ -112,7 +112,7 @@ const route = useRoute();
 const notificationStore = useNotificationStore();
 const roleId = route.params.id;
 const loading = ref(true);
-const availablePermissions = ref([]);
+const availablePermissions = ref<any[]>([]);
 
 // Use permissions composable
 const { getAllPermissions } = usePermissions();

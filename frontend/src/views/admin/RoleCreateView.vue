@@ -92,7 +92,7 @@ import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvTextarea from '@/components/ui/forms/VxvTextarea.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 import { useForm } from '@/composables/useForm';
 import { usePermissions } from '@/composables/usePermissions';
 import api from '@/services/api';
@@ -101,13 +101,13 @@ const router = useRouter();
 const notificationStore = useNotificationStore();
 
 // Available permissions
-const availablePermissions = ref([]);
+const availablePermissions = ref<any[]>([]);
 
 // Use permissions composable
 const { getAllPermissions } = usePermissions();
 
 // Generate slug from name
-const generateSlug = (name) => {
+const generateSlug = (name: string): string => {
   return name.toLowerCase()
     .replace(/[^\w ]+/g, '')
     .replace(/ +/g, '-');

@@ -269,7 +269,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 /**
  * PilotSkillsView.vue - Script
  *
@@ -294,6 +294,7 @@ import VxvSkillCard from '@/components/game/skills/VxvSkillCard.vue';
 // import VxvCircularSkillLevel from '@/components/game/skills/VxvCircularSkillLevel.vue';
 // import VxvDashedSkillLevel from '@/components/game/skills/VxvDashedSkillLevel.vue';
 import { getNextLevelXP, calculateProgressionIndex } from '@/config/skillLevels';
+import type { Skill, SkillCategory, Prerequisite } from '@/types';
 
 // Obtener los métodos y estado del composable
 const {
@@ -305,21 +306,51 @@ const {
   fetchSkillCategories
 } = usePilotSkills();
 
+// Interfaces para los tipos locales
+interface PilotSkill {
+  id: number;
+  name: string;
+  skill_category_id: number;
+  multiplier: number;
+  pivot?: {
+    active: boolean;
+    current_level: number;
+    xp: number;
+  };
+  prerequisites?: Prerequisite[];
+}
+
+interface FilterOptions {
+  search: string;
+  category: string;
+  status: string;
+  multiplier: string;
+  level: string;
+}
+
 // Estado local
-const allSkills = ref([]);
-const categories = ref([]);
-const skillsWithPrerequisites = ref([]);
+const allSkills = ref<PilotSkill[]>([]);
+const categories = ref<SkillCategory[]>([]);
+const skillsWithPrerequisites = ref<PilotSkill[]>([]);
 
 // Estado para filtros
-const activeFilters = ref({});
-const defaultFilters = {
+const activeFilters = ref<FilterOptions>({
+  search: '',
+  category: 'all',
+  status: 'all',
+  multiplier: 'all',
+  level: 'all'
+});
+
+const defaultFilters: FilterOptions = {
   search: '',
   category: 'all',
   status: 'all',
   multiplier: 'all',
   level: 'all'
 };
-const filteredSkills = ref([]);
+
+const filteredSkills = ref<PilotSkill[]>([]);
 
 // Estado para animaciones
 const animationStarted = ref(false);
@@ -522,7 +553,7 @@ const processSkillsWithPrerequisites = () => {
 };
 
 // Verificar si una habilidad pertenece al piloto
-const isPilotSkill = (skillId) => {
+const isPilotSkill = (skillId: number): boolean => {
   try {
     return pilotSkills.value.some(skill => skill.id === skillId);
   } catch (error) {
@@ -532,7 +563,7 @@ const isPilotSkill = (skillId) => {
 };
 
 // Verificar si una habilidad está activa (aprendida)
-const isSkillActive = (skillId) => {
+const isSkillActive = (skillId: number): boolean => {
   try {
     const skill = pilotSkills.value.find(skill => skill.id === skillId);
     return skill && skill.pivot ? skill.pivot.active : false;
@@ -543,7 +574,7 @@ const isSkillActive = (skillId) => {
 };
 
 // Obtener el nivel de una habilidad del piloto
-const getPilotSkillLevel = (skillId) => {
+const getPilotSkillLevel = (skillId: number): number => {
   try {
     const skill = pilotSkills.value.find(skill => skill.id === skillId);
     return skill && skill.pivot ? skill.pivot.current_level : 0;
@@ -554,7 +585,7 @@ const getPilotSkillLevel = (skillId) => {
 };
 
 // Obtener la experiencia actual de una habilidad
-const getSkillXP = (skillId) => {
+const getSkillXP = (skillId: number): number => {
   try {
     const skill = pilotSkills.value.find(skill => skill.id === skillId);
 
@@ -571,13 +602,13 @@ const getSkillXP = (skillId) => {
 };
 
 // Obtener la experiencia mínima para el nivel actual
-const getMinXPForLevel = (skillId) => {
+const getMinXPForLevel = (skillId: number): number => {
   try {
     const level = getPilotSkillLevel(skillId);
     if (level <= 0) return 0;
 
     // Experiencia base para cada nivel
-    const baseXP = {
+    const baseXP: Record<number, number> = {
       1: 0,      // Nivel 1 comienza en 0 XP
       2: 50,     // Nivel 2 comienza en 50 XP
       3: 150,    // Nivel 3 comienza en 150 XP
@@ -596,7 +627,7 @@ const getMinXPForLevel = (skillId) => {
 };
 
 // Obtener el estado de una habilidad (active, inactive, unlearned)
-const getSkillStatus = (skillId) => {
+const getSkillStatus = (skillId: number): 'active' | 'inactive' | 'unlearned' => {
   try {
     if (!isPilotSkill(skillId)) return 'unlearned';
     return isSkillActive(skillId) ? 'active' : 'inactive';
@@ -607,7 +638,7 @@ const getSkillStatus = (skillId) => {
 };
 
 // Verificar si el piloto tiene una habilidad a un nivel específico
-const isPilotSkillAtLevel = (skillId, level) => {
+const isPilotSkillAtLevel = (skillId: number, level: number): boolean => {
   try {
     const pilotLevel = getPilotSkillLevel(skillId);
     return pilotLevel >= level;
@@ -618,7 +649,7 @@ const isPilotSkillAtLevel = (skillId, level) => {
 };
 
 // Verificar si una habilidad está disponible para aprender
-const isSkillAvailable = (skill) => {
+const isSkillAvailable = (skill: PilotSkill): boolean => {
   try {
     // Si no tiene prerrequisitos, está disponible
     if (!skill.prerequisites || skill.prerequisites.length === 0) return true;
@@ -634,7 +665,7 @@ const isSkillAvailable = (skill) => {
 };
 
 // Obtener el nombre de un prerrequisito
-const getPrerequisiteName = (prereq) => {
+const getPrerequisiteName = (prereq: Prerequisite): string => {
   try {
     const skill = allSkills.value.find(s => s.id === prereq.prerequisite_id);
     return skill ? skill.name : 'Habilidad Desconocida';
@@ -645,10 +676,10 @@ const getPrerequisiteName = (prereq) => {
 };
 
 // Generar una descripción estética para cada habilidad
-const getSkillDescription = (skill) => {
+const getSkillDescription = (skill: PilotSkill): string => {
   try {
     // Descripciones predefinidas para algunas habilidades comunes
-    const descriptions = {
+    const descriptions: Record<string, string> = {
       // Habilidades de Combate
       'Armas Láser Básicas': 'Dominio fundamental de armas láser estándar, mejorando precisión y eficiencia energética.',
       'Armas de Proyectil Básicas': 'Conocimiento esencial sobre armas balísticas y munición, aumentando la precisión y reduciendo el tiempo de recarga.',
@@ -699,7 +730,7 @@ const getSkillDescription = (skill) => {
 };
 
 // Obtener el nombre de una categoría por su ID
-const getCategoryName = (categoryId) => {
+const getCategoryName = (categoryId: number): string => {
   try {
     const category = categories.value.find(cat => cat.id === categoryId);
     return category ? category.name : 'Desconocida';

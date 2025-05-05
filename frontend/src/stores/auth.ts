@@ -1,6 +1,13 @@
+/**
+ * @file Store de autenticación
+ * @description Gestión del estado de autenticación y usuario
+ * @module stores/auth
+ */
+
 import { defineStore } from 'pinia';
 import authService from '@/services/authService';
 import type { User, LoginCredentials, RegisterData, PasswordResetData } from '@/services/authService';
+import { authPersistOptions } from './plugins/persistence';
 
 interface AuthState {
   user: User | null;
@@ -299,4 +306,9 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
     },
   },
+
+  /**
+   * Configuración de persistencia
+   */
+  ...authPersistOptions
 });

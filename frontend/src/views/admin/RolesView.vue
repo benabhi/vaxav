@@ -105,13 +105,13 @@ import AdminCrudView from '@/components/admin/AdminCrudView.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
-import { useAuthStore } from '@/stores/auth';
-import { useNotificationStore } from '@/stores/notification';
+import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification.ts';
 import { useRoles } from '@/composables/useRoles';
 import api from '@/services/api';
 
 const router = useRouter();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const notificationStore = useNotificationStore();
 
 // Usar el composable de roles
@@ -130,7 +130,7 @@ const {
 
 // Check if user is superadmin
 const isSuperAdmin = computed(() => {
-  return authStore.user?.roles?.some(role => role.slug === 'superadmin') || false;
+  return userStore.userData?.roles?.some(role => role.slug === 'superadmin') || false;
 });
 
 // Table columns
@@ -143,11 +143,11 @@ const columns = [
 
 // Delete confirmation
 const showDeleteModal = ref(false);
-const roleToDelete = ref(null);
+const roleToDelete = ref<any>(null);
 const deleting = ref(false);
 
 // Available permissions
-const availablePermissions = ref([]);
+const availablePermissions = ref<any[]>([]);
 
 // Fetch available permissions
 const fetchPermissions = async () => {
@@ -171,7 +171,7 @@ const goToCreateRole = () => {
 };
 
 // Navigate to edit role page
-const editRole = (role) => {
+const editRole = (role: any) => {
   router.push(`/admin/roles/${role.id}/edit`);
 };
 
@@ -185,7 +185,7 @@ const handleReset = () => {
 };
 
 // Confirm delete role
-const confirmDeleteRole = (role) => {
+const confirmDeleteRole = (role: any) => {
   roleToDelete.value = role;
   showDeleteModal.value = true;
 };

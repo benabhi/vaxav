@@ -45,8 +45,8 @@
   </AdminLayout>
 </template>
 
-<script setup>
-import { computed } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
 import VxvDataTable from '@/components/ui/tables/VxvDataTable.vue';
@@ -72,7 +72,7 @@ const props = defineProps({
    * Elementos para el breadcrumb
    */
   breadcrumbItems: {
-    type: Array,
+    type: Array as () => Array<{ text: string, to?: string }>,
     default: () => []
   },
 
@@ -183,25 +183,37 @@ const emit = defineEmits([
   'reset'
 ]);
 
+// Referencia al componente AdminLayout
+const adminLayoutRef = ref<{ openMobileMenu: Function } | null>(null);
+
+// Función para registrar la función de apertura del sidebar
+const registerOpenSidebar = (openSidebarFn: Function) => {
+  // Esta función se llama desde AdminLayout y recibe la función para abrir el sidebar
+  if (typeof openSidebarFn === 'function') {
+    // Guardar la función para usarla más tarde si es necesario
+    adminLayoutRef.value = { openMobileMenu: openSidebarFn };
+  }
+};
+
 /**
  * Maneja el cambio de página
  */
-const onPageChange = (page) => emit('page-change', page);
+const onPageChange = (page: number) => emit('page-change', page);
 
 /**
  * Maneja el cambio de elementos por página
  */
-const onPerPageChange = (perPage) => emit('per-page-change', perPage);
+const onPerPageChange = (perPage: number) => emit('per-page-change', perPage);
 
 /**
  * Maneja el cambio de filtros
  */
-const onFilterChange = (filters) => emit('filter-change', filters);
+const onFilterChange = (filters: Record<string, any>) => emit('filter-change', filters);
 
 /**
  * Maneja el cambio de ordenación
  */
-const onSortChange = (sort) => emit('sort-change', sort);
+const onSortChange = (sort: { key: string, order: 'asc' | 'desc' }) => emit('sort-change', sort);
 
 /**
  * Maneja el clic en el botón de crear
@@ -211,7 +223,7 @@ const onCreateItem = () => emit('create');
 /**
  * Maneja el clic en una fila
  */
-const onRowClick = (item) => emit('row-click', item);
+const onRowClick = (item: any) => emit('row-click', item);
 
 /**
  * Maneja el evento de reset de filtros

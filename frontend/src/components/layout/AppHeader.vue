@@ -34,10 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, defineEmits } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { computed, defineEmits } from 'vue';
+import { RouterLink } from 'vue-router';
+import { useUserStore } from '@/stores/user';
 import { useAuthStore } from '@/stores/auth';
-import { usePilotStore } from '@/stores/pilot';
+import api from '@/services/api';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvNavbar from '@/components/ui/navigation/VxvNavbar.vue';
 import VxvDropdown from '@/components/ui/navigation/VxvDropdown.vue';
@@ -45,15 +46,12 @@ import VxvDropdownItem from '@/components/ui/navigation/VxvDropdownItem.vue';
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
 
 const emit = defineEmits(['toggle-sidebar']);
-const router = useRouter();
-const authStore = useAuthStore();
-const pilotStore = usePilotStore();
+const userStore = useUserStore();
 
-const isLoggedIn = computed(() => authStore.isLoggedIn);
-const isEmailVerified = computed(() => authStore.isEmailVerified);
-const user = computed(() => authStore.currentUser);
-const credits = computed(() => pilotStore.pilotCredits.toLocaleString());
-const isModerator = computed(() => authStore.isModerator);
+const isLoggedIn = computed(() => userStore.isLoggedIn);
+const isEmailVerified = computed(() => userStore.isEmailVerified);
+const user = computed(() => userStore.userData);
+const isModerator = computed(() => userStore.isModerator);
 
 // Enlaces de navegación dinámicos basados en el estado de autenticación, verificación y permisos
 const navLinks = computed(() => {
@@ -64,7 +62,7 @@ const navLinks = computed(() => {
   if (!isEmailVerified.value) return [];
 
   // Verificar si el usuario tiene un piloto
-  const hasPilot = pilotStore.hasPilot;
+  const hasPilot = userStore.hasPilot;
 
   // Si está autenticado, verificado pero no tiene piloto, solo mostrar enlace a Piloto
   if (!hasPilot) {
@@ -99,10 +97,10 @@ const navLinks = computed(() => {
 
   // Añadir enlace de administración si el usuario es moderador
   if (isModerator.value) {
+    // Añadir enlace de administración (el estilo se aplicará en el componente)
     links.push({
       to: '/admin',
-      label: 'Administración',
-      className: 'font-bold text-yellow-400 hover:text-yellow-300'
+      label: 'Administración'
     });
   }
 
@@ -110,8 +108,33 @@ const navLinks = computed(() => {
 });
 
 const logout = async () => {
-  await authStore.logout();
-  router.push('/login');
+  // Usar el store unificado para el logout
+  try {
+    // Obtener el store de autenticación
+    const authStore = useAuthStore();
+
+    // Limpiar el token y redirigir al login
+    localStorage.removeItem('auth_token');
+
+    // Eliminar el token de los headers de API
+    delete api.defaults.headers.common['Authorization'];
+
+    // Limpiar el estado de autenticación
+    authStore.$patch({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      emailVerified: false
+    });
+
+    // Limpiar el estado del store unificado
+    userStore.isLoaded = false;
+
+    // Recargar la página para asegurar que todos los estados se limpien
+    window.location.href = '/login';
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+  }
 };
 </script>
 

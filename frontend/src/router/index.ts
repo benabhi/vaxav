@@ -1,42 +1,35 @@
+/**
+ * @file Configuración del router de Vue
+ * @description Configuración de rutas y guardias de navegación
+ * @module router
+ */
+
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { usePilotStore } from '@/stores/pilot'
+import { setupRouterGuards } from './guards'
 import PilotOverviewView from '../views/pilot/PilotOverviewView.vue'
-
-// Helper function to check if user has required role
-const hasRole = (user: any, requiredRoles: string[]): boolean => {
-  if (!user) return false;
-
-  // Check roles array
-  if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
-    const hasRequiredRole = user.roles.some((role: any) => {
-      return requiredRoles.includes(role.slug);
-    });
-
-    if (hasRequiredRole) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/pilot/overview'
+      redirect: '/pilot/overview',
+      meta: { requiresAuth: true }
     },
     // Rutas de piloto
     {
       path: '/pilot',
-      redirect: '/pilot/overview'
+      redirect: '/pilot/overview',
+      meta: { requiresAuth: true }
     },
     {
       path: '/pilot/overview',
       name: 'pilot-overview',
       component: PilotOverviewView,
+      meta: {
+        requiresAuth: true,
+        requiresPilot: true
+      }
     },
     // Rutas de autenticación
     {
@@ -260,102 +253,11 @@ const router = createRouter({
   ],
 })
 
-// Navegación de protección de rutas
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore();
-
-  // Verificar si hay un token en localStorage
-  const token = localStorage.getItem('auth_token');
-
-  // Si hay un token pero el usuario no está cargado, intentar cargarlo
-  if (token && !authStore.user) {
-    try {
-      await authStore.fetchUser();
-    } catch (error) {
-      // Si la ruta requiere autenticación, redirigir al login
-      if (to.meta.requiresAuth) {
-        localStorage.removeItem('auth_token'); // Token inválido o expirado
-        return next({ name: 'login' });
-      }
-    }
-  }
-
-  // Si la ruta requiere autenticación y no hay token o usuario
-  if (to.meta.requiresAuth && (!token || !authStore.user)) {
-    return next({ name: 'login' });
-  }
-
-  // Si la ruta es solo para invitados y el usuario está autenticado
-  if (to.meta.requiresGuest && authStore.isLoggedIn) {
-    return next({ name: 'pilot-overview' });
-  }
-
-  // Si la ruta requiere roles específicos
-  if (to.meta.requiresRoles && Array.isArray(to.meta.requiresRoles) && authStore.user) {
-    // Verificar si el usuario tiene alguno de los roles requeridos
-    const userHasRole = hasRole(authStore.user, to.meta.requiresRoles as string[]);
-
-    if (!userHasRole) {
-      // Redirigir a la página principal
-      return next({ name: 'pilot-overview' });
-    }
-  }
-
-  // Si el usuario está autenticado pero no ha verificado su email
-  if (authStore.user && !authStore.isEmailVerified) {
-    // Verificar explícitamente el estado de verificación del email
-    try {
-      const verificationStatus = await authStore.checkEmailVerification();
-
-      // Si después de verificar, el email sigue sin estar verificado
-      if (!authStore.isEmailVerified) {
-        // Permitir solo acceso a la página de verificación y rutas de autenticación
-        if (to.name !== 'verification.notice' &&
-          to.name !== 'login' &&
-          to.name !== 'register' &&
-          to.name !== 'password.request' &&
-          to.name !== 'password.reset') {
-          // Redirigir a la página de verificación de email para cualquier otra ruta
-          return next({ name: 'verification.notice' });
-        }
-      }
-    } catch (error) {
-      console.error('Error al verificar el estado del email:', error);
-      // En caso de error, permitir continuar pero registrar el error
-    }
-  }
-
-  // Si el usuario está autenticado, ha verificado su email, pero no tiene un piloto
-  if (authStore.user &&
-    authStore.isEmailVerified &&
-    to.name !== 'create-pilot' &&
-    to.name !== 'login' &&
-    to.name !== 'register' &&
-    to.name !== 'password.request' &&
-    to.name !== 'password.reset') {
-
-    // Cargar el piloto del usuario si no se ha cargado aún
-    const pilotStore = usePilotStore();
-    if (!pilotStore.hasPilot && !pilotStore.loading) {
-      try {
-        await pilotStore.fetchCurrentPilot();
-      } catch (error) {
-        console.error('Error fetching pilot:', error);
-      }
-    }
-
-    // Si después de intentar cargar, el usuario no tiene un piloto, redirigir a la página de creación de piloto
-    if (!pilotStore.hasPilot && to.name !== 'pilot-overview') {
-      return next({ name: 'create-pilot' });
-    }
-
-    // Redirección para mantener compatibilidad con enlaces antiguos
-    if (to.path === '/' && pilotStore.hasPilot) {
-      return next({ name: 'pilot-overview' });
-    }
-  }
-
-  next();
+// Configurar los guardias de navegación
+setupRouterGuards(router).then(() => {
+  console.log('Router guards configured successfully');
+}).catch(error => {
+  console.error('Error configuring router guards:', error);
 });
 
 export default router

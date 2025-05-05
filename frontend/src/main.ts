@@ -1,3 +1,9 @@
+/**
+ * @file Punto de entrada principal de la aplicación
+ * @description Configuración de Vue, Pinia, Router y servicios
+ * @module main
+ */
+
 import './assets/main.css'
 
 import { createApp } from 'vue'
@@ -7,10 +13,13 @@ import App from './App.vue'
 import router from './router'
 import authService from './services/authService'
 import { useAuthStore } from './stores/auth'
+import { useUserStore, setupUserStoreWatchers } from './stores/user'
+import { piniaPersistedState } from './stores/plugins/persistence'
 
-// Crear la aplicación y el store
+// Crear la aplicación y configurar Pinia con persistencia
 const app = createApp(App)
 const pinia = createPinia()
+pinia.use(piniaPersistedState)
 app.use(pinia)
 app.use(router)
 
@@ -19,14 +28,17 @@ const initApp = async () => {
     // Inicializar el token desde localStorage
     const hasToken = authService.initToken()
 
-    // Si hay un token, intentar cargar el usuario
+    // Configurar watchers para el store unificado
+    setupUserStoreWatchers()
+
+    // Si hay un token, cargar los datos del usuario usando el store unificado
     if (hasToken) {
-        const authStore = useAuthStore()
+        const userStore = useUserStore()
         try {
-            await authStore.fetchUser()
-            console.log('Usuario cargado:', authStore.user)
+            await userStore.loadUserData()
+            console.log('Datos de usuario cargados correctamente')
         } catch (error) {
-            console.error('Error al cargar el usuario:', error)
+            console.error('Error al cargar los datos del usuario:', error)
         }
     }
 

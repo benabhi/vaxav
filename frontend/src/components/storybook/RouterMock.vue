@@ -4,19 +4,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { provide, ref } from 'vue';
 
+interface RouterMockProps {
+  path?: string;
+}
+
 // Props para configurar la ruta simulada
-const props = defineProps({
-  path: {
-    type: String,
-    default: '/'
-  }
+const props = withDefaults(defineProps<RouterMockProps>(), {
+  path: '/'
 });
 
+interface RouteObject {
+  path: string;
+}
+
 // Crear un objeto route simulado
-const route = ref({
+const route = ref<RouteObject>({
   path: props.path
 });
 

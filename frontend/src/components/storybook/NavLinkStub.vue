@@ -26,71 +26,46 @@
   </a>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 
-const props = defineProps({
-  to: {
-    type: String,
-    required: true
-  },
-  label: {
-    type: String,
-    required: true
-  },
-  icon: {
-    type: [Object, Function],
-    default: null
-  },
-  exact: {
-    type: Boolean,
-    default: false
-  },
-  horizontal: {
-    type: Boolean,
-    default: false
-  },
-  simple: {
-    type: Boolean,
-    default: false
-  },
-  className: {
-    type: String,
-    default: ''
-  },
+interface NavLinkStubProps {
+  to: string;
+  label: string;
+  icon?: object | Function | null;
+  exact?: boolean;
+  horizontal?: boolean;
+  simple?: boolean;
+  className?: string;
   // Para Storybook, podemos simular si el enlace está activo
-  active: {
-    type: Boolean,
-    default: false
-  },
+  active?: boolean;
   // Ruta actual simulada para Storybook
-  currentPath: {
-    type: String,
-    default: ''
-  }
-});
+  currentPath?: string;
+}
+
+const props = defineProps<NavLinkStubProps>();
 
 // Determinar si el enlace está activo
 const isActive = computed(() => {
   if (props.active) return true;
-  
+
   if (props.currentPath) {
     if (props.to === '/') {
       if (props.exact) {
         return props.currentPath === '/';
       }
-      return props.currentPath === '/' || 
-             props.currentPath === '/skills' || 
+      return props.currentPath === '/' ||
+             props.currentPath === '/skills' ||
              props.currentPath.startsWith('/skills/');
     }
-    
+
     if (props.exact) {
       return props.currentPath === props.to;
     }
-    
+
     return props.currentPath === props.to || props.currentPath.startsWith(`${props.to}/`);
   }
-  
+
   return false;
 });
 </script>

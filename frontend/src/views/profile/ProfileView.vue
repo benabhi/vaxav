@@ -93,14 +93,14 @@ import { useRouter } from 'vue-router';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
-import { useNotificationStore } from '@/stores/notification';
-import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification.ts';
+import { useUserStore } from '@/stores/user';
 import { useForm } from '@/composables/useForm';
 import api from '@/services/api';
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 
 const loading = ref(true);
 const userRoles = ref<any[]>([]);
@@ -172,8 +172,8 @@ const {
       // Update user profile
       await api.put('/auth/profile', userData);
 
-      // Update user in auth store
-      await authStore.fetchUser();
+      // Update user in user store
+      await userStore.refreshUserData();
 
       // Show success notification
       notificationStore.success('Tu perfil ha sido actualizado correctamente.');
@@ -228,9 +228,9 @@ const goToHome = () => {
 onMounted(async () => {
   try {
     // Ensure we have the latest user data
-    await authStore.fetchUser();
+    await userStore.loadUserData();
 
-    const user = authStore.currentUser;
+    const user = userStore.userData;
 
     if (user) {
       // Set form values

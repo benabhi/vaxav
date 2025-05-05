@@ -22,7 +22,7 @@ Utiliza el componente VxvAlert para mostrar cada notificación y el store notifi
 En una aplicación real, este componente se utiliza junto con el store de notificaciones:
 
 \`\`\`javascript
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 
 const notificationStore = useNotificationStore();
 

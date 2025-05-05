@@ -8,12 +8,11 @@ import AppHeader from './components/layout/AppHeader.vue'
 import AppFooter from './components/layout/AppFooter.vue'
 import VxvStatusBar from './components/ui/layout/VxvStatusBar.vue'
 import VxvNotification from './components/ui/feedback/VxvNotification.vue'
-import { useAuthStore } from './stores/auth'
-import { usePilotStore } from './stores/pilot'
+import { useUserStore } from './stores/user'
 import authService from './services/authService'
 
-const authStore = useAuthStore()
-const pilotStore = usePilotStore()
+// Usar el store unificado en lugar de los stores individuales
+const userStore = useUserStore()
 
 // Estado para el menú móvil
 const pilotMenuItems = [
@@ -30,7 +29,7 @@ const isMobileMenuOpen = ref(false)
 const isMobileView = ref(false)
 
 // Referencia al componente AdminLayout
-const adminLayoutRef = ref(null)
+const adminLayoutRef = ref<{ openMobileMenu: Function } | null>(null)
 
 // Estado para el cronómetro de acción
 const timerDuration = ref(300) // 5 minutos para prueba
@@ -58,12 +57,12 @@ onMounted(() => {
 
 // Verificar si el usuario es moderador
 const isModerator = computed(() => {
-  return authStore.isModerator || authStore.isAdmin || authStore.isSuperAdmin
+  return userStore.isModerator
 })
 
 // Verificar si el usuario está autenticado y tiene un piloto
 const hasAuthenticatedPilot = computed(() => {
-  return authStore.isAuthenticated && authStore.isEmailVerified && pilotStore.hasPilot
+  return userStore.isLoggedIn && userStore.isEmailVerified && userStore.hasPilot
 })
 
 
@@ -103,20 +102,10 @@ onMounted(async () => {
   // Intentar cargar el usuario al iniciar la aplicación si hay token
   if (hasToken) {
     try {
-      await authStore.fetchUser()
-
-      // Si el usuario está autenticado y verificado, intentar cargar su piloto
-      if (authStore.isAuthenticated && authStore.isEmailVerified) {
-        try {
-          await pilotStore.fetchCurrentPilot()
-
-          // El piloto se ha cargado correctamente
-        } catch (error) {
-          console.error('Error al cargar el piloto:', error)
-        }
-      }
+      // Usar el store unificado para cargar todos los datos del usuario
+      await userStore.loadUserData()
     } catch (error) {
-      console.error('Error al cargar el usuario:', error)
+      console.error('Error al cargar los datos del usuario:', error)
       // Si hay error, limpiamos el token
       localStorage.removeItem('auth_token')
     }

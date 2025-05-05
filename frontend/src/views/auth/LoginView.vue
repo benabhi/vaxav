@@ -7,14 +7,14 @@
         submitText="Iniciar Sesión"
         :show-cancel="false"
         :full-width-submit="true"
-        :loading="authStore.loading"
+        :loading="userStore.isUserDataLoading"
         @submit="handleSubmit"
       >
         <template #alert>
           <VxvAlert
-            v-if="authStore.error"
+            v-if="userStore.error"
             variant="error"
-            :message="authStore.error"
+            :message="userStore.error"
             :dismissible="false"
             class="mb-6"
           />
@@ -59,17 +59,17 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue';
+import { reactive } from 'vue';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useNotificationStore } from '@/stores/notification';
+import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification.ts';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const notificationStore = useNotificationStore();
 
 // No necesitamos verificar si el usuario viene de restablecer su contraseña
@@ -81,14 +81,23 @@ const form = reactive({
 });
 
 const handleSubmit = async () => {
-  await authStore.login(form);
+  try {
+    // Usar el store unificado para iniciar sesión
+    // Este método se encargará de llamar a authStore.login internamente
+    await userStore.login(form);
 
-  if (authStore.isLoggedIn) {
-    // No redirigir directamente a la página principal
-    // Dejar que el middleware de navegación maneje la redirección según el estado del usuario
-    // Si el usuario no ha verificado su email, será redirigido a la página de verificación
-    // Si el usuario ha verificado su email pero no tiene piloto, será redirigido a la página de creación de piloto
-    router.push({ name: 'pilot-overview' });
+    if (userStore.isLoggedIn) {
+      // Mostrar notificación de éxito
+      notificationStore.success('Sesión iniciada correctamente');
+
+      // No redirigir directamente a la página principal
+      // Dejar que el middleware de navegación maneje la redirección según el estado del usuario
+      // Si el usuario no ha verificado su email, será redirigido a la página de verificación
+      // Si el usuario ha verificado su email pero no tiene piloto, será redirigido a la página de creación de piloto
+      router.push({ name: 'pilot-overview' });
+    }
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
   }
 };
 </script>

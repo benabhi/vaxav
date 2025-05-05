@@ -1,6 +1,6 @@
 import { ref, reactive } from 'vue';
 import api from '@/services/api';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 
 /**
  * Composable para gestionar categorías de habilidades

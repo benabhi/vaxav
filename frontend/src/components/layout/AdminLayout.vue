@@ -230,9 +230,8 @@ import VxvSidebar from '@/components/ui/navigation/VxvSidebar.vue';
 import VxvSidebarGroup from '@/components/ui/navigation/VxvSidebarGroup.vue';
 import VxvNavLink from '@/components/ui/navigation/VxvNavLink.vue';
 import VxvNotification from '@/components/ui/feedback/VxvNotification.vue';
-import { useNotificationStore } from '@/stores/notification';
-import { useAuthStore } from '@/stores/auth';
-import { usePilotStore } from '@/stores/pilot';
+import { useNotificationStore } from '@/stores/notification.ts';
+import { useUserStore } from '@/stores/user';
 
 const props = defineProps({
   title: {
@@ -246,8 +245,7 @@ const emit = defineEmits(['register-open-sidebar']);
 
 // Initialize stores
 const notificationStore = useNotificationStore();
-const authStore = useAuthStore();
-const pilotStore = usePilotStore();
+const userStore = useUserStore();
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false);
@@ -269,6 +267,9 @@ defineExpose({
 // Escuchar el evento global para abrir el sidebar móvil
 onMounted(() => {
   window.addEventListener('open-admin-sidebar', openMobileMenu);
+
+  // Emitir el evento register-open-sidebar para que los componentes padres puedan registrar la función
+  emit('register-open-sidebar', openMobileMenu);
 });
 
 // Limpiar el evento al desmontar el componente
@@ -277,9 +278,9 @@ onUnmounted(() => {
 });
 
 // Datos para el menú principal de VAXAV
-const isLoggedIn = computed(() => authStore.isLoggedIn);
-const isEmailVerified = computed(() => authStore.isEmailVerified);
-const isModerator = computed(() => authStore.isModerator);
+const isLoggedIn = computed(() => userStore.isLoggedIn);
+const isEmailVerified = computed(() => userStore.isEmailVerified);
+const isModerator = computed(() => userStore.isModerator);
 
 // Enlaces de navegación para el menú principal
 const mainNavLinks = computed(() => {
@@ -287,7 +288,7 @@ const mainNavLinks = computed(() => {
   if (!isLoggedIn.value || !isEmailVerified.value) return [];
 
   // Verificar si el usuario tiene un piloto
-  const hasPilot = pilotStore.hasPilot;
+  const hasPilot = userStore.hasPilot;
   if (!hasPilot) return [];
 
   // Enlaces principales de VAXAV

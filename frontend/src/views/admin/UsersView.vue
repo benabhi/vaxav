@@ -146,7 +146,7 @@ import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
 import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 import { useUsers } from '@/composables/useUsers';
 
 // Mostrar etiquetas de filtros

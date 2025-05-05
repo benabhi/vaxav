@@ -102,8 +102,8 @@
 <script setup lang="ts">
 import { ref, onMounted, defineProps } from 'vue';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useNotificationStore } from '@/stores/notification';
+import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification.ts';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
@@ -120,7 +120,7 @@ const props = defineProps({
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const notificationStore = useNotificationStore();
 
 const verified = ref(false);
@@ -139,7 +139,7 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
     alertVariant.value = 'info';
 
     // Primero, asegurarse de que el usuario esté autenticado
-    if (!authStore.isLoggedIn) {
+    if (!userStore.isLoggedIn) {
       message.value = 'Debes iniciar sesión para verificar tu email.';
       alertVariant.value = 'error';
       return;
@@ -161,13 +161,11 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
     message.value = response.data.message || 'Email verificado correctamente.';
     alertVariant.value = 'success';
 
-    // Actualizar el usuario en el store
-    await authStore.fetchUser();
+    // Actualizar los datos del usuario en el store unificado
+    await userStore.loadUserData();
 
-    // Forzar una actualización del estado de verificación
-    await authStore.checkEmailVerification();
-
-    if (authStore.isEmailVerified) {
+    // Verificar si el email está verificado
+    if (userStore.isEmailVerified) {
       // Mostrar mensaje de éxito y redirigir
       message.value = '¡Email verificado correctamente! Redirigiendo a la página principal...';
 
@@ -199,15 +197,17 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
 onMounted(async () => {
   // Verificar si el usuario ya está verificado
   try {
-    // Verificar el estado de verificación del email con el backend
-    await authStore.checkEmailVerification();
+    // Cargar los datos del usuario si no están cargados
+    if (userStore.isLoggedIn && !userStore.isLoaded) {
+      await userStore.loadUserData();
+    }
 
     // Si el usuario ya está verificado y no hay parámetros de verificación en la URL,
     // redirigir a la página principal
     const id = props.id || route.query.id as string;
     const hash = props.hash || route.query.hash as string;
 
-    if (authStore.isEmailVerified && !id && !hash) {
+    if (userStore.isEmailVerified && !id && !hash) {
       // El usuario ya está verificado y no viene de un proceso de verificación,
       // redirigir a la página principal
       router.push('/pilot/overview');
@@ -215,7 +215,7 @@ onMounted(async () => {
     }
 
     // Actualizar el estado local
-    verified.value = authStore.isEmailVerified;
+    verified.value = userStore.isEmailVerified;
 
     // Solo mostrar el mensaje de éxito si hay parámetros de verificación en la URL (viene desde un enlace de verificación)
     if (verified.value && (id && hash)) {
@@ -267,12 +267,20 @@ const verifyWithCode = async () => {
   message.value = '';
 
   try {
-    const result = await authStore.verifyEmailWithCode(verificationCode.value);
+    // Usar la API directamente para verificar el código
+    const response = await api.post('/auth/email/verify-code', {
+      code: verificationCode.value
+    });
+
+    const result = response.data;
 
     if (result.verified) {
       verified.value = true;
       message.value = result.message || 'Email verificado correctamente.';
       alertVariant.value = 'success';
+
+      // Actualizar los datos del usuario
+      await userStore.loadUserData();
 
       // Mostrar notificación de éxito
       notificationStore.success(

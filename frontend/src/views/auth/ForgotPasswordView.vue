@@ -40,13 +40,16 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification.ts';
+import api from '@/services/api';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 
 const router = useRouter();
-const authStore = useAuthStore();
+const userStore = useUserStore();
+const notificationStore = useNotificationStore();
 
 const email = ref('');
 const loading = ref(false);
@@ -60,14 +63,32 @@ const handleSubmit = async () => {
   message.value = '';
 
   try {
-    const response = await authStore.forgotPassword(email.value);
-    message.value = response.message || 'Se ha enviado un enlace de recuperación a tu correo electrónico.';
+    // Llamar directamente a la API para solicitar el restablecimiento de contraseña
+    const response = await api.post('/auth/forgot-password', { email: email.value });
+
+    // Mostrar mensaje de éxito
+    message.value = response.data.message || 'Se ha enviado un enlace de recuperación a tu correo electrónico.';
     alertVariant.value = 'success';
+
+    // Mostrar notificación
+    notificationStore.success(
+      'Se ha enviado un enlace de recuperación a tu correo electrónico.',
+      'Solicitud enviada'
+    );
+
     email.value = ''; // Limpiar el campo después de enviar
   } catch (err: any) {
-    error.value = authStore.error || 'Ha ocurrido un error al procesar tu solicitud.';
+    // Manejar errores
+    const errorMessage = err.response?.data?.message || 'Ha ocurrido un error al procesar tu solicitud.';
+    error.value = errorMessage;
     alertVariant.value = 'error';
     message.value = error.value;
+
+    // Mostrar notificación de error
+    notificationStore.error(
+      errorMessage,
+      'Error'
+    );
   } finally {
     loading.value = false;
   }

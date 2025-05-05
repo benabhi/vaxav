@@ -104,7 +104,7 @@ import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 import { useForm } from '@/composables/useForm';
 import api from '@/services/api';
 

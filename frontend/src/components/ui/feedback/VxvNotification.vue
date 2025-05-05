@@ -19,7 +19,7 @@
 <script setup>
 import { computed } from 'vue';
 import VxvAlert from './VxvAlert.vue';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 
 const notificationStore = useNotificationStore();
 

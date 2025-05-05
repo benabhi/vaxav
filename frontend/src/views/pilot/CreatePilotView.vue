@@ -55,15 +55,15 @@
         submitText="Crear Piloto"
         :show-cancel="false"
         :full-width-submit="true"
-        :loading="pilotStore.loading"
+        :loading="userStore.isUserDataLoading"
         :disabled="!form.race"
         @submit="handleSubmit"
       >
         <template #alert>
           <VxvAlert
-            v-if="pilotStore.error"
+            v-if="userStore.error"
             variant="error"
-            :message="pilotStore.error"
+            :message="userStore.error"
             :dismissible="false"
             class="mb-6"
           />
@@ -126,7 +126,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { usePilotStore } from '@/stores/pilot';
+import { useUserStore } from '@/stores/user';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
@@ -135,7 +135,7 @@ import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 
 const router = useRouter();
-const pilotStore = usePilotStore();
+const userStore = useUserStore();
 
 // Estado para el modal de bienvenida
 const showWelcomeModal = ref(false);
@@ -153,16 +153,24 @@ const closeWelcomeModal = () => {
 };
 
 const handleSubmit = async () => {
-  await pilotStore.createPilot(form);
+  try {
+    // Crear el piloto usando el store unificado
+    await userStore.createPilot(form);
 
-  if (pilotStore.currentPilot) {
-    // Guardar el piloto creado para mostrar información en el modal
-    createdPilot.value = pilotStore.currentPilot;
+    // Obtener el piloto creado del store unificado
+    const pilot = userStore.pilotData;
 
-    // Mostrar el modal de bienvenida
-    showWelcomeModal.value = true;
+    if (pilot) {
+      // Guardar el piloto creado para mostrar información en el modal
+      createdPilot.value = pilot;
 
-    // No redirigir inmediatamente, esperar a que el usuario cierre el modal
+      // Mostrar el modal de bienvenida
+      showWelcomeModal.value = true;
+
+      // No redirigir inmediatamente, esperar a que el usuario cierre el modal
+    }
+  } catch (error) {
+    console.error('Error al crear piloto:', error);
   }
 };
 </script>

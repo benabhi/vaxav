@@ -83,7 +83,7 @@ import { useRouter } from 'vue-router';
 import AdminCrudView from '@/components/admin/AdminCrudView.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvModal from '@/components/ui/modals/VxvModal.vue';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notification.ts';
 import { useSkillCategories } from '@/composables/useSkillCategories';
 
 const router = useRouter();

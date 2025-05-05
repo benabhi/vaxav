@@ -7,14 +7,14 @@
         submitText="Registrarse"
         :show-cancel="false"
         :full-width-submit="true"
-        :loading="authStore.loading"
+        :loading="userStore.isUserDataLoading"
         @submit="handleSubmit"
       >
         <template #alert>
           <VxvAlert
-            v-if="authStore.error"
+            v-if="userStore.error"
             variant="error"
-            :message="authStore.error"
+            :message="userStore.error"
             :dismissible="false"
             class="mb-6"
           />
@@ -90,13 +90,15 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification.ts';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 
 const router = useRouter();
-const authStore = useAuthStore();
+const userStore = useUserStore();
+const notificationStore = useNotificationStore();
 
 const form = reactive({
   name: '',
@@ -180,9 +182,14 @@ const handleSubmit = async () => {
   }
 
   try {
-    await authStore.register(form);
+    // Registrar usuario usando el store unificado
+    await userStore.register(form);
 
-    if (authStore.isLoggedIn) {
+    // Verificar si el registro fue exitoso
+    if (userStore.isLoggedIn) {
+      // Mostrar notificación de éxito
+      notificationStore.success('Cuenta creada correctamente. Por favor, verifica tu email.');
+
       // Redirigir a la página de verificación de email
       router.push({ name: 'verification.notice' });
     }

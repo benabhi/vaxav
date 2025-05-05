@@ -1,6 +1,13 @@
+/**
+ * @file Store de piloto
+ * @description Gestión del estado del piloto del usuario
+ * @module stores/pilot
+ */
+
 import { defineStore } from 'pinia';
 import pilotService from '@/services/pilotService';
 import type { Pilot, CreatePilotData } from '@/services/pilotService';
+import { pilotPersistOptions } from './plugins/persistence';
 
 interface PilotState {
   currentPilot: Pilot | null;
@@ -75,4 +82,9 @@ export const usePilotStore = defineStore('pilot', {
       this.error = null;
     },
   },
+
+  /**
+   * Configuración de persistencia
+   */
+  ...pilotPersistOptions
 });

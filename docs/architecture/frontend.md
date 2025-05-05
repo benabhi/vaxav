@@ -80,63 +80,127 @@ Las rutas están organizadas por módulos:
 
 ### Protección de Rutas
 
-Las rutas que requieren autenticación están protegidas mediante guardias de navegación:
+Las rutas que requieren autenticación están protegidas mediante guardias de navegación que utilizan el store unificado:
 
-```javascript
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore();
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+```typescript
+// src/router/guards.ts
+import { useUserStore } from '@/stores/user';
 
-  if (requiresAuth && !authStore.isAuthenticated) {
-    next('/login');
-  } else {
+export async function setupAuthGuard(router) {
+  const userStore = useUserStore();
+
+  router.beforeEach(async (to, from, next) => {
+    // Si la ruta requiere autenticación
+    if (to.meta.requiresAuth) {
+      // Cargar datos del usuario si no están cargados
+      if (!userStore.isLoaded) {
+        await userStore.loadUserData();
+      }
+
+      // Verificar autenticación
+      if (!userStore.isLoggedIn) {
+        return next({ name: 'login', query: { redirect: to.fullPath } });
+      }
+
+      // Verificar verificación de email si es necesario
+      if (to.meta.requiresEmailVerification && !userStore.isEmailVerified) {
+        return next({ name: 'verify-email' });
+      }
+
+      // Verificar si tiene piloto si es necesario
+      if (to.meta.requiresPilot && !userStore.hasPilot) {
+        return next({ name: 'create-pilot' });
+      }
+
+      // Verificar roles si es necesario
+      if (to.meta.requiredRole && !userStore[`is${to.meta.requiredRole}`]) {
+        return next({ name: 'unauthorized' });
+      }
+    }
+
     next();
-  }
-});
+  });
+}
 ```
 
 ## Gestión de Estado
 
 La gestión de estado se realiza con Pinia. Los stores están organizados por funcionalidad:
 
-- `auth.js`: Estado de autenticación y usuario actual
-- `pilots.js`: Estado relacionado con pilotos
-- `ships.js`: Estado relacionado con naves
-- `universe.js`: Estado relacionado con el universo
-- `market.js`: Estado relacionado con el mercado
+- `auth.ts`: Estado de autenticación y usuario actual
+- `pilot.ts`: Estado relacionado con pilotos
+- `notification.js`: Sistema de notificaciones
+- `user.ts`: Store unificado que combina información de usuario y piloto
 
-### Ejemplo de Store
+### Store Unificado de Usuario
 
-```javascript
-// src/stores/auth.js
+El store unificado de usuario (`user.ts`) proporciona una interfaz centralizada para acceder a toda la información relacionada con el usuario y su piloto, eliminando la necesidad de importar múltiples stores en los componentes.
+
+```typescript
+// src/stores/user.ts
 import { defineStore } from 'pinia';
-import api from '@/services/api';
+import { useAuthStore } from './auth';
+import { usePilotStore } from './pilot';
+import { watch } from 'vue';
 
-export const useAuthStore = defineStore('auth', {
+export const useUserStore = defineStore('user', {
   state: () => ({
-    user: null,
-    token: localStorage.getItem('auth_token') || null,
-    loading: false,
+    isLoaded: false,
+    isLoading: false,
+    error: null,
   }),
-  
+
   getters: {
-    isAuthenticated: (state) => !!state.token && !!state.user,
-    // ...
+    // Getters que combinan información de auth y pilot
+    isLoggedIn: () => {
+      const authStore = useAuthStore();
+      return authStore.isLoggedIn;
+    },
+
+    hasPilot: () => {
+      const pilotStore = usePilotStore();
+      return pilotStore.hasPilot;
+    },
+
+    // ... otros getters ...
   },
-  
+
   actions: {
-    async login(credentials) {
+    // Cargar todos los datos del usuario
+    async loadUserData() {
       // Implementación...
     },
-    
-    async logout() {
+
+    // Actualizar datos después de cambios
+    async refreshUserData() {
       // Implementación...
-    },
-    
-    // ...
+    }
   }
 });
 ```
+
+### Persistencia de Estado
+
+Para persistir el estado entre recargas de página, se utiliza el plugin `pinia-plugin-persistedstate`:
+
+```typescript
+// src/stores/plugins/persistence.ts
+import { createPersistedState } from 'pinia-plugin-persistedstate';
+
+export const piniaPersistedState = createPersistedState({
+  storage: localStorage,
+  key: (id) => `vaxav_${id}`,
+});
+
+// Configuración específica para cada store
+export const authPersistOptions = {
+  persist: {
+    paths: ['token', 'user.id', 'user.email', 'isAuthenticated', 'emailVerified'],
+  },
+};
+```
+
+Para más detalles sobre los stores, consulte la [documentación de stores](../stores/README.md).
 
 ## Servicios
 
@@ -186,13 +250,26 @@ La aplicación soporta temas claro y oscuro mediante las clases de Tailwind:
 
 ## Buenas Prácticas
 
+### Componentes y Estructura
+
 1. **Componentes Pequeños y Enfocados**: Cada componente debe tener una única responsabilidad.
 2. **Composición sobre Herencia**: Utilizar la composición de componentes en lugar de herencia.
 3. **Props Validadas**: Todas las props deben tener validación de tipo y valores por defecto cuando sea apropiado.
 4. **Eventos Nombrados Consistentemente**: Usar convenciones de nombres para eventos (ej. `update:modelValue`).
-5. **Separación de Preocupaciones**: Mantener la lógica de negocio en stores y servicios, no en componentes.
-6. **Código Tipado**: Utilizar TypeScript para mejorar la robustez del código.
-7. **Pruebas Unitarias**: Escribir pruebas para componentes y lógica crítica.
+
+### Gestión de Estado
+
+5. **Usar el Store Unificado**: Para información del usuario y piloto, usar siempre el store unificado (`useUserStore`).
+6. **Carga Automática de Datos**: Aprovechar la carga automática de datos del store unificado en lugar de cargar manualmente.
+7. **Verificar Estado de Carga**: Siempre verificar `isLoaded` y `isLoading` antes de acceder a los datos.
+8. **Persistencia de Estado**: Utilizar el plugin de persistencia para datos que deben mantenerse entre sesiones.
+
+### Código y Calidad
+
+9. **Separación de Preocupaciones**: Mantener la lógica de negocio en stores y servicios, no en componentes.
+10. **Código Tipado**: Utilizar TypeScript para mejorar la robustez del código.
+11. **Documentación de Código**: Documentar componentes, funciones y tipos con comentarios JSDoc.
+12. **Pruebas Unitarias**: Escribir pruebas para componentes y lógica crítica.
 
 ## Flujo de Desarrollo
 

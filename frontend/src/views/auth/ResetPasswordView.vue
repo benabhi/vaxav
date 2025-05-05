@@ -65,15 +65,16 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { useNotificationStore } from '@/stores/notification';
+import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification.ts';
+import api from '@/services/api';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const notificationStore = useNotificationStore();
 
 const props = defineProps({
@@ -157,8 +158,10 @@ const handleSubmit = async () => {
   message.value = '';
 
   try {
-    const response = await authStore.resetPassword(form);
-    message.value = response.message || 'Tu contraseña ha sido restablecida correctamente.';
+    // Llamar directamente a la API para restablecer la contraseña
+    const response = await api.post('/auth/reset-password', form);
+
+    message.value = response.data.message || 'Tu contraseña ha sido restablecida correctamente.';
     alertVariant.value = 'success';
 
     // Mostrar notificación de éxito
@@ -167,6 +170,11 @@ const handleSubmit = async () => {
       'Contraseña actualizada',
       7000
     );
+
+    // Si el usuario está logueado, actualizar sus datos
+    if (userStore.isLoggedIn) {
+      await userStore.loadUserData();
+    }
 
     // Redirigir al login después de un breve retraso
     setTimeout(() => {
@@ -199,7 +207,13 @@ const handleSubmit = async () => {
 
       message.value = 'Por favor, corrige los errores en el formulario.';
     } else {
-      message.value = authStore.error || 'Ha ocurrido un error al restablecer tu contraseña.';
+      message.value = err.response?.data?.message || 'Ha ocurrido un error al restablecer tu contraseña.';
+
+      // Mostrar notificación de error
+      notificationStore.error(
+        message.value,
+        'Error'
+      );
     }
   } finally {
     loading.value = false;
