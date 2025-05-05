@@ -30,15 +30,12 @@
 
       <!-- Multiplicador -->
       <div class="flex-shrink-0">
-        <span
-          class="text-xs px-2 py-1 rounded-md border font-medium"
-          :class="[
-            getMultiplierClass(skill.multiplier),
-            getMultiplierBorderClass(skill.multiplier)
-          ]"
+        <VxvBadge
+          :variant="getMultiplierVariant(skill.multiplier)"
+          size="sm"
         >
           x{{ skill.multiplier }}
-        </span>
+        </VxvBadge>
       </div>
     </div>
 
@@ -106,17 +103,16 @@
       <div class="flex flex-wrap gap-1 min-h-[32px] max-h-[36px] overflow-y-auto prereq-container gap-y-0.5">
         <!-- Si tiene prerrequisitos, mostrarlos -->
         <template v-if="skill.prerequisites && skill.prerequisites.length > 0">
-          <div
+          <VxvBadge
             v-for="(prereq, index) in skill.prerequisites"
             :key="index"
-            class="text-xs px-1.5 py-0 rounded text-center leading-none flex items-center h-[18px]"
-            :class="prereq.fulfilled
-              ? 'bg-green-900/50 text-green-300 border border-green-700'
-              : 'bg-red-900/50 text-red-300 border border-red-700'"
+            :variant="prereq.fulfilled ? 'success' : 'danger'"
+            size="sm"
+            class="h-[18px] max-w-[120px] truncate"
             :title="prereq.name + ' (Nivel ' + prereq.level + ')'"
           >
-            <span class="inline-block truncate">{{ prereq.name }} L{{ prereq.level }}</span>
-          </div>
+            {{ prereq.name }} L{{ prereq.level }}
+          </VxvBadge>
         </template>
         <!-- Si no tiene prerrequisitos, mostrar mensaje como texto simple -->
         <p v-else class="text-xs text-gray-500 italic h-[18px] pl-1 m-0 border-0 bg-transparent">
@@ -131,6 +127,7 @@
 import { computed } from 'vue';
 import VxvCircularSkillLevel from './VxvCircularSkillLevel.vue';
 import VxvDashedSkillLevel from './VxvDashedSkillLevel.vue';
+import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 
 /**
  * VxvSkillCard - Componente para mostrar una tarjeta de habilidad
@@ -252,39 +249,21 @@ const descriptionClass = computed(() => {
   }
 });
 
-// Obtener la clase CSS para el texto del multiplicador
-function getMultiplierClass(multiplier) {
+// Obtener la variante del badge para el multiplicador
+function getMultiplierVariant(multiplier) {
   // Verificar que el multiplicador sea un número válido
   if (isNaN(multiplier)) {
-    return 'text-gray-300 bg-gray-800/50';
+    return 'gray';
   }
 
   // Convertir a número para asegurar la comparación correcta
   switch (Number(multiplier)) {
-    case 1: return 'text-gray-300 bg-gray-800/50';
-    case 2: return 'text-green-400 bg-green-900/30';
-    case 3: return 'text-blue-400 bg-blue-900/30';
-    case 4: return 'text-purple-400 bg-purple-900/30';
-    case 5: return 'text-red-400 bg-red-900/30';
-    default: return 'text-gray-300 bg-gray-800/50';
-  }
-}
-
-// Obtener la clase CSS para el borde del multiplicador
-function getMultiplierBorderClass(multiplier) {
-  // Verificar que el multiplicador sea un número válido
-  if (isNaN(multiplier)) {
-    return 'border-gray-600';
-  }
-
-  // Convertir a número para asegurar la comparación correcta
-  switch (Number(multiplier)) {
-    case 1: return 'border-gray-600';
-    case 2: return 'border-green-700';
-    case 3: return 'border-blue-700';
-    case 4: return 'border-purple-700';
-    case 5: return 'border-red-700';
-    default: return 'border-gray-600';
+    case 1: return 'gray';
+    case 2: return 'green';
+    case 3: return 'blue';
+    case 4: return 'purple';
+    case 5: return 'red';
+    default: return 'gray';
   }
 }
 

@@ -228,7 +228,7 @@
         - Diseño responsivo: 1 columna en móvil, 2 en tablet, 3 en desktop, 4 en pantallas grandes
         - Cada tarjeta tiene altura fija para mantener consistencia visual
       -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <!-- Tarjetas de habilidades -->
         <VxvSkillCard
           v-for="(skill, index) in filteredSkills"
