@@ -76,6 +76,24 @@
             />
           </div>
 
+          <!-- Multiplicador -->
+          <div class="w-full md:w-48">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Multiplicador</label>
+            <VxvSelect
+              v-model="filters.multiplier"
+              size="sm"
+              :options="[
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'x1' },
+                { value: '2', label: 'x2' },
+                { value: '3', label: 'x3' },
+                { value: '4', label: 'x4' },
+                { value: '5', label: 'x5' }
+              ]"
+              @update:modelValue="applyFilters"
+            />
+          </div>
+
           <!-- Nivel -->
           <div class="w-full md:w-48">
             <label class="block text-sm font-medium text-gray-300 mb-1">Nivel mínimo</label>
@@ -97,7 +115,7 @@
       </VxvFilters>
 
       <!-- Lista de habilidades -->
-      <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+      <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden overflow-x-auto">
         <VxvTable
           :columns="columns"
           :items="filteredSkills"
@@ -105,6 +123,7 @@
           row-key="id"
           :sort-key="filters.sort_field"
           :sort-order="filters.sort_direction"
+          class="min-w-[1200px]"
           @sort="handleSort"
         >
           <!-- Slot para estado de carga -->
@@ -145,16 +164,38 @@
             <div class="text-sm text-gray-300">{{ item.category?.name }}</div>
           </template>
 
+          <!-- Slot para columna de multiplicador -->
+          <template #cell(multiplier)="{ item }">
+            <VxvBadge
+              :variant="getMultiplierBadgeVariant(item.multiplier)"
+              size="md"
+              class="font-mono"
+            >
+              x{{ item.multiplier }}
+            </VxvBadge>
+          </template>
+
           <!-- Slot para columna de nivel -->
           <template #cell(level)="{ item }">
-            <VxvSelect
-              v-model="item.current_level"
-              :options="getLevelOptions(item)"
-              size="sm"
-              class="w-20"
-              :disabled="isUpdating === item.id"
-              @update:modelValue="(value) => updateSkillLevel(item, value)"
-            />
+            <div class="flex flex-col space-y-2" style="min-width: 350px; width: 100%;">
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-300">Nivel:</span>
+                <span class="text-sm font-bold text-white">{{ calculateSkillLevel(item.xp, item.multiplier) }}</span>
+              </div>
+              <VxvRange
+                v-model="item.xp"
+                :min="0"
+                :max="getMaxXPForSkill(item)"
+                :step="10"
+                :disabled="isUpdating === item.id"
+                :showValue="true"
+                :showMinMax="true"
+                :formatValue="(val) => `${val} XP`"
+                class="w-full min-w-[350px]"
+                style="width: 100%; min-width: 350px;"
+                @change="(value) => updateSkillXP(item, Number(value))"
+              />
+            </div>
           </template>
 
           <!-- Slot para columna de estado -->
@@ -241,7 +282,9 @@ import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvToggleSwitch from '@/components/ui/forms/VxvToggleSwitch.vue';
 import VxvFilters from '@/components/ui/filters/VxvFilters.vue';
 import VxvTable from '@/components/ui/tables/VxvTable.vue';
+import VxvRange from '@/components/ui/forms/VxvRange.vue';
 import { useAdminPilots } from '@/composables/useAdminPilots';
+import { useSkillCalculations } from '@/composables/useSkillCalculations';
 import type { Pilot, PilotSkill } from '@/composables/useAdminPilots';
 
 // Icono para el estado vacío
@@ -271,6 +314,7 @@ const filters = reactive({
   search: '',
   category: '',
   status: '',
+  multiplier: '',
   minLevel: '',
   sort_field: 'name',
   sort_direction: 'asc'
@@ -284,7 +328,8 @@ const sortOrder = ref('asc');
 const columns = [
   { key: 'name', label: 'Nombre', sortable: true },
   { key: 'category', label: 'Categoría', sortable: true },
-  { key: 'level', label: 'Nivel' },
+  { key: 'multiplier', label: 'Mul.', sortable: true },
+  { key: 'level', label: 'Nivel', width: '350px' },
   { key: 'status', label: 'Estado' },
   { key: 'prerequisites', label: 'Prerrequisitos' }
 ];
@@ -322,6 +367,11 @@ const filteredSkills = computed(() => {
       if (filters.status === 'unavailable' && skill.can_activate) return false;
     }
 
+    // Filtro por multiplicador
+    if (filters.multiplier && skill.multiplier !== parseInt(filters.multiplier)) {
+      return false;
+    }
+
     // Filtro por nivel mínimo
     if (filters.minLevel && skill.current_level < parseInt(filters.minLevel)) {
       return false;
@@ -342,6 +392,10 @@ const filteredSkills = computed(() => {
       // Caso especial para categoría
       aValue = a.category?.name || '';
       bValue = b.category?.name || '';
+    } else if (sortField === 'multiplier') {
+      // Caso especial para multiplicador
+      aValue = a.multiplier || 1;
+      bValue = b.multiplier || 1;
     } else if (sortField === 'level') {
       // Caso especial para nivel
       aValue = a.current_level;
@@ -382,6 +436,9 @@ const filteredSkills = computed(() => {
 // Usar el composable de pilotos
 const { getPilot, getPilotSkills, updatePilotSkill } = useAdminPilots();
 
+// Usar el composable de cálculos de habilidades
+const { calculateLevel, getMinXPForLevel } = useSkillCalculations();
+
 // Cargar datos del piloto y sus habilidades
 const loadPilotData = async () => {
   loading.value = true;
@@ -409,13 +466,61 @@ const truncateDescription = (description) => {
   return description.length > 50 ? description.substring(0, 50) + '...' : description;
 };
 
-// Obtener opciones de nivel
-const getLevelOptions = (skill) => {
-  const options = [];
-  for (let i = 0; i <= 5; i++) {
-    options.push({ value: i, label: i.toString() });
+// Calcular el nivel de una habilidad basado en XP y multiplicador
+const calculateSkillLevel = (xp: number, multiplier: number): number => {
+  return calculateLevel(xp, multiplier);
+};
+
+// Obtener el máximo de XP para una habilidad (para el rango)
+const getMaxXPForSkill = (skill): number => {
+  // Establecer un máximo razonable para el rango (nivel 5 + un poco más)
+  return Math.max(2500 * skill.multiplier, skill.xp + 500);
+};
+
+// Actualizar la experiencia de una habilidad
+const updateSkillXP = async (skill, newXP: number) => {
+  if (isUpdating.value) return;
+
+  isUpdating.value = skill.id;
+  try {
+    // Calcular el nivel basado en la nueva experiencia
+    const newLevel = calculateSkillLevel(newXP, skill.multiplier);
+
+    const result = await updatePilotSkill(pilotId, skill.id, {
+      current_level: newLevel,
+      xp: newXP,
+      active: skill.active
+    });
+
+    if (result) {
+      // Recargar habilidades para actualizar estado
+      await loadPilotData();
+    }
+  } catch (error: any) {
+    // Mostrar error
+    errorMessage.value = error.response?.data?.message || 'Ha ocurrido un error al actualizar la experiencia de la habilidad';
+
+    // Preparar detalles del error
+    errorDetails.value = [];
+    if (error.response?.data?.dependent_skills) {
+      error.response.data.dependent_skills.forEach(dep => {
+        errorDetails.value.push(`${dep.skill.name} (Nivel ${dep.level}) requiere esta habilidad en nivel ${dep.required_level}`);
+      });
+    }
+
+    if (error.response?.data?.missing_prerequisites) {
+      error.response.data.missing_prerequisites.forEach(prereq => {
+        errorDetails.value.push(`Falta prerrequisito: ${prereq.skill.name} (Nivel ${prereq.required_level})`);
+      });
+    }
+
+    showErrorModal.value = true;
+
+    // Recargar para restaurar el valor anterior
+    await loadPilotData();
+  } finally {
+    isUpdating.value = null;
   }
-  return options;
 };
 
 // Verificar si se puede cambiar el estado activo
@@ -424,6 +529,30 @@ const canToggleActive = (skill) => {
     return skill.can_deactivate;
   } else {
     return skill.can_activate;
+  }
+};
+
+// Obtener variante de badge para el multiplicador
+const getMultiplierBadgeVariant = (multiplier) => {
+  switch (multiplier) {
+    case 1: return 'gray';    // Básico
+    case 2: return 'success'; // Fácil
+    case 3: return 'info';    // Medio
+    case 4: return 'warning'; // Difícil
+    case 5: return 'danger';  // Muy difícil
+    default: return 'gray';
+  }
+};
+
+// Obtener etiqueta descriptiva para el multiplicador
+const getMultiplierLabel = (multiplier) => {
+  switch (multiplier) {
+    case 1: return 'Básico';
+    case 2: return 'Fácil';
+    case 3: return 'Medio';
+    case 4: return 'Difícil';
+    case 5: return 'Muy difícil';
+    default: return '';
   }
 };
 
@@ -448,8 +577,12 @@ const updateSkillLevel = async (skill, newLevel) => {
 
   isUpdating.value = skill.id;
   try {
+    // Calcular la experiencia mínima necesaria para el nivel seleccionado
+    const minXP = getMinXPForLevel(newLevel, skill.multiplier);
+
     const result = await updatePilotSkill(pilotId, skill.id, {
       current_level: newLevel,
+      xp: minXP,
       active: skill.active
     });
 
@@ -492,6 +625,7 @@ const activateSkill = async (skill) => {
   try {
     const result = await updatePilotSkill(pilotId, skill.id, {
       current_level: skill.current_level,
+      xp: skill.xp,
       active: true
     });
 
@@ -525,6 +659,7 @@ const deactivateSkill = async (skill) => {
   try {
     const result = await updatePilotSkill(pilotId, skill.id, {
       current_level: skill.current_level,
+      xp: skill.xp,
       active: false
     });
 
@@ -578,6 +713,7 @@ const resetFilters = () => {
   filters.search = '';
   filters.category = '';
   filters.status = '';
+  filters.multiplier = '';
   filters.minLevel = '';
   // Mantener el ordenamiento
   filters.sort_field = 'name';

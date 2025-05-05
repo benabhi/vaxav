@@ -230,7 +230,7 @@ export function useAdminPilots() {
   const updatePilotSkill = async (
     pilotId: string | number,
     skillId: string | number,
-    skillData: { current_level: number; active: boolean }
+    skillData: { current_level: number; active: boolean; xp?: number }
   ): Promise<any | null> => {
     try {
       const response = await api.put(`/admin/pilots/${pilotId}/skills/${skillId}`, skillData);
