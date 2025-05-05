@@ -23,6 +23,10 @@ const meta: Meta<typeof VxvFilters> = {
       description: 'Filtros iniciales',
       control: { type: 'object' },
     },
+    defaultFilters: {
+      description: 'Valores por defecto para los filtros al restablecer',
+      control: { type: 'object' },
+    },
     showSearch: {
       description: 'Muestra el campo de búsqueda',
       control: { type: 'boolean' },
@@ -595,6 +599,141 @@ export const WithoutLabels: Story = {
         <div class="bg-gray-800 p-4 rounded-lg mt-4">
           <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
           <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
+        </div>
+      </div>
+    `,
+  }),
+};
+
+/**
+ * Filtros con valores por defecto
+ */
+export const WithDefaultValues: Story = {
+  args: {
+    id: 'default-values-filters',
+    filters: {
+      search: '',
+      status: 'active',
+      category: 'electronics'
+    },
+    defaultFilters: {
+      search: '',
+      status: 'active', // Valor por defecto diferente al vacío
+      category: '' // Se restablecerá a vacío
+    },
+    showSearch: true,
+    searchLabel: 'Búsqueda',
+    searchPlaceholder: 'Buscar...',
+    showApply: true,
+    applyLabel: 'Aplicar',
+    showReset: true,
+    resetLabel: 'Restablecer',
+    showLabels: true,
+    debounce: 300,
+    immediate: false,
+  },
+  render: (args) => ({
+    components: { VxvFilters, VxvSelect },
+    setup() {
+      const filters = ref({
+        search: args.filters.search,
+        status: args.filters.status,
+        category: args.filters.category
+      });
+
+      const statusOptions = [
+        { value: '', label: 'Todos los estados' },
+        { value: 'active', label: 'Activo' },
+        { value: 'inactive', label: 'Inactivo' },
+        { value: 'pending', label: 'Pendiente' }
+      ];
+
+      const categoryOptions = [
+        { value: '', label: 'Todas las categorías' },
+        { value: 'electronics', label: 'Electrónica' },
+        { value: 'clothing', label: 'Ropa' },
+        { value: 'books', label: 'Libros' },
+        { value: 'home', label: 'Hogar' }
+      ];
+
+      const handleFilterChange = (newFilters) => {
+        filters.value = newFilters;
+        args.onFilterChange(newFilters);
+      };
+
+      const handleReset = () => {
+        args.onReset();
+      };
+
+      return {
+        args,
+        filters,
+        statusOptions,
+        categoryOptions,
+        handleFilterChange,
+        handleReset
+      };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <div class="bg-gray-800 p-4 rounded-lg mb-4">
+          <h3 class="text-white font-medium mb-2">Instrucciones:</h3>
+          <p class="text-gray-300">
+            Este ejemplo muestra cómo funcionan los valores por defecto al restablecer los filtros.
+            <br>
+            - El filtro "Estado" tiene un valor por defecto "Activo", por lo que al restablecer volverá a "Activo".
+            <br>
+            - El filtro "Categoría" no tiene un valor por defecto específico, por lo que al restablecer volverá a vacío.
+          </p>
+        </div>
+
+        <VxvFilters
+          v-bind="args"
+          v-model:filters="filters"
+          @filter-change="handleFilterChange"
+          @reset="handleReset"
+        >
+          <template #filters>
+            <div class="w-full md:w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Estado
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.status"
+                  :label="args.showLabels ? '' : 'Estado'"
+                  :options="statusOptions"
+                  size="sm"
+                  class="w-full"
+                />
+              </div>
+            </div>
+
+            <div class="w-full md:w-[180px] flex-shrink-0">
+              <label v-if="args.showLabels" class="block text-sm font-medium text-gray-300 mb-1">
+                Categoría
+              </label>
+              <div class="flex items-center space-x-2">
+                <VxvSelect
+                  v-model="filters.category"
+                  :label="args.showLabels ? '' : 'Categoría'"
+                  :options="categoryOptions"
+                  size="sm"
+                  class="w-full"
+                />
+              </div>
+            </div>
+          </template>
+        </VxvFilters>
+
+        <div class="bg-gray-800 p-4 rounded-lg mt-4">
+          <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
+          <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-lg mt-4">
+          <h3 class="text-white font-medium mb-2">Valores por defecto:</h3>
+          <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(args.defaultFilters, null, 2) }}</pre>
         </div>
       </div>
     `,

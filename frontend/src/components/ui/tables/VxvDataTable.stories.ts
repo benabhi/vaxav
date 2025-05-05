@@ -438,6 +438,141 @@ export const WithoutFilters: Story = {
 };
 
 /**
+ * DataTable con valores por defecto para filtros
+ */
+export const WithDefaultFilters: Story = {
+  args: {
+    title: 'Usuarios con filtros por defecto',
+    showHeader: true,
+    showCreateButton: true,
+    createButtonLabel: 'Crear usuario',
+    columns: sampleColumns,
+    items: sampleItems.slice(0, 10),
+    rowKey: 'id',
+    loading: false,
+    clickable: false,
+    showFilters: true,
+    showSearch: true,
+    showPagination: true,
+    showPerPage: true,
+    currentPage: 1,
+    totalPages: 3,
+    total: 25,
+    perPage: 10,
+    filters: {
+      search: '',
+      role: 'Administrador',
+      status: 'Activo'
+    },
+    defaultFilters: {
+      search: '',
+      role: 'Usuario', // Valor por defecto diferente al inicial
+      status: 'Activo' // Valor por defecto igual al inicial
+    }
+  },
+  render: (args) => ({
+    components: { VxvDataTable, VxvButton, VxvBadge },
+    setup() {
+      const filters = ref({
+        search: args.filters.search,
+        role: args.filters.role,
+        status: args.filters.status
+      });
+
+      const handleFilterChange = (newFilters) => {
+        Object.assign(filters.value, newFilters);
+        args.onFilterChange(filters.value);
+      };
+
+      return {
+        args,
+        filters,
+        handleFilterChange
+      };
+    },
+    template: `
+      <div>
+        <div class="bg-gray-800 p-4 rounded-lg mb-4">
+          <h3 class="text-white font-medium mb-2">Instrucciones:</h3>
+          <p class="text-gray-300">
+            Este ejemplo muestra cómo funcionan los valores por defecto al restablecer los filtros.
+            <br>
+            - El filtro "Rol" tiene un valor inicial "Administrador", pero al restablecer volverá a "Usuario".
+            <br>
+            - El filtro "Estado" tiene un valor inicial "Activo" y también un valor por defecto "Activo".
+            <br>
+            - Prueba a cambiar los filtros y luego presiona el botón "Restablecer".
+          </p>
+        </div>
+
+        <vxv-data-table
+          v-bind="args"
+          :filters="filters"
+          @create="args.onCreate"
+          @row-click="args.onRowClick"
+          @page-change="args.onPageChange"
+          @per-page-change="args.onPerPageChange"
+          @sort-change="args.onSortChange"
+          @filter-change="handleFilterChange"
+        >
+          <template #filters>
+            <div class="w-full md:w-auto">
+              <label class="block text-sm text-gray-300 mb-1">Rol</label>
+              <select v-model="filters.role" class="w-full md:w-auto bg-gray-700 text-white border border-gray-600 rounded-md py-1.5 pl-3 pr-10 text-sm">
+                <option value="">Todos</option>
+                <option value="Administrador">Administrador</option>
+                <option value="Editor">Editor</option>
+                <option value="Usuario">Usuario</option>
+              </select>
+            </div>
+
+            <div class="w-full md:w-auto">
+              <label class="block text-sm text-gray-300 mb-1">Estado</label>
+              <select v-model="filters.status" class="w-full md:w-auto bg-gray-700 text-white border border-gray-600 rounded-md py-1.5 pl-3 pr-10 text-sm">
+                <option value="">Todos</option>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+                <option value="Pendiente">Pendiente</option>
+              </select>
+            </div>
+          </template>
+
+          <template #cell(status)="{ value }">
+            <vxv-badge
+              :variant="
+                value === 'Activo' ? 'success' :
+                value === 'Inactivo' ? 'danger' :
+                'warning'
+              "
+            >
+              {{ value }}
+            </vxv-badge>
+          </template>
+
+          <template #actions="{ item }">
+            <div class="flex space-x-2">
+              <vxv-button size="sm" variant="info">Ver</vxv-button>
+              <vxv-button size="sm" variant="warning">Editar</vxv-button>
+              <vxv-button size="sm" variant="danger">Eliminar</vxv-button>
+            </div>
+          </template>
+        </vxv-data-table>
+
+        <div class="bg-gray-800 p-4 rounded-lg mt-4">
+          <h3 class="text-white font-medium mb-2">Filtros aplicados:</h3>
+          <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(filters, null, 2) }}</pre>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-lg mt-4">
+          <h3 class="text-white font-medium mb-2">Valores por defecto:</h3>
+          <pre class="text-gray-300 bg-gray-700 p-2 rounded">{{ JSON.stringify(args.defaultFilters, null, 2) }}</pre>
+        </div>
+      </div>
+    `,
+  }),
+};
+
+/**
  * DataTable con filtros personalizados
  */
 export const CustomFilters: Story = {

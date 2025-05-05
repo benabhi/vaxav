@@ -1,0 +1,1989 @@
+<!--
+  PilotSkillsView.vue
+
+  Vista principal para mostrar y gestionar las habilidades de piloto.
+
+  Esta vista muestra las habilidades de piloto en un formato de tarjetas con:
+  - Barras de progreso circulares animadas
+  - Información detallada de cada habilidad (nivel, XP, multiplicador)
+  - Filtros para buscar y organizar habilidades
+  - Indicadores visuales del estado de cada habilidad
+
+  Características principales:
+  - Animaciones de carga para barras de progreso y contadores
+  - Diseño responsivo con grid para diferentes tamaños de pantalla
+  - Sistema de filtrado avanzado por múltiples criterios
+  - Manejo de estados de habilidades (activas, inactivas, no aprendidas)
+  - Visualización de prerrequisitos para cada habilidad
+-->
+
+<template>
+  <div class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold text-blue-400 mb-3">Habilidades de Piloto</h1>
+
+    <!-- Descripción detallada de la vista -->
+    <div class="bg-gray-800/70 border border-blue-900/50 rounded-lg p-4 mb-4 text-gray-300 leading-relaxed">
+      <p class="mb-2">
+        Esta sección te permite gestionar las habilidades de tu piloto, fundamentales para tu progreso en el universo.
+        Cada habilidad puede subir hasta el nivel 5 y proporciona ventajas específicas según su categoría.
+      </p>
+      <p>
+        Las habilidades <span class="text-green-400 font-medium">activas</span> (verde) están en uso actualmente,
+        las <span class="text-yellow-400 font-medium">inactivas</span> (amarillo) están aprendidas pero no en uso, y
+        las <span class="text-red-400 font-medium">no aprendidas</span> (rojo) aún pueden ser adquiridas.
+        Utiliza los filtros para encontrar habilidades específicas y gestiona tu progreso de manera eficiente.
+      </p>
+    </div>
+
+    <!--
+      Panel de estadísticas
+      Muestra información detallada sobre las habilidades del piloto:
+      - Progreso general (experiencia total, barra de progreso)
+      - Distribución de habilidades (activas, inactivas, por aprender)
+      - Distribución por nivel (niveles 1-5)
+      - Distribución por multiplicador (x1-x5)
+
+      El panel se actualiza automáticamente cuando:
+      - Se cargan los datos iniciales
+      - Se aplican filtros
+      - Cambia el estado de las habilidades
+    -->
+    <div v-if="!loading && filteredSkills.length > 0" class="bg-gray-800/80 border border-blue-900/50 rounded-lg p-4 mb-4">
+      <h2 class="text-lg font-semibold text-blue-400 mb-3 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+        </svg>
+        Estadísticas de Habilidades
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!--
+          Progreso general
+          Muestra la experiencia total acumulada y el progreso hacia el máximo posible:
+          - Valor numérico de experiencia total
+          - Barra de progreso visual con porcentaje
+          - Comparación entre XP actual y XP máximo posible
+        -->
+        <div class="bg-gray-900/70 rounded-lg p-3 border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Progreso General</h3>
+          <div class="flex justify-between mb-1">
+            <span class="text-xs text-gray-500">Experiencia Total</span>
+            <span class="text-xs font-medium text-blue-400">{{ stats.totalXP.toLocaleString() }} XP</span>
+          </div>
+          <div class="w-full bg-gray-700 rounded-full h-2 mb-3">
+            <div class="bg-blue-500 h-2 rounded-full" :style="{ width: `${stats.progressPercentage}%` }"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>{{ stats.progressPercentage }}% completado</span>
+            <span>{{ stats.totalXP.toLocaleString() }}/{{ stats.maxPossibleXP.toLocaleString() }} XP</span>
+          </div>
+
+          <!-- Índice de Progresión (I.P.) -->
+          <div class="mt-3 pt-3 border-t border-gray-700">
+            <div class="flex justify-between mb-1">
+              <span class="text-xs text-gray-500">Índice de Progresión (I.P.)</span>
+              <span class="text-xs font-bold text-purple-400">{{ stats.progressionIndex.toLocaleString() }}</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-2">
+              <p class="text-xs text-gray-400 italic mb-2">
+                El Índice de Progresión (I.P.) mide tu avance como piloto considerando múltiples factores:
+              </p>
+              <div class="grid grid-cols-2 gap-x-2 gap-y-1">
+                <div class="flex justify-between">
+                  <span>Habilidades ({{ Math.round(stats.progressionComponents.HS) }}%)</span>
+                  <span class="text-gray-400">{{ Math.round(stats.progressionComponents.HS * 10) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Nivel ({{ stats.progressionComponents.AL.toFixed(1) }})</span>
+                  <span class="text-gray-400">{{ Math.round(stats.progressionComponents.AL * 25) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Experiencia</span>
+                  <span class="text-gray-400">{{ Math.round(stats.progressionComponents.XP / 100) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Activas ({{ Math.round(stats.progressionComponents.AS) }}%)</span>
+                  <span class="text-gray-400">{{ Math.round(stats.progressionComponents.AS * 15) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Multiplicador ({{ stats.progressionComponents.MP.toFixed(1) }})</span>
+                  <span class="text-gray-400">{{ Math.round(stats.progressionComponents.MP * 5) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          Distribución de habilidades
+          Muestra la distribución de habilidades por estado:
+          - Número de habilidades activas (verde)
+          - Número de habilidades inactivas (amarillo)
+          - Número de habilidades por aprender (rojo)
+          - Estadísticas adicionales sobre el total y porcentaje de aprendizaje
+        -->
+        <div class="bg-gray-900/70 rounded-lg p-3 border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Distribución de Habilidades</h3>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="text-center">
+              <div class="text-xl font-bold text-green-400">{{ stats.activeSkills }}</div>
+              <div class="text-xs text-gray-500">Activas</div>
+            </div>
+            <div class="text-center">
+              <div class="text-xl font-bold text-yellow-400">{{ stats.inactiveSkills }}</div>
+              <div class="text-xs text-gray-500">Inactivas</div>
+            </div>
+            <div class="text-center">
+              <div class="text-xl font-bold text-red-400">{{ stats.remainingSkills }}</div>
+              <div class="text-xs text-gray-500">Por aprender</div>
+            </div>
+          </div>
+          <div class="mt-2 pt-2 border-t border-gray-700">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Total de habilidades:</span>
+              <span class="text-gray-300">{{ stats.totalSkills }}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Habilidades aprendidas:</span>
+              <span class="text-gray-300">{{ stats.learnedSkills }} ({{ Math.round((stats.learnedSkills / stats.totalSkills) * 100) }}%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          Distribución por nivel
+          Muestra la distribución de habilidades por nivel (1-5):
+          - Barras de progreso para cada nivel con colores diferenciados
+          - Cantidad de habilidades en cada nivel
+          - Nivel más alto alcanzado
+          - Nivel promedio de todas las habilidades
+        -->
+        <div class="bg-gray-900/70 rounded-lg p-3 border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Distribución por Nivel</h3>
+          <div class="space-y-1">
+            <div v-for="level in 5" :key="level" class="flex items-center">
+              <span class="text-xs text-gray-500 w-16">Nivel {{ level }}:</span>
+              <div class="flex-grow bg-gray-700 rounded-full h-2 mx-2">
+                <div
+                  class="h-2 rounded-full"
+                  :class="{
+                    'bg-blue-300': level === 1,
+                    'bg-blue-400': level === 2,
+                    'bg-blue-500': level === 3,
+                    'bg-blue-600': level === 4,
+                    'bg-blue-700': level === 5
+                  }"
+                  :style="{ width: `${stats.learnedSkills > 0 ? (stats.skillsByLevel[level] / stats.learnedSkills) * 100 : 0}%` }"
+                ></div>
+              </div>
+              <span class="text-xs text-gray-400 w-6 text-right">{{ stats.skillsByLevel[level] }}</span>
+            </div>
+          </div>
+          <div class="mt-2 pt-2 border-t border-gray-700">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Nivel más alto:</span>
+              <span class="text-gray-300">{{ stats.highestLevel }}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Nivel promedio:</span>
+              <span class="text-gray-300">
+                {{ stats.learnedSkills > 0
+                  ? (stats.skillsByLevel.reduce((sum, count, level) => sum + (count * level), 0) / stats.learnedSkills).toFixed(1)
+                  : '0.0' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          Distribución por multiplicador
+          Muestra la distribución de habilidades por multiplicador (x1-x5):
+          - Barras de progreso para cada multiplicador con colores temáticos
+          - Cantidad de habilidades con cada multiplicador
+          - Multiplicador promedio de todas las habilidades
+          - Los colores coinciden con los bordes de las tarjetas de habilidades
+        -->
+        <div class="bg-gray-900/70 rounded-lg p-3 border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Distribución por Multiplicador</h3>
+          <div class="space-y-1">
+            <div v-for="mult in [1, 2, 3, 4, 5]" :key="mult" class="flex items-center">
+              <span class="text-xs w-8" :class="{
+                'text-gray-400': mult === 1,
+                'text-green-400': mult === 2,
+                'text-blue-400': mult === 3,
+                'text-purple-400': mult === 4,
+                'text-red-400': mult === 5
+              }">x{{ mult }}:</span>
+              <div class="flex-grow bg-gray-700 rounded-full h-2 mx-2">
+                <div
+                  class="h-2 rounded-full"
+                  :class="{
+                    'bg-gray-500': mult === 1,
+                    'bg-green-500': mult === 2,
+                    'bg-blue-500': mult === 3,
+                    'bg-purple-500': mult === 4,
+                    'bg-red-500': mult === 5
+                  }"
+                  :style="{ width: `${stats.learnedSkills > 0 ? (stats.multiplierStats[mult] / stats.learnedSkills) * 100 : 0}%` }"
+                ></div>
+              </div>
+              <span class="text-xs text-gray-400 w-6 text-right">{{ stats.multiplierStats[mult] }}</span>
+            </div>
+          </div>
+          <div class="mt-2 pt-2 border-t border-gray-700">
+            <div class="flex justify-between text-xs">
+              <span class="text-gray-500">Multiplicador promedio:</span>
+              <span class="text-gray-300">
+                {{ stats.learnedSkills > 0
+                  ? (Object.entries(stats.multiplierStats).reduce((sum, [mult, count]) => sum + (Number(mult) * count), 0) / stats.learnedSkills).toFixed(1)
+                  : '0.0' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader mientras se cargan los datos -->
+    <div v-if="loading" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div v-else-if="error" class="bg-red-900/50 border border-red-700 text-white p-4 rounded-md mb-6">
+      {{ error }}
+    </div>
+
+    <!-- Contenido principal -->
+    <div v-else class="bg-gray-900 rounded-lg overflow-hidden">
+      <!--
+        Barra de filtros
+        Permite filtrar las habilidades por diferentes criterios:
+        - Búsqueda por texto
+        - Categoría
+        - Estado (activas, inactivas, no aprendidas)
+        - Multiplicador
+        - Nivel mínimo
+      -->
+      <VxvFilters
+        v-model:filters="activeFilters"
+        :show-search="true"
+        search-label="Buscar"
+        search-placeholder="Buscar habilidades..."
+        @filter-change="applyFilters"
+      >
+        <template #filters>
+          <!-- Filtro por categoría -->
+          <div class="w-full md:w-[200px] min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Categoría</label>
+            <VxvSelect
+              v-model="activeFilters.category"
+              size="sm"
+              :options="[
+                { value: 'all', label: 'Todas las categorías' },
+                ...categories.map(category => ({
+                  value: category.id.toString(),
+                  label: category.name
+                }))
+              ]"
+              class="block w-full min-w-[200px]"
+              @update:modelValue="applyFilters"
+            />
+          </div>
+
+          <!-- Filtro por estado -->
+          <div class="w-full md:w-[200px] min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Estado</label>
+            <VxvSelect
+              v-model="activeFilters.status"
+              size="sm"
+              :options="[
+                { value: 'all', label: 'Todos' },
+                { value: 'active', label: 'Activas' },
+                { value: 'inactive', label: 'No activadas' },
+                { value: 'unlearned', label: 'No aprendidas' }
+              ]"
+              class="block w-full min-w-[200px]"
+              @update:modelValue="applyFilters"
+            />
+          </div>
+
+          <!-- Filtro por multiplicador -->
+          <div class="w-full md:w-[200px] min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Multiplicador</label>
+            <VxvSelect
+              v-model="activeFilters.multiplier"
+              size="sm"
+              :options="[
+                { value: 'all', label: 'Todos' },
+                { value: '1', label: 'x1' },
+                { value: '2', label: 'x2' },
+                { value: '3', label: 'x3' },
+                { value: '4', label: 'x4' },
+                { value: '5', label: 'x5' }
+              ]"
+              class="block w-full min-w-[200px]"
+              @update:modelValue="applyFilters"
+            />
+          </div>
+
+          <!-- Filtro por nivel mínimo -->
+          <div class="w-full md:w-[200px] min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-300 mb-1">Nivel mínimo</label>
+            <VxvSelect
+              v-model="activeFilters.level"
+              size="sm"
+              :options="[
+                { value: 'all', label: 'Todos' },
+                { value: '1', label: 'Nivel 1+' },
+                { value: '2', label: 'Nivel 2+' },
+                { value: '3', label: 'Nivel 3+' },
+                { value: '4', label: 'Nivel 4+' },
+                { value: '5', label: 'Nivel 5' }
+              ]"
+              class="block w-full min-w-[200px]"
+              @update:modelValue="applyFilters"
+            />
+          </div>
+        </template>
+      </VxvFilters>
+
+      <!--
+        Grid de tarjetas de habilidades
+        - Diseño responsivo: 1 columna en móvil, 2 en tablet, 3 en desktop, 4 en pantallas grandes
+        - Cada tarjeta tiene altura fija para mantener consistencia visual
+        - Las tarjetas se animan al cargar la página con efecto fadeInUp escalonado
+      -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        :class="{
+          'animate-skills': animationStarted,
+          'animation-completed': animationCompleted
+        }">
+        <!--
+          Tarjeta de habilidad
+          Muestra información detallada de una habilidad con:
+          - Indicador de estado (punto de color: verde=activa, amarillo=inactiva, rojo=no aprendida)
+          - Borde de color según estado
+          - Nombre y categoría
+          - Multiplicador de experiencia
+          - Barra de progreso circular animada
+          - Nivel actual y experiencia
+          - Descripción con scroll al hacer hover
+          - Indicadores de nivel (1-5)
+          - Prerrequisitos (si los tiene)
+        -->
+        <div
+          v-for="(skill, index) in filteredSkills"
+          :key="skill.id"
+          class="skill-card rounded-lg overflow-hidden transition-all duration-200 h-[329px]"
+          :style="{ '--index': index }"
+          :class="{
+            'bg-gray-800 border border-blue-600/30': isPilotSkill(skill.id) && isSkillActive(skill.id),
+            'bg-gray-800 border border-yellow-500/30': isPilotSkill(skill.id) && !isSkillActive(skill.id),
+            'bg-gray-800/70 border border-gray-700 opacity-70': !isPilotSkill(skill.id),
+            'opacity-50': !isPilotSkill(skill.id) && !isSkillAvailable(skill),
+            'hover:shadow-lg hover:shadow-blue-500/10': isPilotSkill(skill.id) && isSkillActive(skill.id),
+            'hover:shadow-lg hover:shadow-yellow-500/10': isPilotSkill(skill.id) && !isSkillActive(skill.id),
+            'hover:shadow-lg hover:shadow-gray-500/10': !isPilotSkill(skill.id)
+          }"
+        >
+          <!--
+            Encabezado de la tarjeta (altura fija: 72px)
+            Contiene el nombre, categoría y multiplicador de la habilidad
+          -->
+          <div class="p-4 flex justify-between items-start h-[72px]">
+            <!-- Nombre y categoría -->
+            <div class="flex flex-col justify-center">
+              <div class="flex items-center">
+                <div
+                  class="w-2.5 h-2.5 rounded-full mr-1.5 flex-shrink-0"
+                  :class="{
+                    'bg-green-500 border border-green-400': isPilotSkill(skill.id) && isSkillActive(skill.id),
+                    'bg-yellow-500 border border-yellow-400': isPilotSkill(skill.id) && !isSkillActive(skill.id),
+                    'bg-red-500 border border-red-400': !isPilotSkill(skill.id)
+                  }"
+                ></div>
+                <h3
+                  class="font-medium text-base truncate max-w-[180px]"
+                  :class="{
+                    'text-white': isPilotSkill(skill.id) && isSkillActive(skill.id),
+                    'text-yellow-400': isPilotSkill(skill.id) && !isSkillActive(skill.id),
+                    'text-gray-400': !isPilotSkill(skill.id)
+                  }"
+                  :title="skill.name"
+                >
+                  {{ skill.name }}
+                </h3>
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                {{ getCategoryName(skill.skill_category_id) }}
+              </div>
+            </div>
+
+            <!-- Multiplicador -->
+            <div class="flex-shrink-0">
+              <span
+                class="text-xs px-2 py-1 rounded-md border font-medium"
+                :class="[
+                  getMultiplierClass(skill.multiplier),
+                  getMultiplierBorderClass(skill.multiplier)
+                ]"
+              >
+                x{{ skill.multiplier }}
+              </span>
+            </div>
+          </div>
+
+          <!--
+            Barra de progreso circular (altura fija: 132px)
+            - Muestra el progreso de experiencia de la habilidad visualmente
+            - Se anima al cargar la página (de 0% a valor actual)
+            - El color varía según el nivel y estado de la habilidad
+          -->
+          <div class="flex justify-center items-center py-4 h-[132px]">
+            <div class="relative w-32 h-32">
+              <!-- Círculo de fondo -->
+              <svg class="w-full h-full" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="transparent"
+                  stroke="#1f2937"
+                  stroke-width="8"
+                />
+
+                <!-- Círculo de progreso con animación -->
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="transparent"
+                  :stroke="getProgressColor(skill.id)"
+                  stroke-width="8"
+                  stroke-dasharray="282.7"
+                  :style="{ '--final-dashoffset': 282.7 - (282.7 * getXPPercentage(skill) / 100) }"
+                  transform="rotate(-90 50 50)"
+                  class="progress-circle"
+                />
+              </svg>
+
+              <!-- Texto central con animación -->
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span
+                  class="text-2xl font-bold skill-level-counter"
+                  :class="getPilotSkillLevel(skill.id) > 0 ? 'text-blue-400' : 'text-gray-400'"
+                  :data-target="isPilotSkill(skill.id) ? getPilotSkillLevel(skill.id) : 0"
+                  :style="{ '--target-level': isPilotSkill(skill.id) ? getPilotSkillLevel(skill.id) : 0 }"
+                >
+                  <span class="counter-value">{{ isPilotSkill(skill.id) ? getPilotSkillLevel(skill.id) : 0 }}</span>
+                </span>
+                <span class="text-xs text-gray-400">Nivel</span>
+                <span class="text-xs text-gray-500 mt-1 skill-xp-counter"
+                  :data-current-xp="getFormattedXP(skill.id)"
+                  :data-next-level-xp="getNextLevelXP(skill)"
+                  :style="{ '--current-xp': getFormattedXP(skill.id) }"
+                >
+                  <!-- Valor real (inicialmente oculto) -->
+                  <span class="xp-counter-value">{{ getFormattedXP(skill.id) }}/{{ getNextLevelXP(skill) }} XP</span>
+
+                  <!-- Contador animado (se actualizará con JavaScript) -->
+                  <span class="animated-counter" :id="`xp-counter-${skill.id}`">0/{{ getNextLevelXP(skill) }} XP</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!--
+            Descripción (altura fija: 40px con scroll al hacer hover)
+            - Muestra la descripción de la habilidad
+            - Altura fija para mantener consistencia visual
+            - Al hacer hover, permite scroll para leer descripciones largas
+            - Incluye indicador de scroll para descripciones largas
+          -->
+          <div class="px-4 pb-2 description-container">
+            <div
+              class="description-wrapper h-[40px] relative"
+            >
+              <p
+                class="text-xs italic description-text"
+                :class="{
+                  'text-gray-300': isPilotSkill(skill.id) && isSkillActive(skill.id),
+                  'text-gray-400': isPilotSkill(skill.id) && !isSkillActive(skill.id),
+                  'text-gray-500': !isPilotSkill(skill.id)
+                }"
+              >
+                {{ getSkillDescription(skill) }}
+              </p>
+              <!-- Indicador de scroll (solo visible si la descripción es larga) -->
+              <div
+                class="scroll-indicator"
+                v-if="getSkillDescription(skill).length > 100"
+              ></div>
+            </div>
+          </div>
+
+          <!--
+            Indicadores de nivel (altura fija: 20px)
+            - Muestra visualmente los 5 niveles posibles de la habilidad
+            - Los niveles alcanzados se muestran con color según el estado
+            - Los niveles no alcanzados se muestran en gris
+          -->
+          <div class="px-4 pb-3 pt-2 h-[20px]">
+            <div class="flex justify-between space-x-1">
+              <div
+                v-for="level in 5"
+                :key="level"
+                class="flex-1 h-1.5 rounded-sm"
+                :class="getSkillLevelClass(skill.id, level)"
+              ></div>
+            </div>
+          </div>
+
+          <!--
+            Prerrequisitos (altura fija: 65px)
+            - Muestra los prerrequisitos necesarios para aprender la habilidad
+            - Los prerrequisitos cumplidos se muestran en verde
+            - Los prerrequisitos no cumplidos se muestran en rojo
+            - Si no tiene prerrequisitos, muestra un mensaje informativo
+            - Incluye scroll automático si hay muchos prerrequisitos
+          -->
+          <div class="px-4 pb-4 pt-1 h-[65px]">
+            <div class="text-xs text-gray-400 mb-1">Requisitos:</div>
+            <div class="flex flex-wrap gap-1 min-h-[32px] max-h-[36px] overflow-y-auto prereq-container gap-y-0.5">
+              <!-- Si tiene prerrequisitos, mostrarlos -->
+              <template v-if="skill.prerequisites && skill.prerequisites.length > 0">
+                <div
+                  v-for="prereq in skill.prerequisites"
+                  :key="prereq.prerequisite_id"
+                  class="text-xs px-1.5 py-0 rounded text-center leading-none flex items-center h-[18px]"
+                  :class="isPilotSkillAtLevel(prereq.prerequisite_id, prereq.prerequisite_level)
+                    ? 'bg-green-900/50 text-green-300 border border-green-700'
+                    : 'bg-red-900/50 text-red-300 border border-red-700'"
+                  :title="getPrerequisiteName(prereq) + ' (Nivel ' + prereq.prerequisite_level + ')'"
+                >
+                  <span class="inline-block truncate">{{ getPrerequisiteName(prereq) }} L{{ prereq.prerequisite_level }}</span>
+                </div>
+              </template>
+              <!-- Si no tiene prerrequisitos, mostrar mensaje como texto simple -->
+              <p v-else class="text-xs text-gray-500 italic h-[18px] pl-1 m-0 border-0 bg-transparent">
+                No requiere habilidades previas
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+/**
+ * PilotSkillsView.vue - Script
+ *
+ * Este componente gestiona la visualización y filtrado de habilidades de piloto.
+ * Características principales:
+ * - Carga y muestra habilidades del piloto desde la API
+ * - Permite filtrar habilidades por múltiples criterios
+ * - Implementa animaciones para barras de progreso y contadores
+ * - Gestiona diferentes estados de habilidades (activas, inactivas, no aprendidas)
+ * - Muestra información detallada de cada habilidad
+ */
+
+import { ref, onMounted } from 'vue';
+import { usePilotSkills } from '@/composables/usePilotSkills';
+import VxvFilters from '@/components/ui/filters/VxvFilters.vue';
+import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
+
+// Obtener los métodos y estado del composable
+const {
+  pilotSkills,
+  loading,
+  error,
+  fetchCurrentPilotSkills,
+  fetchAllSkills,
+  fetchSkillCategories
+} = usePilotSkills();
+
+// Estado local
+const allSkills = ref([]);
+const categories = ref([]);
+const skillsWithPrerequisites = ref([]);
+
+// Estado para filtros
+const activeFilters = ref({});
+const filteredSkills = ref([]);
+
+// Estado para animaciones
+const animationStarted = ref(false);
+const animationCompleted = ref(false);
+
+/**
+ * Estado reactivo para las estadísticas de habilidades
+ *
+ * Almacena todas las estadísticas calculadas por la función getSkillStats.
+ * Se utiliza en el panel de estadísticas para mostrar información detallada
+ * sobre las habilidades del piloto.
+ *
+ * Se actualiza automáticamente cuando:
+ * - Se cargan los datos iniciales
+ * - Se aplican filtros
+ * - Cambia el estado de las habilidades
+ */
+const stats = ref({
+  totalSkills: 0,
+  learnedSkills: 0,
+  remainingSkills: 0,
+  activeSkills: 0,
+  inactiveSkills: 0,
+  skillsByLevel: [0, 0, 0, 0, 0, 0],
+  totalXP: 0,
+  maxPossibleXP: 0,
+  progressPercentage: 0,
+  highestLevel: 0,
+  categoriesStats: {},
+  multiplierStats: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+  // Índice de Progresión y sus componentes
+  progressionIndex: 0,
+  progressionComponents: {
+    HS: 0, // Porcentaje de Habilidades Aprendidas
+    AL: 0, // Nivel Promedio
+    XP: 0, // Experiencia Total
+    AS: 0, // Porcentaje de Habilidades Activas
+    MP: 0  // Multiplicador Promedio
+  }
+});
+
+// Cargar datos al montar el componente
+onMounted(async () => {
+  try {
+    // Cargar las habilidades del piloto
+    await fetchCurrentPilotSkills();
+
+    // Cargar todas las habilidades y categorías
+    const [skillsData, categoriesData] = await Promise.all([
+      fetchAllSkills(),
+      fetchSkillCategories()
+    ]);
+
+    allSkills.value = skillsData;
+    categories.value = categoriesData;
+
+    // Procesar las habilidades para añadir información de prerrequisitos
+    processSkillsWithPrerequisites();
+
+    // Inicializar los filtros
+    initializeFilters();
+
+    // Aplicar filtros iniciales (mostrar todas las habilidades)
+    applyFilters();
+
+    // Actualizar estadísticas
+    updateStats();
+
+    console.log('Datos cargados correctamente:');
+    console.log('Categorías:', categories.value);
+    console.log('Habilidades:', allSkills.value);
+    console.log('Habilidades del piloto:', pilotSkills.value);
+
+    // Depuración detallada de las habilidades del piloto
+    console.log('Detalle de habilidades del piloto:');
+    pilotSkills.value.forEach(skill => {
+      console.log(`ID: ${skill.id}, Nivel: ${skill.pivot?.current_level}, XP: ${skill.pivot?.xp}, Activa: ${skill.pivot?.active}`);
+    });
+
+    // Verificar si hay habilidades con nivel > 0
+    const skillsWithLevel = pilotSkills.value.filter(skill => skill.pivot?.current_level > 0);
+    console.log('Habilidades con nivel > 0:', skillsWithLevel.length);
+
+    // Verificar si hay habilidades activas
+    const activeSkills = pilotSkills.value.filter(skill => skill.pivot?.active);
+    console.log('Habilidades activas:', activeSkills.length);
+
+    // Iniciar animaciones después de que los datos estén cargados
+    // Solo activar la clase CSS que controlará todas las animaciones
+    if (!animationStarted.value) {
+      // Esperar a que el DOM se actualice completamente
+      setTimeout(() => {
+        console.log('Activando animaciones CSS...');
+
+        // Primero, asegurarse de que animationCompleted sea false
+        animationCompleted.value = false;
+
+        // Luego activar las animaciones
+        animationStarted.value = true;
+
+        // Animar los contadores de XP con JavaScript
+        animateXPCounters();
+
+        // Marcar las animaciones como completadas después de un tiempo
+        setTimeout(() => {
+          console.log('Animaciones completadas');
+          animationCompleted.value = true;
+        }, 2000);
+      }, 500);
+    }
+  } catch (err) {
+    console.error('Error al cargar los datos:', err);
+  }
+});
+
+// Inicializar los filtros con valores por defecto
+const initializeFilters = () => {
+  activeFilters.value = {
+    category: 'all',
+    status: 'all',
+    multiplier: 'all',
+    level: 'all'
+  };
+};
+
+// Aplicar filtros a las habilidades
+const applyFilters = () => {
+  try {
+    // Si no hay habilidades procesadas, no hacer nada
+    if (!skillsWithPrerequisites.value.length) return;
+
+    // Guardar la cantidad anterior de tarjetas para detectar si se están mostrando más
+    const previousFilteredCount = filteredSkills.value.length;
+
+    // Filtrar las habilidades según los filtros activos
+    filteredSkills.value = skillsWithPrerequisites.value.filter(skill => {
+      // Filtro por búsqueda
+      if (activeFilters.value.search && activeFilters.value.search.trim() !== '') {
+        const searchTerm = activeFilters.value.search.toLowerCase().trim();
+        const skillName = skill.name.toLowerCase();
+        const categoryName = getCategoryName(skill.skill_category_id).toLowerCase();
+
+        // Buscar en nombre de habilidad y categoría
+        if (!skillName.includes(searchTerm) && !categoryName.includes(searchTerm)) {
+          return false;
+        }
+      }
+
+      // Filtro por categoría
+      if (activeFilters.value.category && activeFilters.value.category !== 'all' &&
+          skill.skill_category_id !== parseInt(activeFilters.value.category)) {
+        return false;
+      }
+
+      // Filtro por estado
+      if (activeFilters.value.status && activeFilters.value.status !== 'all') {
+        const isLearned = isPilotSkill(skill.id);
+        const isActive = isLearned && isSkillActive(skill.id);
+
+        if (activeFilters.value.status === 'active' && !isActive) {
+          return false;
+        }
+        if (activeFilters.value.status === 'inactive' && (!isLearned || isActive)) {
+          return false;
+        }
+        if (activeFilters.value.status === 'unlearned' && isLearned) {
+          return false;
+        }
+      }
+
+      // Filtro por multiplicador
+      if (activeFilters.value.multiplier && activeFilters.value.multiplier !== 'all' &&
+          skill.multiplier !== parseInt(activeFilters.value.multiplier)) {
+        return false;
+      }
+
+      // Filtro por nivel mínimo
+      if (activeFilters.value.level && activeFilters.value.level !== 'all') {
+        const skillLevel = getPilotSkillLevel(skill.id);
+        if (skillLevel < parseInt(activeFilters.value.level)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Ordenar las habilidades por categoría y nombre
+    filteredSkills.value.sort((a, b) => {
+      // Primero por categoría
+      if (a.skill_category_id !== b.skill_category_id) {
+        return a.skill_category_id - b.skill_category_id;
+      }
+
+      // Luego por nombre
+      return a.name.localeCompare(b.name);
+    });
+
+    console.log('Filtros aplicados:', activeFilters.value);
+    console.log('Habilidades filtradas:', filteredSkills.value.length);
+
+    // Verificar si se están mostrando más tarjetas que antes (se quitó un filtro)
+    const currentFilteredCount = filteredSkills.value.length;
+
+    // Verificar si ha habido un cambio significativo en las tarjetas mostradas
+    const hasSignificantChange =
+      // Se están mostrando más tarjetas que antes (se quitó un filtro)
+      currentFilteredCount > previousFilteredCount ||
+      // Se pasó de 0 tarjetas a mostrar tarjetas (se limpió un filtro que no mostraba resultados)
+      (previousFilteredCount === 0 && currentFilteredCount > 0) ||
+      // Se están mostrando todas o casi todas las tarjetas después de un filtrado restrictivo
+      (previousFilteredCount < 5 && currentFilteredCount > skillsWithPrerequisites.value.length * 0.8) ||
+      // Hubo un cambio significativo en el número de tarjetas mostradas
+      Math.abs(currentFilteredCount - previousFilteredCount) > 3;
+
+    // Siempre animar cuando hay un cambio en los filtros, pero con un retraso mayor
+    // para dar tiempo a que el DOM se actualice completamente
+    if (hasSignificantChange) {
+      console.log('Cambio detectado en las tarjetas mostradas, reiniciando animaciones...');
+      console.log(`Tarjetas anteriores: ${previousFilteredCount}, Tarjetas actuales: ${currentFilteredCount}`);
+
+      // Esperar a que el DOM se actualice completamente con las nuevas tarjetas
+      setTimeout(() => {
+        console.log('Reiniciando animaciones después de cambio de filtros...');
+
+        // Primero, desactivar ambas clases de animación
+        animationCompleted.value = false;
+        animationStarted.value = false;
+
+        // Forzar un reflow para que los cambios surtan efecto inmediatamente
+        void document.body.offsetHeight;
+
+        // Reactivar las animaciones
+        setTimeout(() => {
+          console.log('Reactivando animaciones CSS...');
+          animationStarted.value = true;
+
+          // Animar los contadores de XP con JavaScript
+          animateXPCounters();
+
+          // Marcar las animaciones como completadas después de un tiempo
+          setTimeout(() => {
+            console.log('Animaciones completadas después de filtros');
+            animationCompleted.value = true;
+          }, 2000);
+        }, 50);
+      }, 200);
+    }
+
+    // Actualizar las estadísticas después de aplicar los filtros
+    updateStats();
+  } catch (error) {
+    console.error('Error en applyFilters:', error);
+    filteredSkills.value = [];
+  }
+};
+
+// Procesar las habilidades para añadir información de prerrequisitos
+const processSkillsWithPrerequisites = () => {
+  try {
+    // Crear un mapa para acceder rápidamente a las habilidades por ID
+    const skillsMap = new Map();
+    allSkills.value.forEach(skill => {
+      skillsMap.set(skill.id, { ...skill, prerequisites: [] });
+    });
+
+    // Simular prerrequisitos (en una implementación real, estos vendrían de la API)
+    // Aquí estamos creando algunos prerrequisitos de ejemplo
+    const prerequisites = [
+      { skill_id: 3, prerequisite_id: 1, prerequisite_level: 2 }, // Defensa Básica requiere Armas Láser Básicas nivel 2
+      { skill_id: 5, prerequisite_id: 4, prerequisite_level: 3 }, // Comercio Avanzado requiere Comercio Básico nivel 3
+      { skill_id: 7, prerequisite_id: 6, prerequisite_level: 2 }, // Navegación Avanzada requiere Navegación Básica nivel 2
+      { skill_id: 8, prerequisite_id: 7, prerequisite_level: 4 }, // Navegación Experta requiere Navegación Avanzada nivel 4
+      { skill_id: 9, prerequisite_id: 2, prerequisite_level: 3 }, // Armas Avanzadas requiere Armas de Proyectil Básicas nivel 3
+    ];
+
+    // Añadir los prerrequisitos a las habilidades
+    prerequisites.forEach(prereq => {
+      const skill = skillsMap.get(prereq.skill_id);
+      if (skill) {
+        skill.prerequisites.push(prereq);
+      }
+    });
+
+    // Actualizar el estado con las habilidades procesadas
+    skillsWithPrerequisites.value = Array.from(skillsMap.values());
+  } catch (error) {
+    console.error('Error en processSkillsWithPrerequisites:', error);
+  }
+};
+
+
+
+// Verificar si una habilidad pertenece al piloto
+const isPilotSkill = (skillId) => {
+  try {
+    return pilotSkills.value.some(skill => skill.id === skillId);
+  } catch (error) {
+    console.error('Error en isPilotSkill:', error);
+    return false;
+  }
+};
+
+// Verificar si una habilidad está activa (aprendida)
+const isSkillActive = (skillId) => {
+  try {
+    const skill = pilotSkills.value.find(skill => skill.id === skillId);
+    return skill && skill.pivot ? skill.pivot.active : false;
+  } catch (error) {
+    console.error('Error en isSkillActive:', error);
+    return false;
+  }
+};
+
+// Obtener el nivel de una habilidad del piloto
+const getPilotSkillLevel = (skillId) => {
+  try {
+    const skill = pilotSkills.value.find(skill => skill.id === skillId);
+    return skill && skill.pivot ? skill.pivot.current_level : 0;
+  } catch (error) {
+    console.error('Error en getPilotSkillLevel:', error);
+    return 0;
+  }
+};
+
+// Obtener la experiencia actual de una habilidad
+const getSkillXP = (skillId) => {
+  try {
+    const skill = pilotSkills.value.find(skill => skill.id === skillId);
+    return skill && skill.pivot ? skill.pivot.xp : 0;
+  } catch (error) {
+    console.error('Error en getSkillXP:', error);
+    return 0;
+  }
+};
+
+// Obtener la experiencia formateada para mostrar
+const getFormattedXP = (skillId) => {
+  try {
+    if (!isPilotSkill(skillId)) return '0';
+    return getSkillXP(skillId).toString();
+  } catch (error) {
+    console.error('Error en getFormattedXP:', error);
+    return '0';
+  }
+};
+
+// Calcular la experiencia necesaria para el siguiente nivel
+const getNextLevelXP = (skill) => {
+  try {
+    // Verificar que skill sea un objeto válido
+    if (!skill || typeof skill !== 'object' || !skill.id) {
+      return '0';
+    }
+
+    // Obtener el nivel actual de la habilidad
+    const pilotSkill = pilotSkills.value.find(s => s.id === skill.id);
+    const currentLevel = pilotSkill && pilotSkill.pivot ? pilotSkill.pivot.current_level : 0;
+
+    // Verificar que el multiplicador sea un número válido
+    const multiplier = skill.multiplier || 1;
+    if (isNaN(multiplier) || multiplier <= 0) {
+      return '0';
+    }
+
+    // Si ya está en nivel 5, no hay siguiente nivel
+    if (currentLevel >= 5) return '-';
+
+    // Experiencia base para cada nivel
+    const baseXP = {
+      0: 50,    // Para nivel 1
+      1: 150,   // Para nivel 2
+      2: 300,   // Para nivel 3
+      3: 600,   // Para nivel 4
+      4: 1000,  // Para nivel 5
+    };
+
+    // Verificar que el nivel actual sea válido
+    if (currentLevel < 0 || currentLevel > 4 || !baseXP.hasOwnProperty(currentLevel)) {
+      return '0';
+    }
+
+    // Multiplicar por el multiplicador de la habilidad
+    return (baseXP[currentLevel] * multiplier).toString();
+  } catch (error) {
+    console.error('Error en getNextLevelXP:', error);
+    return '0';
+  }
+};
+
+// Calcular el porcentaje de experiencia para la barra de progreso
+const getXPPercentage = (skill) => {
+  try {
+    // Verificar que skill sea un objeto válido
+    if (!skill || typeof skill !== 'object' || !skill.id) {
+      return 0;
+    }
+
+    // Si no es una habilidad del piloto, la barra está vacía
+    if (!isPilotSkill(skill.id)) {
+      return 0;
+    }
+
+    // Obtener datos de la habilidad del piloto
+    const pilotSkill = pilotSkills.value.find(s => s.id === skill.id);
+    if (!pilotSkill || !pilotSkill.pivot) {
+      return 0;
+    }
+
+    const currentLevel = pilotSkill.pivot.current_level;
+    const currentXP = pilotSkill.pivot.xp;
+
+    // Si ya está en nivel máximo, la barra está llena
+    if (currentLevel >= 5) {
+      return 100;
+    }
+
+    // Verificar que el multiplicador sea un número válido
+    const multiplier = skill.multiplier || 1;
+    if (isNaN(multiplier) || multiplier <= 0) {
+      return 0;
+    }
+
+    // Experiencia base para cada nivel
+    const baseXP = {
+      0: 0,      // Nivel 0
+      1: 50,     // Para nivel 1
+      2: 150,    // Para nivel 2
+      3: 300,    // Para nivel 3
+      4: 600,    // Para nivel 4
+      5: 1000,   // Para nivel 5
+    };
+
+    // Verificar que el nivel actual sea válido
+    if (currentLevel < 0 || currentLevel > 5 || !baseXP.hasOwnProperty(currentLevel)) {
+      return 0;
+    }
+
+    // Verificar que haya un siguiente nivel
+    if (currentLevel >= 5 || !baseXP.hasOwnProperty(currentLevel + 1)) {
+      return 100;
+    }
+
+    // Calcular la experiencia mínima para el nivel actual
+    const minXPForCurrentLevel = baseXP[currentLevel] * multiplier;
+
+    // Calcular la experiencia necesaria para el siguiente nivel
+    const xpForNextLevel = baseXP[currentLevel + 1] * multiplier;
+
+    // Calcular cuánta experiencia ha ganado desde el nivel actual
+    const xpGainedSinceCurrentLevel = currentXP - minXPForCurrentLevel;
+
+    // Calcular cuánta experiencia necesita para el siguiente nivel desde el nivel actual
+    const xpNeededForNextLevel = xpForNextLevel - minXPForCurrentLevel;
+
+    // Evitar división por cero
+    if (xpNeededForNextLevel <= 0) {
+      return 0;
+    }
+
+    // Calcular el porcentaje
+    const percentage = Math.min(100, Math.round((xpGainedSinceCurrentLevel / xpNeededForNextLevel) * 100));
+
+    // Asegurarse de que el porcentaje sea un número válido
+    return isNaN(percentage) ? 0 : percentage;
+  } catch (error) {
+    console.error('Error en getXPPercentage:', error);
+    return 0;
+  }
+};
+
+// Obtener el color para la barra de progreso circular según el nivel
+const getProgressColor = (skillId) => {
+  try {
+    // Verificar que skillId sea válido
+    if (!skillId) {
+      return '#4b5563'; // gray-600
+    }
+
+    // Si no es una habilidad del piloto, usar color gris
+    if (!isPilotSkill(skillId)) {
+      return '#4b5563'; // gray-600
+    }
+
+    // Obtener el nivel actual de la habilidad
+    const level = getPilotSkillLevel(skillId);
+
+    // Verificar si la habilidad está activa
+    const isActive = isSkillActive(skillId);
+
+    // Si no está activa, usar un color más apagado
+    if (!isActive) {
+      return '#ca8a04'; // yellow-600
+    }
+
+    // Asignar color según el nivel (tonalidades de azul, más oscuro a mayor nivel)
+    switch (level) {
+      case 0: return '#93c5fd'; // blue-300
+      case 1: return '#60a5fa'; // blue-400
+      case 2: return '#3b82f6'; // blue-500
+      case 3: return '#2563eb'; // blue-600
+      case 4: return '#1d4ed8'; // blue-700
+      case 5: return '#1e40af'; // blue-800
+      default: return '#93c5fd'; // blue-300
+    }
+  } catch (error) {
+    console.error('Error en getProgressColor:', error);
+    return '#4b5563'; // gray-600
+  }
+};
+
+// Nota: La función getProgressBarClass se ha reemplazado por getProgressColor para la nueva interfaz de tarjetas
+
+// Verificar si el piloto tiene una habilidad a un nivel específico
+const isPilotSkillAtLevel = (skillId, level) => {
+  try {
+    const pilotLevel = getPilotSkillLevel(skillId);
+    return pilotLevel >= level;
+  } catch (error) {
+    console.error('Error en isPilotSkillAtLevel:', error);
+    return false;
+  }
+};
+
+// Verificar si una habilidad está disponible para aprender
+const isSkillAvailable = (skill) => {
+  try {
+    // Si no tiene prerrequisitos, está disponible
+    if (!skill.prerequisites || skill.prerequisites.length === 0) return true;
+
+    // Verificar que todos los prerrequisitos se cumplan
+    return skill.prerequisites.every(prereq =>
+      isPilotSkillAtLevel(prereq.prerequisite_id, prereq.prerequisite_level)
+    );
+  } catch (error) {
+    console.error('Error en isSkillAvailable:', error);
+    return false;
+  }
+};
+
+// Obtener el nombre de un prerrequisito
+const getPrerequisiteName = (prereq) => {
+  try {
+    const skill = allSkills.value.find(s => s.id === prereq.prerequisite_id);
+    return skill ? skill.name : 'Habilidad Desconocida';
+  } catch (error) {
+    console.error('Error en getPrerequisiteName:', error);
+    return 'Habilidad Desconocida';
+  }
+};
+
+// Obtener la clase CSS para el nivel de una habilidad
+const getSkillLevelClass = (skillId, level) => {
+  try {
+    // Verificar que skillId sea válido
+    if (!skillId || isNaN(level)) {
+      return 'border-gray-600 bg-gray-800';
+    }
+
+    // Obtener el nivel actual de la habilidad
+    const pilotSkill = pilotSkills.value.find(skill => skill.id === skillId);
+    const pilotLevel = pilotSkill && pilotSkill.pivot ? pilotSkill.pivot.current_level : 0;
+
+    // Si la habilidad no está activa, mostrarla como "apagada"
+    const isActive = pilotSkill && pilotSkill.pivot ? pilotSkill.pivot.active : false;
+
+    // Verificar si el nivel actual es mayor o igual al nivel que estamos evaluando
+    if (pilotLevel >= level) {
+      // Si la habilidad está activa, usar tonalidades de azul según el nivel
+      if (isActive) {
+        switch (level) {
+          case 1: return 'border-blue-400 bg-blue-400';
+          case 2: return 'border-blue-500 bg-blue-500';
+          case 3: return 'border-blue-600 bg-blue-600';
+          case 4: return 'border-blue-700 bg-blue-700';
+          case 5: return 'border-blue-800 bg-blue-800';
+          default: return 'border-blue-400 bg-blue-400';
+        }
+      } else {
+        // Si la habilidad no está activa, mostrarla como "apagada" (tonos más claros y semitransparentes)
+        return 'border-blue-300/40 bg-blue-300/40';
+      }
+    } else {
+      return 'border-gray-600 bg-gray-800';
+    }
+  } catch (error) {
+    console.error('Error en getSkillLevelClass:', error);
+    return 'border-gray-600 bg-gray-800';
+  }
+};
+
+// Obtener la clase CSS para el texto del multiplicador de una habilidad
+const getMultiplierClass = (multiplier) => {
+  try {
+    // Verificar que el multiplicador sea un número válido
+    if (isNaN(multiplier)) {
+      return 'text-gray-300';
+    }
+
+    // Convertir a número para asegurar la comparación correcta
+    switch (Number(multiplier)) {
+      case 1: return 'text-gray-300 bg-gray-800/50';
+      case 2: return 'text-green-400 bg-green-900/30';
+      case 3: return 'text-blue-400 bg-blue-900/30';
+      case 4: return 'text-purple-400 bg-purple-900/30';
+      case 5: return 'text-red-400 bg-red-900/30';
+      default: return 'text-gray-300 bg-gray-800/50';
+    }
+  } catch (error) {
+    console.error('Error en getMultiplierClass:', error);
+    return 'text-gray-300 bg-gray-800/50';
+  }
+};
+
+// Obtener la clase CSS para el borde del multiplicador de una habilidad
+const getMultiplierBorderClass = (multiplier) => {
+  try {
+    // Verificar que el multiplicador sea un número válido
+    if (isNaN(multiplier)) {
+      return 'border-gray-600';
+    }
+
+    // Convertir a número para asegurar la comparación correcta
+    switch (Number(multiplier)) {
+      case 1: return 'border-gray-600';
+      case 2: return 'border-green-700';
+      case 3: return 'border-blue-700';
+      case 4: return 'border-purple-700';
+      case 5: return 'border-red-700';
+      default: return 'border-gray-600';
+    }
+  } catch (error) {
+    console.error('Error en getMultiplierBorderClass:', error);
+    return 'border-gray-600';
+  }
+};
+
+/**
+ * Función para actualizar las estadísticas
+ *
+ * Esta función actualiza las estadísticas de habilidades utilizando la función getSkillStats.
+ * Se llama automáticamente cuando:
+ * - Se cargan los datos iniciales
+ * - Se aplican filtros
+ * - Cambia el estado de las habilidades
+ *
+ * Actualiza el estado reactivo 'stats' que se utiliza en el panel de estadísticas.
+ */
+const updateStats = () => {
+  try {
+    // Actualizar las estadísticas utilizando la función getSkillStats
+    const newStats = getSkillStats();
+
+    // Actualizar el estado reactivo
+    stats.value = newStats;
+
+    console.log('Estadísticas actualizadas:', stats.value);
+  } catch (error) {
+    console.error('Error en updateStats:', error);
+  }
+};
+
+/**
+ * Función para calcular estadísticas de habilidades
+ *
+ * Esta función calcula diversas estadísticas sobre las habilidades del piloto:
+ * - Estadísticas básicas (total, aprendidas, restantes, activas, inactivas)
+ * - Estadísticas de nivel (distribución por nivel, nivel más alto, nivel promedio)
+ * - Estadísticas de XP (total, máximo posible, porcentaje de progreso)
+ * - Estadísticas por categoría (total y aprendidas por categoría)
+ * - Estadísticas por multiplicador (distribución por multiplicador, multiplicador promedio)
+ *
+ * @returns {Object} Objeto con todas las estadísticas calculadas
+ */
+const getSkillStats = () => {
+  try {
+    // Estadísticas básicas
+    const totalSkills = allSkills.value.length;
+    const learnedSkills = pilotSkills.value.length;
+    const remainingSkills = totalSkills - learnedSkills;
+    const activeSkills = pilotSkills.value.filter(skill => skill.pivot?.active).length;
+    const inactiveSkills = learnedSkills - activeSkills;
+
+    // Estadísticas de nivel
+    const skillsByLevel = [0, 0, 0, 0, 0, 0]; // Índice 0 para nivel 0, 1 para nivel 1, etc.
+    let totalXP = 0;
+    let maxPossibleXP = 0;
+    let highestLevel = 0;
+
+    // Calcular estadísticas por nivel y XP
+    pilotSkills.value.forEach(skill => {
+      const level = skill.pivot?.current_level || 0;
+      skillsByLevel[level]++;
+
+      if (level > highestLevel) {
+        highestLevel = level;
+      }
+
+      totalXP += skill.pivot?.xp || 0;
+    });
+
+    // Calcular XP máximo posible (todas las habilidades en nivel 5)
+    allSkills.value.forEach(skill => {
+      // Suponiendo que el XP para nivel 5 es 1000 * multiplicador
+      maxPossibleXP += 1000 * (skill.multiplier || 1);
+    });
+
+    // Calcular porcentaje de progreso total
+    const progressPercentage = Math.round((totalXP / maxPossibleXP) * 100);
+
+    // Estadísticas por categoría
+    const categoriesStats = {};
+    categories.value.forEach(category => {
+      const categorySkills = allSkills.value.filter(skill => skill.skill_category_id === category.id);
+      const learnedCategorySkills = pilotSkills.value.filter(skill => skill.skill_category_id === category.id);
+
+      categoriesStats[category.id] = {
+        name: category.name,
+        total: categorySkills.length,
+        learned: learnedCategorySkills.length,
+        percentage: categorySkills.length > 0
+          ? Math.round((learnedCategorySkills.length / categorySkills.length) * 100)
+          : 0
+      };
+    });
+
+    // Estadísticas por multiplicador
+    const multiplierStats = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+    pilotSkills.value.forEach(skill => {
+      const multiplier = skill.multiplier || 1;
+      if (multiplierStats[multiplier] !== undefined) {
+        multiplierStats[multiplier]++;
+      }
+    });
+
+    // Calcular el Índice de Progresión (I.P.)
+    // Fórmula: PI = (HS × 10) + (AL × 25) + (XP ÷ 100) + (AS × 15) + (MP × 5)
+
+    // HS = Porcentaje de Habilidades Aprendidas (0-100%)
+    const HS = totalSkills > 0 ? (learnedSkills / totalSkills) * 100 : 0;
+
+    // AL = Nivel Promedio (1-5)
+    let AL = 0;
+    if (learnedSkills > 0) {
+      const totalLevels = skillsByLevel.reduce((sum, count, level) => sum + (count * level), 0);
+      AL = totalLevels / learnedSkills;
+    }
+
+    // XP = Experiencia Total Acumulada
+    const XP = totalXP;
+
+    // AS = Porcentaje de Habilidades Activas (0-100%)
+    const AS = learnedSkills > 0 ? (activeSkills / learnedSkills) * 100 : 0;
+
+    // MP = Multiplicador Promedio (1-5)
+    let MP = 0;
+    if (learnedSkills > 0) {
+      const totalMultipliers = Object.entries(multiplierStats).reduce((sum, [mult, count]) => sum + (Number(mult) * count), 0);
+      MP = totalMultipliers / learnedSkills;
+    }
+
+    // Calcular el Índice de Progresión
+    const progressionIndex = Math.round((HS * 10) + (AL * 25) + (XP / 100) + (AS * 15) + (MP * 5));
+
+    return {
+      totalSkills,
+      learnedSkills,
+      remainingSkills,
+      activeSkills,
+      inactiveSkills,
+      skillsByLevel,
+      totalXP,
+      maxPossibleXP,
+      progressPercentage,
+      highestLevel,
+      categoriesStats,
+      multiplierStats,
+      // Componentes del Índice de Progresión
+      progressionIndex,
+      progressionComponents: {
+        HS,
+        AL,
+        XP,
+        AS,
+        MP
+      }
+    };
+  } catch (error) {
+    console.error('Error en getSkillStats:', error);
+    return {
+      totalSkills: 0,
+      learnedSkills: 0,
+      remainingSkills: 0,
+      activeSkills: 0,
+      inactiveSkills: 0,
+      skillsByLevel: [0, 0, 0, 0, 0, 0],
+      totalXP: 0,
+      maxPossibleXP: 0,
+      progressPercentage: 0,
+      highestLevel: 0,
+      categoriesStats: {},
+      multiplierStats: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+      progressionIndex: 0,
+      progressionComponents: {
+        HS: 0,
+        AL: 0,
+        XP: 0,
+        AS: 0,
+        MP: 0
+      }
+    };
+  }
+};
+
+// Nota: La función getPrerequisiteShortName ya no se utiliza en la nueva interfaz de tarjetas
+
+
+
+// Generar una descripción estética para cada habilidad
+const getSkillDescription = (skill) => {
+  try {
+    // Descripciones predefinidas para algunas habilidades comunes
+    const descriptions = {
+      // Habilidades de Combate
+      'Armas Láser Básicas': 'Dominio fundamental de armas láser estándar, mejorando precisión y eficiencia energética.',
+      'Armas de Proyectil Básicas': 'Conocimiento esencial sobre armas balísticas y munición, aumentando la precisión y reduciendo el tiempo de recarga.',
+      'Defensa Básica': 'Técnicas fundamentales para mejorar la resistencia del escudo y la armadura de la nave.',
+      'Armas Láser Intermedias': 'Conocimiento avanzado de sistemas láser, permitiendo mayor daño y eficiencia energética.',
+      'Tácticas de Combate Básicas': 'Fundamentos de posicionamiento y maniobras evasivas durante el combate espacial.',
+      'Tácticas de Combate Avanzadas': 'Estrategias complejas de combate, incluyendo flanqueo y coordinación de escuadrones.',
+      'Maestría en Armas Láser': 'Dominio excepcional de sistemas láser avanzados, maximizando daño y minimizando consumo energético.',
+      'Maestría en Combate': 'Dominio completo de todas las formas de combate espacial, convirtiendo al piloto en una fuerza letal.',
+
+      // Habilidades de Minería
+      'Minería Básica': 'Conocimientos fundamentales para la extracción eficiente de minerales comunes.',
+      'Minería Avanzada': 'Técnicas especializadas para la extracción de minerales raros y procesamiento de alta eficiencia.',
+
+      // Habilidades de Navegación
+      'Navegación Básica': 'Fundamentos de pilotaje espacial, mejorando velocidad y maniobrabilidad.',
+      'Navegación Avanzada': 'Técnicas avanzadas de navegación, permitiendo rutas más eficientes y maniobras complejas.',
+
+      // Habilidades de Comercio
+      'Comercio Básico': 'Conocimientos fundamentales de mercados y negociación para mejorar márgenes de beneficio.',
+      'Negociación': 'Arte avanzado de negociación para obtener mejores precios tanto en compra como en venta.',
+
+      // Habilidades de Electrónica
+      'Electrónica Básica': 'Conocimientos fundamentales sobre sistemas electrónicos de naves, mejorando eficiencia y capacidad de reparación.',
+
+      // Habilidades de Exploración
+      'Exploración Espacial': 'Técnicas para descubrir y catalogar nuevos sistemas estelares y recursos.',
+
+      // Habilidades de Ingeniería
+      'Ingeniería Básica': 'Fundamentos de mantenimiento y optimización de sistemas de naves espaciales.',
+      'Reparación de Naves': 'Técnicas especializadas para reparar daños estructurales y de sistemas en condiciones adversas.'
+    };
+
+    // Si existe una descripción predefinida, usarla
+    if (descriptions[skill.name]) {
+      return descriptions[skill.name];
+    }
+
+    // Si no existe, generar una descripción basada en el nombre y multiplicador
+    const categoryName = getCategoryName(skill.skill_category_id);
+    const multiplierText = skill.multiplier > 3 ? 'avanzadas' : 'básicas';
+
+    return `Técnicas ${multiplierText} de ${categoryName.toLowerCase()} que mejoran las capacidades del piloto en este campo.`;
+  } catch (error) {
+    console.error('Error en getSkillDescription:', error);
+    return 'Información no disponible';
+  }
+};
+
+// Obtener el nombre de una categoría por su ID
+const getCategoryName = (categoryId) => {
+  try {
+    const category = categories.value.find(cat => cat.id === categoryId);
+    return category ? category.name : 'Desconocida';
+  } catch (error) {
+    console.error('Error en getCategoryName:', error);
+    return 'Desconocida';
+  }
+};
+
+/**
+ * Función para animar los contadores de XP
+ *
+ * Esta función anima los contadores de XP desde 0 hasta su valor actual
+ * utilizando JavaScript para actualizar el texto directamente.
+ *
+ * Características:
+ * - Anima los contadores de XP de forma suave y gradual
+ * - Sincroniza la animación con las barras de progreso circular
+ * - Utiliza 20 pasos para una animación fluida
+ * - Asegura que los valores finales sean exactos
+ */
+const animateXPCounters = () => {
+  try {
+    console.log('Animando contadores de XP...');
+
+    // Seleccionar todos los contadores de XP visibles
+    const xpCounters = document.querySelectorAll('.skill-xp-counter');
+
+    // Animar cada contador
+    xpCounters.forEach((counter, index) => {
+      // Obtener el elemento que contiene el contador animado
+      const animatedCounter = counter.querySelector('.animated-counter');
+      if (!animatedCounter) return;
+
+      // Obtener los valores de XP
+      const currentXP = parseInt(counter.getAttribute('data-current-xp') || '0');
+      const nextLevelXP = counter.getAttribute('data-next-level-xp') || '0';
+
+      // Si no hay XP, no animar
+      if (currentXP === 0) {
+        animatedCounter.textContent = `0/${nextLevelXP} XP`;
+        return;
+      }
+
+      // Configurar la animación
+      const duration = 1500; // 1.5 segundos (igual que las barras de progreso)
+      const steps = 20; // Número de pasos para la animación
+      const interval = duration / steps; // Intervalo entre pasos
+
+      // Añadir un pequeño retraso escalonado basado en el índice
+      setTimeout(() => {
+        let step = 0;
+        let count = 0;
+
+        // Crear un intervalo para actualizar el contador gradualmente
+        const timer = setInterval(() => {
+          step++;
+
+          // Calcular el valor actual basado en una curva de aceleración
+          // Esto hace que la animación comience lenta y termine rápida
+          const progress = step / steps;
+          const easedProgress = progress < 0.5
+            ? 2 * progress * progress
+            : -1 + (4 - 2 * progress) * progress;
+
+          count = Math.round(currentXP * easedProgress);
+
+          // Actualizar el texto del contador
+          animatedCounter.textContent = `${count}/${nextLevelXP} XP`;
+
+          // Detener la animación cuando se alcance el valor final
+          if (step >= steps) {
+            animatedCounter.textContent = `${currentXP}/${nextLevelXP} XP`;
+            clearInterval(timer);
+          }
+        }, interval);
+      }, index % 5 * 50); // Pequeño retraso escalonado
+    });
+  } catch (error) {
+    console.error('Error en animateXPCounters:', error);
+  }
+};
+</script>
+
+<style scoped>
+/**
+ * Estilos CSS para PilotSkillsView
+ *
+ * Esta sección contiene todos los estilos específicos para esta vista,
+ * incluyendo animaciones, efectos de hover, y estilos para las tarjetas.
+ */
+
+/* Estilos para el círculo de progreso */
+.progress-circle {
+  transition: stroke-dashoffset 0s; /* Inicialmente sin transición, se añade dinámicamente */
+}
+
+/* Estilos base para las tarjetas de habilidades */
+.skill-card {
+  transition: all 0.3s ease; /* Transición suave para efectos hover */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Efecto hover para las tarjetas */
+.skill-card:hover {
+  transform: translateY(-5px);
+}
+
+/*
+ * Estilos para la descripción con scroll
+ * La descripción tiene una altura fija pero se expande al hacer hover
+ * Incluye un efecto de desvanecimiento en la parte inferior
+ */
+.description-wrapper {
+  overflow: hidden;
+  position: relative;
+  /* Efecto de desvanecimiento en la parte inferior */
+  mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+}
+
+.description-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  overflow-y: hidden;
+  transition: all 0.3s ease;
+  padding-right: 5px; /* Espacio para la barra de scroll */
+}
+
+.skill-card:hover .description-text {
+  overflow-y: auto;
+  max-height: 80px;
+  mask-image: none;
+  -webkit-mask-image: none;
+  z-index: 10; /* Asegura que el texto esté por encima de otros elementos */
+}
+
+/* Estilo para la barra de scroll */
+.description-text::-webkit-scrollbar {
+  width: 4px;
+}
+
+.description-text::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 10px;
+}
+
+.description-text::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+}
+
+.description-text::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+/* Indicador de scroll */
+.scroll-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(59, 130, 246, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.skill-card:hover .description-wrapper:hover .scroll-indicator {
+  opacity: 1;
+}
+
+/* Estilos para la sección de prerrequisitos */
+.prereq-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) rgba(31, 41, 55, 0.5);
+}
+
+/* Estilos para los badges de requisitos */
+.prereq-container > div:not(p) {
+  border-width: 1px;
+  font-size: 0.65rem;
+  line-height: 1;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+/* Estilo específico para el mensaje de no requisitos */
+.prereq-container > p {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  display: flex;
+  align-items: center;
+}
+
+.prereq-container::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.prereq-container::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 10px;
+}
+
+.prereq-container::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+}
+
+.prereq-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+/*
+ * Animación para las tarjetas al cargar
+ * Efecto de aparición desde abajo con desvanecimiento
+ * Las tarjetas aparecen secuencialmente con un retraso basado en su índice
+ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0; /* Inicialmente invisible */
+    transform: translateY(20px); /* Desplazado hacia abajo */
+  }
+  to {
+    opacity: 1; /* Completamente visible */
+    transform: translateY(0); /* En su posición final */
+  }
+}
+
+/* Aplicación de la animación a las tarjetas */
+.skill-card {
+  animation: fadeInUp 0.5s ease-out forwards; /* Animación con duración de 0.5s */
+  animation-delay: calc(var(--index, 0) * 0.05s); /* Retraso escalonado basado en el índice */
+  /* Cada tarjeta se retrasa 0.05s más que la anterior, creando un efecto cascada */
+}
+
+/**
+ * Estilos para las animaciones de los círculos de progreso
+ *
+ * Estos estilos controlan la animación de llenado de los círculos de progreso.
+ * La animación se activa cuando se añade la clase 'animate-skills' al contenedor.
+ */
+.progress-circle {
+  stroke-dashoffset: 282.7; /* Valor inicial (círculo vacío) */
+  transition: none; /* Sin transición por defecto */
+}
+
+/* Animación de los círculos de progreso cuando se activa la clase animate-skills */
+.animate-skills .progress-circle {
+  transition: stroke-dashoffset 1.5s ease-out; /* Transición suave */
+  stroke-dashoffset: var(--final-dashoffset); /* Valor final calculado dinámicamente */
+  animation-delay: calc(var(--index, 0) * 0.05s); /* Retraso escalonado basado en el índice */
+}
+
+/**
+ * Configuración para los contadores de nivel
+ *
+ * Estos estilos controlan la animación de los contadores de nivel.
+ * Utilizamos pseudo-elementos (::before) para mostrar valores incrementales
+ * y luego mostramos el valor real cuando termina la animación.
+ */
+.skill-level-counter .counter-value {
+  display: none; /* Ocultar el valor real inicialmente */
+}
+
+.skill-level-counter::before {
+  content: '0'; /* Comenzar desde 0 */
+  display: inline;
+}
+
+/* Animación para el contador de nivel cuando se activa la clase animate-skills */
+.animate-skills .skill-level-counter::before {
+  animation: count-up-level 1.5s forwards; /* Animación de 1.5s (igual que los círculos) */
+  animation-delay: calc(var(--index, 0) * 0.05s); /* Retraso escalonado basado en el índice */
+}
+
+/* Mostrar el valor real del nivel cuando termina la animación */
+.animate-skills.animation-completed .skill-level-counter::before {
+  display: none; /* Ocultar el contador animado */
+}
+
+.animate-skills.animation-completed .skill-level-counter .counter-value {
+  display: inline; /* Mostrar el valor real */
+}
+
+/**
+ * Configuración para los contadores de XP
+ *
+ * Estos estilos controlan la animación de los contadores de XP.
+ * Utilizamos un enfoque basado en elementos HTML anidados y posicionamiento absoluto
+ * para superponer el contador animado sobre el valor real.
+ * La animación se realiza con JavaScript en la función animateXPCounters().
+ */
+.skill-xp-counter {
+  position: relative; /* Necesario para el posicionamiento absoluto */
+}
+
+/* Ocultar el valor real inicialmente */
+.skill-xp-counter .xp-counter-value {
+  opacity: 0; /* Invisible al inicio */
+}
+
+/* Contenedor para el contador animado */
+.skill-xp-counter .animated-counter {
+  position: absolute; /* Posicionamiento absoluto para superponerse */
+  left: 0;
+  top: 0;
+  width: 100%;
+  opacity: 1; /* Visible al inicio */
+}
+
+/* Mostrar el valor real cuando termina la animación */
+.animate-skills.animation-completed .skill-xp-counter .xp-counter-value {
+  opacity: 1; /* Hacer visible el valor real */
+}
+
+.animate-skills.animation-completed .skill-xp-counter .animated-counter {
+  opacity: 0; /* Ocultar el contador animado */
+}
+
+/**
+ * Animaciones para contar hacia arriba
+ *
+ * Estas animaciones controlan el incremento gradual de los contadores de nivel.
+ * Utilizamos la propiedad 'content' de los pseudo-elementos para mostrar
+ * valores incrementales a lo largo del tiempo.
+ *
+ * Esta es la animación genérica que se usa por defecto, pero cada nivel
+ * tiene su propia animación personalizada definida más abajo.
+ */
+@keyframes count-up-level {
+  0% { content: '0'; }
+  5% { content: '0'; }
+  10% { content: '0'; }
+  15% { content: '0'; }
+  20% { content: '1'; }
+  25% { content: '1'; }
+  30% { content: '1'; }
+  35% { content: '1'; }
+  40% { content: '2'; }
+  45% { content: '2'; }
+  50% { content: '2'; }
+  55% { content: '2'; }
+  60% { content: '3'; }
+  65% { content: '3'; }
+  70% { content: '3'; }
+  75% { content: '3'; }
+  80% { content: '4'; }
+  85% { content: '4'; }
+  90% { content: '4'; }
+  95% { content: '4'; }
+  100% { content: '5'; }
+}
+
+/**
+ * Animaciones personalizadas para cada nivel
+ *
+ * Estas reglas seleccionan la animación adecuada según el nivel máximo
+ * de cada habilidad (almacenado en el atributo data-target).
+ * Esto asegura que cada contador se anime hasta su valor correcto.
+ */
+.skill-level-counter[data-target="1"]::before {
+  animation-name: count-up-level-1 !important; /* Animar solo hasta nivel 1 */
+}
+.skill-level-counter[data-target="2"]::before {
+  animation-name: count-up-level-2 !important; /* Animar hasta nivel 2 */
+}
+.skill-level-counter[data-target="3"]::before {
+  animation-name: count-up-level-3 !important; /* Animar hasta nivel 3 */
+}
+.skill-level-counter[data-target="4"]::before {
+  animation-name: count-up-level-4 !important; /* Animar hasta nivel 4 */
+}
+.skill-level-counter[data-target="5"]::before {
+  animation-name: count-up-level-5 !important; /* Animar hasta nivel 5 */
+}
+
+/**
+ * Definiciones de animaciones específicas para cada nivel
+ *
+ * Cada nivel tiene su propia animación personalizada que incrementa
+ * el contador desde 0 hasta el nivel correspondiente.
+ * Los pasos intermedios están distribuidos uniformemente para crear
+ * una animación fluida y natural.
+ */
+
+/* Animación para nivel 1 */
+@keyframes count-up-level-1 {
+  0% { content: '0'; }
+  100% { content: '1'; }
+}
+
+/* Animación para nivel 2 */
+@keyframes count-up-level-2 {
+  0% { content: '0'; }
+  50% { content: '1'; } /* Mitad del tiempo en nivel 1 */
+  100% { content: '2'; }
+}
+
+/* Animación para nivel 3 */
+@keyframes count-up-level-3 {
+  0% { content: '0'; }
+  33% { content: '1'; } /* Un tercio del tiempo en cada nivel */
+  66% { content: '2'; }
+  100% { content: '3'; }
+}
+
+/* Animación para nivel 4 */
+@keyframes count-up-level-4 {
+  0% { content: '0'; }
+  25% { content: '1'; } /* Un cuarto del tiempo en cada nivel */
+  50% { content: '2'; }
+  75% { content: '3'; }
+  100% { content: '4'; }
+}
+
+/* Animación para nivel 5 */
+@keyframes count-up-level-5 {
+  0% { content: '0'; }
+  20% { content: '1'; } /* Un quinto del tiempo en cada nivel */
+  40% { content: '2'; }
+  60% { content: '3'; }
+  80% { content: '4'; }
+  100% { content: '5'; }
+}
+
+/**
+ * Transiciones para los contadores
+ *
+ * Estas transiciones suavizan el cambio de opacidad cuando se muestra/oculta
+ * el contador animado y el valor real al final de la animación.
+ */
+.skill-xp-counter .xp-counter-value,
+.skill-xp-counter .animated-counter {
+  transition: opacity 0.3s ease; /* Transición suave de 0.3 segundos */
+}
+
+/**
+ * Documentación del Índice de Progresión (I.P.)
+ *
+ * El Índice de Progresión (I.P.) es una métrica integral que mide el avance
+ * del piloto considerando múltiples factores relacionados con sus habilidades.
+ *
+ * Fórmula: PI = (HS × 10) + (AL × 25) + (XP ÷ 100) + (AS × 15) + (MP × 5)
+ *
+ * Donde:
+ * - HS = Porcentaje de Habilidades Aprendidas (0-100%)
+ *   Mide la amplitud de conocimiento del piloto.
+ *   Contribución máxima: 1000 puntos (100% × 10)
+ *
+ * - AL = Nivel Promedio de las habilidades aprendidas (1-5)
+ *   Mide la profundidad de dominio del piloto.
+ *   Contribución máxima: 125 puntos (5 × 25)
+ *
+ * - XP = Experiencia Total Acumulada
+ *   Mide el tiempo y esfuerzo invertido por el piloto.
+ *   Contribución: Variable, dependiendo de la experiencia acumulada.
+ *   Ejemplo: 15,000 XP contribuye 150 puntos (15,000 ÷ 100)
+ *
+ * - AS = Porcentaje de Habilidades Activas (0-100%)
+ *   Mide la aplicación práctica de las habilidades.
+ *   Contribución máxima: 1500 puntos (100% × 15)
+ *
+ * - MP = Multiplicador Promedio de las habilidades aprendidas (1-5)
+ *   Mide la dificultad de las habilidades dominadas.
+ *   Contribución máxima: 25 puntos (5 × 5)
+ *
+ * Ejemplo de cálculo:
+ * - Piloto con 50% de habilidades aprendidas (HS = 50)
+ * - Nivel promedio de 3 (AL = 3)
+ * - 25,000 puntos de experiencia (XP = 25,000)
+ * - 75% de habilidades activas (AS = 75)
+ * - Multiplicador promedio de 2 (MP = 2)
+ *
+ * PI = (50 × 10) + (3 × 25) + (25,000 ÷ 100) + (75 × 15) + (2 × 5)
+ * PI = 500 + 75 + 250 + 1125 + 10
+ * PI = 1960
+ *
+ * Interpretación:
+ * - Un I.P. bajo (0-500): Piloto novato
+ * - Un I.P. medio (501-1500): Piloto experimentado
+ * - Un I.P. alto (1501+): Piloto veterano
+ *
+ * El I.P. proporciona una medida integral del progreso del piloto,
+ * considerando tanto la amplitud como la profundidad de sus habilidades,
+ * así como su experiencia acumulada y la aplicación práctica de sus conocimientos.
+ */
+</style>

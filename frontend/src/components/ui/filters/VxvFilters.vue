@@ -85,6 +85,14 @@ const props = defineProps({
     default: () => ({})
   },
   /**
+   * Default filter values to use when resetting
+   * If not provided, filters will be reset to empty values
+   */
+  defaultFilters: {
+    type: Object,
+    default: () => ({})
+  },
+  /**
    * Whether to show the search input
    */
   showSearch: {
@@ -159,10 +167,11 @@ const props = defineProps({
 // Define emits
 const emit = defineEmits(['update:filters', 'filter-change', 'reset']);
 
-// Create a local copy of the filters
+// Create a local copy of the filters, merging with default values for any missing properties
 const localFilters = reactive({
   search: '',
-  ...props.filters
+  ...props.defaultFilters, // Aplicar valores por defecto primero
+  ...props.filters // Los filtros iniciales tienen prioridad sobre los valores por defecto
 });
 
 // Watch for changes in props.filters
@@ -205,36 +214,56 @@ const applyFilters = () => {
 
 // Reset filters
 const resetFilters = () => {
-  // Crear una copia de los filtros locales
-  const resetFilters = { ...localFilters };
+  // Crear un objeto para los filtros restablecidos
+  const resetFiltersObj = {};
 
-  // Restablecer todos los filtros excepto sort_field y sort_direction
-  Object.keys(resetFilters).forEach(key => {
-    if (key !== 'sort_field' && key !== 'sort_direction') {
-      if (typeof resetFilters[key] === 'string') {
-        resetFilters[key] = '';
-      } else if (Array.isArray(resetFilters[key])) {
-        resetFilters[key] = [];
-      } else if (typeof resetFilters[key] === 'object' && resetFilters[key] !== null) {
-        resetFilters[key] = {};
-      } else if (typeof resetFilters[key] === 'number') {
-        resetFilters[key] = 0;
-      } else if (typeof resetFilters[key] === 'boolean') {
-        resetFilters[key] = false;
+  // Obtener todas las claves de los filtros actuales
+  const allKeys = new Set([
+    ...Object.keys(localFilters),
+    ...Object.keys(props.defaultFilters)
+  ]);
+
+  // Restablecer todos los filtros
+  allKeys.forEach(key => {
+    // Mantener los valores de ordenación si existen
+    if (key === 'sort_field' || key === 'sort_direction') {
+      resetFiltersObj[key] = localFilters[key];
+      return;
+    }
+
+    // Si hay un valor por defecto definido, usarlo
+    if (key in props.defaultFilters) {
+      resetFiltersObj[key] = props.defaultFilters[key];
+    } else {
+      // Si no hay valor por defecto, restablecer según el tipo
+      if (key in localFilters) {
+        if (typeof localFilters[key] === 'string') {
+          resetFiltersObj[key] = '';
+        } else if (Array.isArray(localFilters[key])) {
+          resetFiltersObj[key] = [];
+        } else if (typeof localFilters[key] === 'object' && localFilters[key] !== null) {
+          resetFiltersObj[key] = {};
+        } else if (typeof localFilters[key] === 'number') {
+          resetFiltersObj[key] = 0;
+        } else if (typeof localFilters[key] === 'boolean') {
+          resetFiltersObj[key] = false;
+        } else {
+          resetFiltersObj[key] = null;
+        }
       }
     }
   });
 
   // Actualizar los filtros locales
-  Object.keys(resetFilters).forEach(key => {
-    localFilters[key] = resetFilters[key];
+  Object.keys(resetFiltersObj).forEach(key => {
+    localFilters[key] = resetFiltersObj[key];
   });
 
-  console.log('Filtros restablecidos en VxvFilters:', resetFilters);
+  console.log('Filtros restablecidos en VxvFilters:', resetFiltersObj);
 
   // Emitir eventos con una copia de los filtros para asegurar que se detecten los cambios
-  emit('update:filters', { ...resetFilters });
-  emit('filter-change', { ...resetFilters });
+  emit('update:filters', { ...resetFiltersObj });
+  emit('filter-change', { ...resetFiltersObj });
 
   // Emitir un evento de reset para que los componentes padres puedan realizar acciones adicionales
   // Este evento es importante para que VxvDataTable pueda restablecer el valor de perPage
