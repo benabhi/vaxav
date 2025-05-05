@@ -1,4 +1,2 @@
-- [ ] Hacer fixed con posibilidad de pegado al footer el statusbar
-- [ ] hacer que tanto los menues (salvo piloto) del navbar como el pagetitle entero no se muestren hasta que este creado el piloto.
-
+- [ ] Los menues del menu lateral tanto en el panel de admin como en resposivo no quedan "activos" cuando se les cliquea.
 
