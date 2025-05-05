@@ -63,6 +63,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
@@ -70,6 +71,7 @@ import VxvForm from '@/components/ui/forms/VxvForm.vue';
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 
 const props = defineProps({
   token: {
@@ -116,6 +118,13 @@ const handleSubmit = async () => {
     const response = await authStore.resetPassword(form);
     message.value = response.message || 'Tu contraseña ha sido restablecida correctamente.';
     alertVariant.value = 'success';
+
+    // Mostrar notificación de éxito
+    notificationStore.success(
+      'Tu contraseña ha sido restablecida correctamente.',
+      'Contraseña actualizada',
+      7000
+    );
 
     // Redirigir al login después de un breve retraso
     setTimeout(() => {
