@@ -170,7 +170,7 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const user = await authService.getUser();
-        console.log('Usuario obtenido del servidor:', user);
+        // Usuario obtenido del servidor
 
         // Asegurarnos de que las propiedades de roles estén correctamente establecidas
         if (user) {
@@ -193,14 +193,12 @@ export const useAuthStore = defineStore('auth', {
 
         // Verificar explícitamente si el email está verificado basado en la respuesta del backend
         this.emailVerified = user.email_verified_at !== null;
-        console.log('Email verificado:', this.emailVerified, 'email_verified_at:', user.email_verified_at);
-
-        console.log('Usuario establecido en el store:', this.user);
+        // Email verificado y usuario establecido en el store
       } catch (error: any) {
         this.user = null;
         this.isAuthenticated = false;
         this.emailVerified = false;
-        console.error('Error al obtener usuario:', error);
+        // Error al obtener usuario
         throw error; // Re-lanzar el error para que pueda ser manejado por el llamador
       } finally {
         this.loading = false;
@@ -214,23 +212,23 @@ export const useAuthStore = defineStore('auth', {
 
         // Luego, verificar específicamente el estado de verificación
         const status = await authService.getEmailVerificationStatus();
-        console.log('Estado de verificación desde API:', status);
+        // Estado de verificación desde API
 
         // Actualizar el estado en el store
         this.emailVerified = status.verified;
 
         // Si hay discrepancia entre el estado del usuario y la API, confiar en la API
         if (this.user && this.user.email_verified_at && !status.verified) {
-          console.warn('Discrepancia en el estado de verificación: usuario tiene email_verified_at pero API dice que no está verificado');
+          // Discrepancia en el estado de verificación
         } else if (this.user && !this.user.email_verified_at && status.verified) {
-          console.warn('Discrepancia en el estado de verificación: usuario no tiene email_verified_at pero API dice que está verificado');
+          // Discrepancia en el estado de verificación
           // Forzar una actualización del usuario
           await this.fetchUser();
         }
 
         return status;
       } catch (error) {
-        console.error('Error al verificar estado del email:', error);
+        // Error al verificar estado del email
         return { verified: false, message: 'Error al verificar estado del email' };
       }
     },

@@ -349,9 +349,7 @@ const router = createRouter({
 })
 
 // Configurar los guardias de navegación
-setupRouterGuards(router).then(() => {
-  console.log('Router guards configured successfully');
-}).catch(error => {
+setupRouterGuards(router).catch(error => {
   console.error('Error configuring router guards:', error);
 });
 

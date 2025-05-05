@@ -89,9 +89,10 @@
 
   <!-- Modal de confirmación de eliminación -->
   <VxvModal
-    v-model="showDeleteModal"
+    :show="showDeleteModal"
     title="Confirmar eliminación"
     :loading="deleting"
+    @close="showDeleteModal = false"
   >
     <p class="text-gray-300 mb-4">
       ¿Estás seguro de que deseas eliminar el piloto <span class="font-bold text-white">{{ pilotToDelete?.name }}</span>?

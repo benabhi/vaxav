@@ -128,6 +128,7 @@ import VxvPaginator from '../pagination/VxvPaginator.vue';
 import VxvFilters from '../filters/VxvFilters.vue';
 import VxvButton from '../buttons/VxvButton.vue';
 import VxvSelect from '../forms/VxvSelect.vue';
+import VxvClearState from '../feedback/VxvClearState.vue';
 
 // Define props
 const props = defineProps({
@@ -487,13 +488,10 @@ const handleFilterReset = () => {
   const defaultPerPage = Number(props.perPage);
 
   if (currentPerPage !== defaultPerPage) {
-    console.log('Restableciendo perPage de', currentPerPage, 'a', defaultPerPage);
     localPerPage.value = defaultPerPage;
     emit('update:perPage', defaultPerPage);
     emit('per-page-change', defaultPerPage);
   }
-
-  console.log('Filtros restablecidos en VxvDataTable, perPage:', localPerPage.value);
 };
 
 // Watch for changes in props

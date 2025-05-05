@@ -37,33 +37,7 @@ export interface Pilot {
   };
 }
 
-/**
- * Interfaz para una habilidad de piloto
- */
-export interface PilotSkill {
-  id: number;
-  name: string;
-  description: string;
-  multiplier: number;
-  skill_category_id: number;
-  category: {
-    id: number;
-    name: string;
-  };
-  prerequisites: Array<{
-    id: number;
-    name: string;
-    pivot: {
-      prerequisite_level: number;
-    };
-  }>;
-  pilot_skill_id: number | null;
-  current_level: number;
-  xp: number;
-  active: boolean;
-  can_activate: boolean;
-  can_deactivate: boolean;
-}
+import type { Skill, SkillCategory, Prerequisite, PilotSkill } from '@/composables/usePilotSkills';
 
 /**
  * Interfaz para la paginación

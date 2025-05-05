@@ -153,7 +153,7 @@ const availablePermissions = ref<any[]>([]);
 const fetchPermissions = async () => {
   try {
     const response = await api.get('/admin/permissions');
-    console.log('Permissions fetched successfully:', response.data);
+    // Permisos obtenidos correctamente
 
     if (response.data) {
       availablePermissions.value = response.data;
@@ -177,8 +177,6 @@ const editRole = (role: any) => {
 
 // Handle reset event
 const handleReset = () => {
-  console.log('Evento reset recibido en RolesView');
-
   // Los filtros y la paginación ya han sido restablecidos por AdminCrudView
   // Solo necesitamos forzar una recarga de los datos
   fetchRoles();

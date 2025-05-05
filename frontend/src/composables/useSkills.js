@@ -47,7 +47,7 @@ export function useSkills() {
       if (filters.category_id) params.category_id = filters.category_id;
       if (filters.multiplier) params.multiplier = filters.multiplier;
 
-      console.log('Enviando parámetros:', params);
+      // Enviando parámetros
 
       // Realizar la petición
       const response = await api.get('/admin/skills', { params });
@@ -65,17 +65,12 @@ export function useSkills() {
           pagination.currentPage = response.data.current_page || 1;
         }
 
-        console.log('Habilidades cargadas:', skills.value.length);
-
         // Verificar que los prerrequisitos estén correctamente formateados
         skills.value.forEach(skill => {
           if (skill.prerequisites && skill.prerequisites.length > 0) {
-            console.log(`Habilidad ${skill.name} tiene ${skill.prerequisites.length} prerrequisitos`);
             skill.prerequisites.forEach(prereq => {
-              if (prereq.prerequisite) {
-                console.log(`- Prerrequisito: ${prereq.prerequisite.name} (Nivel ${prereq.prerequisite_level})`);
-              } else {
-                console.warn(`- Prerrequisito incompleto:`, prereq);
+              if (!prereq.prerequisite) {
+                // Prerrequisito incompleto
               }
             });
           }
@@ -85,7 +80,7 @@ export function useSkills() {
         pagination.totalPages = 1;
       }
     } catch (error) {
-      console.error('Error al cargar habilidades:', error);
+      // Error al cargar habilidades
       skills.value = [];
       pagination.totalPages = 1;
       notificationStore.adminError('Error al cargar las habilidades');
@@ -110,7 +105,7 @@ export function useSkills() {
       await fetchSkills();
       return response.data;
     } catch (error) {
-      console.error('Error al crear habilidad:', error);
+      // Error al crear habilidad
 
       notificationStore.adminError(
         'Ha ocurrido un error al crear la habilidad.'
@@ -137,7 +132,7 @@ export function useSkills() {
       await fetchSkills();
       return response.data;
     } catch (error) {
-      console.error('Error al actualizar habilidad:', error);
+      // Error al actualizar habilidad
 
       notificationStore.adminError(
         'Ha ocurrido un error al actualizar la habilidad.'
@@ -163,7 +158,7 @@ export function useSkills() {
       await fetchSkills();
       return true;
     } catch (error) {
-      console.error('Error al eliminar habilidad:', error);
+      // Error al eliminar habilidad
 
       let errorMessage = 'Ha ocurrido un error al eliminar la habilidad.';
 
@@ -192,15 +187,14 @@ export function useSkills() {
           response.data.prerequisites = [];
         }
 
-        console.log('Habilidad obtenida:', response.data);
-        console.log('Prerrequisitos:', response.data.prerequisites);
+        // Habilidad obtenida con sus prerrequisitos
 
         return response.data;
       }
 
       return null;
     } catch (error) {
-      console.error(`Error al obtener habilidad ${skillId}:`, error);
+      // Error al obtener habilidad
 
       if (error.response?.status === 404) {
         notificationStore.adminError(`La habilidad con ID ${skillId} no existe o fue eliminada.`);
@@ -219,7 +213,7 @@ export function useSkills() {
       const response = await api.get('/admin/skills-dropdown');
       return response.data;
     } catch (error) {
-      console.error('Error al obtener habilidades para dropdown:', error);
+      // Error al obtener habilidades para dropdown
       return null;
     }
   };
@@ -274,8 +268,7 @@ export function useSkills() {
    * Restablece todos los filtros a sus valores por defecto
    */
   const resetFilters = () => {
-    console.log('Restableciendo filtros en useSkills...');
-    console.log('Filtros antes de restablecer:', { ...filters });
+    // Restableciendo filtros
 
     // Mantener la ordenación actual
     const currentSortField = filters.sort_field;
@@ -289,19 +282,14 @@ export function useSkills() {
         // para que se muestre el placeholder "Todos"
         if (typeof filters[key] === 'string') {
           filters[key] = '';
-          console.log(`Restablecido filtro ${key} a:`, filters[key]);
         } else if (Array.isArray(filters[key])) {
           filters[key] = [];
-          console.log(`Restablecido filtro ${key} a:`, filters[key]);
         } else if (typeof filters[key] === 'object' && filters[key] !== null) {
           filters[key] = {};
-          console.log(`Restablecido filtro ${key} a:`, filters[key]);
         } else if (typeof filters[key] === 'number') {
           filters[key] = 0;
-          console.log(`Restablecido filtro ${key} a:`, filters[key]);
         } else if (typeof filters[key] === 'boolean') {
           filters[key] = false;
-          console.log(`Restablecido filtro ${key} a:`, filters[key]);
         }
       }
     });
@@ -314,7 +302,7 @@ export function useSkills() {
     pagination.currentPage = 1;
     pagination.perPage = 10;
 
-    console.log('Filtros después de restablecer:', { ...filters });
+    // Filtros restablecidos
 
     // Recargar datos
     fetchSkills();

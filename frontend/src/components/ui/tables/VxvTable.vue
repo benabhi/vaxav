@@ -48,9 +48,12 @@
               </td>
             </tr>
             <tr v-else-if="!items || items.length === 0">
-              <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="px-6 py-4 text-center text-sm text-gray-300">
+              <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="px-6 py-8 text-center">
                 <slot name="empty">
-                  No se encontraron resultados
+                  <VxvClearState
+                    message="No se encontraron resultados"
+                    variant="secondary"
+                  />
                 </slot>
               </td>
             </tr>
@@ -93,6 +96,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import VxvClearState from '../feedback/VxvClearState.vue';
 
 // Define props
 const props = defineProps({

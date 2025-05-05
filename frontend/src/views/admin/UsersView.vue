@@ -214,8 +214,6 @@ const clearRoleFilter = () => {
 
 // Handle reset event
 const handleReset = () => {
-  console.log('Evento reset recibido en UsersView');
-
   // Los filtros y la paginación ya han sido restablecidos por AdminCrudView
   // Solo necesitamos forzar una recarga de los datos
   fetchUsers();

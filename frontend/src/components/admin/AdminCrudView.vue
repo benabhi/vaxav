@@ -230,8 +230,6 @@ const onRowClick = (item: any) => emit('row-click', item);
  * Restablece todos los filtros y la paginación a su estado por defecto
  */
 const onReset = () => {
-  console.log('Evento reset recibido en AdminCrudView');
-
   // Restablecer todos los filtros a su estado por defecto
   Object.keys(props.filters).forEach(key => {
     if (key !== 'sort_field' && key !== 'sort_direction') {
@@ -252,9 +250,6 @@ const onReset = () => {
   // Restablecer la paginación a su estado por defecto
   props.pagination.currentPage = 1;
   props.pagination.perPage = 10; // Valor por defecto
-
-  console.log('Filtros restablecidos en AdminCrudView:', props.filters);
-  console.log('Paginación restablecida en AdminCrudView:', props.pagination);
 
   // Emitir el evento reset para que los componentes padres puedan realizar acciones adicionales
   emit('reset');

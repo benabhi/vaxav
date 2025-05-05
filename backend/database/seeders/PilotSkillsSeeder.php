@@ -33,54 +33,7 @@ class PilotSkillsSeeder extends Seeder
             ]
         );
 
-        // Función para calcular la experiencia necesaria para un nivel y multiplicador
-        function calculateXpForLevel($level, $multiplier)
-        {
-            $baseXp = [
-                0 => 0,      // Nivel 0
-                1 => 50,     // Para nivel 1
-                2 => 150,    // Para nivel 2
-                3 => 300,    // Para nivel 3
-                4 => 600,    // Para nivel 4
-                5 => 1000,   // Para nivel 5
-            ];
-
-            return $baseXp[$level] * $multiplier;
-        }
-
-        // Función para generar XP aleatorio entre el nivel actual y el siguiente
-        function generateRandomXp($currentLevel, $nextLevel, $multiplier)
-        {
-            $baseXp = [
-                0 => 0,      // Nivel 0
-                1 => 50,     // Para nivel 1
-                2 => 150,    // Para nivel 2
-                3 => 300,    // Para nivel 3
-                4 => 600,    // Para nivel 4
-                5 => 1000,   // Para nivel 5
-            ];
-
-            // Para cada nivel, necesitamos al menos la experiencia mínima para ese nivel
-            $minRequiredXp = $baseXp[$currentLevel] * $multiplier;
-
-            // Si es nivel 5, solo devolver el XP exacto del nivel 5
-            if ($currentLevel >= 5) {
-                return $minRequiredXp;
-            }
-
-            // El máximo es justo antes del siguiente nivel
-            $maxPossibleXp = ($baseXp[$nextLevel] * $multiplier) - 1;
-
-            // Asegurarnos de que el mínimo sea al menos un poco más que el requerido para el nivel actual
-            $minXp = $minRequiredXp + 1;
-
-            // Si por alguna razón el mínimo es mayor que el máximo, usar el mínimo
-            if ($minXp >= $maxPossibleXp) {
-                return $minXp;
-            }
-
-            return rand($minXp, $maxPossibleXp);
-        }
+        // Los valores de XP acumulados se definen directamente en el bucle foreach
 
         // Obtener un subconjunto de habilidades para asignar al piloto
         // Incluimos habilidades de diferentes niveles y categorías con multiplicadores variados
@@ -91,13 +44,13 @@ class PilotSkillsSeeder extends Seeder
             ['name' => 'Minería Básica', 'level' => 4, 'multiplier' => 1, 'active' => true],
 
             // Habilidades x2 (intermedias)
-            ['name' => 'Armas de Proyectil Básicas', 'level' => 3, 'multiplier' => 2, 'active' => true],
+            ['name' => 'Armas de Proyectil Básicas', 'level' => 4, 'multiplier' => 2, 'active' => true],
             ['name' => 'Comercio Básico', 'level' => 3, 'multiplier' => 2, 'active' => true],
             ['name' => 'Navegación Básica', 'level' => 5, 'multiplier' => 2, 'active' => true],
 
             // Habilidades x3 (avanzadas)
-            ['name' => 'Armas Láser Intermedias', 'level' => 2, 'multiplier' => 3, 'active' => true],
-            ['name' => 'Navegación Avanzada', 'level' => 1, 'multiplier' => 3, 'active' => true],
+            ['name' => 'Armas Láser Intermedias', 'level' => 3, 'multiplier' => 3, 'active' => true],
+            ['name' => 'Navegación Avanzada', 'level' => 2, 'multiplier' => 3, 'active' => true],
             ['name' => 'Electrónica Básica', 'level' => 2, 'multiplier' => 3, 'active' => true],
 
             // Habilidades x4 (especializadas)
@@ -118,13 +71,39 @@ class PilotSkillsSeeder extends Seeder
             ['name' => 'Maestría en Combate', 'level' => 0, 'multiplier' => 5, 'active' => false],
         ];
 
-        // Calcular XP aleatorio para cada habilidad
+        // Calcular XP específico para cada habilidad basado en los nuevos valores acumulados
         foreach ($skillsToAssign as $key => $skill) {
-            if ($skill['level'] > 0) {
-                $nextLevel = min(5, $skill['level'] + 1);
-                $skillsToAssign[$key]['xp'] = generateRandomXp($skill['level'], $nextLevel, $skill['multiplier']);
-            } else {
+            // Valores acumulados de XP para cada nivel
+            $cumulativeXp = [
+                0 => 0,     // Nivel 0 (no aprendida)
+                1 => 50,    // Para nivel 1
+                2 => 200,   // Para nivel 2 (50 + 150)
+                3 => 500,   // Para nivel 3 (50 + 150 + 300)
+                4 => 1100,  // Para nivel 4 (50 + 150 + 300 + 600)
+                5 => 2100   // Para nivel 5 (50 + 150 + 300 + 600 + 1000)
+            ];
+
+            // Aplicar el multiplicador a los umbrales de XP
+            $scaledXpThresholds = [];
+            foreach ($cumulativeXp as $level => $xp) {
+                $scaledXpThresholds[$level] = $xp * $skill['multiplier'];
+            }
+
+            if ($skill['level'] == 0) {
+                // Para nivel 0, no hay XP
                 $skillsToAssign[$key]['xp'] = 0;
+            } else if ($skill['level'] == 5) {
+                // Para nivel 5, usar exactamente el XP necesario para nivel 5
+                $skillsToAssign[$key]['xp'] = $scaledXpThresholds[5];
+            } else {
+                // Para niveles 1-4, calcular un valor entre el nivel actual y el siguiente
+                $currentLevelXp = $scaledXpThresholds[$skill['level']];
+                $nextLevelXp = $scaledXpThresholds[$skill['level'] + 1];
+
+                // Añadir entre 10% y 80% del progreso hacia el siguiente nivel
+                $xpRange = $nextLevelXp - $currentLevelXp;
+                $additionalXp = rand(intval($xpRange * 0.1), intval($xpRange * 0.8));
+                $skillsToAssign[$key]['xp'] = $currentLevelXp + $additionalXp;
             }
         }
 

@@ -117,7 +117,6 @@ const closeMobileMenu = () => {
 
 // Métodos para el cronómetro de acción
 const onTimerComplete = () => {
-  console.log('Cronómetro completado')
   // Aquí puedes realizar acciones cuando el cronómetro llega a cero
 }
 

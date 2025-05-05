@@ -1,7 +1,12 @@
 <template>
   <div
     class="vxv-skill-card rounded-lg overflow-hidden transition-all duration-200 h-[329px]"
-    :class="cardClasses"
+    :class="[cardClasses, { 'animate-fade-in': animated }]"
+    :style="{
+      '--animation-delay': `${index * 100}ms`,
+      'animation-delay': `${index * 100}ms`,
+      'animation-fill-mode': 'both'
+    }"
   >
     <!--
       Encabezado de la tarjeta (altura fija: 72px)
@@ -46,15 +51,15 @@
     <div class="flex justify-center items-center py-4 h-[132px]">
       <VxvCircularSkillLevel
         :level="skill.level"
-        :currentXP="skill.currentXP"
-        :minXP="skill.minXP"
-        :maxXP="skill.maxXP"
+        :progressPercentage="getProgressPercentage()"
+        :currentLevelXP="getCurrentLevelXP()"
+        :currentXP="Number(skill.currentXP)"
         :status="status"
         :size="128"
         :thickness="8"
         :animated="animated"
         :animationDuration="animationDuration"
-        :xpSuffix="getXPSuffix()"
+        :xpSuffix="getSuffix()"
       />
     </div>
 
@@ -89,8 +94,8 @@
         :status="status"
         height="sm"
         :animated="animated"
-        :animationDuration="400"
-        :staggerDelay="250"
+        :animationDuration="animationDuration"
+        :staggerDelay="10"
       />
     </div>
 
@@ -123,11 +128,80 @@
   </div>
 </template>
 
-<script setup>
+<style scoped>
+.vxv-skill-card {
+  opacity: 0;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.description-container {
+  position: relative;
+}
+
+.description-wrapper {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.description-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+
+.description-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.description-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+}
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(transparent, rgba(17, 24, 39, 0.8));
+  pointer-events: none;
+}
+</style>
+
+<script setup lang="ts">
 import { computed } from 'vue';
 import VxvCircularSkillLevel from './VxvCircularSkillLevel.vue';
 import VxvDashedSkillLevel from './VxvDashedSkillLevel.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
+import type { Skill } from '@/composables/usePilotSkills';
+import { useSkillCalculations } from '@/composables/useSkillCalculations';
+
+// Interfaz para los datos de la tarjeta de habilidad
+interface SkillCardData extends Skill {
+  progressPercentage?: number;
+  currentLevelXP?: number;
+}
+
+// Obtener las funciones de cálculo de habilidades
+const {
+  calculateProgressPercentage,
+  calculateCurrentLevelXP,
+  getXPSuffix
+} = useSkillCalculations();
 
 /**
  * VxvSkillCard - Componente para mostrar una tarjeta de habilidad
@@ -140,7 +214,7 @@ const props = defineProps({
    * Datos de la habilidad
    */
   skill: {
-    type: Object,
+    type: Object as () => SkillCardData,
     required: true,
     validator: (value) => {
       return value && typeof value === 'object' && 'name' in value;
@@ -174,7 +248,7 @@ const props = defineProps({
    */
   animationDuration: {
     type: [Number, String],
-    default: 1500
+    default: 1000
   },
   /**
    * Índice de la tarjeta (para animaciones escalonadas)
@@ -267,40 +341,49 @@ function getMultiplierVariant(multiplier) {
   }
 }
 
+// Calcular el porcentaje de progreso hacia el siguiente nivel
+function getProgressPercentage() {
+  if (!props.skill) return 0;
+
+  // Si ya se proporcionó el porcentaje de progreso, usarlo
+  if (props.skill.progressPercentage !== undefined) {
+    return props.skill.progressPercentage;
+  }
+
+  // Calcular el porcentaje de progreso usando el composable
+  return calculateProgressPercentage(
+    Number(props.skill.currentXP) || 0,
+    Number(props.skill.level) || 0,
+    Number(props.skill.multiplier) || 1
+  );
+}
+
+// Calcular la experiencia acumulada en el nivel actual
+function getCurrentLevelXP() {
+  if (!props.skill) return 0;
+
+  // Si ya se proporcionó la experiencia acumulada en el nivel actual, usarla
+  if (props.skill.currentLevelXP !== undefined) {
+    return props.skill.currentLevelXP;
+  }
+
+  // Calcular la experiencia acumulada en el nivel actual usando el composable
+  return calculateCurrentLevelXP(
+    Number(props.skill.currentXP) || 0,
+    Number(props.skill.level) || 0,
+    Number(props.skill.multiplier) || 1
+  );
+}
+
 // Obtener el sufijo para la experiencia
-function getXPSuffix() {
+function getSuffix() {
   if (!props.skill) return '/0 XP';
 
-  // Asegurarse de que todos los valores sean números válidos
-  const currentXP = Number(props.skill.currentXP) || 0;
-  const minXP = Number(props.skill.minXP) || 0;
-  const maxXP = Number(props.skill.maxXP) || 0;
-
-  // Si ya está en nivel 5 (nivel máximo), mostrar "MAX" en lugar de XP
-  if (Number(props.skill.level) >= 5) {
-    return ' MAX';
-  }
-
-  // Obtener la experiencia necesaria para el siguiente nivel
-  // Estos son los valores fijos según el nivel y multiplicador
-  const levelRequirements = {
-    0: 50,    // Para nivel 1
-    1: 150,   // Para nivel 2
-    2: 300,   // Para nivel 3
-    3: 600,   // Para nivel 4
-    4: 1000,  // Para nivel 5
-  };
-
-  const level = Number(props.skill.level);
-  const multiplier = Number(props.skill.multiplier) || 1;
-
-  // Si el nivel es válido, calcular la experiencia necesaria
-  if (level >= 0 && level < 5 && levelRequirements[level]) {
-    const xpNeeded = levelRequirements[level] * multiplier;
-    return `/${xpNeeded} XP`;
-  }
-
-  return '/0 XP';
+  // Obtener el sufijo usando el composable
+  return getXPSuffix(
+    Number(props.skill.level) || 0,
+    Number(props.skill.multiplier) || 1
+  );
 }
 </script>
 

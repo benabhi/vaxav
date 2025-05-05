@@ -248,9 +248,7 @@ const isValidPrerequisite = (prerequisite) => {
                   prerequisite.prerequisite.id &&
                   prerequisite.prerequisite.name;
 
-  if (!isValid) {
-    console.warn('Prerrequisito inválido:', prerequisite);
-  }
+  // No necesitamos mostrar advertencias en la consola
 
   return isValid;
 };
@@ -279,8 +277,6 @@ const handleCategoryChange = () => {
 
 // Manejar cambio de multiplicador
 const handleMultiplierChange = () => {
-  console.log('Cambio de multiplicador a:', filters.multiplier, 'tipo:', typeof filters.multiplier);
-
   // Asegurarnos de que el multiplicador sea un número antes de enviarlo
   // Si el valor es vacío, enviamos una cadena vacía para limpiar el filtro
   const multiplier = filters.multiplier === '' ? '' : Number(filters.multiplier);
@@ -290,8 +286,6 @@ const handleMultiplierChange = () => {
 
 // Manejar el evento de reset de filtros
 const handleReset = () => {
-  console.log('Evento reset recibido en SkillsView');
-
   // Asegurarnos de que el valor del multiplicador se limpie correctamente
   // Establecer a cadena vacía para que el placeholder "Todos" se muestre
   filters.multiplier = '';
@@ -301,11 +295,6 @@ const handleReset = () => {
 
   // Usar el nuevo método resetFilters del composable
   resetFilters();
-
-  // Forzar una actualización de la vista
-  setTimeout(() => {
-    console.log('Filtros después de restablecer:', filters);
-  }, 0);
 };
 
 // Navegar a la página de creación

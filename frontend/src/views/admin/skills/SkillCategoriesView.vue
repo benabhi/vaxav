@@ -122,8 +122,6 @@ const truncateText = (text, maxLength) => {
 
 // Manejar el evento de reset de filtros
 const handleReset = () => {
-  console.log('Evento reset recibido en SkillCategoriesView');
-
   // Los filtros y la paginación ya han sido restablecidos por AdminCrudView
   // Solo necesitamos forzar una recarga de los datos
   fetchCategories();

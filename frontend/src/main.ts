@@ -36,7 +36,6 @@ const initApp = async () => {
         const userStore = useUserStore()
         try {
             await userStore.loadUserData()
-            console.log('Datos de usuario cargados correctamente')
         } catch (error) {
             console.error('Error al cargar los datos del usuario:', error)
         }

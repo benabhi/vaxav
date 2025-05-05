@@ -117,9 +117,21 @@
 
           <!-- Slot para estado vacío -->
           <template #empty>
-            <div class="text-center py-8 text-gray-400">
-              No se encontraron habilidades que coincidan con los filtros.
-            </div>
+            <VxvClearState
+              message="No se encontraron habilidades que coincidan con los filtros"
+              variant="secondary"
+              :icon="SearchIcon"
+            >
+              <template #action>
+                <VxvButton
+                  variant="secondary"
+                  size="sm"
+                  @click="resetFilters(); loadPilotData();"
+                >
+                  Limpiar filtros
+                </VxvButton>
+              </template>
+            </VxvClearState>
           </template>
 
           <!-- Slot para columna de nombre -->
@@ -148,9 +160,9 @@
           <!-- Slot para columna de estado -->
           <template #cell(status)="{ item }">
             <VxvToggleSwitch
-              v-model="item.active"
+              :model-value="Boolean(item.active)"
               :disabled="!canToggleActive(item) || isUpdating === item.id"
-              @change="toggleSkillActive(item)"
+              @update:model-value="toggleSkillActive(item)"
             />
           </template>
 
@@ -185,8 +197,9 @@
 
     <!-- Modal de error -->
     <VxvModal
-      v-model="showErrorModal"
+      :show="showErrorModal"
       title="No se puede realizar la acción"
+      @close="showErrorModal = false"
     >
       <div class="text-gray-300">
         <p class="mb-4">{{ errorMessage }}</p>
@@ -222,6 +235,7 @@ import AdminLayout from '@/components/layout/AdminLayout.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
+import VxvClearState from '@/components/ui/feedback/VxvClearState.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
 import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvToggleSwitch from '@/components/ui/forms/VxvToggleSwitch.vue';
@@ -229,6 +243,15 @@ import VxvFilters from '@/components/ui/filters/VxvFilters.vue';
 import VxvTable from '@/components/ui/tables/VxvTable.vue';
 import { useAdminPilots } from '@/composables/useAdminPilots';
 import type { Pilot, PilotSkill } from '@/composables/useAdminPilots';
+
+// Icono para el estado vacío
+const SearchIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  `
+};
 
 const router = useRouter();
 const route = useRoute();

@@ -192,7 +192,7 @@ class SkillService
      */
     public function getXpRequirements(): array
     {
-        // Valores hardcodeados para los requisitos de XP
+        // Valores actualizados para los requisitos de XP
         return [
             0 => 50,   // Nivel 0 -> 1
             1 => 150,  // Nivel 1 -> 2
@@ -215,16 +215,18 @@ class SkillService
             return 0;
         }
 
-        $xpRequirements = $this->getXpRequirements();
-        $baseXp = 0;
-
-        // Sumar todo el XP requerido para alcanzar el nivel objetivo
-        for ($i = 0; $i < $level; $i++) {
-            $baseXp += $xpRequirements[$i];
-        }
+        // Valores acumulados de XP para cada nivel
+        $cumulativeXp = [
+            0 => 0,     // Nivel 0 (no aprendida)
+            1 => 50,    // Para nivel 1
+            2 => 200,   // Para nivel 2 (50 + 150)
+            3 => 500,   // Para nivel 3 (50 + 150 + 300)
+            4 => 1100,  // Para nivel 4 (50 + 150 + 300 + 600)
+            5 => 2100   // Para nivel 5 (50 + 150 + 300 + 600 + 1000)
+        ];
 
         // Aplicar multiplicador y devolver como entero
-        return (int) ceil($baseXp * $multiplier);
+        return (int) ceil($cumulativeXp[$level] * $multiplier);
     }
 
     /**
@@ -236,17 +238,22 @@ class SkillService
      */
     public function calculateLevelFromXp(int $xp, float $multiplier = 1.0): int
     {
-        $xpRequirements = $this->getXpRequirements();
-        $accumulatedXp = 0;
+        // Valores acumulados de XP para cada nivel
+        $cumulativeXp = [
+            0 => 0,     // Nivel 0 (no aprendida)
+            1 => 50,    // Para nivel 1
+            2 => 200,   // Para nivel 2 (50 + 150)
+            3 => 500,   // Para nivel 3 (50 + 150 + 300)
+            4 => 1100,  // Para nivel 4 (50 + 150 + 300 + 600)
+            5 => 2100   // Para nivel 5 (50 + 150 + 300 + 600 + 1000)
+        ];
+
         $level = 0;
 
         // Iterar a través de los niveles y verificar si tenemos suficiente XP
-        for ($i = 0; $i < 5; $i++) {
-            $requiredXp = (int) ceil($xpRequirements[$i] * $multiplier);
-
-            if ($xp >= $accumulatedXp + $requiredXp) {
-                $accumulatedXp += $requiredXp;
-                $level++;
+        for ($i = 1; $i <= 5; $i++) {
+            if ($xp >= $cumulativeXp[$i] * $multiplier) {
+                $level = $i;
             } else {
                 break;
             }
@@ -273,9 +280,27 @@ class SkillService
             ];
         }
 
-        $xpRequirements = $this->getXpRequirements();
+        // Valores acumulados de XP para cada nivel
+        $cumulativeXp = [
+            0 => 0,     // Nivel 0 (no aprendida)
+            1 => 50,    // Para nivel 1
+            2 => 200,   // Para nivel 2 (50 + 150)
+            3 => 500,   // Para nivel 3 (50 + 150 + 300)
+            4 => 1100,  // Para nivel 4 (50 + 150 + 300 + 600)
+            5 => 2100   // Para nivel 5 (50 + 150 + 300 + 600 + 1000)
+        ];
+
+        // Requisitos de XP para cada nivel individual
+        $xpRequirements = [
+            0 => 50,    // Para nivel 1
+            1 => 150,   // Para nivel 2
+            2 => 300,   // Para nivel 3
+            3 => 600,   // Para nivel 4
+            4 => 1000,  // Para nivel 5
+        ];
+
         $requiredXp = (int) ceil($xpRequirements[$level] * $multiplier);
-        $previousLevelXp = $this->getMinXpForLevel($level, $multiplier);
+        $previousLevelXp = $cumulativeXp[$level] * $multiplier;
         $currentLevelXp = $xp - $previousLevelXp;
 
         $percentage = $requiredXp > 0 ? min(100, floor(($currentLevelXp / $requiredXp) * 100)) : 100;

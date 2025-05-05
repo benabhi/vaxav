@@ -40,7 +40,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvCard from '@/components/ui/layout/VxvCard.vue';
 
@@ -87,7 +87,10 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['submit', 'cancel']);
+const emit = defineEmits<{
+  (e: 'submit'): void;
+  (e: 'cancel'): void;
+}>();
 
 const onSubmit = () => {
   emit('submit');

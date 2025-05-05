@@ -48,7 +48,7 @@
           :progressValue="stats.totalXP"
           :progressMax="stats.maxPossibleXP"
           :showProgressPercentage="true"
-          :animated="animationStarted"
+          :animated="true"
           :showProgressionIndex="true"
           :showProgressionDetails="true"
           :progressionIndex="stats.progressionIndex"
@@ -228,7 +228,27 @@
         - Diseño responsivo: 1 columna en móvil, 2 en tablet, 3 en desktop, 4 en pantallas grandes
         - Cada tarjeta tiene altura fija para mantener consistencia visual
       -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <!-- Estado vacío cuando no hay habilidades -->
+      <div v-if="filteredSkills.length === 0" class="py-8">
+        <VxvClearState
+          message="No se encontraron habilidades que coincidan con los filtros aplicados"
+          variant="primary"
+          :icon="SearchIcon"
+        >
+          <template #action>
+            <VxvButton
+              variant="primary"
+              size="sm"
+              @click="initializeFilters(); applyFilters();"
+            >
+              Limpiar filtros
+            </VxvButton>
+          </template>
+        </VxvClearState>
+      </div>
+
+      <!-- Grid de tarjetas de habilidades -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <!-- Tarjetas de habilidades -->
         <VxvSkillCard
           v-for="(skill, index) in filteredSkills"
@@ -237,11 +257,13 @@
             id: skill.id,
             name: skill.name,
             category: getCategoryName(skill.skill_category_id),
-            level: getPilotSkillLevel(skill.id),
+            level: calculateSkillLevel(skill.id),
             multiplier: skill.multiplier,
             currentXP: getSkillXP(skill.id),
             minXP: getMinXPForLevel(skill.id),
-            maxXP: getNextLevelXP(getPilotSkillLevel(skill.id), skill.multiplier) + getMinXPForLevel(skill.id),
+            maxXP: getMinXPForLevel(skill.id) + calculateXPNeededForNextLevel(skill.id),
+            progressPercentage: calculateProgressPercentage(skill.id),
+            currentLevelXP: calculateCurrentLevelXP(skill.id),
             description: getSkillDescription(skill),
             prerequisites: skill.prerequisites ? skill.prerequisites.map(prereq => ({
               id: prereq.prerequisite_id,
@@ -258,8 +280,8 @@
           :showProgress="true"
           :compact="false"
           :loading="false"
-          :animated="animationStarted"
-          :animationDuration="1200"
+          :animated="true"
+          :animationDuration="1500"
           :index="index"
           class="skill-card"
           :style="{ '--index': index }"
@@ -286,6 +308,8 @@ import { ref, onMounted } from 'vue';
 import { usePilotSkills } from '@/composables/usePilotSkills';
 import VxvFilters from '@/components/ui/filters/VxvFilters.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
+import VxvButton from '@/components/ui/buttons/VxvButton.vue';
+import VxvClearState from '@/components/ui/feedback/VxvClearState.vue';
 import VxvGeneralProgressCard from '@/components/game/stats/VxvGeneralProgressCard.vue';
 import VxvSkillDistributionCard from '@/components/game/stats/VxvSkillDistributionCard.vue';
 import VxvDistributionCard from '@/components/game/stats/VxvDistributionCard.vue';
@@ -293,8 +317,18 @@ import VxvSkillCard from '@/components/game/skills/VxvSkillCard.vue';
 // Estos componentes se utilizan internamente en VxvSkillCard
 // import VxvCircularSkillLevel from '@/components/game/skills/VxvCircularSkillLevel.vue';
 // import VxvDashedSkillLevel from '@/components/game/skills/VxvDashedSkillLevel.vue';
-import { getNextLevelXP, calculateProgressionIndex, getXPRequirements } from '@/config/skillLevels';
-import type { Skill, SkillCategory, Prerequisite } from '@/types';
+import { useSkillExperience } from '@/composables/useSkillExperience';
+import { useSkillCalculations } from '@/composables/useSkillCalculations';
+import type { SkillCategory, Prerequisite, PilotSkill } from '@/composables/usePilotSkills';
+
+// Icono para el estado vacío
+const SearchIcon = {
+  template: `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  `
+};
 
 // Obtener los métodos y estado del composable
 const {
@@ -306,19 +340,13 @@ const {
   fetchSkillCategories
 } = usePilotSkills();
 
-// Interfaces para los tipos locales
-interface PilotSkill {
-  id: number;
-  name: string;
-  skill_category_id: number;
-  multiplier: number;
-  pivot?: {
-    active: boolean;
-    current_level: number;
-    xp: number;
-  };
-  prerequisites?: Prerequisite[];
-}
+// Obtener los métodos del composable de experiencia de habilidades
+const {
+  calculateProgressionIndex
+} = useSkillExperience();
+
+// Obtener los métodos del composable de cálculos de habilidades
+const skillCalculations = useSkillCalculations();
 
 interface FilterOptions {
   search: string;
@@ -352,14 +380,38 @@ const defaultFilters: FilterOptions = {
 
 const filteredSkills = ref<PilotSkill[]>([]);
 
-// Estado para animaciones
-const animationStarted = ref(false);
-const animationCompleted = ref(false);
+// Las animaciones ahora se manejan directamente en los componentes
+
+/**
+ * Interfaz para las estadísticas de habilidades
+ */
+interface SkillStats {
+  totalSkills: number;
+  learnedSkills: number;
+  remainingSkills: number;
+  activeSkills: number;
+  inactiveSkills: number;
+  skillsByLevel: number[];
+  totalXP: number;
+  maxPossibleXP: number;
+  progressPercentage: number;
+  highestLevel: number;
+  categoriesStats: Record<number, { name: string; total: number; learned: number; percentage: number }>;
+  multiplierStats: Record<number, number>;
+  progressionIndex: number;
+  progressionComponents: {
+    HS: number; // Porcentaje de Habilidades Aprendidas
+    AL: number; // Nivel Promedio
+    XP: number; // Experiencia Total
+    AS: number; // Porcentaje de Habilidades Activas
+    MP: number; // Multiplicador Promedio
+  };
+}
 
 /**
  * Estado reactivo para las estadísticas de habilidades
  */
-const stats = ref({
+const stats = ref<SkillStats>({
   totalSkills: 0,
   learnedSkills: 0,
   remainingSkills: 0,
@@ -409,24 +461,8 @@ onMounted(async () => {
     // Actualizar estadísticas (ahora es async)
     await updateStats();
 
-    // Iniciar animaciones después de cargar los datos
-    // Primero asegurarse de que las animaciones estén detenidas
-    animationStarted.value = false;
-    animationCompleted.value = false;
-
-    // Forzar un reflow del DOM para asegurar que los cambios se apliquen
-    document.body.offsetHeight;
-
-    // Usar requestAnimationFrame para asegurar que las animaciones se inicien en el próximo frame
-    requestAnimationFrame(() => {
-      // Activar las animaciones
-      animationStarted.value = true;
-
-      // Marcar como completado después de la duración de la animación
-      setTimeout(() => {
-        animationCompleted.value = true;
-      }, 1500);
-    });
+    // Las animaciones ahora se manejan directamente en los componentes
+    // No es necesario inicializarlas aquí
   } catch (err) {
     console.error('Error al cargar los datos:', err);
   }
@@ -502,8 +538,11 @@ const applyFilters = () => {
     // Ordenar las habilidades por categoría y nombre
     filteredSkills.value.sort((a, b) => {
       // Primero por categoría
-      if (a.skill_category_id !== b.skill_category_id) {
-        return a.skill_category_id - b.skill_category_id;
+      const categoryA = a.skill_category_id || 0;
+      const categoryB = b.skill_category_id || 0;
+
+      if (categoryA !== categoryB) {
+        return categoryA - categoryB;
       }
 
       // Luego por nombre
@@ -591,7 +630,9 @@ const getSkillXP = (skillId: number): number => {
 
     // Si la habilidad existe y tiene experiencia, devolverla
     if (skill && skill.pivot && typeof skill.pivot.xp === 'number') {
-      return skill.pivot.xp;
+      // Asegurarse de que el valor sea un número válido
+      const xp = Number(skill.pivot.xp);
+      return isNaN(xp) ? 0 : xp;
     }
 
     return 0;
@@ -601,27 +642,100 @@ const getSkillXP = (skillId: number): number => {
   }
 };
 
-// Obtener la experiencia mínima para el nivel actual
-const getMinXPForLevel = async (skillId: number): Promise<number> => {
+/**
+ * Calcula el nivel de una habilidad para asegurar consistencia entre los componentes visuales
+ * @param skillId - ID de la habilidad
+ * @returns Nivel de la habilidad (0-5)
+ */
+const calculateSkillLevel = (skillId: number): number => {
   try {
-    const level = getPilotSkillLevel(skillId);
+    // Verificar si el piloto tiene la habilidad
+    const pilotSkill = pilotSkills.value.find(skill => skill.id === skillId);
+    if (!pilotSkill) return 0;
+
+    // Obtener la habilidad base para conocer su multiplicador
+    const skill = allSkills.value.find(s => s.id === skillId);
+    if (!skill) return pilotSkill.pivot?.current_level || 0;
+
+    // Obtener la experiencia actual
+    const xp = getSkillXP(skillId);
+    const multiplier = skill.multiplier || 1;
+
+    // Usar el composable para calcular el nivel
+    return skillCalculations.calculateLevel(xp, multiplier);
+  } catch (error) {
+    console.error('Error en calculateSkillLevel:', error);
+    return 0;
+  }
+};
+
+// Obtener la experiencia mínima para el nivel actual
+const getMinXPForLevel = (skillId: number): number => {
+  try {
+    const level = calculateSkillLevel(skillId);
     if (level <= 0) return 0;
 
-    // Obtener los requisitos de XP desde la configuración
-    const xpRequirements = await getXPRequirements();
-
-    // Calcular la experiencia acumulada para el nivel actual
-    let baseXP = 0;
-    for (let i = 0; i < level; i++) {
-      baseXP += xpRequirements[i];
-    }
-
+    // Obtener la habilidad base para conocer su multiplicador
     const skill = allSkills.value.find(s => s.id === skillId);
-    const multiplier = skill ? skill.multiplier : 1;
+    if (!skill) return 0;
 
-    return baseXP * multiplier;
+    // Usar el composable para calcular la experiencia mínima
+    return skillCalculations.getMinXPForLevel(level, skill.multiplier);
   } catch (error) {
     console.error('Error en getMinXPForLevel:', error);
+    return 0;
+  }
+};
+
+// Calcular la experiencia necesaria para el siguiente nivel
+const calculateXPNeededForNextLevel = (skillId: number): number => {
+  try {
+    const level = calculateSkillLevel(skillId);
+    if (level >= 5) return 0; // Ya está en nivel máximo
+
+    const skill = allSkills.value.find(s => s.id === skillId);
+    if (!skill) return 0;
+
+    // Usar el composable para calcular la experiencia necesaria
+    return skillCalculations.calculateXPNeededForNextLevel(level, skill.multiplier);
+  } catch (error) {
+    console.error('Error en calculateXPNeededForNextLevel:', error);
+    return 0;
+  }
+};
+
+// Calcular el porcentaje de progreso hacia el siguiente nivel
+const calculateProgressPercentage = (skillId: number): number => {
+  try {
+    const level = calculateSkillLevel(skillId);
+    if (level >= 5) return 100; // Ya está en nivel máximo
+
+    const currentXP = getSkillXP(skillId);
+    const skill = allSkills.value.find(s => s.id === skillId);
+    if (!skill) return 0;
+
+    // Usar el composable para calcular el porcentaje de progreso
+    return skillCalculations.calculateProgressPercentage(currentXP, level, skill.multiplier);
+  } catch (error) {
+    console.error('Error en calculateProgressPercentage:', error);
+    return 0;
+  }
+};
+
+// Calcular la experiencia acumulada en el nivel actual
+const calculateCurrentLevelXP = (skillId: number): number => {
+  try {
+    const level = calculateSkillLevel(skillId);
+    if (level >= 5) return 0; // Ya está en nivel máximo
+
+    const currentXP = getSkillXP(skillId);
+    const skill = allSkills.value.find(s => s.id === skillId);
+    if (!skill) return 0;
+
+    // Usar el composable para calcular la experiencia acumulada en el nivel actual
+    return skillCalculations.calculateCurrentLevelXP(currentXP, level, skill.multiplier);
+  } catch (error) {
+    console.error('Error en calculateCurrentLevelXP:', error);
     return 0;
   }
 };
@@ -730,8 +844,9 @@ const getSkillDescription = (skill: PilotSkill): string => {
 };
 
 // Obtener el nombre de una categoría por su ID
-const getCategoryName = (categoryId: number): string => {
+const getCategoryName = (categoryId?: number): string => {
   try {
+    if (categoryId === undefined) return 'Desconocida';
     const category = categories.value.find(cat => cat.id === categoryId);
     return category ? category.name : 'Desconocida';
   } catch (error) {
@@ -754,7 +869,7 @@ const updateStats = async () => {
 };
 
 // Función para calcular estadísticas de habilidades
-const getSkillStats = async () => {
+const getSkillStats = async (): Promise<SkillStats> => {
   try {
     // Estadísticas básicas
     const totalSkills = allSkills.value.length;
@@ -791,7 +906,7 @@ const getSkillStats = async () => {
     const progressPercentage = Math.round((totalXP / maxPossibleXP) * 100);
 
     // Estadísticas por categoría
-    const categoriesStats = {};
+    const categoriesStats: Record<number, { name: string; total: number; learned: number; percentage: number }> = {};
     categories.value.forEach(category => {
       const categorySkills = allSkills.value.filter(skill => skill.skill_category_id === category.id);
       const learnedCategorySkills = pilotSkills.value.filter(skill => skill.skill_category_id === category.id);
@@ -807,10 +922,10 @@ const getSkillStats = async () => {
     });
 
     // Estadísticas por multiplicador
-    const multiplierStats = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+    const multiplierStats: Record<number, number> = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
     pilotSkills.value.forEach(skill => {
       const multiplier = skill.multiplier || 1;
-      if (multiplierStats[multiplier] !== undefined) {
+      if (multiplier >= 1 && multiplier <= 5) {
         multiplierStats[multiplier]++;
       }
     });

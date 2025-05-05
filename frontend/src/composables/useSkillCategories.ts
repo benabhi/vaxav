@@ -8,7 +8,7 @@ import { ref, reactive } from 'vue';
 import type { Ref } from 'vue';
 import api from '@/services/api';
 import { useNotificationStore } from '@/stores/notification.ts';
-import { SkillCategory } from '@/types';
+import type { SkillCategory } from '@/composables/usePilotSkills';
 
 interface Pagination {
   currentPage: number;

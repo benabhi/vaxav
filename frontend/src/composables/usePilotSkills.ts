@@ -9,59 +9,122 @@ import type { Ref } from 'vue';
 import api from '@/services/api';
 
 /**
- * Interfaz para una habilidad
+ * Interfaz para una categoría de habilidad
  */
-export interface Skill {
+export interface SkillCategory {
+  /** ID único de la categoría */
   id: number;
+  /** Nombre de la categoría */
   name: string;
-  slug: string;
+  /** Descripción de la categoría */
   description?: string;
-  multiplier: number;
-  category_id: number;
-  category?: SkillCategory;
-  prerequisites?: SkillPrerequisite[];
+  /** Icono de la categoría */
+  icon?: string;
+  /** Orden de la categoría */
+  order?: number;
+  /** Fecha de creación */
   created_at?: string;
+  /** Fecha de última actualización */
   updated_at?: string;
 }
 
 /**
- * Interfaz para una categoría de habilidades
+ * Interfaz para la información pivot de la relación entre piloto y habilidad
  */
-export interface SkillCategory {
+export interface PilotSkillPivot {
+  /** ID del piloto */
+  pilot_id: number;
+  /** ID de la habilidad */
+  skill_id: number;
+  /** Nivel actual de la habilidad */
+  current_level: number;
+  /** Experiencia acumulada */
+  xp: number;
+  /** Si la habilidad está activa */
+  active: boolean;
+}
+
+/**
+ * Interfaz para una habilidad
+ */
+export interface Skill {
+  /** ID único de la habilidad */
   id: number;
+  /** Nombre de la habilidad */
   name: string;
-  slug: string;
+  /** Descripción de la habilidad */
   description?: string;
+  /** ID de la categoría a la que pertenece la habilidad */
+  category_id?: number;
+  /** ID de la categoría a la que pertenece la habilidad (alias para compatibilidad) */
+  skill_category_id?: number;
+  /** Categoría a la que pertenece la habilidad */
+  category?: SkillCategory;
+  /** Multiplicador de la habilidad (1-5) */
+  multiplier: number;
+  /** Icono de la habilidad */
+  icon?: string;
+  /** Prerrequisitos de la habilidad */
+  prerequisites?: Prerequisite[];
+  /** Información de la relación pivot cuando la habilidad pertenece a un piloto */
+  pivot?: PilotSkillPivot;
+  /** Nivel actual de la habilidad (para compatibilidad con vistas existentes) */
+  current_level?: number;
+  /** Experiencia acumulada (para compatibilidad con vistas existentes) */
+  xp?: number;
+  /** Si la habilidad está activa (para compatibilidad con vistas existentes) */
+  active?: boolean;
+  /** Si la habilidad puede ser activada (para compatibilidad con vistas existentes) */
+  can_activate?: boolean;
+  /** Si la habilidad puede ser desactivada (para compatibilidad con vistas existentes) */
+  can_deactivate?: boolean;
+  /** Fecha de creación */
   created_at?: string;
+  /** Fecha de última actualización */
   updated_at?: string;
 }
 
 /**
  * Interfaz para un prerrequisito de habilidad
  */
-export interface SkillPrerequisite {
-  id: number;
-  skill_id: number;
-  required_skill_id: number;
-  required_level: number;
-  created_at?: string;
-  updated_at?: string;
-  required_skill?: Skill;
+export interface Prerequisite {
+  /** ID único del prerrequisito */
+  id?: number;
+  /** ID de la habilidad que tiene el prerrequisito */
+  skill_id?: number;
+  /** ID de la habilidad prerrequisito */
+  prerequisite_id: number;
+  /** Nivel requerido de la habilidad prerrequisito */
+  prerequisite_level: number;
+  /** Información de la relación pivot */
+  pivot?: {
+    /** Nivel requerido de la habilidad prerrequisito */
+    prerequisite_level: number;
+  };
+  /** Nombre de la habilidad prerrequisito (para compatibilidad con vistas existentes) */
+  name?: string;
+  /** Si el prerrequisito está cumplido (para compatibilidad con vistas existentes) */
+  fulfilled?: boolean;
+  /** Habilidad prerrequisito */
+  prerequisite?: Skill;
 }
 
 /**
  * Interfaz para una habilidad de piloto
+ * Esta interfaz extiende la interfaz Skill
+ * y añade propiedades específicas para la relación entre piloto y habilidad
  */
-export interface PilotSkill {
-  id: number;
-  pilot_id: number;
-  skill_id: number;
-  level: number;
-  experience: number;
-  active: boolean;
-  created_at?: string;
-  updated_at?: string;
-  skill?: Skill;
+export interface PilotSkill extends Skill {
+  /** ID del piloto */
+  pilot_id?: number;
+  /** ID de la habilidad */
+  skill_id?: number;
+  /** Nivel de la habilidad (alias para current_level) */
+  level?: number;
+  /** Experiencia acumulada (alias para xp) */
+  experience?: number;
+  /** ID de la relación entre piloto y habilidad */
+  pilot_skill_id?: number | null;
 }
 
 /**

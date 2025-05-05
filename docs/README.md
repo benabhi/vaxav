@@ -28,12 +28,15 @@ Documentación sobre las características implementadas:
 Documentación sobre las mecánicas y reglas del juego:
 - [Visión General](./game/README.md) - Conceptos fundamentales del juego
 - [Flujo de Navegación](./game/navigation-flow.md) - Secuencia de navegación y restricciones
+- [Matemáticas de Habilidades](./game-mechanics/skill-mathematics.md) - Detalles sobre los cálculos de niveles, experiencia y progreso de habilidades
 
 ### 5. Componentes UI
 Documentación sobre los componentes de interfaz de usuario:
 - [Visión General](./components/README.md) - Sistema de componentes
 - [Componentes UI](./components/ui/README.md) - Componentes básicos de UI
 - [Componentes de Layout](./components/layout/layout.md) - Componentes de estructura
+- [Componentes de Habilidades](./components/skill-components.md) - Componentes para visualizar habilidades
+- [Composable de Cálculos de Habilidades](./components/skill-calculation-composable.md) - Composable para cálculos de habilidades
 
 ### 6. API y Autenticación
 Documentación sobre la API y el sistema de autenticación:

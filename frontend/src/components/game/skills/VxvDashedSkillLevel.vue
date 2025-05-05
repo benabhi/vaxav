@@ -30,7 +30,7 @@
           :style="{
             '--level': level,
             '--animation-duration': animationDuration + 'ms',
-            '--animation-delay': (level - 1) * (Number(animationDuration) + Number(staggerDelay)) + 'ms'
+            '--animation-delay': (level - 1) * Number(staggerDelay) + 'ms'
           }"
         ></div>
       </template>
@@ -38,7 +38,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, watch, ref } from 'vue';
 import { MAX_SKILL_LEVEL } from '@/config/skillLevels';
 
@@ -95,14 +95,14 @@ const props = defineProps({
    */
   animationDuration: {
     type: [Number, String],
-    default: 600
+    default: 1000
   },
   /**
    * Retraso adicional entre la animación de cada barra (en milisegundos)
    */
   staggerDelay: {
     type: [Number, String],
-    default: 50
+    default: 150
   }
 });
 
@@ -162,7 +162,7 @@ watch(() => props.animated, (newValue) => {
     setTimeout(() => {
       // Activar las animaciones
       animationsReady.value = true;
-    }, 50);
+    }, 100);
   }
 });
 
@@ -176,7 +176,7 @@ onMounted(() => {
     setTimeout(() => {
       // Activar las animaciones
       animationsReady.value = true;
-    }, 100);
+    }, 200);
   }
 });
 </script>
@@ -202,32 +202,38 @@ onMounted(() => {
 /* Estado previo a la animación - completamente invisible */
 .pre-animation {
   opacity: 0 !important; /* Forzar opacidad 0 */
-  transform: scale(0.5);
+  transform: scaleX(0);
   visibility: visible; /* Visible pero con opacidad 0 */
+  transform-origin: left;
 }
 
 /* Barras que deben animarse cuando animated=true */
 .animated-level-bar {
   opacity: 0; /* Iniciar invisible */
-  transform: scale(0.5);
+  transform: scaleX(0);
   visibility: visible; /* Asegurar que sea visible para la animación */
-  animation: appearComplete var(--animation-duration) forwards;
+  animation: appearComplete var(--animation-duration) ease-in-out forwards;
   /* Usar el delay definido en el estilo en línea */
   animation-delay: var(--animation-delay);
+  transform-origin: left;
 }
 
 @keyframes appearComplete {
   0% {
     opacity: 0;
-    transform: scale(0.5);
+    transform: scaleX(0);
   }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
+  30% {
+    opacity: 0.7;
+    transform: scaleX(0.3);
+  }
+  70% {
+    opacity: 0.9;
+    transform: scaleX(1.05);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: scaleX(1);
   }
 }
 </style>

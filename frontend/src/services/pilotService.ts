@@ -24,10 +24,10 @@ const pilotService = {
   getCurrentPilot: async () => {
     try {
       const response = await api.get('/pilots/current');
-      console.log('getCurrentPilot success:', response.data);
+      // Piloto actual obtenido
       return response.data;
     } catch (error) {
-      console.error('getCurrentPilot error:', error);
+      // Error al obtener el piloto actual
       throw error;
     }
   },

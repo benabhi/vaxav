@@ -259,7 +259,7 @@ const resetFilters = () => {
     localFilters[key] = resetFiltersObj[key];
   });
 
-  console.log('Filtros restablecidos en VxvFilters:', resetFiltersObj);
+  // Filtros restablecidos
 
   // Emitir eventos con una copia de los filtros para asegurar que se detecten los cambios
   emit('update:filters', { ...resetFiltersObj });

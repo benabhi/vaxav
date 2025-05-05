@@ -259,7 +259,7 @@ onMounted(async () => {
     if (urlParams.has('expires')) expires = urlParams.get('expires') || expires;
     if (urlParams.has('signature')) signature = urlParams.get('signature') || signature;
 
-    console.log('Parámetros extraídos de redirect:', { id, hash, expires, signature });
+    // Parámetros extraídos de redirect
   }
 
   if (id && hash) {
