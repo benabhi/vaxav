@@ -171,8 +171,19 @@ El servicio `authService` proporciona métodos para interactuar con la API de re
 
 - Los tokens de restablecimiento de contraseña tienen una validez limitada (60 minutos por defecto).
 - Se aplica limitación de tasa (throttling) para prevenir ataques de fuerza bruta.
-- Las contraseñas se validan para garantizar que cumplan con los requisitos mínimos de seguridad.
 - Los tokens son de un solo uso y se eliminan después de ser utilizados.
+
+### Validación de Contraseñas
+
+Las contraseñas deben cumplir con los siguientes requisitos de seguridad:
+
+- Mínimo 8 caracteres
+- Al menos una letra mayúscula
+- Al menos una letra minúscula
+- Al menos un número
+- Al menos un carácter especial (@$!%*?&)
+
+Estas validaciones se aplican tanto en el frontend (mediante validación en JavaScript) como en el backend (mediante reglas de validación de Laravel).
 
 ## Solución de Problemas Comunes
 

@@ -18,16 +18,6 @@ const hasPilot = computed(() => pilotStore.hasPilot);
 onMounted(async () => {
   if (authStore.isLoggedIn) {
     await pilotStore.fetchCurrentPilot();
-
-    // Verificar si el usuario acaba de verificar su email (parámetro 'verified=true' en la URL)
-    if (route.query.verified === 'true') {
-      // Mostrar una notificación de éxito
-      notificationStore.success(
-        '¡Tu dirección de correo electrónico ha sido verificada correctamente!',
-        'Verificación completada',
-        7000
-      );
-    }
   }
 });
 </script>

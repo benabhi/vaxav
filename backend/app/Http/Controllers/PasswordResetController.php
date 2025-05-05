@@ -46,9 +46,22 @@ class PasswordResetController extends Controller
     public function reset(Request $request): JsonResponse
     {
         $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|min:8|confirmed',
+            'token'    => 'required',
+            'email'    => 'required|email',
+            'password' => [
+                'required',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/'
+            ],
+        ], [
+            'token.required'     => 'El token es obligatorio',
+            'email.required'     => 'El email es obligatorio',
+            'email.email'        => 'El email debe tener un formato válido',
+            'password.required'  => 'La contraseña es obligatoria',
+            'password.min'       => 'La contraseña debe tener al menos 8 caracteres',
+            'password.regex'     => 'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial',
+            'password.confirmed' => 'Las contraseñas no coinciden',
         ]);
 
         $status = Password::reset(

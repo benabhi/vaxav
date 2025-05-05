@@ -103,6 +103,7 @@
 import { ref, onMounted, defineProps } from 'vue';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
@@ -120,6 +121,7 @@ const props = defineProps({
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
 
 const verified = ref(false);
 const resending = ref(false);
@@ -169,10 +171,16 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
       // Mostrar mensaje de éxito y redirigir
       message.value = '¡Email verificado correctamente! Redirigiendo a la página principal...';
 
+      // Mostrar notificación de éxito
+      notificationStore.success(
+        '¡Tu dirección de correo electrónico ha sido verificada correctamente!',
+        'Verificación completada',
+        7000
+      );
+
       // Redirigir al usuario a la página principal después de verificar
-      // Añadimos el parámetro 'verified=true' para indicar que acaba de verificar su email
       setTimeout(() => {
-        router.push({ path: '/', query: { verified: 'true' } });
+        router.push('/');
       }, 2000);
     } else {
       message.value = 'El email no se marcó como verificado. Por favor, contacta al soporte.';
@@ -198,9 +206,8 @@ onMounted(async () => {
     // redirigir a la página principal
     const id = props.id || route.query.id as string;
     const hash = props.hash || route.query.hash as string;
-    const justVerified = route.query.verified === 'true';
 
-    if (authStore.isEmailVerified && !id && !hash && !justVerified) {
+    if (authStore.isEmailVerified && !id && !hash) {
       // El usuario ya está verificado y no viene de un proceso de verificación,
       // redirigir a la página principal
       router.push('/');
@@ -210,10 +217,8 @@ onMounted(async () => {
     // Actualizar el estado local
     verified.value = authStore.isEmailVerified;
 
-    // Solo mostrar el mensaje de éxito si:
-    // 1. El usuario acaba de verificar su email (parámetro 'verified' en la URL)
-    // 2. O si hay parámetros de verificación en la URL (viene desde un enlace de verificación)
-    if (verified.value && (justVerified || (id && hash))) {
+    // Solo mostrar el mensaje de éxito si hay parámetros de verificación en la URL (viene desde un enlace de verificación)
+    if (verified.value && (id && hash)) {
       message.value = 'Tu dirección de correo electrónico ha sido verificada.';
       alertVariant.value = 'success';
     }
@@ -269,10 +274,16 @@ const verifyWithCode = async () => {
       message.value = result.message || 'Email verificado correctamente.';
       alertVariant.value = 'success';
 
+      // Mostrar notificación de éxito
+      notificationStore.success(
+        '¡Tu dirección de correo electrónico ha sido verificada correctamente!',
+        'Verificación completada',
+        7000
+      );
+
       // Redirigir al usuario a la página principal después de un breve retraso
-      // Añadimos el parámetro 'verified=true' para indicar que acaba de verificar su email
       setTimeout(() => {
-        router.push({ path: '/', query: { verified: 'true' } });
+        router.push('/');
       }, 2000);
     } else {
       message.value = result.message || 'Código de verificación inválido.';

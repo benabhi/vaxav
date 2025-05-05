@@ -1,6 +1,6 @@
 # Validaciones del Formulario de Registro
 
-Este documento describe las validaciones implementadas en el formulario de registro de Vaxav, tanto en el frontend como en el backend.
+Este documento describe las validaciones implementadas en el formulario de registro de Vaxav, tanto en el frontend como en el backend. Estas mismas validaciones también se aplican en el formulario de restablecimiento de contraseña.
 
 ## Índice
 
@@ -50,7 +50,7 @@ Las validaciones en el frontend se implementan en el componente `RegisterView.vu
       required
       :error="errors.name"
     />
-    
+
     <!-- Email -->
     <VxvInput
       id="email"
@@ -60,7 +60,7 @@ Las validaciones en el frontend se implementan en el componente `RegisterView.vu
       required
       :error="errors.email"
     />
-    
+
     <!-- Confirmación de Email -->
     <VxvInput
       id="email_confirmation"
@@ -70,7 +70,7 @@ Las validaciones en el frontend se implementan en el componente `RegisterView.vu
       required
       :error="errors.email_confirmation"
     />
-    
+
     <!-- Contraseña -->
     <VxvInput
       id="password"
@@ -80,7 +80,7 @@ Las validaciones en el frontend se implementan en el componente `RegisterView.vu
       required
       :error="errors.password"
     />
-    
+
     <!-- Confirmación de Contraseña -->
     <VxvInput
       id="password_confirmation"
@@ -99,14 +99,14 @@ Las validaciones en el frontend se implementan en el componente `RegisterView.vu
 ```typescript
 const validateForm = (): boolean => {
   let isValid = true;
-  
+
   // Limpiar errores previos
   errors.name = '';
   errors.email = '';
   errors.email_confirmation = '';
   errors.password = '';
   errors.password_confirmation = '';
-  
+
   // Validar nombre (solo letras y números, 3-12 caracteres)
   if (!form.name) {
     errors.name = 'El nombre es obligatorio';
@@ -115,7 +115,7 @@ const validateForm = (): boolean => {
     errors.name = 'El nombre debe tener entre 3 y 12 caracteres alfanuméricos';
     isValid = false;
   }
-  
+
   // Validar email (formato de email)
   if (!form.email) {
     errors.email = 'El email es obligatorio';
@@ -124,7 +124,7 @@ const validateForm = (): boolean => {
     errors.email = 'El email debe tener un formato válido';
     isValid = false;
   }
-  
+
   // Validar confirmación de email
   if (!form.email_confirmation) {
     errors.email_confirmation = 'La confirmación de email es obligatoria';
@@ -133,7 +133,7 @@ const validateForm = (): boolean => {
     errors.email_confirmation = 'Los emails no coinciden';
     isValid = false;
   }
-  
+
   // Validar contraseña (mínimo 8 caracteres, al menos una mayúscula, una minúscula, un número y un carácter especial)
   if (!form.password) {
     errors.password = 'La contraseña es obligatoria';
@@ -142,7 +142,7 @@ const validateForm = (): boolean => {
     errors.password = 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial';
     isValid = false;
   }
-  
+
   // Validar confirmación de contraseña
   if (!form.password_confirmation) {
     errors.password_confirmation = 'La confirmación de contraseña es obligatoria';
@@ -151,7 +151,7 @@ const validateForm = (): boolean => {
     errors.password_confirmation = 'Las contraseñas no coinciden';
     isValid = false;
   }
-  
+
   return isValid;
 };
 ```
@@ -164,7 +164,7 @@ const handleSubmit = async () => {
   if (!validateForm()) {
     return;
   }
-  
+
   try {
     await authStore.register(form);
 
@@ -175,26 +175,26 @@ const handleSubmit = async () => {
   } catch (error: any) {
     // Los errores de validación del servidor ya son manejados por el store
     console.error('Error en el registro:', error);
-    
+
     // Si hay errores de validación del servidor, actualizar los errores locales
     if (error.response?.data?.errors) {
       const serverErrors = error.response.data.errors;
-      
+
       if (serverErrors.name) {
         errors.name = Array.isArray(serverErrors.name) ? serverErrors.name[0] : serverErrors.name;
       }
-      
+
       if (serverErrors.email) {
         errors.email = Array.isArray(serverErrors.email) ? serverErrors.email[0] : serverErrors.email;
       }
-      
+
       if (serverErrors.password) {
         errors.password = Array.isArray(serverErrors.password) ? serverErrors.password[0] : serverErrors.password;
       }
-      
+
       if (serverErrors.password_confirmation) {
-        errors.password_confirmation = Array.isArray(serverErrors.password_confirmation) 
-          ? serverErrors.password_confirmation[0] 
+        errors.password_confirmation = Array.isArray(serverErrors.password_confirmation)
+          ? serverErrors.password_confirmation[0]
           : serverErrors.password_confirmation;
       }
     }
