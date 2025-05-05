@@ -4,7 +4,7 @@ import VxvNavLink from './VxvNavLink.vue';
 
 /**
  * VxvNavLink es un componente para enlaces de navegación estilizados.
- * Se utiliza principalmente en barras de navegación y menús laterales.
+ * Se utiliza principalmente en barras de navegación, menús desplegables y menús laterales.
  *
  * Nota: Este componente requiere Vue Router para funcionar correctamente.
  * En Storybook, se muestra una versión simplificada.
@@ -32,6 +32,10 @@ const meta: Meta<typeof VxvNavLink> = {
     },
     horizontal: {
       description: 'Si es true, el enlace se muestra horizontalmente (para barras de navegación)',
+      control: { type: 'boolean' },
+    },
+    simple: {
+      description: 'Si es true, el enlace se muestra sin fondo, solo cambia el color del texto cuando está activo',
       control: { type: 'boolean' },
     },
     activeClass: {
@@ -122,6 +126,7 @@ export const Default: Story = {
     icon: null,
     exact: false,
     horizontal: false,
+    simple: false,
     activeClass: 'bg-gray-700 text-blue-400',
     inactiveClass: 'text-gray-300 hover:text-white',
     activeIconClass: 'text-blue-400',
@@ -131,13 +136,14 @@ export const Default: Story = {
   render: (args) => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               inactiveClass,
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"
@@ -185,13 +191,14 @@ export const WithIcon: Story = {
   render: (args) => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               inactiveClass,
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"
@@ -239,13 +246,14 @@ export const Active: Story = {
   render: (args) => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               activeClass, // Simulamos que está activo
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"
@@ -293,13 +301,14 @@ export const Horizontal: Story = {
   render: (args) => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               inactiveClass,
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"
@@ -335,13 +344,14 @@ export const MultipleLinks: Story = {
   render: () => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               to === '/dashboard' ? 'bg-gray-700 text-blue-400' : 'text-gray-300 hover:text-white',
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"
@@ -385,13 +395,14 @@ export const HorizontalNavbar: Story = {
   render: () => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               to === '/dashboard' ? 'bg-gray-700 text-blue-400' : 'text-gray-300 hover:text-white',
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"
@@ -429,19 +440,76 @@ export const HorizontalNavbar: Story = {
 };
 
 /**
+ * Enlace simple (solo texto azul cuando está activo)
+ */
+export const Simple: Story = {
+  args: {
+    to: '/dashboard',
+    label: 'Dashboard',
+    icon: HomeIcon,
+    exact: false,
+    horizontal: false,
+    simple: true,
+    activeClass: 'bg-gray-700 text-blue-400',
+    inactiveClass: 'text-gray-300 hover:text-white',
+    activeIconClass: 'text-blue-400',
+    inactiveIconClass: 'text-gray-400',
+    className: '',
+  },
+  render: (args) => ({
+    components: {
+      VxvNavLink: {
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        template: `
+          <a
+            :href="to"
+            :class="[
+              'text-blue-400', // Simulamos que está activo
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
+              horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
+              className
+            ]"
+          >
+            <div class="flex items-center">
+              <component
+                v-if="icon"
+                :is="icon"
+                class="mr-2 h-5 w-5"
+                :class="activeIconClass" // Simulamos que está activo
+              />
+              <span>{{ label }}</span>
+            </div>
+          </a>
+        `
+      }
+    },
+    setup() {
+      return { args };
+    },
+    template: `
+      <div class="bg-gray-800 p-4 w-64">
+        <VxvNavLink v-bind="args" />
+      </div>
+    `,
+  }),
+};
+
+/**
  * Estilos personalizados
  */
 export const CustomStyles: Story = {
   render: () => ({
     components: {
       VxvNavLink: {
-        props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
+        props: ['to', 'label', 'icon', 'horizontal', 'simple', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
         template: `
           <a
             :href="to"
             :class="[
               to === '/dashboard' ? activeClass : inactiveClass,
-              'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
+              'block text-base font-medium transition-all duration-150',
+              simple ? 'px-3 py-1' : 'px-4 py-2 rounded-md hover:bg-gray-700',
               horizontal ? 'inline-flex items-center h-[38px] py-0 leading-[38px]' : '',
               className
             ]"

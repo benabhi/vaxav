@@ -1,5 +1,8 @@
 <template>
-  <AdminLayout :title="title">
+  <AdminLayout
+    :title="title"
+    @register-open-sidebar="registerOpenSidebar"
+  >
     <template #breadcrumbs>
       <VxvBreadcrumb
         :items="breadcrumbItems"

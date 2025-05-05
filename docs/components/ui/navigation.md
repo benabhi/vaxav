@@ -83,8 +83,8 @@ Los componentes de navegación proporcionan interfaces para la navegación dentr
 | `label` | `String` | Requerido | Texto del enlace |
 | `icon` | `Object/Function` | `null` | Componente de icono opcional |
 | `exact` | `Boolean` | `false` | Si la ruta debe coincidir exactamente para considerarse activa |
-| `activeClass` | `String` | `'bg-gray-700 text-blue-400'` | Clase CSS aplicada cuando el enlace está activo |
-| `inactiveClass` | `String` | `'text-gray-300 hover:bg-gray-700 hover:text-white'` | Clase CSS aplicada cuando el enlace está inactivo |
+| `activeClass` | `String` | `'text-blue-400'` | Clase CSS aplicada cuando el enlace está activo |
+| `inactiveClass` | `String` | `'text-gray-300 hover:text-white'` | Clase CSS aplicada cuando el enlace está inactivo |
 | `activeIconClass` | `String` | `'text-blue-400'` | Clase CSS aplicada al icono cuando el enlace está activo |
 | `inactiveIconClass` | `String` | `'text-gray-400'` | Clase CSS aplicada al icono cuando el enlace está inactivo |
 | `className` | `String` | `''` | Clases CSS adicionales para el enlace |

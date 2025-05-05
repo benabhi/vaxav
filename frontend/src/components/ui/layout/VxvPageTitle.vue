@@ -11,17 +11,8 @@
         </div>
       </div>
 
-      <!-- Mobile menu button - only visible on small screens -->
-      <button
-        v-if="showMobileMenuButton"
-        type="button"
-        class="md:hidden text-gray-300 hover:text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        @click="$emit('mobile-menu-click')"
-      >
-        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+      <!-- Espacio para acciones (si se necesitan) -->
+      <div class="md:hidden w-6"></div>
     </div>
 
     <!-- Menú secundario para móviles y breadcrumbs -->
@@ -44,13 +35,7 @@ defineProps({
     required: true
   },
 
-  /**
-   * Whether to show the mobile menu button
-   */
-  showMobileMenuButton: {
-    type: Boolean,
-    default: true
-  },
+
 
   /**
    * Whether the current view is in mobile mode
@@ -61,5 +46,5 @@ defineProps({
   }
 });
 
-defineEmits(['mobile-menu-click']);
+
 </script>

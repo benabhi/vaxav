@@ -6,13 +6,12 @@ import VxvNavLink from '../navigation/VxvNavLink.vue';
 
 /**
  * VxvPageTitle es un componente que muestra el título de la página y opcionalmente breadcrumbs y menús de navegación.
- * También puede mostrar un botón de menú móvil en pantallas pequeñas.
  *
  * El componente está diseñado para adaptarse a diferentes contextos:
- * - Sin breadcrumbs ni menús: Muestra solo el título y el botón de menú móvil en una sola fila
- * - Con breadcrumbs: Muestra el título y el botón en la primera fila, y los breadcrumbs en una segunda fila
- * - Con menús: Muestra el título y los menús de navegación en la misma fila, y el botón de menú móvil en pantallas pequeñas
- * - Con breadcrumbs y menús: Muestra el título, los menús y el botón en la primera fila, y los breadcrumbs en una segunda fila
+ * - Sin breadcrumbs ni menús: Muestra solo el título en una sola fila
+ * - Con breadcrumbs: Muestra el título en la primera fila, y los breadcrumbs en una segunda fila
+ * - Con menús: Muestra el título y los menús de navegación en la misma fila
+ * - Con breadcrumbs y menús: Muestra el título y los menús en la primera fila, y los breadcrumbs en una segunda fila
  */
 const meta: Meta<typeof VxvPageTitle> = {
   title: 'UI/Layout/VxvPageTitle',
@@ -23,11 +22,7 @@ const meta: Meta<typeof VxvPageTitle> = {
       description: 'Título de la página',
       control: { type: 'text' },
     },
-    showMobileMenuButton: {
-      description: 'Muestra el botón de menú móvil en pantallas pequeñas',
-      control: { type: 'boolean' },
-    },
-    onMobileMenuClick: { action: 'mobile-menu-click' },
+
   },
 };
 
@@ -40,7 +35,6 @@ type Story = StoryObj<typeof VxvPageTitle>;
 export const Default: Story = {
   args: {
     title: 'Dashboard',
-    showMobileMenuButton: true,
   },
   render: (args) => ({
     components: { VxvPageTitle },
@@ -51,7 +45,6 @@ export const Default: Story = {
       <div class="bg-gray-900">
         <VxvPageTitle
           v-bind="args"
-          @mobile-menu-click="args.onMobileMenuClick"
         />
       </div>
     `,
@@ -59,12 +52,11 @@ export const Default: Story = {
 };
 
 /**
- * Título de página sin botón de menú móvil
+ * Título de página con título diferente
  */
-export const WithoutMobileMenu: Story = {
+export const WithDifferentTitle: Story = {
   args: {
     title: 'Configuración',
-    showMobileMenuButton: false,
   },
   render: (args) => ({
     components: { VxvPageTitle },
@@ -87,7 +79,6 @@ export const WithoutMobileMenu: Story = {
 export const WithBreadcrumbs: Story = {
   args: {
     title: 'Detalles de Usuario',
-    showMobileMenuButton: true,
   },
   render: (args) => ({
     components: { VxvPageTitle, VxvBreadcrumb },
@@ -121,7 +112,7 @@ export const WithBreadcrumbs: Story = {
 export const WithLongTitle: Story = {
   args: {
     title: 'Configuración Avanzada del Sistema de Administración de Usuarios y Permisos',
-    showMobileMenuButton: true,
+
   },
   render: (args) => ({
     components: { VxvPageTitle },
@@ -132,7 +123,7 @@ export const WithLongTitle: Story = {
       <div class="bg-gray-900">
         <VxvPageTitle
           v-bind="args"
-          @mobile-menu-click="args.onMobileMenuClick"
+
         />
       </div>
     `,
@@ -145,7 +136,7 @@ export const WithLongTitle: Story = {
 export const WithMenu: Story = {
   args: {
     title: 'Piloto',
-    showMobileMenuButton: true,
+
   },
   render: (args) => ({
     components: { VxvPageTitle, VxvNavLink },
@@ -161,7 +152,7 @@ export const WithMenu: Story = {
       <div class="bg-gray-900">
         <VxvPageTitle
           v-bind="args"
-          @mobile-menu-click="args.onMobileMenuClick"
+
         >
           <template #menu>
             <VxvNavLink
@@ -188,7 +179,7 @@ export const WithMenu: Story = {
 export const WithBreadcrumbsAndMenu: Story = {
   args: {
     title: 'Universo',
-    showMobileMenuButton: true,
+
   },
   render: (args) => ({
     components: { VxvPageTitle, VxvBreadcrumb, VxvNavLink },
@@ -209,7 +200,7 @@ export const WithBreadcrumbsAndMenu: Story = {
       <div class="bg-gray-900">
         <VxvPageTitle
           v-bind="args"
-          @mobile-menu-click="args.onMobileMenuClick"
+
         >
           <template #breadcrumbs>
             <VxvBreadcrumb :items="breadcrumbItems" />
@@ -259,7 +250,7 @@ export const InAppLayout: Story = {
         <!-- Header -->
         <VxvPageTitle
           title="Detalles de Usuario"
-          @mobile-menu-click="() => {}"
+
         >
           <template #breadcrumbs>
             <VxvBreadcrumb :items="breadcrumbItems" />

@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-white">
     <div class="container mx-auto py-8 px-4">
-
+      <h1 class="text-3xl font-bold mb-6 text-blue-400">Perfil de Usuario</h1>
 
       <div v-if="loading" class="flex justify-center my-8">
         <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

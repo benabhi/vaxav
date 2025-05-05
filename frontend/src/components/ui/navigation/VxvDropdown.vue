@@ -1,14 +1,14 @@
 <template>
   <div class="vxv-dropdown relative" ref="dropdownRef">
     <!-- Trigger element -->
-    <div 
+    <div
       @click="toggleDropdown"
       class="dropdown-trigger cursor-pointer"
       :class="triggerClass"
     >
       <slot name="trigger"></slot>
     </div>
-    
+
     <!-- Dropdown menu -->
     <transition
       enter-active-class="transition ease-out duration-100"
@@ -18,7 +18,7 @@
       leave-from-class="transform opacity-100 scale-100"
       leave-to-class="transform opacity-0 scale-95"
     >
-      <div 
+      <div
         v-show="isOpen"
         :class="[
           'absolute z-50 mt-2 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none',
@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, provide } from 'vue';
 
 const props = defineProps({
   position: {
@@ -117,6 +117,9 @@ const handleEscKey = (event: KeyboardEvent) => {
     closeDropdown();
   }
 };
+
+// Provide closeDropdown method to child components
+provide('closeDropdown', closeDropdown);
 
 // Lifecycle hooks
 onMounted(() => {

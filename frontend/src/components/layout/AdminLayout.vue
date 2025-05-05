@@ -76,14 +76,15 @@
     <!-- Column 2: Content area with three rows -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Row 1: Header -->
-      <VxvPageTitle
-        :title="title"
-        @mobile-menu-click="openMobileMenu"
-      >
-        <template #breadcrumbs>
-          <slot name="breadcrumbs"></slot>
-        </template>
-      </VxvPageTitle>
+      <div class="bg-gray-800 border-b border-gray-700 px-4 py-3">
+        <!-- Título -->
+        <h1 class="text-xl font-semibold text-white">{{ title }}</h1>
+      </div>
+
+      <!-- Breadcrumbs (si existen) -->
+      <div v-if="$slots.breadcrumbs" class="bg-gray-800 border-b border-gray-700 px-4 py-2">
+        <slot name="breadcrumbs"></slot>
+      </div>
 
       <!-- Notifications -->
       <VxvNotification />
@@ -176,6 +177,47 @@
             :is-mobile="true"
             active-class="text-blue-400"
           />
+
+          <!-- Separador -->
+          <div class="mt-6 mb-4 border-t border-gray-700"></div>
+
+          <!-- Título VAXAV -->
+          <div class="px-4 py-2 text-lg font-semibold text-blue-400">VAXAV</div>
+
+          <!-- Menús principales de VAXAV -->
+          <template v-for="(link, index) in mainNavLinks" :key="index">
+            <!-- Si el enlace tiene submenús, usar SidebarGroup -->
+            <template v-if="link.children && link.children.length > 0">
+              <VxvSidebarGroup
+                :title="link.label"
+                :default-collapsed="false"
+                :is-sidebar-collapsed="false"
+                :is-mobile="true"
+                :basePath="link.to"
+              >
+                <VxvNavLink
+                  v-for="(child, childIndex) in link.children"
+                  :key="childIndex"
+                  :to="child.to"
+                  :label="child.label"
+                  :is-sidebar-collapsed="false"
+                  :is-mobile="true"
+                  active-class="text-blue-400"
+                />
+              </VxvSidebarGroup>
+            </template>
+
+            <!-- Si el enlace no tiene submenús, usar NavLink normal -->
+            <template v-else>
+              <VxvNavLink
+                :to="link.to"
+                :label="link.label"
+                :is-sidebar-collapsed="false"
+                :is-mobile="true"
+                active-class="text-blue-400"
+              />
+            </template>
+          </template>
         </VxvSidebar>
       </div>
     </div>
@@ -183,23 +225,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import VxvSidebar from '@/components/ui/navigation/VxvSidebar.vue';
 import VxvSidebarGroup from '@/components/ui/navigation/VxvSidebarGroup.vue';
 import VxvNavLink from '@/components/ui/navigation/VxvNavLink.vue';
-import VxvPageTitle from '@/components/ui/layout/VxvPageTitle.vue';
 import VxvNotification from '@/components/ui/feedback/VxvNotification.vue';
 import { useNotificationStore } from '@/stores/notification';
+import { useAuthStore } from '@/stores/auth';
+import { usePilotStore } from '@/stores/pilot';
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     default: 'Panel de Administración'
   }
 });
 
-// Initialize notification store
+// Definir eventos para exponer el método de abrir el sidebar móvil
+const emit = defineEmits(['register-open-sidebar']);
+
+// Initialize stores
 const notificationStore = useNotificationStore();
+const authStore = useAuthStore();
+const pilotStore = usePilotStore();
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false);
@@ -212,6 +260,58 @@ const openMobileMenu = () => {
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
+
+// Definir método para abrir el sidebar móvil desde fuera
+defineExpose({
+  openMobileMenu
+});
+
+// Escuchar el evento global para abrir el sidebar móvil
+onMounted(() => {
+  window.addEventListener('open-admin-sidebar', openMobileMenu);
+});
+
+// Limpiar el evento al desmontar el componente
+onUnmounted(() => {
+  window.removeEventListener('open-admin-sidebar', openMobileMenu);
+});
+
+// Datos para el menú principal de VAXAV
+const isLoggedIn = computed(() => authStore.isLoggedIn);
+const isEmailVerified = computed(() => authStore.isEmailVerified);
+const isModerator = computed(() => authStore.isModerator);
+
+// Enlaces de navegación para el menú principal
+const mainNavLinks = computed(() => {
+  // Si no está autenticado o no ha verificado su email, no mostrar enlaces
+  if (!isLoggedIn.value || !isEmailVerified.value) return [];
+
+  // Verificar si el usuario tiene un piloto
+  const hasPilot = pilotStore.hasPilot;
+  if (!hasPilot) return [];
+
+  // Enlaces principales de VAXAV
+  return [
+    {
+      to: '/pilot',
+      label: 'Piloto',
+      children: [
+        { to: '/pilot/overview', label: 'Vista General' },
+        { to: '/pilot/skills', label: 'Habilidades' }
+      ]
+    },
+    {
+      to: '/universe',
+      label: 'Universo',
+      children: [
+        { to: '/universe/galaxy', label: 'Galaxia' },
+        { to: '/universe/solar-system', label: 'Sistema Solar' }
+      ]
+    },
+    { to: '/market', label: 'Mercado' },
+    { to: '/ships', label: 'Naves' }
+  ];
+});
 </script>
 
 <style scoped>

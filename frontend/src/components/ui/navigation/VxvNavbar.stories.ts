@@ -8,8 +8,8 @@ import { HomeIcon, ShoppingCartIcon, UserIcon, CogIcon } from '@heroicons/vue/24
 const VxvNavLinkStub = {
   props: ['to', 'label', 'icon', 'horizontal', 'activeClass', 'inactiveClass', 'activeIconClass', 'inactiveIconClass', 'className'],
   template: `
-    <a 
-      :href="to" 
+    <a
+      :href="to"
       :class="[
         inactiveClass,
         'block px-4 py-2 text-base font-medium rounded-md transition-all duration-150 hover:bg-gray-700',
@@ -40,7 +40,7 @@ const VxvLogoStub = {
       lg: 'text-3xl',
       xl: 'text-4xl'
     };
-    
+
     // Inyectar los estilos CSS en el DOM
     if (typeof document !== 'undefined' && !document.getElementById('vxv-logo-styles')) {
       const styleEl = document.createElement('style');
@@ -48,20 +48,20 @@ const VxvLogoStub = {
       styleEl.textContent = `
         @keyframes neonPulse {
           0% {
-            text-shadow: 
+            text-shadow:
               0 0 5px rgba(59, 130, 246, 0.5),
               0 0 10px rgba(59, 130, 246, 0.5),
               0 0 15px rgba(59, 130, 246, 0.5);
           }
           50% {
-            text-shadow: 
+            text-shadow:
               0 0 5px rgba(59, 130, 246, 0.6),
               0 0 10px rgba(59, 130, 246, 0.6),
               0 0 15px rgba(59, 130, 246, 0.6),
               0 0 20px rgba(59, 130, 246, 0.4);
           }
           100% {
-            text-shadow: 
+            text-shadow:
               0 0 5px rgba(59, 130, 246, 0.5),
               0 0 10px rgba(59, 130, 246, 0.5),
               0 0 15px rgba(59, 130, 246, 0.5);
@@ -71,7 +71,7 @@ const VxvLogoStub = {
         @keyframes neonFlicker {
           0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
             color: #60a5fa;
-            text-shadow: 
+            text-shadow:
               0 0 5px rgba(96, 165, 250, 0.8),
               0 0 10px rgba(96, 165, 250, 0.8),
               0 0 15px rgba(96, 165, 250, 0.8),
@@ -100,7 +100,7 @@ const VxvLogoStub = {
 
         .neon-logo:hover {
           color: #60a5fa; /* Azul más claro (blue-400) */
-          text-shadow: 
+          text-shadow:
             0 0 5px rgba(96, 165, 250, 0.8),
             0 0 10px rgba(96, 165, 250, 0.8),
             0 0 15px rgba(96, 165, 250, 0.8),
@@ -114,12 +114,12 @@ const VxvLogoStub = {
       `;
       document.head.appendChild(styleEl);
     }
-    
+
     return { sizeClasses };
   },
   template: `
     <a :href="to" class="block">
-      <h1 
+      <h1
         :class="[
           'font-bold neon-logo',
           sizeClasses[size]
@@ -163,8 +163,12 @@ const meta: Meta<typeof VxvNavbar> = {
       control: { type: 'text' },
     },
     links: {
-      description: 'Array de objetos con la configuración de los enlaces',
+      description: 'Array de objetos con la configuración de los enlaces. Puede incluir children para menús desplegables',
       control: { type: 'object' },
+    },
+    showMobileMenuButton: {
+      description: 'Si se debe mostrar el botón de menú móvil',
+      control: { type: 'boolean' },
     },
     activeClass: {
       description: 'Clases CSS para enlaces activos',
@@ -200,6 +204,7 @@ export const Default: Story = {
     transparent: false,
     logoSize: 'md',
     logoLink: '/',
+    showMobileMenuButton: true,
     links: [
       { to: '/', label: 'Inicio', exact: true },
       { to: '/features', label: 'Características' },
@@ -212,7 +217,7 @@ export const Default: Story = {
     inactiveIconClass: 'text-gray-400',
   },
   render: (args) => ({
-    components: { 
+    components: {
       VxvNavbar: {
         props: Object.keys(args),
         components: {
@@ -303,8 +308,8 @@ export const WithActions: Story = {
     ...Default.args,
   },
   render: (args) => ({
-    components: { 
-      VxvNavbar: Default.render({...args}).components.VxvNavbar,
+    components: {
+      VxvNavbar: Default.render({ ...args }).components.VxvNavbar,
       VxvButton
     },
     setup() {
@@ -339,6 +344,38 @@ export const Transparent: Story = {
 };
 
 /**
+ * Barra de navegación con menús desplegables
+ */
+export const WithDropdowns: Story = {
+  args: {
+    ...Default.args,
+    links: [
+      {
+        to: '/pilot',
+        label: 'Piloto',
+        exact: false,
+        children: [
+          { to: '/pilot/overview', label: 'Vista General' },
+          { to: '/pilot/skills', label: 'Habilidades' }
+        ]
+      },
+      {
+        to: '/universe',
+        label: 'Universo',
+        exact: false,
+        children: [
+          { to: '/universe/galaxy', label: 'Galaxia' },
+          { to: '/universe/solar-system', label: 'Sistema Solar' }
+        ]
+      },
+      { to: '/market', label: 'Mercado' },
+      { to: '/ships', label: 'Naves' }
+    ],
+  },
+  render: Default.render,
+};
+
+/**
  * Barra de navegación con usuario autenticado
  */
 export const LoggedIn: Story = {
@@ -346,8 +383,8 @@ export const LoggedIn: Story = {
     ...Default.args,
   },
   render: (args) => ({
-    components: { 
-      VxvNavbar: Default.render({...args}).components.VxvNavbar,
+    components: {
+      VxvNavbar: Default.render({ ...args }).components.VxvNavbar,
       VxvButton
     },
     setup() {
@@ -355,7 +392,7 @@ export const LoggedIn: Story = {
         name: 'John Doe',
         credits: '1,500'
       };
-      
+
       return { args, user };
     },
     template: `
@@ -386,8 +423,8 @@ export const CustomLogo: Story = {
     ...Default.args,
   },
   render: (args) => ({
-    components: { 
-      VxvNavbar: Default.render({...args}).components.VxvNavbar,
+    components: {
+      VxvNavbar: Default.render({ ...args }).components.VxvNavbar,
     },
     setup() {
       return { args };

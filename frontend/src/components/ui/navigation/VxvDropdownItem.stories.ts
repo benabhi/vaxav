@@ -24,7 +24,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Elemento básico del dropdown
+ * Elemento básico del dropdown.
+ *
+ * Nota: Al hacer clic en un elemento del menú desplegable, el menú se cierra automáticamente.
  */
 export const Default: Story = {
   args: {

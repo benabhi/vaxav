@@ -522,6 +522,49 @@ const sidebarItems = [
 />
 ```
 
+## Componentes de Layout
+
+### AdminLayout
+
+`AdminLayout` es el componente principal de layout para el panel de administración.
+
+**Archivo**: `/components/layout/AdminLayout.vue`
+
+#### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `title` | `String` | `'Panel de Administración'` | Título del panel de administración |
+
+#### Slots
+
+| Nombre | Descripción |
+|--------|-------------|
+| `default` | Contenido principal |
+| `breadcrumbs` | Migas de pan |
+| `footer` | Pie de página |
+
+#### Características
+
+- **Sidebar Lateral**: Incluye un sidebar fijo en el lado izquierdo con enlaces de navegación.
+- **Sidebar Móvil**: En dispositivos móviles, el sidebar se muestra como un panel deslizable.
+- **Integración con Navbar**: El botón hamburguesa del navbar principal abre el sidebar móvil del AdminLayout cuando se está en una ruta de administración.
+- **Menús VAXAV**: El sidebar móvil incluye tanto los menús de administración como los menús principales de VAXAV.
+
+#### Ejemplo de Uso
+
+```vue
+<AdminLayout title="Gestión de Usuarios">
+  <template #breadcrumbs>
+    <VxvBreadcrumb :items="breadcrumbItems" />
+  </template>
+
+  <div class="py-6">
+    <!-- Contenido principal -->
+  </div>
+</AdminLayout>
+```
+
 ## Patrones de Uso
 
 ### Página de Listado
@@ -529,17 +572,37 @@ const sidebarItems = [
 ```vue
 <template>
   <AdminLayout title="Usuarios">
-    <AdminHeader title="Gestión de Usuarios">
-      <template #actions>
-        <BaseButton variant="primary" @click="createUser">
-          Nuevo Usuario
-        </BaseButton>
-      </template>
-    </AdminHeader>
+    <template #breadcrumbs>
+      <VxvBreadcrumb :items="breadcrumbItems" />
+    </template>
 
-    <AdminFilter :filters="filters" v-model="filterValues" @apply="fetchUsers" />
+    <div class="py-6">
+      <VxvDataTable
+        title="Usuarios"
+        :columns="columns"
+        :items="users"
+        :loading="loading"
+      >
+        <!-- Contenido de la tabla -->
+      </VxvDataTable>
+    </div>
+  </AdminLayout>
+</template>
+```
 
-    <AdminTable
+### Página con Filtros y Tabla
+
+```vue
+<template>
+  <AdminLayout title="Usuarios">
+    <template #breadcrumbs>
+      <VxvBreadcrumb :items="breadcrumbItems" />
+    </template>
+
+    <div class="py-6">
+      <AdminFilter :filters="filters" v-model="filterValues" @apply="fetchUsers" />
+
+      <AdminTable
       :columns="columns"
       :data="users"
       :loading="loading"

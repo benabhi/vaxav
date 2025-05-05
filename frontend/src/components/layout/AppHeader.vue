@@ -1,5 +1,5 @@
 <template>
-  <VxvNavbar :links="navLinks">
+  <VxvNavbar :links="navLinks" @mobile-menu-click="$emit('toggle-sidebar')">
     <!-- Slot para acciones personalizadas -->
     <template #actions>
       <template v-if="isLoggedIn">
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, defineEmits } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { usePilotStore } from '@/stores/pilot';
@@ -44,6 +44,7 @@ import VxvDropdown from '@/components/ui/navigation/VxvDropdown.vue';
 import VxvDropdownItem from '@/components/ui/navigation/VxvDropdownItem.vue';
 import { ChevronDownIcon } from '@heroicons/vue/24/outline';
 
+const emit = defineEmits(['toggle-sidebar']);
 const router = useRouter();
 const authStore = useAuthStore();
 const pilotStore = usePilotStore();
@@ -74,15 +75,35 @@ const navLinks = computed(() => {
 
   // Si está autenticado, verificado y tiene piloto, mostrar todos los enlaces
   const links = [
-    { to: '/pilot/overview', label: 'Piloto', exact: false }, // No exacto para que se active con submenús
-    { to: '/universe/galaxy', label: 'Universo', exact: false }, // No exacto para que se active con submenús
+    {
+      to: '/pilot',
+      label: 'Piloto',
+      exact: false,
+      children: [
+        { to: '/pilot/overview', label: 'Vista General' },
+        { to: '/pilot/skills', label: 'Habilidades' }
+      ]
+    },
+    {
+      to: '/universe',
+      label: 'Universo',
+      exact: false,
+      children: [
+        { to: '/universe/galaxy', label: 'Galaxia' },
+        { to: '/universe/solar-system', label: 'Sistema Solar' }
+      ]
+    },
     { to: '/market', label: 'Mercado' },
     { to: '/ships', label: 'Naves' }
   ];
 
   // Añadir enlace de administración si el usuario es moderador
   if (isModerator.value) {
-    links.push({ to: '/admin', label: 'Administración' });
+    links.push({
+      to: '/admin',
+      label: 'Administración',
+      className: 'font-bold text-yellow-400 hover:text-yellow-300'
+    });
   }
 
   return links;

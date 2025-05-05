@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 const props = defineProps({
   label: {
@@ -61,6 +61,9 @@ const tag = computed(() => {
   return 'button';
 });
 
+// Inject closeDropdown method from parent dropdown
+const closeDropdown = inject('closeDropdown', () => {}) as () => void;
+
 // Methods
 const handleClick = (event: MouseEvent) => {
   if (props.disabled) {
@@ -69,5 +72,8 @@ const handleClick = (event: MouseEvent) => {
   }
 
   emit('click', event);
+
+  // Close the dropdown menu after click
+  closeDropdown();
 };
 </script>
