@@ -42,6 +42,9 @@
             required
             :error="errors.password"
           />
+          <p class="text-xs text-gray-400 mt-1">
+            La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.
+          </p>
         </div>
 
         <div class="mb-6">
@@ -105,14 +108,53 @@ onMounted(() => {
   }
 });
 
-const handleSubmit = async () => {
-  loading.value = true;
-  message.value = '';
+// Validar el formulario antes de enviarlo
+const validateForm = (): boolean => {
+  let isValid = true;
 
   // Limpiar errores previos
   errors.email = '';
   errors.password = '';
   errors.password_confirmation = '';
+
+  // Validar email
+  if (!form.email) {
+    errors.email = 'El email es obligatorio';
+    isValid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    errors.email = 'El email debe tener un formato válido';
+    isValid = false;
+  }
+
+  // Validar contraseña (mínimo 8 caracteres, al menos una mayúscula, una minúscula, un número y un carácter especial)
+  if (!form.password) {
+    errors.password = 'La contraseña es obligatoria';
+    isValid = false;
+  } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(form.password)) {
+    errors.password = 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial';
+    isValid = false;
+  }
+
+  // Validar confirmación de contraseña
+  if (!form.password_confirmation) {
+    errors.password_confirmation = 'La confirmación de contraseña es obligatoria';
+    isValid = false;
+  } else if (form.password !== form.password_confirmation) {
+    errors.password_confirmation = 'Las contraseñas no coinciden';
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+const handleSubmit = async () => {
+  // Validar formulario antes de enviar
+  if (!validateForm()) {
+    return;
+  }
+
+  loading.value = true;
+  message.value = '';
 
   try {
     const response = await authStore.resetPassword(form);
