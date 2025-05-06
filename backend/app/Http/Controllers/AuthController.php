@@ -17,34 +17,59 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (Auth::attempt($request->only('email', 'password'))) {
-            // Generamos un token para el usuario
-            $token = $request->user()->createToken('auth-token')->plainTextToken;
-
-            // Obtenemos el usuario con sus roles
-            $user = Auth::user();
-            $user->load('roles');
-
-            // Agregamos información de roles para el frontend
-            $userData = $user->toArray();
-            $userData['is_superadmin'] = $user->isSuperAdmin();
-            $userData['is_admin'] = $user->isAdmin();
-            $userData['is_moderator'] = $user->isModerator();
-
-            return response()->json([
-                'user'  => $userData,
-                'token' => $token
+        try {
+            $request->validate([
+                'email'    => 'required|email',
+                'password' => 'required',
+            ], [
+                'email.required'    => 'Por favor, ingresa tu dirección de correo electrónico.',
+                'email.email'       => 'Por favor, ingresa una dirección de correo electrónico válida.',
+                'password.required' => 'Por favor, ingresa tu contraseña.',
             ]);
-        }
 
-        throw ValidationException::withMessages([
-            'email' => ['Las credenciales proporcionadas son incorrectas.'],
-        ]);
+            // Verificar si el usuario existe
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                throw ValidationException::withMessages([
+                    'email' => ['El usuario con este correo electrónico no existe.'],
+                ]);
+            }
+
+            // Intentar autenticar
+            if (Auth::attempt($request->only('email', 'password'))) {
+                // Generamos un token para el usuario
+                $token = $request->user()->createToken('auth-token')->plainTextToken;
+
+                // Obtenemos el usuario con sus roles
+                $user = Auth::user();
+                $user->load('roles');
+
+                // Agregamos información de roles para el frontend
+                $userData = $user->toArray();
+                $userData['is_superadmin'] = $user->isSuperAdmin();
+                $userData['is_admin'] = $user->isAdmin();
+                $userData['is_moderator'] = $user->isModerator();
+
+                return response()->json([
+                    'user'  => $userData,
+                    'token' => $token
+                ]);
+            }
+
+            // Si llegamos aquí, el usuario existe pero la contraseña es incorrecta
+            throw ValidationException::withMessages([
+                'password' => ['La contraseña ingresada es incorrecta.'],
+            ]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            // Capturar cualquier otra excepción y proporcionar un mensaje amigable
+            return response()->json([
+                'message' => 'Ha ocurrido un error al intentar iniciar sesión. Por favor, inténtalo de nuevo más tarde.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

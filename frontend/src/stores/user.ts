@@ -150,8 +150,12 @@ export const useUserStore = defineStore('user', {
           await authStore.fetchUser();
         }
 
-        // Si está autenticado, cargar datos del piloto
+        // Si está autenticado, cargar datos del piloto y verificar estado de email
         if (authStore.isAuthenticated) {
+          // Verificar explícitamente el estado de verificación del correo electrónico
+          await authStore.checkEmailVerification();
+
+          // Cargar datos del piloto
           const pilotStore = usePilotStore();
           await pilotStore.fetchCurrentPilot();
         }
@@ -221,6 +225,9 @@ export const useUserStore = defineStore('user', {
         // Si el inicio de sesión fue exitoso, cargar datos del usuario
         if (authStore.isAuthenticated) {
           await this.loadUserData();
+
+          // Verificar explícitamente el estado de verificación del correo electrónico
+          await authStore.checkEmailVerification();
         }
 
         this.isLoaded = true;

@@ -10,15 +10,7 @@
         :loading="userStore.isUserDataLoading"
         @submit="handleSubmit"
       >
-        <template #alert>
-          <VxvAlert
-            v-if="userStore.error"
-            variant="error"
-            :message="userStore.error"
-            :dismissible="false"
-            class="mb-6"
-          />
-        </template>
+
         <div class="mb-4">
           <VxvInput
             id="email"
@@ -64,7 +56,6 @@ import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { useNotificationStore } from '@/stores/notification.ts';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
-import VxvAlert from '@/components/ui/feedback/VxvAlert.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 
 const router = useRouter();
@@ -116,8 +107,31 @@ const handleSubmit = async () => {
         router.push({ name: 'pilot-overview' });
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al iniciar sesión:', error);
+
+    // Mostrar mensaje de error más descriptivo
+    if (error.response?.status === 422) {
+      // Error de validación (credenciales incorrectas)
+      if (error.response?.data?.errors?.email) {
+        // Si hay un mensaje específico para el email, mostrarlo
+        const errorMessage = Array.isArray(error.response.data.errors.email)
+          ? error.response.data.errors.email[0]
+          : error.response.data.errors.email;
+
+        notificationStore.error(errorMessage, 'Error de autenticación');
+      } else {
+        // Mensaje genérico para credenciales incorrectas
+        notificationStore.error('El usuario no existe o la contraseña es incorrecta', 'Error de autenticación');
+      }
+    } else if (error.response?.status === 429) {
+      // Error de límite de intentos
+      notificationStore.error('Demasiados intentos de inicio de sesión. Por favor, inténtalo de nuevo más tarde.', 'Error de autenticación');
+    } else {
+      // Otros errores
+      const errorMessage = error.response?.data?.message || userStore.error || 'Error al iniciar sesión';
+      notificationStore.error(errorMessage, 'Error de autenticación');
+    }
   }
 };
 </script>

@@ -191,7 +191,7 @@ const handleSubmit = async () => {
       notificationStore.success('Cuenta creada correctamente. Por favor, verifica tu email.');
 
       // Redirigir a la página de verificación de email
-      router.push({ name: 'verification.notice' });
+      router.push({ name: 'verify-email' });
     }
   } catch (error: any) {
     // Los errores de validación del servidor ya son manejados por el store

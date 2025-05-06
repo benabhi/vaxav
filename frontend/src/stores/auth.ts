@@ -92,7 +92,26 @@ export const useAuthStore = defineStore('auth', {
         // Verificar el estado de verificación del email con el backend
         await this.checkEmailVerification();
       } catch (error: any) {
-        this.error = error.response?.data?.message || 'Error al iniciar sesión';
+        // Manejar diferentes tipos de errores
+        if (error.response?.status === 422) {
+          // Error de validación (credenciales incorrectas)
+          if (error.response?.data?.errors?.email) {
+            const emailErrors = error.response.data.errors.email;
+            this.error = Array.isArray(emailErrors) ? emailErrors[0] : emailErrors;
+          } else if (error.response?.data?.errors?.password) {
+            const passwordErrors = error.response.data.errors.password;
+            this.error = Array.isArray(passwordErrors) ? passwordErrors[0] : passwordErrors;
+          } else {
+            this.error = 'El usuario no existe o la contraseña es incorrecta';
+          }
+        } else if (error.response?.status === 429) {
+          // Error de límite de intentos
+          this.error = 'Demasiados intentos de inicio de sesión. Por favor, inténtalo de nuevo más tarde.';
+        } else {
+          // Otros errores
+          this.error = error.response?.data?.message || 'Error al iniciar sesión';
+        }
+
         this.isAuthenticated = false;
         throw error;
       } finally {

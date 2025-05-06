@@ -57,10 +57,10 @@ const {
     try {
       // Enviar datos al servidor
       await api.post('/auth/login', formValues);
-      
+
       // Mostrar notificación de éxito
       notificationStore.success('Sesión iniciada correctamente');
-      
+
       // Redirigir a la página principal
       router.push('/dashboard');
     } catch (error) {
@@ -87,7 +87,7 @@ const {
         {{ errors.email }}
       </div>
     </div>
-    
+
     <div>
       <label for="password">Contraseña</label>
       <input
@@ -100,7 +100,7 @@ const {
         {{ errors.password }}
       </div>
     </div>
-    
+
     <button type="submit" :disabled="submitting">
       {{ submitting ? 'Enviando...' : 'Iniciar sesión' }}
     </button>

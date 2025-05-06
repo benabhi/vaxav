@@ -28,10 +28,25 @@ El flujo de verificación de email es el siguiente:
 2. **Envío de Email de Verificación**: El sistema envía automáticamente un email con:
    - Un enlace de verificación único
    - Un código de verificación de 6 dígitos
-3. **Verificación por Enlace**: El usuario puede hacer clic en el enlace para verificar su email automáticamente.
-4. **Verificación por Código**: Alternativamente, el usuario puede ingresar el código de 6 dígitos en la página de verificación.
+3. **Verificación por Enlace**:
+   - El usuario puede hacer clic en el enlace para verificar su email automáticamente
+   - No requiere que el usuario esté autenticado
+   - Después de verificar, se muestra un mensaje de éxito
+   - El usuario debe hacer clic en "Ir a Iniciar Sesión" para continuar
+   - Si el usuario estaba autenticado, se cierra su sesión
+4. **Verificación por Código**:
+   - Alternativamente, el usuario puede ingresar el código de 6 dígitos en la página de verificación
+   - Después de verificar, se muestra un mensaje de éxito
+   - El usuario debe hacer clic en "Ir a Iniciar Sesión" para continuar
+   - Si el usuario estaba autenticado, se cierra su sesión
 5. **Reenvío de Email**: Si el usuario no recibe el email, puede solicitar un reenvío desde la página de verificación.
-6. **Redirección Post-Verificación**: Una vez verificado, el usuario es redirigido a la página de creación de piloto.
+6. **Restricciones de Acceso**:
+   - Los usuarios con correo no verificado no pueden acceder a ninguna funcionalidad principal
+   - Son redirigidos automáticamente a la página de verificación
+   - No ven los enlaces de navegación en la barra lateral
+7. **Redirección Post-Verificación**:
+   - Después de iniciar sesión con un correo verificado, el usuario es redirigido a la página de creación de piloto
+   - Si el usuario ya tiene un piloto, es redirigido a la página principal
 
 ## Implementación del Backend
 
@@ -44,7 +59,7 @@ El sistema utiliza el modelo `User` estándar de Laravel con el trait `MustVerif
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
-    
+
     // ...
 }
 
@@ -56,11 +71,11 @@ class VerificationCode extends Model
         'code',
         'expires_at',
     ];
-    
+
     protected $casts = [
         'expires_at' => 'datetime',
     ];
-    
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -76,14 +91,25 @@ El sistema utiliza dos controladores principales:
 // app/Http/Controllers/VerifyEmailController.php
 class VerifyEmailController extends Controller
 {
-    // Verifica el email a través del enlace
-    public function verify($id, $hash)
+    // Verifica el email a través del enlace (no requiere autenticación)
+    public function verify(Request $request, $id, $hash)
+    {
+        // Buscar el usuario por ID
+        $user = User::find($id);
+
+        // Verificar el hash y actualizar email_verified_at
+        // Si el usuario está autenticado, cerrar su sesión
+        // Implementación...
+    }
+
+    // Reenvía el email de verificación
+    public function resend(Request $request)
     {
         // Implementación...
     }
-    
-    // Reenvía el email de verificación
-    public function resend(Request $request)
+
+    // Muestra información sobre la verificación
+    public function notice()
     {
         // Implementación...
     }
@@ -97,6 +123,12 @@ class VerifyEmailWithCodeController extends Controller
     {
         // Implementación...
     }
+
+    // Genera un nuevo código de verificación
+    public function generateCode(Request $request)
+    {
+        // Implementación...
+    }
 }
 ```
 
@@ -106,17 +138,28 @@ Las rutas para la verificación de email son:
 
 ```php
 // routes/api.php
-Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
-    ->middleware(['auth:sanctum', 'throttle:6,1'])
-    ->name('verification.send');
-
+// Ruta pública para verificación de email por enlace (sin autenticación)
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
-    ->middleware(['signed', 'throttle:6,1'])
+    ->middleware(['throttle:6,1'])
     ->name('verification.verify');
 
-Route::post('/email/verify-code', [VerifyEmailWithCodeController::class, 'verify'])
-    ->middleware(['auth:sanctum', 'throttle:6,1'])
-    ->name('verification.verify-code');
+// Rutas que requieren autenticación
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
+        ->middleware(['throttle:6,1'])
+        ->name('verification.send');
+
+    Route::get('/email/verify', [VerifyEmailController::class, 'notice'])
+        ->name('verification.notice');
+
+    Route::post('/email/verify-code', [VerifyEmailWithCodeController::class, 'verify'])
+        ->middleware(['throttle:6,1'])
+        ->name('verification.code');
+
+    Route::post('/email/generate-code', [VerifyEmailWithCodeController::class, 'generateCode'])
+        ->middleware(['throttle:3,1'])
+        ->name('verification.generate-code');
+});
 ```
 
 ### Notificaciones
@@ -137,8 +180,11 @@ class VerifyEmailNotification extends Notification
 
 El frontend incluye las siguientes vistas para la verificación de email:
 
-- `VerifyEmailView.vue`: Vista principal para la verificación de email
-- `EmailVerificationSuccess.vue`: Vista de éxito después de la verificación
+- `VerifyEmailView.vue`: Vista principal para la verificación de email que incluye:
+  - Formulario para ingresar el código de verificación
+  - Botón para reenviar el email de verificación
+  - Mensaje de éxito después de la verificación
+  - Botón "Ir a Iniciar Sesión" después de verificar
 
 ### Componentes
 
@@ -146,36 +192,113 @@ Los componentes utilizados en la verificación de email son:
 
 - `VxvForm`: Componente de formulario para la entrada del código de verificación
 - `VxvInput`: Componente de entrada para el código de verificación
-- `VxvButton`: Componente de botón para enviar el código y reenviar el email
+- `VxvButton`: Componente de botón para enviar el código, reenviar el email y navegar al login
 - `VxvAlert`: Componente para mostrar mensajes de éxito o error
 
-### Store
+### Stores
 
-El estado de verificación de email se gestiona a través del store de autenticación:
+El estado de verificación de email se gestiona a través de dos stores:
+
+#### Store de Autenticación
 
 ```javascript
-// src/stores/auth.js
+// src/stores/auth.ts
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     // ...
     emailVerified: false,
     // ...
   }),
-  
+
   actions: {
     // Verificar email con código
     async verifyEmailWithCode(code) {
-      // Implementación...
+      const result = await authService.verifyEmailWithCode(code);
+      if (result.verified) {
+        // Actualizar el usuario para reflejar la verificación
+        await this.fetchUser();
+      }
+      return result;
     },
-    
+
     // Reenviar email de verificación
     async resendVerificationEmail() {
-      // Implementación...
+      return await authService.resendVerificationEmail();
     },
-    
+
     // Comprobar estado de verificación
-    async checkVerificationStatus() {
-      // Implementación...
+    async checkEmailVerification() {
+      // Obtener el estado actual del usuario
+      await this.fetchUser();
+
+      // Verificar específicamente el estado de verificación
+      const status = await authService.getEmailVerificationStatus();
+
+      // Actualizar el estado en el store
+      this.emailVerified = status.verified;
+
+      return status;
+    },
+
+    // Obtener usuario actual
+    async fetchUser() {
+      const user = await authService.getUser();
+      this.user = user;
+      this.isAuthenticated = true;
+
+      // Verificar explícitamente si el email está verificado
+      this.emailVerified = user.email_verified_at !== null;
+    }
+  }
+});
+```
+
+#### Store de Usuario Unificado
+
+```javascript
+// src/stores/user.ts
+export const useUserStore = defineStore('user', {
+  // ...
+  getters: {
+    // Indica si el email del usuario está verificado
+    isEmailVerified: () => {
+      const authStore = useAuthStore();
+      return authStore.emailVerified;
+    },
+    // ...
+  },
+
+  actions: {
+    // Carga todos los datos del usuario
+    async loadUserData() {
+      const authStore = useAuthStore();
+
+      // Cargar datos de autenticación
+      if (!authStore.isAuthenticated && authStore.token) {
+        await authStore.fetchUser();
+      }
+
+      // Verificar explícitamente el estado de verificación del email
+      if (authStore.isAuthenticated) {
+        await authStore.checkEmailVerification();
+
+        // Cargar datos del piloto
+        const pilotStore = usePilotStore();
+        await pilotStore.fetchCurrentPilot();
+      }
+    },
+
+    // Iniciar sesión
+    async login(credentials) {
+      const authStore = useAuthStore();
+      await authStore.login(credentials);
+
+      if (authStore.isAuthenticated) {
+        await this.loadUserData();
+
+        // Verificar explícitamente el estado de verificación del email
+        await authStore.checkEmailVerification();
+      }
     }
   }
 });
@@ -223,6 +346,8 @@ Si los usuarios tienen problemas para verificar su email:
 
 Si los usuarios no son redirigidos correctamente después de la verificación:
 
-1. Verificar la lógica de redirección en el controlador
-2. Comprobar que el middleware de autenticación esté funcionando correctamente
-3. Verificar que las rutas estén correctamente definidas
+1. Verificar la lógica de redirección en el componente `VerifyEmailView.vue`
+2. Comprobar que el guardia de navegación en `router/guards.ts` esté funcionando correctamente
+3. Verificar que todas las rutas tengan la meta `requiresEmailVerification: true` cuando sea necesario
+4. Asegurarse de que el método `checkEmailVerification` se esté llamando después del inicio de sesión
+5. Verificar que el nombre de la ruta de verificación sea `verify-email` en todos los lugares donde se usa

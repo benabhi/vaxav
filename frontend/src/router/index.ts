@@ -7,20 +7,51 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setupRouterGuards } from './guards'
 import PilotOverviewView from '../views/pilot/PilotOverviewView.vue'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/pilot/overview',
-      meta: { requiresAuth: true }
+      redirect: to => {
+        // Verificar si el usuario está autenticado
+        const userStore = useUserStore();
+
+        // Si el usuario no está autenticado, redirigir al login
+        if (!userStore.isLoggedIn) {
+          return { name: 'login' };
+        }
+
+        // Si el usuario está autenticado pero no ha verificado su email, redirigir a la verificación
+        if (userStore.isLoggedIn && !userStore.isEmailVerified) {
+          return { name: 'verify-email' };
+        }
+
+        // Si el usuario está autenticado y ha verificado su email, redirigir a la página principal
+        return { path: '/pilot/overview' };
+      }
     },
     // Rutas de piloto
     {
       path: '/pilot',
-      redirect: '/pilot/overview',
-      meta: { requiresAuth: true }
+      redirect: to => {
+        // Verificar si el usuario está autenticado
+        const userStore = useUserStore();
+
+        // Si el usuario no está autenticado, redirigir al login
+        if (!userStore.isLoggedIn) {
+          return { name: 'login' };
+        }
+
+        // Si el usuario está autenticado pero no ha verificado su email, redirigir a la verificación
+        if (userStore.isLoggedIn && !userStore.isEmailVerified) {
+          return { name: 'verify-email' };
+        }
+
+        // Si el usuario está autenticado y ha verificado su email, redirigir a la página principal
+        return { path: '/pilot/overview' };
+      }
     },
     {
       path: '/pilot/overview',
@@ -28,6 +59,7 @@ const router = createRouter({
       component: PilotOverviewView,
       meta: {
         requiresAuth: true,
+        requiresEmailVerification: true,
         requiresPilot: true
       }
     },
@@ -59,7 +91,7 @@ const router = createRouter({
     },
     {
       path: '/email/verify',
-      name: 'verification.notice',
+      name: 'verify-email',
       component: () => import('../views/auth/VerifyEmailView.vue'),
       meta: { requiresAuth: true },
       // Pasar los parámetros de verificación si están presentes en la URL
@@ -75,52 +107,76 @@ const router = createRouter({
       path: '/create-pilot',
       name: 'create-pilot',
       component: () => import('../views/pilot/CreatePilotView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     {
       path: '/pilot/skills',
       name: 'pilot-skills',
       component: () => import('../views/pilot/PilotSkillsView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     // Rutas del universo
     {
       path: '/universe',
       redirect: '/universe/galaxy',
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     {
       path: '/universe/galaxy',
       name: 'universe-galaxy',
       component: () => import('../views/universe/UniverseView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     {
       path: '/universe/solar-system',
       name: 'universe-solar-system',
       component: () => import('../views/universe/UniverseView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     // Rutas de mercado
     {
       path: '/market',
       name: 'market',
       component: () => import('../views/market/MarketView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     // Rutas de naves
     {
       path: '/ships',
       name: 'ships',
       component: () => import('../views/ships/ShipsView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     // Ruta de perfil
     {
       path: '/profile',
       name: 'profile',
       component: () => import('../views/profile/ProfileView.vue'),
-      meta: { requiresAuth: true }
+      meta: {
+        requiresAuth: true,
+        requiresEmailVerification: true
+      }
     },
     // Rutas de administración
     {
@@ -129,6 +185,7 @@ const router = createRouter({
       redirect: '/admin/users',
       meta: {
         requiresAuth: true,
+        requiresEmailVerification: true,
         requiresRoles: ['superadmin', 'admin', 'moderator']
       }
     },

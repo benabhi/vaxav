@@ -36,6 +36,13 @@ export async function setupAuthGuard(router: Router): Promise<void> {
       // Verificar autenticación
       if (!userStore.isLoggedIn) {
         notificationStore.warning('Debes iniciar sesión para acceder a esta página.');
+
+        // Si es la ruta base o la ruta /pilot, redirigir directamente al login sin parámetros
+        if (to.path === '/' || to.path === '/pilot') {
+          return next({ name: 'login' });
+        }
+
+        // Para otras rutas, incluir el parámetro redirect
         return next({
           name: 'login',
           query: { redirect: to.fullPath }
