@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SkillController;
 use App\Http\Controllers\Admin\SkillCategoryController;
+use App\Http\Controllers\Admin\PilotController as AdminPilotController;
 use App\Http\Controllers\PilotSkillController;
 
 /*
@@ -105,6 +106,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|superadmin'])->g
     // Rutas de habilidades
     Route::apiResource('skills', SkillController::class);
     Route::get('/skills-dropdown', [SkillController::class, 'getSkillsForDropdown']);
+
+    // Rutas de administración de pilotos
+    Route::get('/pilots', [AdminPilotController::class, 'index']);
+    Route::get('/pilots/{id}', [AdminPilotController::class, 'show']);
+    Route::put('/pilots/{id}', [AdminPilotController::class, 'update']);
+    Route::delete('/pilots/{id}', [AdminPilotController::class, 'destroy']);
+    Route::get('/pilots/{id}/skills', [AdminPilotController::class, 'getSkills']);
+    Route::put('/pilots/{id}/skills/{skillId}', [AdminPilotController::class, 'updateSkill']);
 });
 
 // Rutas de universo

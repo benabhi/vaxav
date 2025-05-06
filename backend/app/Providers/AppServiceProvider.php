@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\SkillService;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\URL;
@@ -15,7 +16,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Registrar el servicio de habilidades
+        $this->app->singleton(SkillService::class, function ($app) {
+            return new SkillService();
+        });
     }
 
     /**

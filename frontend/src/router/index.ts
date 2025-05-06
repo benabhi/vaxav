@@ -307,6 +307,34 @@ const router = createRouter({
         requiresRoles: ['superadmin', 'admin']
       }
     },
+    // Rutas de pilotos
+    {
+      path: '/admin/pilots',
+      name: 'admin-pilots',
+      component: () => import('../views/admin/pilots/PilotsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/pilots/:id/edit',
+      name: 'admin-pilots-edit',
+      component: () => import('../views/admin/pilots/PilotEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/pilots/:id/skills',
+      name: 'admin-pilots-skills',
+      component: () => import('../views/admin/pilots/PilotSkillsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
   ],
 })
 

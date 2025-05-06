@@ -18,7 +18,7 @@
             :is-sidebar-collapsed="false"
             :is-mobile="false"
             basePath="/admin/users"
-            :additional-paths="['/admin/roles']"
+            :additional-paths="['/admin/roles', '/admin/pilots']"
           >
             <VxvNavLink
               to="/admin/users"
@@ -30,6 +30,13 @@
             <VxvNavLink
               to="/admin/roles"
               label="Roles"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/pilots"
+              label="Pilotos"
               :is-sidebar-collapsed="false"
               :is-mobile="false"
               active-class="text-blue-400"
@@ -126,7 +133,7 @@
             :is-sidebar-collapsed="false"
             :is-mobile="true"
             basePath="/admin/users"
-            :additional-paths="['/admin/roles']"
+            :additional-paths="['/admin/roles', '/admin/pilots']"
           >
             <VxvNavLink
               to="/admin/users"
@@ -138,6 +145,13 @@
             <VxvNavLink
               to="/admin/roles"
               label="Roles"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/pilots"
+              label="Pilotos"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
               active-class="text-blue-400"
