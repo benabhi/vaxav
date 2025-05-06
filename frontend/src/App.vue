@@ -9,6 +9,7 @@ import AppFooter from './components/layout/AppFooter.vue'
 import VxvStatusBar from './components/ui/layout/VxvStatusBar.vue'
 import VxvNotification from './components/ui/feedback/VxvNotification.vue'
 import { useUserStore } from './stores/user'
+import { usePilotStore } from './stores/pilot'
 import authService from './services/authService'
 
 // Usar el store unificado en lugar de los stores individuales
@@ -65,6 +66,34 @@ const hasAuthenticatedPilot = computed(() => {
   return userStore.isLoggedIn && userStore.isEmailVerified && userStore.hasPilot
 })
 
+// Recargar los datos del usuario cuando cambia la ruta
+import { useRoute, useRouter } from 'vue-router'
+const route = useRoute()
+const router = useRouter()
+import { watch } from 'vue'
+
+// Observar cambios en la ruta para recargar datos del usuario si es necesario
+watch(() => route.path, async (newPath) => {
+  // Si el usuario está autenticado y cambia de ruta, recargar datos
+  if (userStore.isLoggedIn && !userStore.isLoading) {
+    try {
+      await userStore.refreshUserData()
+
+      // Si estamos en la página de overview y no tenemos piloto, redirigir a la página de creación
+      if (newPath === '/pilot/overview' && !userStore.hasPilot) {
+        router.push('/create-pilot')
+      }
+
+      // Si estamos en la página de creación y ya tenemos piloto, redirigir a la página de overview
+      if (newPath === '/create-pilot' && userStore.hasPilot) {
+        router.push('/pilot/overview')
+      }
+    } catch (error) {
+      console.error('Error al recargar datos del usuario:', error)
+    }
+  }
+})
+
 
 
 // Métodos para el menú móvil
@@ -104,6 +133,14 @@ onMounted(async () => {
     try {
       // Usar el store unificado para cargar todos los datos del usuario
       await userStore.loadUserData()
+
+      // Cargar los datos del piloto si el usuario está autenticado
+      const pilotStore = usePilotStore()
+      try {
+        await pilotStore.fetchCurrentPilot()
+      } catch (error) {
+        // Ignorar errores al cargar el piloto, probablemente no existe
+      }
     } catch (error) {
       console.error('Error al cargar los datos del usuario:', error)
       // Si hay error, limpiamos el token

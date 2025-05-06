@@ -172,7 +172,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = user;
         this.isAuthenticated = true;
 
-        // Verificar explícitamente si el email está verificado
+        // Verificar explícitamente si el email está verificado basado en la respuesta del backend
         this.emailVerified = user.email_verified_at !== null;
         console.log('Email verificado:', this.emailVerified, 'email_verified_at:', user.email_verified_at);
 
@@ -229,8 +229,8 @@ export const useAuthStore = defineStore('auth', {
       try {
         const result = await authService.verifyEmailWithCode(code);
         if (result.verified) {
-          this.emailVerified = true;
-          await this.fetchUser(); // Actualizar el usuario para reflejar la verificación
+          // Actualizar el usuario para reflejar la verificación desde el backend
+          await this.fetchUser();
         }
         return result;
       } catch (error: any) {

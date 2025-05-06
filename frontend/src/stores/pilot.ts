@@ -7,7 +7,6 @@
 import { defineStore } from 'pinia';
 import pilotService from '@/services/pilotService';
 import type { Pilot, CreatePilotData } from '@/services/pilotService';
-import { pilotPersistOptions } from './plugins/persistence';
 
 interface PilotState {
   currentPilot: Pilot | null;
@@ -21,6 +20,11 @@ export const usePilotStore = defineStore('pilot', {
     loading: false,
     error: null,
   }),
+
+  // Asegurar que el estado se persista correctamente
+  persist: {
+    paths: ['currentPilot'],
+  },
 
   getters: {
     hasPilot: (state) => !!state.currentPilot,
@@ -83,8 +87,5 @@ export const usePilotStore = defineStore('pilot', {
     },
   },
 
-  /**
-   * Configuración de persistencia
-   */
-  ...pilotPersistOptions
+  // End of store definition
 });

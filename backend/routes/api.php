@@ -42,10 +42,13 @@ Route::prefix('auth')->group(function () {
         ->middleware(['guest'])
         ->name('password.update');
 
-    // Rutas de verificación de email
+    // Ruta pública para verificación de email por enlace (sin autenticación)
+    Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
+        ->middleware(['throttle:6,1'])
+        ->name('verification.verify');
+
+    // Rutas de verificación de email que requieren autenticación
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
-            ->name('verification.verify');
 
         Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
             ->middleware(['throttle:6,1'])
@@ -61,8 +64,6 @@ Route::prefix('auth')->group(function () {
         Route::post('/email/generate-code', [VerifyEmailWithCodeController::class, 'generateCode'])
             ->middleware(['throttle:3,1'])
             ->name('verification.generate-code');
-
-
     });
 
     // Rutas de perfil

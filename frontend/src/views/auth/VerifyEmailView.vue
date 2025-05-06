@@ -88,11 +88,9 @@
             <p class="text-gray-300 mt-2">Ahora puedes acceder a todas las funciones de VAXAV.</p>
           </div>
 
-          <RouterLink to="/pilot/overview" custom v-slot="{ navigate }">
-            <VxvButton variant="primary" @click="navigate">
-              Ir al inicio
-            </VxvButton>
-          </RouterLink>
+          <VxvButton variant="primary" @click="goToLogin" class="w-full">
+            Ir a Iniciar Sesión
+          </VxvButton>
         </div>
       </VxvForm>
     </div>
@@ -103,6 +101,7 @@
 import { ref, onMounted, defineProps } from 'vue';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification.ts';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
@@ -130,6 +129,15 @@ const alertVariant = ref('info');
 const verificationCode = ref('');
 const verifyingCode = ref(false);
 
+// Función para ir a la página de login
+const goToLogin = () => {
+  // Asegurarnos de que el usuario esté deslogueado antes de redirigir
+  userStore.logout().then(() => {
+    // Usar window.location.replace para evitar que quede en el historial
+    window.location.replace('/login');
+  });
+};
+
 
 // Función para verificar el email con los parámetros de la URL
 const verifyEmailWithParams = async (id: string, hash: string, expires?: string, signature?: string) => {
@@ -138,48 +146,50 @@ const verifyEmailWithParams = async (id: string, hash: string, expires?: string,
     message.value = 'Verificando tu dirección de email...';
     alertVariant.value = 'info';
 
-    // Primero, asegurarse de que el usuario esté autenticado
-    if (!userStore.isLoggedIn) {
-      message.value = 'Debes iniciar sesión para verificar tu email.';
-      alertVariant.value = 'error';
-      return;
-    }
+    // Decodificar los parámetros si es necesario
+    const decodedId = decodeURIComponent(id);
+    const decodedHash = decodeURIComponent(hash);
+    const decodedExpires = expires ? decodeURIComponent(expires) : undefined;
+    const decodedSignature = signature ? decodeURIComponent(signature) : undefined;
 
     // Construir la URL de verificación
-    let verificationUrl = `/auth/email/verify/${id}/${hash}`;
+    let verificationUrl = `/auth/email/verify/${decodedId}/${decodedHash}`;
 
     // Añadir parámetros de expires y signature si existen
-    if (expires && signature) {
-      verificationUrl += `?expires=${expires}&signature=${signature}`;
+    if (decodedExpires && decodedSignature) {
+      verificationUrl += `?expires=${decodedExpires}&signature=${decodedSignature}`;
     }
 
     // Realizar la petición de verificación
     const response = await api.get(verificationUrl);
 
-    // Actualizar el estado
-    verified.value = true;
-    message.value = response.data.message || 'Email verificado correctamente.';
-    alertVariant.value = 'success';
+    if (response.data.verified) {
+      // Actualizar el estado
+      verified.value = true;
+      message.value = response.data.message || 'Email verificado correctamente.';
+      alertVariant.value = 'success';
 
-    // Actualizar los datos del usuario en el store unificado
-    await userStore.loadUserData();
+      // Si la respuesta indica que se cerró la sesión del usuario
+      if (response.data.logout) {
+        // Cerrar sesión en el frontend también
+        await userStore.logout();
+      } else {
+        // Recargar los datos del usuario para obtener el estado actualizado del backend
+        await userStore.refreshUserData();
+      }
 
-    // Verificar si el email está verificado
-    if (userStore.isEmailVerified) {
-      // Mostrar mensaje de éxito y redirigir
-      message.value = '¡Email verificado correctamente! Redirigiendo a la página principal...';
+      // Mostrar mensaje de éxito
+      message.value = '¡Email verificado correctamente! Ahora puedes iniciar sesión para continuar.';
 
       // Mostrar notificación de éxito
       notificationStore.success(
-        '¡Tu dirección de correo electrónico ha sido verificada correctamente!',
+        '¡Tu dirección de correo electrónico ha sido verificada correctamente! Por favor, inicia sesión para continuar.',
         'Verificación completada',
         7000
       );
 
-      // Redirigir al usuario a la página principal después de verificar
-      setTimeout(() => {
-        router.push('/pilot/overview');
-      }, 2000);
+      // Actualizar el estado para mostrar el botón de ir a login
+      verified.value = true;
     } else {
       message.value = 'El email no se marcó como verificado. Por favor, contacta al soporte.';
       alertVariant.value = 'error';
@@ -203,14 +213,18 @@ onMounted(async () => {
     }
 
     // Si el usuario ya está verificado y no hay parámetros de verificación en la URL,
-    // redirigir a la página principal
+    // mostrar un mensaje y redirigir al login
     const id = props.id || route.query.id as string;
     const hash = props.hash || route.query.hash as string;
 
     if (userStore.isEmailVerified && !id && !hash) {
-      // El usuario ya está verificado y no viene de un proceso de verificación,
-      // redirigir a la página principal
-      router.push('/pilot/overview');
+      // El usuario ya está verificado y no viene de un proceso de verificación
+      message.value = 'Tu dirección de correo electrónico ya ha sido verificada.';
+      alertVariant.value = 'success';
+      verified.value = true;
+
+      // Cerrar sesión
+      await userStore.logout();
       return;
     }
 
@@ -228,12 +242,27 @@ onMounted(async () => {
   }
 
   // Verificar si hay parámetros de verificación en las props o en la URL
-  const id = props.id || route.query.id as string;
-  const hash = props.hash || route.query.hash as string;
-  const expires = props.expires || route.query.expires as string;
-  const signature = props.signature || route.query.signature as string;
+  let id = props.id || route.query.id as string;
+  let hash = props.hash || route.query.hash as string;
+  let expires = props.expires || route.query.expires as string;
+  let signature = props.signature || route.query.signature as string;
 
-  if (id && hash && expires && signature) {
+  // Verificar si hay un parámetro redirect que contiene los parámetros de verificación
+  const redirect = route.query.redirect as string;
+  if (redirect && redirect.startsWith('/email/verify')) {
+    // Extraer los parámetros de la URL de redirección
+    const urlParams = new URLSearchParams(redirect.split('?')[1]);
+
+    // Obtener los parámetros individuales
+    if (urlParams.has('id')) id = urlParams.get('id') || id;
+    if (urlParams.has('hash')) hash = urlParams.get('hash') || hash;
+    if (urlParams.has('expires')) expires = urlParams.get('expires') || expires;
+    if (urlParams.has('signature')) signature = urlParams.get('signature') || signature;
+
+    console.log('Parámetros extraídos de redirect:', { id, hash, expires, signature });
+  }
+
+  if (id && hash) {
     await verifyEmailWithParams(id, hash, expires, signature);
   }
 });
@@ -279,20 +308,31 @@ const verifyWithCode = async () => {
       message.value = result.message || 'Email verificado correctamente.';
       alertVariant.value = 'success';
 
-      // Actualizar los datos del usuario
-      await userStore.loadUserData();
+      // Recargar los datos del usuario para obtener el estado actualizado del backend
+      await userStore.refreshUserData();
+
+      // Verificar si el email se marcó como verificado en el backend
+      const authStore = useAuthStore();
+
+      // Verificar que el estado se haya actualizado correctamente
+      if (!userStore.isEmailVerified) {
+        console.error('Error: El estado de verificación de email no se actualizó correctamente');
+        // Intentar actualizar de nuevo
+        await authStore.checkEmailVerification();
+      }
+
+      // Cerrar sesión para forzar al usuario a iniciar sesión nuevamente
+      await userStore.logout();
 
       // Mostrar notificación de éxito
       notificationStore.success(
-        '¡Tu dirección de correo electrónico ha sido verificada correctamente!',
+        '¡Tu dirección de correo electrónico ha sido verificada correctamente! Por favor, inicia sesión para continuar.',
         'Verificación completada',
         7000
       );
 
-      // Redirigir al usuario a la página principal después de un breve retraso
-      setTimeout(() => {
-        router.push('/pilot/overview');
-      }, 2000);
+      // Actualizar el mensaje para indicar que puede iniciar sesión
+      message.value = '¡Email verificado correctamente! Ahora puedes iniciar sesión para continuar.';
     } else {
       message.value = result.message || 'Código de verificación inválido.';
       alertVariant.value = 'error';

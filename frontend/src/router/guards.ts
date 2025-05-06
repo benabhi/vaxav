@@ -49,9 +49,21 @@ export async function setupAuthGuard(router: Router): Promise<void> {
       }
 
       // Verificar si tiene piloto si es necesario
-      if (to.meta.requiresPilot && !userStore.hasPilot) {
-        notificationStore.info('Debes crear un piloto para acceder a esta página.');
-        return next({ name: 'create-pilot' });
+      if (to.meta.requiresPilot) {
+        // Si no sabemos si tiene piloto, intentar cargar los datos
+        if (!userStore.isLoaded) {
+          try {
+            await userStore.loadUserData();
+          } catch (error) {
+            console.error('Error al cargar datos del usuario:', error);
+          }
+        }
+
+        // Ahora verificar si tiene piloto
+        if (!userStore.hasPilot && to.name !== 'create-pilot') {
+          notificationStore.info('Debes crear un piloto para acceder a esta página.');
+          return next({ name: 'create-pilot' });
+        }
       }
 
       // Verificar roles si es necesario

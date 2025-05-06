@@ -124,9 +124,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { usePilotStore } from '@/stores/pilot';
+import { useNotificationStore } from '@/stores/notification.ts';
+import pilotService from '@/services/pilotService';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvSelect from '@/components/ui/forms/VxvSelect.vue';
@@ -136,6 +139,30 @@ import VxvButton from '@/components/ui/buttons/VxvButton.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
+const pilotStore = usePilotStore();
+const notificationStore = useNotificationStore();
+const hasPilot = computed(() => userStore.hasPilot);
+
+// Verificar si el usuario ya tiene un piloto al cargar la página
+onMounted(async () => {
+  if (!userStore.isLoaded) {
+    try {
+      await userStore.loadUserData();
+
+      // Si el usuario ya tiene un piloto, redirigir a la página principal
+      if (userStore.hasPilot) {
+        notificationStore.info('Ya tienes un piloto creado.');
+        router.push('/pilot/overview');
+      }
+    } catch (error) {
+      console.error('Error al cargar datos del usuario:', error);
+    }
+  } else if (userStore.hasPilot) {
+    // Si ya tenemos los datos cargados y el usuario tiene piloto, redirigir
+    notificationStore.info('Ya tienes un piloto creado.');
+    router.push('/pilot/overview');
+  }
+});
 
 // Estado para el modal de bienvenida
 const showWelcomeModal = ref(false);
@@ -149,28 +176,33 @@ const form = reactive({
 // Método para cerrar el modal y navegar a la página principal
 const closeWelcomeModal = () => {
   showWelcomeModal.value = false;
-  router.push('/pilot/overview');
+
+  // Usar window.location para forzar una recarga completa de la página
+  // Esto asegura que todos los componentes se reinicien y se carguen con datos frescos
+  window.location.href = '/pilot/overview';
 };
 
 const handleSubmit = async () => {
   try {
-    // Crear el piloto usando el store unificado
-    await userStore.createPilot(form);
+    // Crear el piloto directamente usando el servicio API
+    const response = await pilotService.createPilot(form);
 
-    // Obtener el piloto creado del store unificado
-    const pilot = userStore.pilotData;
+    // Guardar el piloto creado en localStorage para asegurar que esté disponible después de la recarga
+    localStorage.setItem('vaxav_pilot_data', JSON.stringify(response));
 
-    if (pilot) {
-      // Guardar el piloto creado para mostrar información en el modal
-      createdPilot.value = pilot;
+    // Guardar el piloto en el store
+    pilotStore.currentPilot = response;
 
-      // Mostrar el modal de bienvenida
-      showWelcomeModal.value = true;
+    // Guardar el piloto creado para mostrar información en el modal
+    createdPilot.value = response;
 
-      // No redirigir inmediatamente, esperar a que el usuario cierre el modal
-    }
+    // Mostrar el modal de bienvenida
+    showWelcomeModal.value = true;
+
+    // No redirigir inmediatamente, esperar a que el usuario cierre el modal
   } catch (error) {
     console.error('Error al crear piloto:', error);
+    notificationStore.error('Error al crear piloto. Por favor, inténtalo de nuevo.');
   }
 };
 </script>

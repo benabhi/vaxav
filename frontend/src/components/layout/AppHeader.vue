@@ -34,9 +34,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineEmits } from 'vue';
-import { RouterLink } from 'vue-router';
+import { computed, defineEmits, onMounted, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { usePilotStore } from '@/stores/pilot';
 import { useAuthStore } from '@/stores/auth';
 import api from '@/services/api';
 import VxvButton from '@/components/ui/buttons/VxvButton.vue';
@@ -47,25 +48,57 @@ import { ChevronDownIcon } from '@heroicons/vue/24/outline';
 
 const emit = defineEmits(['toggle-sidebar']);
 const userStore = useUserStore();
+const route = useRoute();
+
+// Cargar datos del usuario cuando el componente se monta
+onMounted(async () => {
+  if (userStore.isLoggedIn && !userStore.isLoading) {
+    try {
+      await userStore.refreshUserData();
+
+      // Cargar explícitamente los datos del piloto
+      const pilotStore = usePilotStore();
+      await pilotStore.fetchCurrentPilot();
+    } catch (error) {
+      console.error('Error al cargar datos del usuario en AppHeader:', error);
+    }
+  }
+});
+
+// Recargar datos cuando cambia la ruta
+watch(() => route.path, async () => {
+  if (userStore.isLoggedIn && !userStore.isLoading) {
+    try {
+      await userStore.refreshUserData();
+    } catch (error) {
+      console.error('Error al recargar datos del usuario en AppHeader:', error);
+    }
+  }
+});
 
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const isEmailVerified = computed(() => userStore.isEmailVerified);
 const user = computed(() => userStore.userData);
 const isModerator = computed(() => userStore.isModerator);
 
-// Enlaces de navegación dinámicos basados en el estado de autenticación, verificación y permisos
+// Usar directamente el store de piloto para mayor reactividad
+const pilotStore = usePilotStore();
+const hasPilot = computed(() => pilotStore.hasPilot);
+
+// Enlaces de navegación dinámicos basados en el estado de autenticación y permisos
 const navLinks = computed(() => {
   // Si no está autenticado, no mostrar enlaces
-  if (!isLoggedIn.value) return [];
+  if (!isLoggedIn.value) {
+    return [];
+  }
 
   // Si está autenticado pero no ha verificado su email, no mostrar enlaces
-  if (!isEmailVerified.value) return [];
-
-  // Verificar si el usuario tiene un piloto
-  const hasPilot = userStore.hasPilot;
+  if (!isEmailVerified.value) {
+    return [];
+  }
 
   // Si está autenticado, verificado pero no tiene piloto, solo mostrar enlace a Piloto
-  if (!hasPilot) {
+  if (!hasPilot.value) {
     return [
       { to: '/pilot/overview', label: 'Piloto', exact: false }
     ];

@@ -24,6 +24,11 @@ return [
         'http://0.0.0.0:5173',
         'http://10.0.2.15:5173',
         'http://10.11.37.169:5173',
+        'http://10.11.37.184:5173',
+        'http://localhost:3000', // In case you're using a different port
+        'http://127.0.0.1:3000',
+        'http://localhost', // In case you're accessing without port
+        'http://127.0.0.1',
     ], // Vue.js dev server
 
     'allowed_origins_patterns' => [],

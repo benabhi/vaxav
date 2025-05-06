@@ -12,6 +12,7 @@ const route = useRoute();
 
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const hasPilot = computed(() => userStore.hasPilot);
+const isLoading = computed(() => userStore.isUserDataLoading);
 
 onMounted(async () => {
   if (userStore.isLoggedIn && !userStore.isLoaded) {
@@ -35,7 +36,7 @@ onMounted(async () => {
       </div>
 
       <VxvCard
-        v-if="!hasPilot && isLoggedIn"
+        v-if="!hasPilot && isLoggedIn && !isLoading"
         title="Crea tu Piloto"
         max-width="md"
         centered

@@ -7,7 +7,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: false, // No necesitamos cookies para autenticación con tokens
+  withCredentials: true, // Necesario para CORS con credenciales
 });
 
 // Configurar el token de autenticación si existe en localStorage

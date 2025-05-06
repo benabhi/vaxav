@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, onMounted } from 'vue';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { useNotificationStore } from '@/stores/notification.ts';
@@ -72,8 +72,21 @@ const route = useRoute();
 const userStore = useUserStore();
 const notificationStore = useNotificationStore();
 
-// No necesitamos verificar si el usuario viene de restablecer su contraseña
-// ya que la notificación se muestra en la página de restablecimiento
+// Verificar si hay un parámetro redirect que contiene los parámetros de verificación de email
+onMounted(() => {
+  const redirect = route.query.redirect as string;
+  if (redirect && redirect.startsWith('/email/verify')) {
+    // Extraer los parámetros de la URL de redirección para mostrarlos en el formulario
+    const urlParams = new URLSearchParams(redirect.split('?')[1]);
+    if (urlParams.has('id') && urlParams.has('hash')) {
+      notificationStore.info(
+        'Por favor, inicia sesión para verificar tu dirección de correo electrónico.',
+        'Verificación de email pendiente',
+        10000
+      );
+    }
+  }
+});
 
 const form = reactive({
   email: '',
@@ -90,11 +103,18 @@ const handleSubmit = async () => {
       // Mostrar notificación de éxito
       notificationStore.success('Sesión iniciada correctamente');
 
-      // No redirigir directamente a la página principal
-      // Dejar que el middleware de navegación maneje la redirección según el estado del usuario
-      // Si el usuario no ha verificado su email, será redirigido a la página de verificación
-      // Si el usuario ha verificado su email pero no tiene piloto, será redirigido a la página de creación de piloto
-      router.push({ name: 'pilot-overview' });
+      // Verificar si hay un parámetro redirect que contiene los parámetros de verificación de email
+      const redirect = route.query.redirect as string;
+      if (redirect && redirect.startsWith('/email/verify')) {
+        // Redirigir a la página de verificación de email con los parámetros originales
+        router.push(redirect);
+      } else {
+        // No redirigir directamente a la página principal
+        // Dejar que el middleware de navegación maneje la redirección según el estado del usuario
+        // Si el usuario no ha verificado su email, será redirigido a la página de verificación
+        // Si el usuario ha verificado su email pero no tiene piloto, será redirigido a la página de creación de piloto
+        router.push({ name: 'pilot-overview' });
+      }
     }
   } catch (error) {
     console.error('Error al iniciar sesión:', error);

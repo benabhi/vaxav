@@ -24,9 +24,11 @@ class VerifyEmailController extends Controller
     }
 
     /**
-     * Marca el email del usuario autenticado como verificado.
+     * Verifica el email de un usuario sin requerir autenticación.
      *
-     * @param  \Illuminate\Foundation\Auth\EmailVerificationRequest  $request
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @param  string  $hash
      * @return \Illuminate\Http\JsonResponse
      */
     public function verify(Request $request, $id, $hash): JsonResponse
@@ -51,15 +53,6 @@ class VerifyEmailController extends Controller
 
         try {
             // Verificar el hash
-            $verifyUrl = URL::temporarySignedRoute(
-                'verification.verify',
-                now()->addMinutes(60),
-                [
-                    'id'   => $user->getKey(),
-                    'hash' => sha1($user->getEmailForVerification()),
-                ]
-            );
-
             $actualHash = sha1($user->getEmailForVerification());
 
             if ($hash !== $actualHash) {
@@ -86,16 +79,29 @@ class VerifyEmailController extends Controller
             // Verificar que se haya guardado correctamente
             $user->refresh();
 
+            // Verificar si el usuario está autenticado
+            $isAuthenticated = auth()->check();
+            $userId = $user->id;
+
+            // Si el usuario está autenticado, cerrar su sesión
+            if ($isAuthenticated) {
+                // Revocar todos los tokens del usuario
+                $user->tokens()->delete();
+            }
+
             Log::info('Email verificado correctamente', [
                 'user_id'           => $user->id,
                 'email'             => $user->email,
                 'email_verified_at' => $user->email_verified_at,
                 'is_verified'       => $user->hasVerifiedEmail(),
+                'was_authenticated' => $isAuthenticated,
             ]);
 
             return response()->json([
-                'message'  => 'Correo electrónico verificado correctamente.',
+                'message'  => 'Correo electrónico verificado correctamente. Por favor, inicia sesión para continuar.',
                 'verified' => true,
+                'user_id'  => $userId,
+                'logout'   => $isAuthenticated,
             ]);
         } catch (\Exception $e) {
             Log::error('Error al verificar email', [
@@ -136,6 +142,7 @@ class VerifyEmailController extends Controller
             'message' => 'Se ha enviado un nuevo correo de verificación a tu dirección de email. Contiene tanto un enlace como un código de verificación.',
         ]);
     }
+
 
 
 

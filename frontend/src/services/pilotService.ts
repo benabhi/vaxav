@@ -22,8 +22,14 @@ const pilotService = {
    * Obtener el piloto del usuario actual
    */
   getCurrentPilot: async () => {
-    const response = await api.get('/pilots/current');
-    return response.data;
+    try {
+      const response = await api.get('/pilots/current');
+      console.log('getCurrentPilot success:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('getCurrentPilot error:', error);
+      throw error;
+    }
   },
 
   /**
