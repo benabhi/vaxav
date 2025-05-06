@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
@@ -103,18 +103,25 @@ import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
 import { useNotificationStore } from '@/stores/notification.ts';
 import { useForm } from '@/composables/useForm';
+import { useRoles } from '@/composables/useRoles';
 import api from '@/services/api';
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
 
-// Available roles
-const availableRoles = ref([
-  { id: 1, name: 'Super Admin', slug: 'superadmin' },
-  { id: 2, name: 'Administrador', slug: 'admin' },
-  { id: 3, name: 'Moderador', slug: 'moderator' },
-  { id: 4, name: 'Usuario', slug: 'user' }
-]);
+// Use roles composable to get all roles
+const { roles: availableRoles, fetchRoles } = useRoles();
+
+// Load roles on mount
+onMounted(async () => {
+  await fetchRoles();
+
+  // Find the user role ID to set as default
+  const userRole = availableRoles.value.find(role => role.slug === 'user');
+  if (userRole) {
+    values.roles = [userRole.id];
+  }
+});
 
 // Validation rules
 const validationRules = {
@@ -155,7 +162,7 @@ const {
     email: '',
     password: '',
     password_confirmation: '',
-    roles: [4] // Default to 'user' role
+    roles: [] // Will be set after roles are loaded
   },
   validationRules,
   onSubmit: async (formValues) => {

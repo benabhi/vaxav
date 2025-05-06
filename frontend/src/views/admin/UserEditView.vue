@@ -106,6 +106,7 @@ import VxvCheckbox from '@/components/ui/forms/VxvCheckbox.vue';
 import VxvBreadcrumb from '@/components/ui/navigation/VxvBreadcrumb.vue';
 import { useNotificationStore } from '@/stores/notification.ts';
 import { useForm } from '@/composables/useForm';
+import { useRoles } from '@/composables/useRoles';
 import api from '@/services/api';
 
 const router = useRouter();
@@ -114,13 +115,8 @@ const notificationStore = useNotificationStore();
 const userId = route.params.id;
 const loading = ref(true);
 
-// Available roles
-const availableRoles = ref([
-  { id: 1, name: 'Super Admin', slug: 'superadmin' },
-  { id: 2, name: 'Administrador', slug: 'admin' },
-  { id: 3, name: 'Moderador', slug: 'moderator' },
-  { id: 4, name: 'Usuario', slug: 'user' }
-]);
+// Use roles composable to get all roles
+const { roles: availableRoles, fetchRoles } = useRoles();
 
 // Validation rules
 const validationRules = {
@@ -219,6 +215,11 @@ const {
 const fetchUser = async () => {
   try {
     loading.value = true;
+
+    // Fetch roles first
+    await fetchRoles();
+
+    // Then fetch user data
     const response = await api.get(`/admin/users/${userId}`);
     const userData = response.data;
 
@@ -231,7 +232,7 @@ const fetchUser = async () => {
       roles: userData.roles.map(role => role.id)
     });
   } catch (error) {
-
+    console.error('Error fetching user data:', error);
     notificationStore.adminError(
       'Ha ocurrido un error al cargar los datos del usuario.'
     );
