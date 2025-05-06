@@ -293,7 +293,7 @@ import VxvSkillCard from '@/components/game/skills/VxvSkillCard.vue';
 // Estos componentes se utilizan internamente en VxvSkillCard
 // import VxvCircularSkillLevel from '@/components/game/skills/VxvCircularSkillLevel.vue';
 // import VxvDashedSkillLevel from '@/components/game/skills/VxvDashedSkillLevel.vue';
-import { getNextLevelXP, calculateProgressionIndex } from '@/config/skillLevels';
+import { getNextLevelXP, calculateProgressionIndex, getXPRequirements } from '@/config/skillLevels';
 import type { Skill, SkillCategory, Prerequisite } from '@/types';
 
 // Obtener los métodos y estado del composable
@@ -602,24 +602,24 @@ const getSkillXP = (skillId: number): number => {
 };
 
 // Obtener la experiencia mínima para el nivel actual
-const getMinXPForLevel = (skillId: number): number => {
+const getMinXPForLevel = async (skillId: number): Promise<number> => {
   try {
     const level = getPilotSkillLevel(skillId);
     if (level <= 0) return 0;
 
-    // Experiencia base para cada nivel
-    const baseXP: Record<number, number> = {
-      1: 0,      // Nivel 1 comienza en 0 XP
-      2: 50,     // Nivel 2 comienza en 50 XP
-      3: 150,    // Nivel 3 comienza en 150 XP
-      4: 300,    // Nivel 4 comienza en 300 XP
-      5: 600,    // Nivel 5 comienza en 600 XP
-    };
+    // Obtener los requisitos de XP desde la configuración
+    const xpRequirements = await getXPRequirements();
+
+    // Calcular la experiencia acumulada para el nivel actual
+    let baseXP = 0;
+    for (let i = 0; i < level; i++) {
+      baseXP += xpRequirements[i];
+    }
 
     const skill = allSkills.value.find(s => s.id === skillId);
     const multiplier = skill ? skill.multiplier : 1;
 
-    return baseXP[level] * multiplier;
+    return baseXP * multiplier;
   } catch (error) {
     console.error('Error en getMinXPForLevel:', error);
     return 0;

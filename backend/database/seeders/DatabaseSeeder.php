@@ -39,5 +39,8 @@ class DatabaseSeeder extends Seeder
 
         // Assign skills to test pilot
         $this->call(PilotSkillsSeeder::class);
+
+        // Seed settings
+        $this->call(SettingsSeeder::class);
     }
 }

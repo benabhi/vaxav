@@ -58,7 +58,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import VxvProgressCircular from '../../ui/progress/VxvProgressCircular.vue';
 import VxvAnimatedCounter from '../../ui/progress/VxvAnimatedCounter.vue';
-import { getNextLevelXP, getProgressPercentage, MAX_SKILL_LEVEL } from '@/config/skillLevels';
+import { getNextLevelXP, getProgressPercentage, MAX_SKILL_LEVEL, getXPRequirements } from '@/config/skillLevels';
 
 /**
  * VxvCircularSkillLevel - Componente para mostrar el nivel de una habilidad con progreso circular

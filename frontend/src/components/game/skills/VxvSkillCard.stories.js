@@ -1,5 +1,5 @@
 import VxvSkillCard from './VxvSkillCard.vue';
-import { BASE_XP_REQUIREMENTS } from '@/config/skillLevels';
+import { DEFAULT_XP_REQUIREMENTS } from '@/config/skillLevels';
 
 export default {
   title: 'Game/Skills/VxvSkillCard',
@@ -39,25 +39,25 @@ const createSkill = (level, multiplier, status) => {
   // Calcular XP para el nivel actual
   const getMinXP = (level) => {
     if (level === 0) return 0;
-    
+
     let xp = 0;
     for (let i = 0; i < level; i++) {
-      xp += BASE_XP_REQUIREMENTS[i] * multiplier;
+      xp += DEFAULT_XP_REQUIREMENTS[i] * multiplier;
     }
     return xp;
   };
-  
+
   // Calcular XP para el siguiente nivel
   const getMaxXP = (level) => {
     if (level >= 5) return getMinXP(5);
     return getMinXP(level + 1);
   };
-  
+
   // Calcular XP actual (entre el mínimo y el máximo)
   const minXP = getMinXP(level);
   const maxXP = getMaxXP(level);
   const currentXP = level >= 5 ? minXP : minXP + Math.floor((maxXP - minXP) * 0.6);
-  
+
   return {
     id: 1,
     name: 'Armas Láser Avanzadas',
@@ -104,24 +104,24 @@ export const DifferentStatuses = () => ({
     const activeSkill = createSkill(3, 2, 'active');
     const inactiveSkill = createSkill(3, 2, 'inactive');
     const unlearnedSkill = createSkill(0, 2, 'unlearned');
-    
+
     return { activeSkill, inactiveSkill, unlearnedSkill };
   },
   template: `
     <div class="flex flex-wrap gap-4">
-      <VxvSkillCard 
-        :skill="activeSkill" 
-        status="active" 
+      <VxvSkillCard
+        :skill="activeSkill"
+        status="active"
         :index="0"
       />
-      <VxvSkillCard 
-        :skill="inactiveSkill" 
-        status="inactive" 
+      <VxvSkillCard
+        :skill="inactiveSkill"
+        status="inactive"
         :index="1"
       />
-      <VxvSkillCard 
-        :skill="unlearnedSkill" 
-        status="unlearned" 
+      <VxvSkillCard
+        :skill="unlearnedSkill"
+        status="unlearned"
         :index="2"
       />
     </div>
@@ -136,16 +136,16 @@ export const DifferentLevels = () => ({
       skill: createSkill(level, 2, level > 0 ? 'active' : 'unlearned'),
       status: level > 0 ? 'active' : 'unlearned'
     }));
-    
+
     return { skills };
   },
   template: `
     <div class="flex flex-wrap gap-4">
-      <VxvSkillCard 
+      <VxvSkillCard
         v-for="(item, index) in skills"
         :key="index"
-        :skill="item.skill" 
-        :status="item.status" 
+        :skill="item.skill"
+        :status="item.status"
         :index="index"
       />
     </div>
@@ -161,16 +161,16 @@ export const DifferentMultipliers = () => ({
       skill.name = `Habilidad x${multiplier}`;
       return { skill, multiplier };
     });
-    
+
     return { skills };
   },
   template: `
     <div class="flex flex-wrap gap-4">
-      <VxvSkillCard 
+      <VxvSkillCard
         v-for="(item, index) in skills"
         :key="index"
-        :skill="item.skill" 
-        status="active" 
+        :skill="item.skill"
+        status="active"
         :index="index"
       />
     </div>
@@ -195,13 +195,13 @@ export const SkillWithoutPrerequisites = () => ({
   setup() {
     const skill = createSkill(2, 1, 'active');
     skill.prerequisites = [];
-    
+
     return { skill };
   },
   template: `
-    <VxvSkillCard 
-      :skill="skill" 
-      status="active" 
+    <VxvSkillCard
+      :skill="skill"
+      status="active"
     />
   `
 });

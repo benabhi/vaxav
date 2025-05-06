@@ -1,5 +1,5 @@
 import VxvCircularSkillLevel from './VxvCircularSkillLevel.vue';
-import { BASE_XP_REQUIREMENTS } from '@/config/skillLevels';
+import { DEFAULT_XP_REQUIREMENTS } from '@/config/skillLevels';
 
 export default {
   title: 'Game/Skills/VxvCircularSkillLevel',
@@ -86,47 +86,47 @@ export const DifferentLevels = () => ({
   components: { VxvCircularSkillLevel },
   template: `
     <div class="flex flex-wrap gap-4">
-      <VxvCircularSkillLevel 
-        level="0" 
-        currentXP="0" 
-        minXP="0" 
-        maxXP="50" 
+      <VxvCircularSkillLevel
+        level="0"
+        currentXP="0"
+        minXP="0"
+        maxXP="50"
         xpSuffix="/50 XP"
         status="unlearned"
       />
-      <VxvCircularSkillLevel 
-        level="1" 
-        currentXP="100" 
-        minXP="50" 
-        maxXP="200" 
+      <VxvCircularSkillLevel
+        level="1"
+        currentXP="100"
+        minXP="50"
+        maxXP="200"
         xpSuffix="/150 XP"
       />
-      <VxvCircularSkillLevel 
-        level="2" 
-        currentXP="250" 
-        minXP="200" 
-        maxXP="500" 
+      <VxvCircularSkillLevel
+        level="2"
+        currentXP="250"
+        minXP="200"
+        maxXP="500"
         xpSuffix="/300 XP"
       />
-      <VxvCircularSkillLevel 
-        level="3" 
-        currentXP="700" 
-        minXP="500" 
-        maxXP="1100" 
+      <VxvCircularSkillLevel
+        level="3"
+        currentXP="700"
+        minXP="500"
+        maxXP="1100"
         xpSuffix="/600 XP"
       />
-      <VxvCircularSkillLevel 
-        level="4" 
-        currentXP="1500" 
-        minXP="1100" 
-        maxXP="2100" 
+      <VxvCircularSkillLevel
+        level="4"
+        currentXP="1500"
+        minXP="1100"
+        maxXP="2100"
         xpSuffix="/1000 XP"
       />
-      <VxvCircularSkillLevel 
-        level="5" 
-        currentXP="2100" 
-        minXP="2100" 
-        maxXP="2100" 
+      <VxvCircularSkillLevel
+        level="5"
+        currentXP="2100"
+        minXP="2100"
+        maxXP="2100"
         xpSuffix=" XP"
       />
     </div>
@@ -139,35 +139,35 @@ export const DifferentStatuses = () => ({
   template: `
     <div class="flex flex-wrap gap-4">
       <div class="text-center">
-        <VxvCircularSkillLevel 
-          level="3" 
-          currentXP="700" 
-          minXP="500" 
-          maxXP="1100" 
+        <VxvCircularSkillLevel
+          level="3"
+          currentXP="700"
+          minXP="500"
+          maxXP="1100"
           status="active"
           xpSuffix="/600 XP"
         />
         <div class="mt-2 text-sm text-gray-400">Activa</div>
       </div>
-      
+
       <div class="text-center">
-        <VxvCircularSkillLevel 
-          level="3" 
-          currentXP="700" 
-          minXP="500" 
-          maxXP="1100" 
+        <VxvCircularSkillLevel
+          level="3"
+          currentXP="700"
+          minXP="500"
+          maxXP="1100"
           status="inactive"
           xpSuffix="/600 XP"
         />
         <div class="mt-2 text-sm text-gray-400">Inactiva</div>
       </div>
-      
+
       <div class="text-center">
-        <VxvCircularSkillLevel 
-          level="0" 
-          currentXP="0" 
-          minXP="0" 
-          maxXP="50" 
+        <VxvCircularSkillLevel
+          level="0"
+          currentXP="0"
+          minXP="0"
+          maxXP="50"
           status="unlearned"
           xpSuffix="/50 XP"
         />
@@ -182,38 +182,38 @@ export const DifferentSizes = () => ({
   components: { VxvCircularSkillLevel },
   template: `
     <div class="flex flex-wrap gap-4 items-center">
-      <VxvCircularSkillLevel 
-        level="3" 
-        currentXP="700" 
-        minXP="500" 
-        maxXP="1100" 
+      <VxvCircularSkillLevel
+        level="3"
+        currentXP="700"
+        minXP="500"
+        maxXP="1100"
         size="80"
         thickness="6"
         xpSuffix="/600 XP"
       />
-      <VxvCircularSkillLevel 
-        level="3" 
-        currentXP="700" 
-        minXP="500" 
-        maxXP="1100" 
+      <VxvCircularSkillLevel
+        level="3"
+        currentXP="700"
+        minXP="500"
+        maxXP="1100"
         size="100"
         thickness="8"
         xpSuffix="/600 XP"
       />
-      <VxvCircularSkillLevel 
-        level="3" 
-        currentXP="700" 
-        minXP="500" 
-        maxXP="1100" 
+      <VxvCircularSkillLevel
+        level="3"
+        currentXP="700"
+        minXP="500"
+        maxXP="1100"
         size="120"
         thickness="10"
         xpSuffix="/600 XP"
       />
-      <VxvCircularSkillLevel 
-        level="3" 
-        currentXP="700" 
-        minXP="500" 
-        maxXP="1100" 
+      <VxvCircularSkillLevel
+        level="3"
+        currentXP="700"
+        minXP="500"
+        maxXP="1100"
         size="150"
         thickness="12"
         xpSuffix="/600 XP"
@@ -228,20 +228,20 @@ export const DifferentMultipliers = () => ({
   setup() {
     // Calcular XP para cada multiplicador
     const getXPForMultiplier = (multiplier) => {
-      const baseXP = BASE_XP_REQUIREMENTS[2]; // Nivel 2 -> 3
+      const baseXP = DEFAULT_XP_REQUIREMENTS[2]; // Nivel 2 -> 3
       return baseXP * multiplier;
     };
-    
+
     return { getXPForMultiplier };
   },
   template: `
     <div class="flex flex-wrap gap-4">
       <div v-for="multiplier in [1, 2, 3, 4, 5]" :key="multiplier" class="text-center">
-        <VxvCircularSkillLevel 
-          level="2" 
-          currentXP="250" 
-          minXP="200" 
-          :maxXP="200 + getXPForMultiplier(multiplier)" 
+        <VxvCircularSkillLevel
+          level="2"
+          currentXP="250"
+          minXP="200"
+          :maxXP="200 + getXPForMultiplier(multiplier)"
           :multiplier="multiplier"
           :xpSuffix="'/' + getXPForMultiplier(multiplier) + ' XP'"
         />

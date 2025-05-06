@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SkillController;
 use App\Http\Controllers\Admin\SkillCategoryController;
 use App\Http\Controllers\Admin\PilotController as AdminPilotController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\PilotSkillController;
 
 /*
@@ -114,6 +115,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|superadmin'])->g
     Route::delete('/pilots/{id}', [AdminPilotController::class, 'destroy']);
     Route::get('/pilots/{id}/skills', [AdminPilotController::class, 'getSkills']);
     Route::put('/pilots/{id}/skills/{skillId}', [AdminPilotController::class, 'updateSkill']);
+
+    // Rutas de configuraciones
+    Route::apiResource('settings', SettingController::class);
+    Route::get('/settings/name/{name}', [SettingController::class, 'getByName']);
+    Route::put('/settings/name/{name}', [SettingController::class, 'updateByName']);
 });
 
 // Rutas de universo

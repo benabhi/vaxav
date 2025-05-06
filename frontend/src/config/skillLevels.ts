@@ -5,6 +5,8 @@
  * @module config/skillLevels
  */
 
+import api from '@/services/api';
+
 /**
  * Tipo para los requisitos de experiencia base
  */
@@ -56,15 +58,10 @@ export interface ProgressionResult {
 }
 
 /**
- * Experiencia base requerida para cada nivel
- * El índice representa el nivel actual, y el valor es la XP necesaria para alcanzar el siguiente nivel
- * Nivel 0 -> 1: 50 XP
- * Nivel 1 -> 2: 150 XP
- * Nivel 2 -> 3: 300 XP
- * Nivel 3 -> 4: 600 XP
- * Nivel 4 -> 5: 1000 XP
+ * Valores por defecto para los requisitos de XP
+ * Estos valores se utilizarán si no se pueden obtener de la API
  */
-export const BASE_XP_REQUIREMENTS: XPRequirements = {
+const DEFAULT_XP_REQUIREMENTS: XPRequirements = {
   0: 50,    // Para nivel 1
   1: 150,   // Para nivel 2
   2: 300,   // Para nivel 3
@@ -73,17 +70,65 @@ export const BASE_XP_REQUIREMENTS: XPRequirements = {
 };
 
 /**
- * Experiencia acumulada para cada nivel
- * El índice representa el nivel, y el valor es la XP acumulada para ese nivel
+ * Obtiene los requisitos de XP desde la API
+ * @returns Promesa que resuelve a los requisitos de XP
  */
-export const CUMULATIVE_XP: XPRequirements = {
-  0: 0,      // Nivel 0
-  1: 50,     // Nivel 1
-  2: 200,    // Nivel 2 (50 + 150)
-  3: 500,    // Nivel 3 (50 + 150 + 300)
-  4: 1100,   // Nivel 4 (50 + 150 + 300 + 600)
-  5: 2100,   // Nivel 5 (50 + 150 + 300 + 600 + 1000)
-};
+export async function fetchXPRequirements(): Promise<XPRequirements> {
+  try {
+    const response = await api.get('/admin/settings/name/x1xp');
+    if (response.data && response.data.value) {
+      try {
+        const xpData = JSON.parse(response.data.value);
+        if (Array.isArray(xpData) && xpData.length === 5) {
+          // Convertir el array a un objeto con índices como claves
+          const requirements: XPRequirements = {};
+          xpData.forEach((value, index) => {
+            requirements[index] = value;
+          });
+          return requirements;
+        }
+      } catch (e) {
+        console.error('Error parsing XP requirements:', e);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching XP requirements:', error);
+  }
+
+  // Si hay algún error, devolver los valores por defecto
+  return DEFAULT_XP_REQUIREMENTS;
+}
+
+// Variable para almacenar en caché los requisitos de XP
+let cachedXPRequirements: XPRequirements | null = null;
+
+/**
+ * Obtiene los requisitos de XP, utilizando la caché si está disponible
+ * @returns Requisitos de XP
+ */
+export async function getXPRequirements(): Promise<XPRequirements> {
+  if (!cachedXPRequirements) {
+    cachedXPRequirements = await fetchXPRequirements();
+  }
+  return cachedXPRequirements;
+}
+
+/**
+ * Calcula la experiencia acumulada para cada nivel
+ * @param baseRequirements - Requisitos de XP base
+ * @returns Experiencia acumulada para cada nivel
+ */
+export function calculateCumulativeXP(baseRequirements: XPRequirements): XPRequirements {
+  const cumulative: XPRequirements = { 0: 0 };
+  let accumulated = 0;
+
+  for (let i = 0; i < 5; i++) {
+    accumulated += baseRequirements[i];
+    cumulative[i + 1] = accumulated;
+  }
+
+  return cumulative;
+}
 
 /**
  * Multiplicadores de experiencia
@@ -106,16 +151,21 @@ export const MAX_SKILL_LEVEL: number = 5;
  * Calcula la experiencia necesaria para subir del nivel actual al siguiente
  * @param currentLevel - Nivel actual de la habilidad (0-5)
  * @param multiplier - Multiplicador de la habilidad (1-5)
+ * @param baseRequirements - Requisitos de XP base
  * @returns Experiencia necesaria para el siguiente nivel
  */
-export function getNextLevelXP(currentLevel: number, multiplier: number = 1): number {
+export function getNextLevelXP(
+  currentLevel: number,
+  multiplier: number = 1,
+  baseRequirements: XPRequirements = DEFAULT_XP_REQUIREMENTS
+): number {
   // Si ya está en nivel máximo, devolver la experiencia actual
   if (currentLevel >= MAX_SKILL_LEVEL) {
     return 0; // No se necesita más experiencia para subir de nivel
   }
 
   // Validar parámetros
-  if (currentLevel < 0 || currentLevel > 4 || !BASE_XP_REQUIREMENTS.hasOwnProperty(currentLevel)) {
+  if (currentLevel < 0 || currentLevel > 4 || !baseRequirements.hasOwnProperty(currentLevel)) {
     return 0;
   }
 
@@ -124,7 +174,7 @@ export function getNextLevelXP(currentLevel: number, multiplier: number = 1): nu
   }
 
   // Calcular XP necesaria
-  return BASE_XP_REQUIREMENTS[currentLevel] * multiplier;
+  return baseRequirements[currentLevel] * multiplier;
 }
 
 /**
@@ -132,9 +182,15 @@ export function getNextLevelXP(currentLevel: number, multiplier: number = 1): nu
  * @param currentXP - Experiencia actual
  * @param currentLevel - Nivel actual de la habilidad (0-5)
  * @param multiplier - Multiplicador de la habilidad (1-5)
+ * @param baseRequirements - Requisitos de XP base
  * @returns Porcentaje de progreso (0-100)
  */
-export function getProgressPercentage(currentXP: number, currentLevel: number, multiplier: number = 1): number {
+export function getProgressPercentage(
+  currentXP: number,
+  currentLevel: number,
+  multiplier: number = 1,
+  baseRequirements: XPRequirements = DEFAULT_XP_REQUIREMENTS
+): number {
   // Si ya está en nivel máximo, retornar 100%
   if (currentLevel >= MAX_SKILL_LEVEL) {
     return 100;
@@ -149,11 +205,14 @@ export function getProgressPercentage(currentXP: number, currentLevel: number, m
     multiplier = 1;
   }
 
+  // Calcular experiencia acumulada
+  const cumulativeXP = calculateCumulativeXP(baseRequirements);
+
   // Calcular XP mínima para el nivel actual
-  const minXPForCurrentLevel = CUMULATIVE_XP[currentLevel] * multiplier;
+  const minXPForCurrentLevel = cumulativeXP[currentLevel] * multiplier;
 
   // Calcular XP necesaria para el siguiente nivel
-  const xpForNextLevel = CUMULATIVE_XP[currentLevel + 1] * multiplier;
+  const xpForNextLevel = cumulativeXP[currentLevel + 1] * multiplier;
 
   // Calcular cuánta experiencia ha ganado desde el nivel actual
   const xpGainedSinceCurrentLevel = currentXP - minXPForCurrentLevel;
@@ -261,11 +320,14 @@ export function calculateProgressionIndex(stats: ProgressionStats): ProgressionR
   }
 }
 
+// Exportar un objeto con todas las funciones y constantes
 export default {
-  BASE_XP_REQUIREMENTS,
-  CUMULATIVE_XP,
+  DEFAULT_XP_REQUIREMENTS,
   MULTIPLIERS,
   MAX_SKILL_LEVEL,
+  fetchXPRequirements,
+  getXPRequirements,
+  calculateCumulativeXP,
   getNextLevelXP,
   getProgressPercentage,
   getMultiplierColor,

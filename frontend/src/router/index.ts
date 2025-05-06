@@ -335,6 +335,16 @@ const router = createRouter({
         requiresRoles: ['superadmin', 'admin']
       }
     },
+    // Rutas de configuración
+    {
+      path: '/admin/settings',
+      name: 'admin-settings',
+      component: () => import('../views/admin/settings/SettingsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
   ],
 })
 

@@ -232,6 +232,17 @@ class PilotController extends Controller
         // Update the skill
         $pilotSkill->current_level = $validated['current_level'];
         $pilotSkill->active = $validated['active'];
+
+        // Calculate and set the minimum XP required for this level
+        if ($validated['current_level'] > 0) {
+            $minXp = $this->skillService->getMinXpForLevel($validated['current_level'], $skill->multiplier);
+
+            // Only update XP if it's less than the minimum required
+            if ($pilotSkill->xp < $minXp) {
+                $pilotSkill->xp = $minXp;
+            }
+        }
+
         $pilotSkill->save();
 
         return response()->json([
