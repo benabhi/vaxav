@@ -187,7 +187,7 @@
                 :min="0"
                 :max="getMaxXPForSkill(item)"
                 :step="10"
-                :disabled="isUpdating === item.id"
+                :disabled="isUpdating === item.id || !item.active"
                 :showValue="true"
                 :showMinMax="true"
                 :formatValue="(val) => `${val} XP`"
@@ -195,6 +195,14 @@
                 style="width: 100%; min-width: 350px;"
                 @change="(value) => updateSkillXP(item, Number(value))"
               />
+              <div v-if="!item.active" class="mt-1 text-xs text-amber-500">
+                <span class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Activa la habilidad para modificar la experiencia
+                </span>
+              </div>
             </div>
           </template>
 
