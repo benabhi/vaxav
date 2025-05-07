@@ -409,35 +409,145 @@ Similar a `BaseCheckbox` pero con estilo de interruptor.
 
 ### VxvForm
 
-`VxvForm` es un contenedor para agrupar campos de formulario relacionados.
+`VxvForm` es un componente contenedor para formularios que proporciona un diseño consistente y botones de acción estándar.
 
 **Archivo**: `/components/ui/forms/VxvForm.vue`
+
+**Documentación detallada**: [VxvForm](./forms/VxvForm.md)
+
+**Storybook**: Este componente está documentado en Storybook con ejemplos interactivos.
 
 #### Props
 
 | Nombre | Tipo | Valor por defecto | Descripción |
 |--------|------|------------------|-------------|
-| `label` | `String` | `''` | Etiqueta del grupo |
-| `description` | `String` | `''` | Descripción del grupo |
-| `error` | `String` | `''` | Error del grupo |
-| `inline` | `Boolean` | `false` | Si los campos deben mostrarse en línea |
+| `title` | `String` | `''` | Título del formulario |
+| `submitText` | `String` | `'Guardar'` | Texto del botón de envío |
+| `cancelText` | `String` | `'Cancelar'` | Texto del botón de cancelación |
+| `showSubmit` | `Boolean` | `true` | Si se debe mostrar el botón de envío |
+| `showCancel` | `Boolean` | `true` | Si se debe mostrar el botón de cancelación |
+| `loading` | `Boolean` | `false` | Si el formulario está en estado de carga |
+| `disabled` | `Boolean` | `false` | Si el formulario está deshabilitado |
+| `maxWidth` | `String` | `'2xl'` | Ancho máximo del formulario (`'sm'`, `'md'`, `'lg'`, `'xl'`, `'2xl'`, `'3xl'`, `'4xl'`, `'5xl'`, `'6xl'`, `'7xl'`) |
+| `hasBorder` | `Boolean` | `true` | Si el formulario debe tener borde |
+| `fullWidthSubmit` | `Boolean` | `false` | Si el botón de envío debe ocupar todo el ancho disponible |
 
 #### Slots
 
 | Nombre | Descripción |
 |--------|-------------|
-| `default` | Campos del formulario |
-| `label` | Personalización de la etiqueta |
-| `description` | Personalización de la descripción |
+| `default` | Contenido principal del formulario |
+| `alert` | Para mostrar alertas en la parte superior del formulario |
+| `buttons` | Para personalizar los botones de acción (reemplaza los botones predeterminados) |
+| `footer` | Para añadir contenido debajo de los botones |
+
+#### Eventos
+
+| Nombre | Descripción |
+|--------|-------------|
+| `submit` | Se emite cuando se envía el formulario |
+| `cancel` | Se emite cuando se hace clic en el botón de cancelación |
 
 #### Ejemplos de Uso
 
+**Formulario Básico**:
 ```vue
-<FormGroup label="Información personal" description="Ingresa tus datos personales">
-  <BaseInput v-model="firstName" label="Nombre" />
-  <BaseInput v-model="lastName" label="Apellido" />
-  <BaseInput v-model="email" label="Correo electrónico" type="email" />
-</FormGroup>
+<VxvForm
+  title="Iniciar Sesión"
+  submitText="Iniciar Sesión"
+  @submit="handleSubmit"
+>
+  <VxvInput
+    v-model="form.email"
+    label="Correo electrónico"
+    type="email"
+    required
+  />
+  <VxvInput
+    v-model="form.password"
+    label="Contraseña"
+    type="password"
+    required
+  />
+</VxvForm>
+```
+
+**Formulario con Botones Personalizados**:
+```vue
+<VxvForm
+  title="Editar Piloto"
+  @submit="handleSubmit"
+  @cancel="goBack"
+>
+  <VxvInput
+    v-model="form.name"
+    label="Nombre"
+    required
+  />
+  <VxvSelect
+    v-model="form.race"
+    label="Raza"
+    :options="razas"
+    required
+  />
+
+  <!-- Personalización de botones -->
+  <template #buttons>
+    <div class="flex items-center space-x-3">
+      <VxvButton
+        type="submit"
+        variant="primary"
+      >
+        Guardar cambios
+      </VxvButton>
+
+      <VxvButton
+        variant="secondary"
+        @click="goToSkills"
+        type="button"
+      >
+        Editar Habilidades
+      </VxvButton>
+
+      <VxvButton
+        type="button"
+        variant="secondary"
+        @click="goBack"
+      >
+        Cancelar
+      </VxvButton>
+    </div>
+  </template>
+</VxvForm>
+```
+
+**Formulario con Alerta**:
+```vue
+<VxvForm
+  title="Registro"
+  submitText="Registrarse"
+  @submit="handleSubmit"
+>
+  <template #alert>
+    <VxvAlert
+      type="info"
+      title="Información"
+      message="Completa todos los campos para crear tu cuenta."
+    />
+  </template>
+
+  <VxvInput
+    v-model="form.name"
+    label="Nombre"
+    required
+  />
+  <VxvInput
+    v-model="form.email"
+    label="Correo electrónico"
+    type="email"
+    required
+  />
+</VxvForm>
 ```
 
 ## Validación de Formularios

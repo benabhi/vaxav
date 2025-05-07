@@ -74,9 +74,17 @@
         </div>
       </div>
 
-      <!-- Botones de acción adicionales -->
-      <div class="mt-6 border-t border-gray-700 pt-4">
-        <div class="flex flex-wrap gap-3">
+      <!-- Botón de Editar Habilidades (se mostrará en el slot de botones) -->
+      <template #buttons>
+        <div class="flex items-center space-x-3">
+          <VxvButton
+            type="submit"
+            variant="primary"
+            :loading="submitting"
+          >
+            Guardar cambios
+          </VxvButton>
+
           <VxvButton
             variant="secondary"
             @click="goToSkills"
@@ -84,8 +92,16 @@
           >
             Editar Habilidades
           </VxvButton>
+
+          <VxvButton
+            type="button"
+            variant="secondary"
+            @click="goBack"
+          >
+            Cancelar
+          </VxvButton>
         </div>
-      </div>
+      </template>
     </VxvForm>
   </AdminLayout>
 </template>

@@ -10,6 +10,12 @@ import VxvTextarea from './VxvTextarea.vue';
 /**
  * VxvForm es un componente contenedor para formularios que proporciona un diseño consistente
  * y botones de acción estándar.
+ *
+ * Slots disponibles:
+ * - default: Contenido principal del formulario
+ * - alert: Para mostrar alertas en la parte superior del formulario
+ * - buttons: Para personalizar los botones de acción (reemplaza los botones predeterminados)
+ * - footer: Para añadir contenido debajo de los botones
  */
 const meta: Meta<typeof VxvForm> = {
   title: 'UI/Forms/VxvForm',
@@ -542,8 +548,94 @@ export const WithValidation: Story = {
 };
 
 /**
- * Formulario con botón de ancho completo y contenido en el footer
+ * Formulario con botones personalizados
  */
+export const WithCustomButtons: Story = {
+  args: {
+    title: 'Editar Piloto',
+    loading: false,
+    maxWidth: '3xl',
+    hasBorder: true,
+    showSubmit: false, // No mostrar botones predeterminados
+    showCancel: false,
+  },
+  render: (args) => ({
+    components: { VxvForm, VxvInput, VxvSelect, VxvButton },
+    setup() {
+      const form = ref({
+        name: 'Piloto Test',
+        race: 'Humano',
+        credits: 5000
+      });
+
+      return { args, form };
+    },
+    template: `
+      <div class="bg-gray-900 p-4">
+        <VxvForm
+          v-bind="args"
+          @submit="args.onSubmit"
+          @cancel="args.onCancel"
+        >
+          <div class="space-y-4 mb-6">
+            <VxvInput
+              v-model="form.name"
+              label="Nombre"
+              placeholder="Nombre del piloto"
+              required
+            />
+
+            <VxvSelect
+              v-model="form.race"
+              label="Raza"
+              :options="[
+                { value: 'Humano', label: 'Humano' },
+                { value: 'Cyborg', label: 'Cyborg' },
+                { value: 'Alienígena', label: 'Alienígena' },
+                { value: 'Sintético', label: 'Sintético' }
+              ]"
+              required
+            />
+
+            <VxvInput
+              v-model="form.credits"
+              label="Créditos"
+              type="number"
+              min="0"
+              required
+            />
+          </div>
+
+          <template #buttons>
+            <div class="flex items-center space-x-3">
+              <VxvButton
+                type="submit"
+                variant="primary"
+              >
+                Guardar cambios
+              </VxvButton>
+
+              <VxvButton
+                variant="secondary"
+                type="button"
+              >
+                Editar Habilidades
+              </VxvButton>
+
+              <VxvButton
+                type="button"
+                variant="secondary"
+              >
+                Cancelar
+              </VxvButton>
+            </div>
+          </template>
+        </VxvForm>
+      </div>
+    `,
+  }),
+};
+
 export const WithFooterAndFullWidthButton: Story = {
   args: {
     title: 'Iniciar Sesión',

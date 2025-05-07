@@ -12,26 +12,29 @@
       <form @submit.prevent="onSubmit">
         <slot></slot>
 
-        <div v-if="showSubmit" class="flex space-x-3">
-          <VxvButton
-            type="submit"
-            variant="primary"
-            :full-width="fullWidthSubmit"
-            :loading="loading"
-            :disabled="disabled"
-          >
-            {{ submitText }}
-          </VxvButton>
-          <VxvButton
-            v-if="showCancel"
-            type="button"
-            variant="secondary"
-            :full-width="false"
-            @click="onCancel"
-          >
-            {{ cancelText }}
-          </VxvButton>
-        </div>
+        <!-- Slot para botones personalizados -->
+        <slot name="buttons">
+          <div v-if="showSubmit" class="flex space-x-3">
+            <VxvButton
+              type="submit"
+              variant="primary"
+              :full-width="fullWidthSubmit"
+              :loading="loading"
+              :disabled="disabled"
+            >
+              {{ submitText }}
+            </VxvButton>
+            <VxvButton
+              v-if="showCancel"
+              type="button"
+              variant="secondary"
+              :full-width="false"
+              @click="onCancel"
+            >
+              {{ cancelText }}
+            </VxvButton>
+          </div>
+        </slot>
 
         <!-- Slot para contenido debajo de los botones -->
         <slot name="footer"></slot>
