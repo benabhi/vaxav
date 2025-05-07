@@ -33,6 +33,17 @@ export async function setupAuthGuard(router: Router): Promise<void> {
         }
       }
 
+      // Verificar si el usuario está baneado
+      if (userStore.isBanned) {
+        // Si el usuario está intentando acceder a la página de baneo, permitirlo
+        if (to.name === 'banned-user') {
+          return next();
+        }
+
+        // Si no, redirigir a la página de baneo
+        return next({ name: 'banned-user' });
+      }
+
       // Verificar autenticación
       if (!userStore.isLoggedIn) {
         notificationStore.warning('Debes iniciar sesión para acceder a esta página.');

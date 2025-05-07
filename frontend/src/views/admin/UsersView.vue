@@ -103,7 +103,8 @@
     </template>
 
     <template #actions="{ item }">
-      <button @click="editUser(item)" class="text-blue-400 hover:text-blue-300 mr-4">Editar</button>
+      <button @click="editUser(item)" class="text-blue-400 hover:text-blue-300 mr-3">Editar</button>
+      <button @click="banUser(item)" class="text-orange-400 hover:text-orange-300 mr-3">Banear</button>
       <button @click="confirmDeleteUser(item)" class="text-red-400 hover:text-red-300">Eliminar</button>
     </template>
 
@@ -237,6 +238,11 @@ const goToCreateUser = () => {
 // Navigate to edit user page
 const editUser = (user) => {
   router.push(`/admin/users/${user.id}/edit`);
+};
+
+// Navigate to ban user page
+const banUser = (user) => {
+  router.push(`/admin/users/${user.id}/ban`);
 };
 
 // Confirm delete user

@@ -6,6 +6,7 @@ use App\Notifications\ResetPasswordNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -133,5 +134,44 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    /**
+     * Get the bans associated with the user.
+     */
+    public function bans(): HasMany
+    {
+        return $this->hasMany(BannedUser::class);
+    }
+
+    /**
+     * Get the active ban for the user, if any.
+     */
+    public function activeBan()
+    {
+        return $this->bans()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->where('type', 'permanent')
+                    ->orWhere(function ($q) {
+                        $q->where('type', 'temporary')
+                            ->where(function ($q2) {
+                                $q2->whereNull('expires_at')
+                                    ->orWhere('expires_at', '>', now());
+                            });
+                    });
+            })
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Check if the user is banned.
+     *
+     * @return bool
+     */
+    public function isBanned(): bool
+    {
+        return $this->activeBan() !== null;
     }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\SkillController;
 use App\Http\Controllers\Admin\SkillCategoryController;
 use App\Http\Controllers\Admin\PilotController as AdminPilotController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\BannedUserController;
 use App\Http\Controllers\PilotSkillController;
 use App\Http\Controllers\SkillConfigController;
 
@@ -121,6 +122,12 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|superadmin'])->g
     Route::apiResource('settings', SettingController::class);
     Route::get('/settings/name/{name}', [SettingController::class, 'getByName']);
     Route::put('/settings/name/{name}', [SettingController::class, 'updateByName']);
+
+    // Rutas de gestión de baneos
+    Route::apiResource('banned-users', BannedUserController::class);
+    Route::put('/banned-users/{id}/lift', [BannedUserController::class, 'lift']);
+    Route::get('/users/{userId}/bans', [BannedUserController::class, 'userBans']);
+    Route::get('/users/{userId}/check-ban', [BannedUserController::class, 'checkBan']);
 });
 
 // Rutas de universo

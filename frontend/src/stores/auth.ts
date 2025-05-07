@@ -9,6 +9,13 @@ import authService from '@/services/authService';
 import type { User, LoginCredentials, RegisterData, PasswordResetData } from '@/services/authService';
 import { authPersistOptions } from './plugins/persistence';
 
+interface BanInfo {
+  reason: string;
+  type: 'permanent' | 'temporary';
+  is_permanent: boolean;
+  expires_at?: string;
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -16,6 +23,8 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   emailVerified: boolean;
+  isBanned: boolean;
+  banInfo: BanInfo | null;
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -26,6 +35,8 @@ export const useAuthStore = defineStore('auth', {
     loading: false,
     error: null,
     emailVerified: false,
+    isBanned: false,
+    banInfo: null,
   }),
 
   getters: {
@@ -80,9 +91,21 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         const response = await authService.login(credentials);
+
+        // Verificar si el usuario está baneado
+        if (response.banned) {
+          this.isBanned = true;
+          this.banInfo = response.ban_info;
+          this.isAuthenticated = false;
+          this.error = response.message || 'Tu cuenta ha sido suspendida.';
+          throw new Error('Usuario baneado');
+        }
+
         this.user = response.user;
         this.token = response.token;
         this.isAuthenticated = true;
+        this.isBanned = false;
+        this.banInfo = null;
 
         // Verificar explícitamente si el email está verificado
         if (this.user && this.user.email_verified_at) {
@@ -169,7 +192,18 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
 
       try {
-        const user = await authService.getUser();
+        const response = await authService.getUser();
+
+        // Verificar si la respuesta indica que el usuario está baneado
+        if (response.banned) {
+          this.isBanned = true;
+          this.banInfo = response.ban_info;
+          this.isAuthenticated = false;
+          this.error = response.message || 'Tu cuenta ha sido suspendida.';
+          throw new Error('Usuario baneado');
+        }
+
+        const user = response;
         // Usuario obtenido del servidor
 
         // Asegurarnos de que las propiedades de roles estén correctamente establecidas
@@ -190,6 +224,8 @@ export const useAuthStore = defineStore('auth', {
 
         this.user = user;
         this.isAuthenticated = true;
+        this.isBanned = false;
+        this.banInfo = null;
 
         // Verificar explícitamente si el email está verificado basado en la respuesta del backend
         this.emailVerified = user.email_verified_at !== null;

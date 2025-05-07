@@ -71,6 +71,12 @@ const router = createRouter({
       meta: { requiresGuest: true }
     },
     {
+      path: '/banned',
+      name: 'banned-user',
+      component: () => import('../views/auth/BannedUserView.vue'),
+      meta: { requiresGuest: false }
+    },
+    {
       path: '/register',
       name: 'register',
       component: () => import('../views/auth/RegisterView.vue'),
@@ -220,6 +226,15 @@ const router = createRouter({
       path: '/admin/users/:id/edit',
       name: 'admin-users-edit',
       component: () => import('../views/admin/UserEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/users/:id/ban',
+      name: 'admin-users-ban',
+      component: () => import('../views/admin/users/BanUserView.vue'),
       meta: {
         requiresAuth: true,
         requiresRoles: ['superadmin', 'admin']

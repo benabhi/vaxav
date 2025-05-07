@@ -126,6 +126,22 @@ export const useUserStore = defineStore('user', {
       const authStore = useAuthStore();
       const pilotStore = usePilotStore();
       return authStore.loading || pilotStore.loading;
+    },
+
+    /**
+     * Indica si el usuario está baneado
+     */
+    isBanned: () => {
+      const authStore = useAuthStore();
+      return authStore.isBanned;
+    },
+
+    /**
+     * Información del baneo del usuario
+     */
+    banInfo: () => {
+      const authStore = useAuthStore();
+      return authStore.banInfo;
     }
   },
 

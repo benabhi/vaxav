@@ -38,11 +38,38 @@ class AuthController extends Controller
 
             // Intentar autenticar
             if (Auth::attempt($request->only('email', 'password'))) {
-                // Generamos un token para el usuario
-                $token = $request->user()->createToken('auth-token')->plainTextToken;
-
                 // Obtenemos el usuario con sus roles
                 $user = Auth::user();
+
+                // Verificar si el usuario está baneado
+                if ($user->isBanned()) {
+                    $activeBan = $user->activeBan();
+
+                    // Cerrar la sesión
+                    Auth::logout();
+
+                    // Preparar la respuesta con información del baneo
+                    $banInfo = [
+                        'reason' => $activeBan->reason,
+                        'type' => $activeBan->type,
+                        'is_permanent' => $activeBan->isPermanent(),
+                    ];
+
+                    // Agregar fecha de expiración si es un baneo temporal
+                    if ($activeBan->isTemporary() && $activeBan->expires_at) {
+                        $banInfo['expires_at'] = $activeBan->expires_at->format('Y-m-d H:i:s');
+                    }
+
+                    return response()->json([
+                        'message' => 'Tu cuenta ha sido suspendida.',
+                        'banned' => true,
+                        'ban_info' => $banInfo
+                    ], 403);
+                }
+
+                // Generamos un token para el usuario
+                $token = $user->createToken('auth-token')->plainTextToken;
+
                 $user->load('roles');
 
                 // Agregamos información de roles para el frontend
@@ -157,6 +184,30 @@ class AuthController extends Controller
     {
         // Devolvemos el usuario autenticado con sus roles
         $user = $request->user();
+
+        // Verificar si el usuario está baneado
+        if ($user->isBanned()) {
+            $activeBan = $user->activeBan();
+
+            // Preparar la respuesta con información del baneo
+            $banInfo = [
+                'reason' => $activeBan->reason,
+                'type' => $activeBan->type,
+                'is_permanent' => $activeBan->isPermanent(),
+            ];
+
+            // Agregar fecha de expiración si es un baneo temporal
+            if ($activeBan->isTemporary() && $activeBan->expires_at) {
+                $banInfo['expires_at'] = $activeBan->expires_at->format('Y-m-d H:i:s');
+            }
+
+            return response()->json([
+                'message' => 'Tu cuenta ha sido suspendida.',
+                'banned' => true,
+                'ban_info' => $banInfo
+            ], 403);
+        }
+
         $user->load('roles');
 
         // Agregamos información de roles para el frontend

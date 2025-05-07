@@ -239,6 +239,42 @@ notificationStore.adminWarning('Esta acción no se puede deshacer.');
 notificationStore.adminInfo('Hay actualizaciones disponibles.');
 ```
 
+## VxvSpinner
+
+`VxvSpinner` es un componente que muestra un indicador de carga animado, útil para indicar a los usuarios que una operación está en progreso.
+
+**Archivo**: `/components/ui/feedback/VxvSpinner.vue`
+
+### Props
+
+| Nombre | Tipo | Valor por defecto | Descripción |
+|--------|------|------------------|-------------|
+| `size` | `String` | `'md'` | Tamaño del spinner. Valores posibles: `'xs'`, `'sm'`, `'md'`, `'lg'`, `'xl'` |
+| `color` | `String` | `'primary'` | Color del spinner. Valores posibles: `'primary'`, `'secondary'`, `'success'`, `'danger'`, `'warning'`, `'info'`, `'light'`, `'dark'`, `'white'` |
+| `label` | `String` | `''` | Texto que se muestra junto al spinner |
+| `hideText` | `Boolean` | `false` | Ocultar el texto para lectores de pantalla |
+
+### Ejemplo de Uso
+
+```vue
+<!-- Spinner básico -->
+<VxvSpinner />
+
+<!-- Spinner con etiqueta -->
+<VxvSpinner label="Cargando..." />
+
+<!-- Spinner en un botón -->
+<button class="bg-blue-600 text-white py-2 px-4 rounded inline-flex items-center">
+  <VxvSpinner size="sm" color="white" class="mr-2" hideText />
+  <span>Cargando...</span>
+</button>
+
+<!-- Spinner centrado en un contenedor -->
+<div class="flex items-center justify-center h-64">
+  <VxvSpinner size="xl" label="Cargando contenido..." />
+</div>
+```
+
 ## Mejores Prácticas
 
 1. **Mensajes Claros**: Utiliza mensajes claros y concisos que expliquen exactamente qué ha ocurrido.
@@ -247,6 +283,7 @@ notificationStore.adminInfo('Hay actualizaciones disponibles.');
 4. **No Abrumar**: Evita mostrar demasiadas notificaciones a la vez.
 5. **Consistencia**: Mantén un estilo y formato consistente en todas las notificaciones.
 6. **Accesibilidad**: Asegúrate de que las notificaciones sean accesibles para todos los usuarios.
+7. **Indicadores de Carga**: Utiliza el componente `VxvSpinner` para indicar claramente cuando una operación está en progreso.
 
 ## Personalización
 
@@ -255,4 +292,6 @@ El componente `BaseAlert` puede ser personalizado mediante las siguientes props:
 - `className`: Clases CSS adicionales para personalizar el estilo.
 - `icon`: Componente de icono personalizado.
 
-Además, el componente utiliza clases de Tailwind CSS que pueden ser sobrescritas en el archivo de configuración de Tailwind.
+El componente `VxvSpinner` puede ser personalizado mediante las props `size` y `color`.
+
+Además, los componentes utilizan clases de Tailwind CSS que pueden ser sobrescritas en el archivo de configuración de Tailwind.
