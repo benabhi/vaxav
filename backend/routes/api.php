@@ -150,6 +150,8 @@ Route::prefix('pilots')->middleware(['auth:sanctum'])->group(function () {
     // Rutas de habilidades de pilotos
     Route::get('/current/skills', [PilotSkillController::class, 'getCurrentPilotSkills']);
     Route::get('/{pilotId}/skills', [PilotSkillController::class, 'getPilotSkills']);
+    Route::put('/current/skills/{skillId}/activate', [PilotSkillController::class, 'activateSkill']);
+    Route::put('/current/skills/{skillId}/deactivate', [PilotSkillController::class, 'deactivateSkill']);
 });
 
 // Rutas de habilidades

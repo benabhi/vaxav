@@ -32,10 +32,8 @@ class EmailVerificationTest extends TestCase
         ])->get("/api/auth/email/verify/{$id}/{$hash}");
 
         $response->assertStatus(200)
-            ->assertJson([
-                'message'  => 'Correo electrónico verificado correctamente.',
-                'verified' => true,
-            ]);
+            ->assertJsonPath('message', 'Correo electrónico verificado correctamente. Por favor, inicia sesión para continuar.')
+            ->assertJsonPath('verified', true);
 
         // Verificar que el email se marcó como verificado
         $this->assertNotNull($user->fresh()->email_verified_at);

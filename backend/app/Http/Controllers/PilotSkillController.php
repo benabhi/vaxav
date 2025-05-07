@@ -23,7 +23,15 @@ class PilotSkillController extends Controller
             return response()->json(['message' => 'El usuario no tiene un piloto'], 404);
         }
 
-        $skills = $pilot->skills()->with('category')->get();
+        $query = $pilot->skills()->with('category');
+
+        // Filtrar por estado de activación si se proporciona
+        if ($request->has('active')) {
+            $active = $request->input('active');
+            $query->wherePivot('active', $active);
+        }
+
+        $skills = $query->get();
         return response()->json($skills);
     }
 
@@ -75,5 +83,53 @@ class PilotSkillController extends Controller
     {
         $skill = Skill::with(['category', 'prerequisites', 'prerequisites.prerequisite'])->findOrFail($skillId);
         return response()->json($skill);
+    }
+
+    /**
+     * Activate a skill for the current pilot.
+     */
+    public function activateSkill(Request $request, string $skillId): JsonResponse
+    {
+        $user = $request->user();
+        $pilot = $user->pilot;
+
+        if (!$pilot) {
+            return response()->json(['message' => 'El usuario no tiene un piloto'], 404);
+        }
+
+        // Check if the pilot has this skill
+        $pilotSkill = $pilot->skills()->where('skill_id', $skillId)->first();
+        if (!$pilotSkill) {
+            return response()->json(['message' => 'El piloto no tiene esta habilidad'], 404);
+        }
+
+        // Update the skill to active
+        $pilot->skills()->updateExistingPivot($skillId, ['active' => true]);
+
+        return response()->json(['message' => 'Habilidad activada correctamente']);
+    }
+
+    /**
+     * Deactivate a skill for the current pilot.
+     */
+    public function deactivateSkill(Request $request, string $skillId): JsonResponse
+    {
+        $user = $request->user();
+        $pilot = $user->pilot;
+
+        if (!$pilot) {
+            return response()->json(['message' => 'El usuario no tiene un piloto'], 404);
+        }
+
+        // Check if the pilot has this skill
+        $pilotSkill = $pilot->skills()->where('skill_id', $skillId)->first();
+        if (!$pilotSkill) {
+            return response()->json(['message' => 'El piloto no tiene esta habilidad'], 404);
+        }
+
+        // Update the skill to inactive
+        $pilot->skills()->updateExistingPivot($skillId, ['active' => false]);
+
+        return response()->json(['message' => 'Habilidad desactivada correctamente']);
     }
 }

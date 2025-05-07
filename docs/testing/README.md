@@ -7,12 +7,11 @@ Esta sección documenta la estrategia de testing implementada en Vaxav, incluyen
 - [Enfoque General](#enfoque-general)
 - [Testing de Backend](#testing-de-backend)
 - [Testing de Frontend](#testing-de-frontend)
+- [Testing End-to-End con Cypress](#testing-end-to-end-con-cypress)
 - [Herramientas Utilizadas](#herramientas-utilizadas)
 - [Ejecución de Tests](#ejecución-de-tests)
 - [Mejores Prácticas](./best-practices.md)
-- [Testing de Componentes Vue](./vue-component-testing.md)
 - [Solución de Problemas](./troubleshooting.md)
-- [Solución de Problemas con Vitest](./testing-vitest.md)
 
 ## Enfoque General
 
@@ -36,13 +35,24 @@ Para más detalles, consulta la [documentación de testing de backend](./backend
 
 ## Testing de Frontend
 
-El frontend de Vaxav utiliza Vitest y Vue Test Utils para el testing. Los tests están organizados en:
+El frontend de Vaxav utiliza Vitest y Vue Test Utils para el testing unitario y de integración. Los tests están organizados en:
 
 - **Tests Unitarios**: Prueban componentes, composables y utilidades de forma aislada.
 - **Tests de Integración**: Prueban la interacción entre componentes.
 - **Tests de Vistas**: Prueban las vistas completas con sus dependencias.
 
-Para más detalles, consulta la [documentación de testing de frontend](./frontend-testing.md).
+## Testing End-to-End con Cypress
+
+Para el testing end-to-end (E2E), utilizamos Cypress. Estos tests verifican el funcionamiento de la aplicación desde la perspectiva del usuario final, probando flujos completos como registro, login y otras funcionalidades clave.
+
+- **Tests de Autenticación**: Prueban los flujos de registro, login y verificación de email.
+- **Tests de Navegación**: Verifican que la navegación entre páginas funcione correctamente.
+- **Tests de Funcionalidades**: Prueban las funcionalidades principales de la aplicación.
+
+Para más detalles, consulta la documentación de Cypress:
+- [Guía de Testing con Cypress](./cypress/README.md)
+- [Testing de Autenticación](./cypress/auth-testing.md)
+- [Ejecución en Modo Headless](./cypress/headless-testing.md)
 
 ## Herramientas Utilizadas
 
@@ -56,6 +66,7 @@ Para más detalles, consulta la [documentación de testing de frontend](./fronte
 - **Vue Test Utils**: Utilidades de testing para Vue.js
 - **Testing Library**: Utilidades para testing centrado en el usuario
 - **Jest DOM**: Extensiones de Jest para el DOM
+- **Cypress**: Framework de testing end-to-end
 
 ## Ejecución de Tests
 
@@ -79,51 +90,56 @@ php artisan test --coverage
 
 ### Frontend (Vue.js)
 
-#### Script de Limpieza de Caché (Recomendado)
-
-Hemos creado un script `test-clean.sh` que automatiza la limpieza de caché y la ejecución de tests:
+#### Tests Unitarios y de Integración
 
 ```bash
 # Navegar al directorio del frontend
 cd frontend
 
-# Ejecutar todos los tests con limpieza de caché
-./test-clean.sh
+# Ejecutar todos los tests unitarios
+npm run test:unit
 
-# Ejecutar tests específicos con limpieza de caché
-./test-clean.sh src/views/admin/__tests__/RoleCreateView.spec.ts
+# Ejecutar tests específicos
+npm run test:unit src/views/admin/__tests__/RoleCreateView.spec.ts
 
-# Ejecutar múltiples tests específicos
-./test-clean.sh "src/views/admin/__tests__/RoleCreateView.spec.ts src/views/admin/__tests__/RoleEditView.spec.ts"
+# Ejecutar tests con cobertura
+npm run test:unit -- --coverage
+```
+
+#### Tests End-to-End con Cypress
+
+```bash
+# Navegar al directorio del frontend
+cd frontend
+
+# Abrir Cypress en modo interactivo
+npm run test:e2e
+
+# Ejecutar tests en modo headless (sin interfaz gráfica)
+npm run test:e2e:headless
+
+# Ejecutar tests específicos
+npm run test:e2e:headless -- --spec "tests/e2e/specs/auth/login.cy.js"
+
+# Ejecutar tests en entornos sin interfaz gráfica (como Ubuntu Server)
+npm run test:e2e:ci
+```
+
+También puedes usar el script personalizado `run-cypress.sh`:
+
+```bash
+cd frontend
+./run-cypress.sh
 ```
 
 Este script:
-- Elimina la caché de Vitest antes de ejecutar los tests
-- Ejecuta los tests con la configuración optimizada
+- Configura Xvfb para ejecutar Cypress en entornos sin interfaz gráfica
+- Ejecuta los tests en modo headless
 - Proporciona feedback visual sobre el resultado
 
-#### Comandos Manuales
-
-También puedes ejecutar los tests manualmente:
-
-```bash
-# Navegar al directorio del frontend
-cd frontend
-
-# Ejecutar todos los tests
-npm run test:unit -- --no-cache
-
-# Ejecutar tests específicos
-npm run test:unit -- --no-cache src/views/admin/__tests__/RoleCreateView.spec.ts
-
-# Ejecutar tests que coincidan con un patrón
-npm run test:unit -- --no-cache "src/**/*.spec.ts"
-
-# Ejecutar tests con cobertura
-npm run test:unit -- --no-cache --coverage
-```
-
 ## Estructura Recomendada para Tests
+
+### Tests Unitarios y de Integración
 
 ```
 src/
@@ -141,6 +157,24 @@ src/
         └── MyView.spec.ts
 ```
 
+### Tests End-to-End con Cypress
+
+```
+tests/
+└── e2e/
+    ├── fixtures/       # Datos de prueba
+    │   └── users.json
+    ├── specs/          # Tests E2E
+    │   ├── auth/
+    │   │   ├── login.cy.js
+    │   │   ├── register.cy.js
+    │   │   └── email-verification.cy.js
+    │   └── ...
+    └── support/        # Comandos personalizados y configuración
+        ├── commands.js
+        └── e2e.js
+```
+
 ## Contribución a la Documentación de Testing
 
 Si encuentras áreas que podrían mejorarse en esta documentación o tienes sugerencias adicionales, por favor:
@@ -149,40 +183,19 @@ Si encuentras áreas que podrían mejorarse en esta documentación o tienes suge
 2. Realiza tus cambios
 3. Envía un pull request con una descripción clara de las mejoras
 
-## Configuración Personalizada de Vitest
-
-Hemos implementado archivos de configuración que ayudan a resolver los problemas de caché:
-
-- `vitest.config.ts`: Configuración principal con opciones optimizadas:
-  ```javascript
-  export default defineConfig({
-    test: {
-      cache: false,
-      clearMocks: true,
-      restoreMocks: true,
-      mockReset: true,
-      setupFiles: ['./vitest.setup.ts'],
-    }
-  });
-  ```
-
-- `vitest.setup.ts`: Reseteo de módulos y limpieza de mocks:
-  ```javascript
-  import { vi } from 'vitest';
-
-  // Resetear los módulos antes de cada test
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  // Limpiar todos los mocks después de cada test
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-  ```
-
 ## Recursos Adicionales
 
+### Vitest y Vue Test Utils
 - [Documentación oficial de Vitest](https://vitest.dev/)
 - [Documentación de Vue Test Utils](https://test-utils.vuejs.org/)
 - [Guía de testing de Vue.js](https://vuejs.org/guide/scaling-up/testing.html)
+
+### Cypress
+- [Documentación oficial de Cypress](https://docs.cypress.io/)
+- [Buenas prácticas de Cypress](https://docs.cypress.io/guides/references/best-practices)
+- [API de Cypress](https://docs.cypress.io/api/table-of-contents)
+- [Ejemplos de Cypress](https://github.com/cypress-io/cypress-example-recipes)
+
+### Laravel Testing
+- [Documentación de testing de Laravel](https://laravel.com/docs/10.x/testing)
+- [Documentación de PHPUnit](https://phpunit.de/documentation.html)
