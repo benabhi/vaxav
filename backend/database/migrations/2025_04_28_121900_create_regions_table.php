@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
+            $table->float('x_coord')->default(0);
+            $table->float('y_coord')->default(0);
             $table->timestamps();
         });
     }

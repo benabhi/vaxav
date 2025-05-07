@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('solar_systems', function (Blueprint $table) {
+        Schema::create('planets', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
-            $table->float('x_coord')->default(0);
-            $table->float('y_coord')->default(0);
-            $table->foreignId('constellation_id')->constrained()->onDelete('cascade');
+            $table->string('type')->nullable();
+            $table->integer('orbit_position')->default(1);
+            $table->foreignId('star_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('solar_systems');
+        Schema::dropIfExists('planets');
     }
 };

@@ -128,6 +128,21 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin|superadmin'])->g
     Route::put('/banned-users/{id}/lift', [BannedUserController::class, 'lift']);
     Route::get('/users/{userId}/bans', [BannedUserController::class, 'userBans']);
     Route::get('/users/{userId}/check-ban', [BannedUserController::class, 'checkBan']);
+
+    // Rutas de gestión del universo
+    Route::get('/regions/list-all', [\App\Http\Controllers\Admin\RegionController::class, 'all']);
+    Route::apiResource('regions', \App\Http\Controllers\Admin\RegionController::class);
+
+    Route::get('/constellations/list-all', [\App\Http\Controllers\Admin\ConstellationController::class, 'all']);
+    Route::apiResource('constellations', \App\Http\Controllers\Admin\ConstellationController::class);
+
+    Route::get('/solar-systems/list-all', [\App\Http\Controllers\Admin\SolarSystemController::class, 'all']);
+    Route::apiResource('solar-systems', \App\Http\Controllers\Admin\SolarSystemController::class);
+
+    Route::get('/stars/list-all', [\App\Http\Controllers\Admin\StarController::class, 'all']);
+    Route::apiResource('stars', \App\Http\Controllers\Admin\StarController::class);
+
+    Route::apiResource('planets', \App\Http\Controllers\Admin\PlanetController::class);
 });
 
 // Rutas de universo

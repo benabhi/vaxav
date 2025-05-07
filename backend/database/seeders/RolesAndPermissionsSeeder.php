@@ -51,30 +51,45 @@ class RolesAndPermissionsSeeder extends Seeder
             // System management
             ['name' => 'Access Admin Panel', 'slug' => 'admin.access'],
             ['name' => 'Manage System Settings', 'slug' => 'system.settings'],
+
+            // Universe management
+            ['name' => 'View Universe', 'slug' => 'universe.view'],
+            ['name' => 'Manage Regions', 'slug' => 'universe.regions'],
+            ['name' => 'Manage Constellations', 'slug' => 'universe.constellations'],
+            ['name' => 'Manage Solar Systems', 'slug' => 'universe.solar-systems'],
+            ['name' => 'Manage Stars', 'slug' => 'universe.stars'],
+            ['name' => 'Manage Planets', 'slug' => 'universe.planets'],
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create($permission);
+            Permission::updateOrCreate(
+                ['slug' => $permission['slug']],
+                ['name' => $permission['name']]
+            );
         }
 
         // Create roles and assign permissions
 
         // SuperAdmin role
-        $superAdminRole = Role::create([
-            'name' => 'Super Admin',
-            'slug' => 'superadmin',
-            'description' => 'Super Administrator with all permissions',
-        ]);
+        $superAdminRole = Role::updateOrCreate(
+            ['slug' => 'superadmin'],
+            [
+                'name' => 'Super Admin',
+                'description' => 'Super Administrator with all permissions',
+            ]
+        );
 
         // Assign all permissions to superadmin
-        $superAdminRole->permissions()->attach(Permission::all());
+        $superAdminRole->permissions()->sync(Permission::all()->pluck('id')->toArray());
 
         // Admin role
-        $adminRole = Role::create([
-            'name' => 'Administrator',
-            'slug' => 'admin',
-            'description' => 'Administrator with most permissions',
-        ]);
+        $adminRole = Role::updateOrCreate(
+            ['slug' => 'admin'],
+            [
+                'name' => 'Administrator',
+                'description' => 'Administrator with most permissions',
+            ]
+        );
 
         // Assign specific permissions to admin
         $adminPermissions = Permission::whereIn('slug', [
@@ -85,16 +100,20 @@ class RolesAndPermissionsSeeder extends Seeder
             'ships.view.all', 'ships.edit.all',
             'market.moderate',
             'admin.access',
+            'universe.view', 'universe.regions', 'universe.constellations',
+            'universe.solar-systems', 'universe.stars', 'universe.planets',
         ])->get();
 
-        $adminRole->permissions()->attach($adminPermissions);
+        $adminRole->permissions()->sync($adminPermissions->pluck('id')->toArray());
 
         // Moderator role
-        $moderatorRole = Role::create([
-            'name' => 'Moderator',
-            'slug' => 'moderator',
-            'description' => 'Moderator with limited permissions',
-        ]);
+        $moderatorRole = Role::updateOrCreate(
+            ['slug' => 'moderator'],
+            [
+                'name' => 'Moderator',
+                'description' => 'Moderator with limited permissions',
+            ]
+        );
 
         // Assign specific permissions to moderator
         $moderatorPermissions = Permission::whereIn('slug', [
@@ -103,23 +122,26 @@ class RolesAndPermissionsSeeder extends Seeder
             'ships.view.all',
             'market.moderate',
             'admin.access',
+            'universe.view',
         ])->get();
 
-        $moderatorRole->permissions()->attach($moderatorPermissions);
+        $moderatorRole->permissions()->sync($moderatorPermissions->pluck('id')->toArray());
 
         // User role
-        $userRole = Role::create([
-            'name' => 'User',
-            'slug' => 'user',
-            'description' => 'Regular user with basic permissions',
-        ]);
+        $userRole = Role::updateOrCreate(
+            ['slug' => 'user'],
+            [
+                'name' => 'User',
+                'description' => 'Regular user with basic permissions',
+            ]
+        );
 
         // No additional permissions for regular users
 
         // Assign superadmin role to the first user (if exists)
         $user = User::first();
         if ($user) {
-            $user->roles()->attach($superAdminRole);
+            $user->roles()->sync([$superAdminRole->id]);
         }
     }
 }

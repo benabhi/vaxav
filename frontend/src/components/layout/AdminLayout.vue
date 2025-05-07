@@ -68,6 +68,58 @@
             />
           </VxvSidebarGroup>
 
+          <!-- Universe Management Group -->
+          <VxvSidebarGroup
+            title="Gestión de Universo"
+            :default-collapsed="false"
+            :is-sidebar-collapsed="false"
+            :is-mobile="false"
+            basePath="/admin/universe"
+            :additional-paths="[
+              '/admin/universe/regions',
+              '/admin/universe/constellations',
+              '/admin/universe/solar-systems',
+              '/admin/universe/stars',
+              '/admin/universe/planets'
+            ]"
+          >
+            <VxvNavLink
+              to="/admin/universe/regions"
+              label="Regiones"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/constellations"
+              label="Constelaciones"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/solar-systems"
+              label="Sistemas Solares"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/stars"
+              label="Estrellas"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/planets"
+              label="Planetas"
+              :is-sidebar-collapsed="false"
+              :is-mobile="false"
+              active-class="text-blue-400"
+            />
+          </VxvSidebarGroup>
+
           <!-- Other menu items -->
           <VxvNavLink
             to="/admin/settings"
@@ -177,6 +229,58 @@
             <VxvNavLink
               to="/admin/skill-categories"
               label="Categorías"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+              active-class="text-blue-400"
+            />
+          </VxvSidebarGroup>
+
+          <!-- Universe Management Group -->
+          <VxvSidebarGroup
+            title="Gestión de Universo"
+            :default-collapsed="false"
+            :is-sidebar-collapsed="false"
+            :is-mobile="true"
+            basePath="/admin/universe"
+            :additional-paths="[
+              '/admin/universe/regions',
+              '/admin/universe/constellations',
+              '/admin/universe/solar-systems',
+              '/admin/universe/stars',
+              '/admin/universe/planets'
+            ]"
+          >
+            <VxvNavLink
+              to="/admin/universe/regions"
+              label="Regiones"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/constellations"
+              label="Constelaciones"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/solar-systems"
+              label="Sistemas Solares"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/stars"
+              label="Estrellas"
+              :is-sidebar-collapsed="false"
+              :is-mobile="true"
+              active-class="text-blue-400"
+            />
+            <VxvNavLink
+              to="/admin/universe/planets"
+              label="Planetas"
               :is-sidebar-collapsed="false"
               :is-mobile="true"
               active-class="text-blue-400"

@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('celestial_types', function (Blueprint $table) {
+        Schema::create('stars', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
+            $table->string('type')->nullable();
+            $table->foreignId('solar_system_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -24,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('celestial_types');
+        Schema::dropIfExists('stars');
     }
 };

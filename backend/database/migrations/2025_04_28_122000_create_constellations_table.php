@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
-            $table->float('coordinates_x');
-            $table->float('coordinates_y');
+            $table->float('x_coord')->default(0);
+            $table->float('y_coord')->default(0);
             $table->foreignId('region_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });

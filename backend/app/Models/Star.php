@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Constellation extends Model
+class Star extends Model
 {
     use HasFactory;
 
@@ -19,24 +19,23 @@ class Constellation extends Model
     protected $fillable = [
         'name',
         'description',
-        'region_id',
-        'x_coord',
-        'y_coord',
+        'solar_system_id',
+        'type',
     ];
 
     /**
-     * Get the region that owns the constellation.
+     * Get the solar system that owns the star.
      */
-    public function region(): BelongsTo
+    public function solarSystem(): BelongsTo
     {
-        return $this->belongsTo(Region::class);
+        return $this->belongsTo(SolarSystem::class);
     }
 
     /**
-     * Get the solar systems in this constellation.
+     * Get the planets orbiting this star.
      */
-    public function solarSystems(): HasMany
+    public function planets(): HasMany
     {
-        return $this->hasMany(SolarSystem::class);
+        return $this->hasMany(Planet::class);
     }
 }

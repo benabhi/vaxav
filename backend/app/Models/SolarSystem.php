@@ -20,9 +20,8 @@ class SolarSystem extends Model
         'name',
         'description',
         'constellation_id',
-        'security_level',
-        'coordinates_x',
-        'coordinates_y',
+        'x_coord',
+        'y_coord',
     ];
 
     /**
@@ -34,11 +33,11 @@ class SolarSystem extends Model
     }
 
     /**
-     * Get the celestial bodies in this solar system.
+     * Get the stars in this solar system.
      */
-    public function celestialBodies(): HasMany
+    public function stars(): HasMany
     {
-        return $this->hasMany(CelestialBody::class);
+        return $this->hasMany(Star::class);
     }
 
     /**

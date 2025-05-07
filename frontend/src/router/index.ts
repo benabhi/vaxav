@@ -360,6 +360,143 @@ const router = createRouter({
         requiresRoles: ['superadmin', 'admin']
       }
     },
+
+    // Rutas de gestión del universo
+    {
+      path: '/admin/universe/regions',
+      name: 'admin-universe-regions',
+      component: () => import('../views/admin/universe/RegionsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/regions/create',
+      name: 'admin-universe-regions-create',
+      component: () => import('../views/admin/universe/RegionCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/regions/:id/edit',
+      name: 'admin-universe-regions-edit',
+      component: () => import('../views/admin/universe/RegionEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/constellations',
+      name: 'admin-universe-constellations',
+      component: () => import('../views/admin/universe/ConstellationsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/constellations/create',
+      name: 'admin-universe-constellations-create',
+      component: () => import('../views/admin/universe/ConstellationCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/constellations/:id/edit',
+      name: 'admin-universe-constellations-edit',
+      component: () => import('../views/admin/universe/ConstellationEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/solar-systems',
+      name: 'admin-universe-solar-systems',
+      component: () => import('../views/admin/universe/SolarSystemsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/solar-systems/create',
+      name: 'admin-universe-solar-systems-create',
+      component: () => import('../views/admin/universe/SolarSystemCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/solar-systems/:id/edit',
+      name: 'admin-universe-solar-systems-edit',
+      component: () => import('../views/admin/universe/SolarSystemEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/stars',
+      name: 'admin-universe-stars',
+      component: () => import('../views/admin/universe/StarsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/stars/create',
+      name: 'admin-universe-stars-create',
+      component: () => import('../views/admin/universe/StarCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/stars/:id/edit',
+      name: 'admin-universe-stars-edit',
+      component: () => import('../views/admin/universe/StarEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/planets',
+      name: 'admin-universe-planets',
+      component: () => import('../views/admin/universe/PlanetsView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/planets/create',
+      name: 'admin-universe-planets-create',
+      component: () => import('../views/admin/universe/PlanetCreateView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
+    {
+      path: '/admin/universe/planets/:id/edit',
+      name: 'admin-universe-planets-edit',
+      component: () => import('../views/admin/universe/PlanetEditView.vue'),
+      meta: {
+        requiresAuth: true,
+        requiresRoles: ['superadmin', 'admin']
+      }
+    },
   ],
 })
 

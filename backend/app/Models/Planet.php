@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CelestialType extends Model
+class Planet extends Model
 {
     use HasFactory;
 
@@ -18,13 +18,16 @@ class CelestialType extends Model
     protected $fillable = [
         'name',
         'description',
+        'star_id',
+        'type',
+        'orbit_position',
     ];
 
     /**
-     * Get the celestial bodies of this type.
+     * Get the star that owns the planet.
      */
-    public function celestialBodies(): HasMany
+    public function star(): BelongsTo
     {
-        return $this->hasMany(CelestialBody::class);
+        return $this->belongsTo(Star::class);
     }
 }
