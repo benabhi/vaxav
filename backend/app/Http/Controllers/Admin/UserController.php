@@ -61,6 +61,22 @@ class UserController extends Controller
         $perPage = $request->input('per_page', 10);
         $users = $query->paginate($perPage);
 
+        // Agregar información de baneo a cada usuario
+        $users->getCollection()->transform(function ($user) {
+            $user->is_banned = $user->isBanned();
+            if ($user->is_banned) {
+                $activeBan = $user->activeBan();
+                $user->ban_info = [
+                    'id' => $activeBan->id,
+                    'reason' => $activeBan->reason,
+                    'type' => $activeBan->type,
+                    'is_permanent' => $activeBan->isPermanent(),
+                    'expires_at' => $activeBan->expires_at ? $activeBan->expires_at->format('Y-m-d H:i:s') : null
+                ];
+            }
+            return $user;
+        });
+
         // Devolver los datos en el formato esperado por el frontend
         return response()->json($users);
     }
@@ -105,6 +121,19 @@ class UserController extends Controller
     public function show(string $id): JsonResponse
     {
         $user = User::with('roles')->findOrFail($id);
+
+        // Agregar información de baneo
+        $user->is_banned = $user->isBanned();
+        if ($user->is_banned) {
+            $activeBan = $user->activeBan();
+            $user->ban_info = [
+                'id' => $activeBan->id,
+                'reason' => $activeBan->reason,
+                'type' => $activeBan->type,
+                'is_permanent' => $activeBan->isPermanent(),
+                'expires_at' => $activeBan->expires_at ? $activeBan->expires_at->format('Y-m-d H:i:s') : null
+            ];
+        }
 
         return response()->json($user);
     }

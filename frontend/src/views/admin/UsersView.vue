@@ -93,7 +93,10 @@
     </template>
 
     <template #cell(status)="{ item }">
-      <VxvBadge variant="success">
+      <VxvBadge v-if="item.is_banned" variant="danger">
+        Baneado
+      </VxvBadge>
+      <VxvBadge v-else variant="success">
         Activo
       </VxvBadge>
     </template>
@@ -104,7 +107,20 @@
 
     <template #actions="{ item }">
       <button @click="editUser(item)" class="text-blue-400 hover:text-blue-300 mr-3">Editar</button>
-      <button @click="banUser(item)" class="text-orange-400 hover:text-orange-300 mr-3">Banear</button>
+      <button
+        v-if="item.is_banned"
+        @click="liftBan(item)"
+        class="text-red-400 hover:text-red-300 mr-3"
+      >
+        Ver Ban
+      </button>
+      <button
+        v-else
+        @click="banUser(item)"
+        class="text-orange-400 hover:text-orange-300 mr-3"
+      >
+        Banear
+      </button>
       <button @click="confirmDeleteUser(item)" class="text-red-400 hover:text-red-300">Eliminar</button>
     </template>
 
@@ -149,6 +165,7 @@ import VxvModal from '@/components/ui/modals/VxvModal.vue';
 import VxvBadge from '@/components/ui/feedback/VxvBadge.vue';
 import { useNotificationStore } from '@/stores/notification.ts';
 import { useUsers } from '@/composables/useUsers';
+import api from '@/services/api';
 
 // Mostrar etiquetas de filtros
 const showFilterLabels = true;
@@ -242,6 +259,17 @@ const editUser = (user) => {
 
 // Navigate to ban user page
 const banUser = (user) => {
+  router.push(`/admin/users/${user.id}/ban`);
+};
+
+// Navigate to ban details view
+const liftBan = (user) => {
+  if (!user.is_banned || !user.ban_info) {
+    notificationStore.adminError('No se encontró información del baneo');
+    return;
+  }
+
+  // Navigate to ban details view
   router.push(`/admin/users/${user.id}/ban`);
 };
 
