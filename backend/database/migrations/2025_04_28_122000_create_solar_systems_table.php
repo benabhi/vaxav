@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('solar_systems', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->text('description')->nullable();
             $table->decimal('security_level', 3, 2)->default(1.0);
-            $table->integer('x_coordinate');
-            $table->integer('y_coordinate');
-            $table->foreignId('region_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('constellation_id')->nullable()->constrained()->onDelete('set null');
+            $table->float('coordinates_x');
+            $table->float('coordinates_y');
+            $table->foreignId('constellation_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

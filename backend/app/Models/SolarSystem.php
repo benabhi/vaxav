@@ -21,8 +21,8 @@ class SolarSystem extends Model
         'description',
         'constellation_id',
         'security_level',
-        'x_coordinate',
-        'y_coordinate',
+        'coordinates_x',
+        'coordinates_y',
     ];
 
     /**

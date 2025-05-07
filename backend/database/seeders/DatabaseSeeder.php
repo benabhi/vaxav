@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
         // Seed additional permissions
         $this->call(PermissionsSeeder::class);
 
-        // Seed solar systems
-        $this->call(SolarSystemSeeder::class);
+        // Seed universe (regions, constellations, solar systems, celestial bodies)
+        $this->call(UniverseSeeder::class);
 
         // Seed skill categories
         $this->call(SkillCategorySeeder::class);

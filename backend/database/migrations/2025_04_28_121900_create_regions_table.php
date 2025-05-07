@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
-            $table->decimal('security_level', 3, 2)->default(1.0);
             $table->timestamps();
         });
     }

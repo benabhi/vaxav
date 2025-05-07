@@ -20,7 +20,8 @@ class Constellation extends Model
         'name',
         'description',
         'region_id',
-        'security_level',
+        'coordinates_x',
+        'coordinates_y',
     ];
 
     /**

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Region extends Model
+class CelestialType extends Model
 {
     use HasFactory;
 
@@ -21,10 +21,10 @@ class Region extends Model
     ];
 
     /**
-     * Get the constellations in this region.
+     * Get the celestial bodies of this type.
      */
-    public function constellations(): HasMany
+    public function celestialBodies(): HasMany
     {
-        return $this->hasMany(Constellation::class);
+        return $this->hasMany(CelestialBody::class);
     }
 }
