@@ -46,6 +46,15 @@ api.interceptors.response.use(
         // Limpiar el token si no es válido
         localStorage.removeItem('auth_token');
       }
+
+      // Manejar errores de usuario baneado (403 con banned=true)
+      if (error.response.status === 403 && error.response.data.banned) {
+        // Modificar el error para que sea manejado como una respuesta normal
+        // en lugar de un error, para que el flujo de autenticación pueda continuar
+        return Promise.resolve({
+          data: error.response.data
+        });
+      }
     } else if (error.request) {
       // La solicitud se realizó pero no se recibió respuesta
       console.error('Error de solicitud:', error.request);

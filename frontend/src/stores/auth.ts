@@ -98,7 +98,9 @@ export const useAuthStore = defineStore('auth', {
           this.banInfo = response.ban_info;
           this.isAuthenticated = false;
           this.error = response.message || 'Tu cuenta ha sido suspendida.';
-          throw new Error('Usuario baneado');
+
+          // No lanzar error, permitir que el flujo continúe para manejar la redirección
+          return { banned: true, banInfo: response.ban_info };
         }
 
         this.user = response.user;

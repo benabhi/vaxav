@@ -5,7 +5,7 @@
     <aside
       class="w-64 bg-gray-800 border-r border-gray-700 hidden lg:block"
     >
-      <div class="sticky top-0 h-screen overflow-y-auto">
+      <div class="sticky top-0 h-screen overflow-y-auto" style="min-height: 100vh;">
         <VxvSidebar
           title="Panel Admin"
           :collapsible="false"

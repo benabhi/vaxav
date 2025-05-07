@@ -236,7 +236,14 @@ export const useUserStore = defineStore('user', {
         const authStore = useAuthStore();
 
         // Iniciar sesión usando el store de autenticación
-        await authStore.login(credentials);
+        const loginResult = await authStore.login(credentials);
+
+        // Verificar si el usuario está baneado
+        if (loginResult && loginResult.banned) {
+          // No lanzar error, permitir que el componente maneje la redirección
+          this.isLoaded = true;
+          return { banned: true, banInfo: loginResult.banInfo };
+        }
 
         // Si el inicio de sesión fue exitoso, cargar datos del usuario
         if (authStore.isAuthenticated) {

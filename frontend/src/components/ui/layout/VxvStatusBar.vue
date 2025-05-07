@@ -305,7 +305,7 @@ watch(isDocked, (newValue) => {
   left: 0;
   right: 0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-  z-index: 50; /* Asegurarse de que esté por encima de otros elementos */
+  z-index: 40; /* Asegurarse de que esté por debajo del sidebar móvil (z-index: 50) */
 }
 
 /* Modo docked: la barra se acopla encima del footer cuando este es visible */
@@ -318,6 +318,7 @@ watch(isDocked, (newValue) => {
   margin-bottom: 0; /* Eliminar cualquier margen */
   transform: translateY(0); /* Asegurar que no haya transformación */
   border-bottom: none; /* Eliminar el borde inferior para evitar espacios */
+  z-index: 40; /* Asegurarse de que esté por debajo del sidebar móvil (z-index: 50) */
 }
 
 
@@ -326,7 +327,6 @@ watch(isDocked, (newValue) => {
 .status-bar-placeholder {
   height: 3rem; /* Misma altura que la barra */
   width: 100%;
-  margin-bottom: 0.5rem; /* Pequeño espacio antes del footer */
 }
 
 .status-section {

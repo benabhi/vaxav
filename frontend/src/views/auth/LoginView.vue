@@ -54,6 +54,7 @@
 import { reactive, onMounted } from 'vue';
 import { RouterLink, useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification.ts';
 import VxvInput from '@/components/ui/forms/VxvInput.vue';
 import VxvForm from '@/components/ui/forms/VxvForm.vue';
@@ -88,7 +89,22 @@ const handleSubmit = async () => {
   try {
     // Usar el store unificado para iniciar sesión
     // Este método se encargará de llamar a authStore.login internamente
-    await userStore.login(form);
+    const loginResult = await userStore.login(form);
+
+    // Verificar si el usuario está baneado
+    if (loginResult && loginResult.banned) {
+      // Guardar la información del baneo en el store de autenticación
+      const authStore = useAuthStore();
+      authStore.isBanned = true;
+      authStore.banInfo = loginResult.banInfo;
+
+      // No mostrar notificación, ya que vamos a redirigir a la vista de usuario baneado
+      // donde se mostrará toda la información del baneo
+
+      // Redirigir a la página de usuario baneado
+      router.push({ name: 'banned-user' });
+      return;
+    }
 
     if (userStore.isLoggedIn) {
       // Mostrar notificación de éxito
@@ -110,8 +126,16 @@ const handleSubmit = async () => {
   } catch (error: any) {
     console.error('Error al iniciar sesión:', error);
 
-    // Mostrar mensaje de error más descriptivo
-    if (error.response?.status === 422) {
+    // Verificar si el error es de usuario baneado
+    if (error.response?.status === 403 && error.response.data.banned) {
+      // Guardar la información del baneo en el store de autenticación
+      const authStore = useAuthStore();
+      authStore.isBanned = true;
+      authStore.banInfo = error.response.data.ban_info;
+
+      // Redirigir a la página de usuario baneado sin mostrar notificación
+      router.push({ name: 'banned-user' });
+    } else if (error.response?.status === 422) {
       // Error de validación (credenciales incorrectas)
       if (error.response?.data?.errors?.email) {
         // Si hay un mensaje específico para el email, mostrarlo
