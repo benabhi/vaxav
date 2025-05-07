@@ -232,12 +232,12 @@
       <div v-if="filteredSkills.length === 0" class="py-8">
         <VxvClearState
           message="No se encontraron habilidades que coincidan con los filtros aplicados"
-          variant="primary"
+          variant="secondary"
           :icon="SearchIcon"
         >
           <template #action>
             <VxvButton
-              variant="primary"
+              variant="secondary"
               size="sm"
               @click="initializeFilters(); applyFilters();"
             >
