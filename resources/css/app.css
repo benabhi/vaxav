@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-100 font-inter;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-orbitron;
+  }
+}
+
+@layer components {
+  /* Void Command UI Components */
+  .void-card {
+    @apply bg-gradient-to-br from-void-900 to-gray-900 border border-void-700 rounded-lg shadow-lg;
+  }
+
+  .void-button {
+    @apply bg-gradient-to-r from-void-600 to-void-700 hover:from-void-500 hover:to-void-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .void-button-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+  }
+
+  .void-input {
+    @apply bg-gray-800 border border-gray-700 text-gray-100 rounded-lg focus:ring-2 focus:ring-void-500 focus:border-transparent;
+  }
+
+  .neon-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-neon-purple;
+  }
+
+  .glow-effect {
+    @apply animate-glow;
+  }
+
+  /* Progress bars */
+  .progress-bar {
+    @apply bg-gray-700 rounded-full overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply bg-gradient-to-r from-neon-cyan to-void-500 h-full rounded-full transition-all duration-500;
+  }
+
+  /* Stat cards */
+  .stat-card {
+    @apply void-card p-4 hover:border-void-500 transition-all duration-300;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply text-gray-300 hover:text-neon-cyan transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply text-neon-cyan border-b-2 border-neon-cyan;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  }
+
+  .box-glow {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-void-700 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-void-600;
+}
