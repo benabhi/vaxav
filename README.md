@@ -25,9 +25,9 @@ Juego web masivo asíncrono de ciencia ficción tipo sandbox. Un universo persis
 
 ## Requisitos
 
-- Docker
-- Docker Compose
+- Docker Desktop (Windows/Mac) o Docker + Docker Compose (Linux)
 - Git
+- PowerShell (Windows) o Bash (Linux/Mac)
 
 ## Instalación
 
@@ -40,6 +40,12 @@ cd vaxav
 
 ### 2. Ejecutar setup inicial
 
+**Windows (PowerShell):**
+```powershell
+.\setup.ps1
+```
+
+**Linux/Mac (Bash):**
 ```bash
 chmod +x setup.sh
 ./setup.sh
@@ -62,14 +68,41 @@ Abre tu navegador en: http://localhost:8080
 
 ### Iniciar servicios
 
+**Windows:**
+```powershell
+.\start.ps1
+```
+
+**Linux/Mac:**
 ```bash
 ./start.sh
 ```
 
 ### Detener servicios
 
+**Windows:**
+```powershell
+.\stop.ps1
+```
+
+**Linux/Mac:**
 ```bash
 ./stop.sh
+```
+
+### Limpiar caché
+
+**Windows:**
+```powershell
+.\clean.ps1
+```
+
+**Linux/Mac:**
+```bash
+docker-compose exec app php artisan cache:clear
+docker-compose exec app php artisan config:clear
+docker-compose exec app php artisan route:clear
+docker-compose exec app php artisan view:clear
 ```
 
 ### Ver logs
@@ -94,15 +127,6 @@ docker-compose exec app php artisan migrate
 
 ```bash
 docker-compose exec app php artisan db:seed
-```
-
-### Limpiar caché
-
-```bash
-docker-compose exec app php artisan cache:clear
-docker-compose exec app php artisan config:clear
-docker-compose exec app php artisan route:clear
-docker-compose exec app php artisan view:clear
 ```
 
 ### Ejecutar tests
@@ -136,9 +160,10 @@ vaxav/
 ├── storage/                # Archivos generados
 ├── PRD/                    # Documentación del proyecto
 ├── docker-compose.yml      # Configuración de servicios
-├── setup.sh               # Script de setup inicial
-├── start.sh               # Script para iniciar servicios
-├── stop.sh                # Script para detener servicios
+├── setup.ps1 / setup.sh   # Scripts de setup inicial
+├── start.ps1 / start.sh   # Scripts para iniciar servicios
+├── stop.ps1 / stop.sh     # Scripts para detener servicios
+├── clean.ps1              # Script para limpiar caché (Windows)
 └── README.md              # Este archivo
 ```
 
