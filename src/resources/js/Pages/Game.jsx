@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { Model } from 'flexlayout-react';
 import FlexLayoutWrapper from '../Components/FlexLayoutWrapper';
-import { InventoryIcon, MapIcon, StatsIcon, ChatIcon } from '../Components/RetroUI/RetroIcons';
+import * as FlexLayout from 'flexlayout-react';
 
 // --- CRT Styled Panels ---
 
@@ -131,17 +131,29 @@ const ChatPanel = () => {
     );
 };
 
+import Taskbar from '../Components/RetroUI/Taskbar';
+import { InventoryIcon, MapIcon, StatsIcon, ChatIcon } from '../Components/RetroUI/RetroIcons';
+
+// --- Available Panels Definition ---
+const AVAILABLE_PANELS = [
+    { id: 'inventory', name: 'INVENTORY', icon: <InventoryIcon />, component: 'inventory', description: 'Manage equipment and items' },
+    { id: 'map', name: 'NAV_SYSTEM', icon: <MapIcon />, component: 'map', description: 'Galaxy map and navigation' },
+    { id: 'stats', name: 'PILOT_STATUS', icon: <StatsIcon />, component: 'stats', description: 'Health, energy, and credits' },
+    { id: 'chat', name: 'COMMS_LINK', icon: <ChatIcon />, component: 'chat', description: 'Interstellar communication' },
+];
+
 export default function Game() {
     // Layout Configuration
     const layoutModel = Model.fromJson({
         global: {
-            tabEnableClose: false,
+            tabEnableClose: true, // Enable closing tabs
+            tabEnableRename: false, // Disable renaming
             tabSetEnableTabStrip: true,
             tabSetEnableDrop: true,
             tabSetEnableDrag: true,
             tabSetEnableDivide: true,
             tabSetEnableMaximize: true,
-            splitterSize: 2, // Explicitly set splitter size
+            splitterSize: 2,
         },
         borders: [],
         layout: {
@@ -150,49 +162,55 @@ export default function Game() {
             children: [
                 {
                     type: "tabset",
-                    weight: 20,
+                    weight: 50,
                     children: [
                         {
                             type: "tab",
                             name: "INVENTORY",
                             component: "inventory",
                             config: { icon: <InventoryIcon /> }
-                        },
-                        {
-                            type: "tab",
-                            name: "STATS",
-                            component: "stats",
-                            config: { icon: <StatsIcon /> }
                         }
                     ]
                 },
                 {
                     type: "tabset",
-                    weight: 60,
+                    weight: 50,
                     children: [
                         {
                             type: "tab",
-                            name: "MAP",
+                            name: "NAV_SYSTEM",
                             component: "map",
                             config: { icon: <MapIcon /> }
-                        }
-                    ]
-                },
-                {
-                    type: "tabset",
-                    weight: 20,
-                    children: [
-                        {
-                            type: "tab",
-                            name: "COMMS",
-                            component: "chat",
-                            config: { icon: <ChatIcon /> }
                         }
                     ]
                 }
             ]
         }
     });
+
+    // Force update state to re-render when layout changes (for empty state check)
+    const [model, setModel] = useState(layoutModel);
+    const [isEmpty, setIsEmpty] = useState(false);
+    const [layoutUpdateTick, setLayoutUpdateTick] = useState(0);
+
+    // Check for empty state on every render/action
+    useEffect(() => {
+        const checkEmpty = () => {
+            // Count visible tabs
+            let count = 0;
+            model.visitNodes((node) => {
+                if (node.getType() === 'tab') count++;
+            });
+            setIsEmpty(count === 0);
+        };
+        checkEmpty();
+    }, [layoutUpdateTick, model]);
+
+    const onModelChange = (model) => {
+        // Trigger re-render
+        setLayoutUpdateTick(t => t + 1);
+    };
+
 
     const factory = (node) => {
         const component = node.getComponent();
@@ -203,6 +221,54 @@ export default function Game() {
             case "chat": return <ChatPanel />;
             default: return <div>UNKNOWN_COMPONENT</div>;
         }
+    };
+
+    const handleAddPanel = (panelDef) => {
+        let parentId = '#0';
+        let location = FlexLayout.DockLocation.CENTER;
+
+        // Logic to determine unique name
+        let count = 0;
+        model.visitNodes((node) => {
+            if (node.getType() === 'tab' && node.getComponent() === panelDef.component) {
+                count++;
+            }
+        });
+
+        const newName = count > 0 ? `${panelDef.name} ${count + 1}` : panelDef.name;
+
+        // Logic to force split
+        // We want to split the currently active tabset, or the root if none.
+        const activeTabset = model.getActiveTabset();
+        if (activeTabset) {
+            parentId = activeTabset.getId();
+            location = FlexLayout.DockLocation.RIGHT; // Split to the right
+        } else {
+            // If no active tabset, find the first one or root
+            let firstTabset = null;
+            model.visitNodes((node) => {
+                if (node.getType() === 'tabset' && !firstTabset) {
+                    firstTabset = node;
+                }
+            });
+            if (firstTabset) {
+                parentId = firstTabset.getId();
+                location = FlexLayout.DockLocation.RIGHT;
+            }
+        }
+
+        model.doAction(FlexLayout.Actions.addNode(
+            {
+                type: 'tab',
+                component: panelDef.component,
+                name: newName,
+                config: { icon: panelDef.icon },
+                id: `${panelDef.id}_${Date.now()}` // Ensure unique ID for cloning
+            },
+            parentId,
+            location,
+            -1
+        ));
     };
 
     return (
@@ -230,16 +296,29 @@ export default function Game() {
                     </div>
                 </div>
 
-                {/* Main Layout Area - FlexGrow to fill space */}
-                <div className="flex-1 relative w-full overflow-hidden z-0">
-                    <FlexLayoutWrapper model={layoutModel} factory={factory} />
+                {/* Main Layout Area */}
+                <div className="flex-1 relative w-full overflow-hidden z-0 bg-[#000a05]">
+                    {isEmpty && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center z-0 pointer-events-none select-none opacity-50">
+                            <div className="text-6xl mb-4 text-[#005533]">VAXAV_OS</div>
+                            <div className="text-xl text-[#00ffaa] animate-pulse">SYSTEM_IDLE</div>
+                            <div className="mt-8 text-sm text-[#005533] border border-[#005533] p-2">
+                                {">"} ACCESS_SYSTEM_MENU_TO_INITIATE_MODULES
+                            </div>
+                        </div>
+                    )}
+                    <div className={`h-full w-full ${isEmpty ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                        <FlexLayoutWrapper model={model} factory={factory} onModelChange={onModelChange} />
+                    </div>
                 </div>
 
-                {/* System Footer */}
-                <div className="h-8 border-t border-[#005533] bg-[#000500] flex items-center px-4 z-40 relative shrink-0">
-                    <span className="text-[#005533] mr-2">{">"}</span>
-                    <span className="animate-pulse text-[#00ffaa]">_</span>
-                </div>
+                {/* Taskbar */}
+                <Taskbar
+                    model={model}
+                    factory={factory}
+                    availablePanels={AVAILABLE_PANELS}
+                    onAddPanel={handleAddPanel}
+                />
             </div>
         </>
     );
