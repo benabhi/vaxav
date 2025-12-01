@@ -7,7 +7,22 @@ export default {
         './resources/js/**/*.jsx',
     ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                crt: {
+                    bg: 'var(--crt-bg)',
+                    panel: 'var(--crt-panel)',
+                    phosphor: 'var(--crt-phosphor)',
+                    'phosphor-dim': 'var(--crt-phosphor-dim)',
+                    border: 'var(--crt-border)',
+                    'border-active': 'var(--crt-border-active)',
+                },
+            },
+            boxShadow: {
+                'crt-glow': '0 0 10px var(--crt-phosphor-glow)',
+                'crt-glow-sm': '0 0 5px var(--crt-phosphor-glow)',
+            },
+        },
     },
     plugins: [],
 };

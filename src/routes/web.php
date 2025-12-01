@@ -9,3 +9,7 @@ Route::get('/', function () {
 });
 
 Route::get('/game', [GameController::class, 'index']);
+
+Route::get('/components', function () {
+    return Inertia::render('ComponentsDemo');
+});

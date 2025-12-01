@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import { Model } from 'flexlayout-react';
 import FlexLayoutWrapper from '../Components/FlexLayoutWrapper';
-import { InventoryIcon, MapIcon, StatsIcon, ChatIcon } from '../Components/TabIcons';
+import { InventoryIcon, MapIcon, StatsIcon, ChatIcon } from '../Components/RetroUI/RetroIcons';
 
 // --- CRT Styled Panels ---
 
