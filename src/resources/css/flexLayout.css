@@ -164,7 +164,7 @@
 /* --- Zero-Gap Grid Structure --- */
 
 /* Tab Set Header */
-.flexlayout__tabset_header {
+.flexlayout__layout .flexlayout__tabset_header {
     background-color: var(--crt-bg) !important;
     border-bottom: 1px solid var(--crt-phosphor-dim) !important;
     height: 28px !important;
@@ -172,6 +172,34 @@
     margin: 0 !important;
     display: flex !important;
     align-items: flex-end !important;
+    position: relative !important;
+}
+
+.flexlayout__layout .flexlayout__tabset_header::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 1px !important;
+    background-color: var(--crt-phosphor-dim) !important;
+    z-index: 1000 !important;
+}
+
+/* Tab Bar (where the actual tabs sit) */
+.flexlayout__layout .flexlayout__tabset_tabbar_inner_top {
+    position: relative !important;
+}
+
+.flexlayout__layout .flexlayout__tabset_tabbar_inner_top::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 1px !important;
+    background-color: var(--crt-phosphor-dim) !important;
+    z-index: 1000 !important;
 }
 
 /* Individual Tab */
