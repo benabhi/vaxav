@@ -172,26 +172,14 @@
     margin: 0 !important;
     display: flex !important;
     align-items: flex-end !important;
+}
+
+/* Tab Bar Outer Container (includes maximize button) */
+.flexlayout__layout .flexlayout__tabset_tabbar_outer_top {
     position: relative !important;
 }
 
-.flexlayout__layout .flexlayout__tabset_header::after {
-    content: '' !important;
-    position: absolute !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    right: 0 !important;
-    width: 1px !important;
-    background-color: var(--crt-phosphor-dim) !important;
-    z-index: 1000 !important;
-}
-
-/* Tab Bar (where the actual tabs sit) */
-.flexlayout__layout .flexlayout__tabset_tabbar_inner_top {
-    position: relative !important;
-}
-
-.flexlayout__layout .flexlayout__tabset_tabbar_inner_top::after {
+.flexlayout__layout .flexlayout__tabset_tabbar_outer_top::after {
     content: '' !important;
     position: absolute !important;
     top: 0 !important;
@@ -228,14 +216,18 @@
     text-shadow: 0 0 8px var(--crt-phosphor-glow);
 }
 
-/* Selected Tab - Inverted Block */
-.flexlayout__tab--selected {
-    background-color: var(--crt-phosphor) !important;
-    color: var(--crt-bg) !important;
-    /* Black text on Phosphor bg */
+/* Selected Tab - Integrated Look */
+.flexlayout__tab_button--selected {
+    background-color: transparent !important;
+    /* Blend with header bg */
+    color: var(--crt-phosphor) !important;
     border: 1px solid var(--crt-phosphor) !important;
+    border-bottom: 1px solid var(--crt-panel) !important;
+    /* Connect to panel */
     font-weight: bold !important;
-    box-shadow: 0 0 10px var(--crt-phosphor-glow);
+    box-shadow: inset 0 0 15px rgba(0, 255, 170, 0.15);
+    /* Subtle inner glow */
+    z-index: 10 !important;
 }
 
 /* Tab Content - The Grid Cell */
