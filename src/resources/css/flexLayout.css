@@ -1,0 +1,274 @@
+/* FlexLayout CRT Grid Theme */
+
+:root {
+    /* Phosphor Palette */
+    --crt-bg: #000500;
+    /* Deepest black-green */
+    --crt-panel: #000a05;
+
+    --crt-phosphor: #00ffaa;
+    /* Classic Phosphor Green/Cyan mix */
+    --crt-phosphor-dim: #005533;
+    --crt-phosphor-glow: rgba(0, 255, 170, 0.6);
+
+    --crt-border: #003322;
+    --crt-border-active: #00ffaa;
+}
+
+/* Override FlexLayout Variables */
+.flexlayout__layout {
+    --color-text: var(--crt-phosphor);
+    --color-background: var(--crt-bg);
+    --color-base: var(--crt-panel);
+    --color-1: var(--crt-bg);
+    /* Header bg same as main to blend */
+    --color-2: var(--crt-bg);
+    --color-3: var(--crt-phosphor);
+    --color-4: var(--crt-phosphor-dim);
+    --color-5: var(--crt-bg);
+    --color-6: var(--crt-panel);
+
+    --color-tab-selected: var(--crt-phosphor);
+    --color-tab-selected-background: var(--crt-panel);
+    --color-tab-unselected: var(--crt-phosphor-dim);
+    --color-tab-unselected-background: transparent;
+
+    --color-border-divider: var(--crt-border);
+    --color-splitter: var(--crt-bg);
+    --color-splitter-hover: var(--crt-phosphor);
+
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 13px !important;
+
+    /* CRITICAL: Layout Positioning */
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    position: absolute !important;
+}
+
+/* --- Zero-Gap Grid Structure --- */
+
+/* Tab Set Header */
+.flexlayout__tabset_header {
+    background-color: var(--crt-bg) !important;
+    border-bottom: 1px solid var(--crt-phosphor-dim) !important;
+    height: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+}
+
+/* Individual Tab */
+.flexlayout__tab {
+    background-color: transparent !important;
+    border: 1px solid transparent !important;
+    border-right: 1px solid var(--crt-phosphor-dim) !important;
+    /* Separator */
+    border-bottom: none !important;
+    margin: 0 !important;
+    /* ZERO MARGIN */
+    border-radius: 0 !important;
+    color: var(--crt-phosphor-dim) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    padding: 4px 12px !important;
+    line-height: 18px !important;
+    position: relative;
+}
+
+/* Tab Hover */
+.flexlayout__tab:hover {
+    color: var(--crt-phosphor) !important;
+    background-color: rgba(0, 255, 170, 0.1) !important;
+    text-shadow: 0 0 8px var(--crt-phosphor-glow);
+}
+
+/* Selected Tab - Inverted Block */
+.flexlayout__tab--selected {
+    background-color: var(--crt-phosphor) !important;
+    color: var(--crt-bg) !important;
+    /* Black text on Phosphor bg */
+    border: 1px solid var(--crt-phosphor) !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 10px var(--crt-phosphor-glow);
+}
+
+/* Tab Content - The Grid Cell */
+.flexlayout__tab_content {
+    background-color: var(--crt-panel) !important;
+    border: 1px solid var(--crt-phosphor-dim) !important;
+    border-top: none !important;
+    color: var(--crt-phosphor) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    /* Inner Glow */
+    box-shadow: inset 0 0 20px rgba(0, 255, 170, 0.05);
+}
+
+/* Force Terminal Look on ALL Content */
+/* FlexLayout CRT Grid Theme */
+
+:root {
+    /* Phosphor Palette */
+    --crt-bg: #000500;
+    /* Deepest black-green */
+    --crt-panel: #000a05;
+
+    --crt-phosphor: #00ffaa;
+    /* Classic Phosphor Green/Cyan mix */
+    --crt-phosphor-dim: #005533;
+    --crt-phosphor-glow: rgba(0, 255, 170, 0.6);
+
+    --crt-border: #003322;
+    --crt-border-active: #00ffaa;
+}
+
+/* Override FlexLayout Variables */
+.flexlayout__layout {
+    --color-text: var(--crt-phosphor);
+    --color-background: var(--crt-bg);
+    --color-base: var(--crt-panel);
+    --color-1: var(--crt-bg);
+    /* Header bg same as main to blend */
+    --color-2: var(--crt-bg);
+    --color-3: var(--crt-phosphor);
+    --color-4: var(--crt-phosphor-dim);
+    --color-5: var(--crt-bg);
+    --color-6: var(--crt-panel);
+
+    --color-tab-selected: var(--crt-phosphor);
+    --color-tab-selected-background: var(--crt-panel);
+    --color-tab-unselected: var(--crt-phosphor-dim);
+    --color-tab-unselected-background: transparent;
+
+    --color-border-divider: var(--crt-border);
+    --color-splitter: var(--crt-bg);
+    --color-splitter-hover: var(--crt-phosphor);
+
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 13px !important;
+
+    /* CRITICAL: Layout Positioning */
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    position: absolute !important;
+}
+
+/* --- Zero-Gap Grid Structure --- */
+
+/* Tab Set Header */
+.flexlayout__tabset_header {
+    background-color: var(--crt-bg) !important;
+    border-bottom: 1px solid var(--crt-phosphor-dim) !important;
+    height: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+}
+
+/* Individual Tab */
+.flexlayout__tab {
+    background-color: transparent !important;
+    border: 1px solid transparent !important;
+    border-right: 1px solid var(--crt-phosphor-dim) !important;
+    /* Separator */
+    border-bottom: none !important;
+    margin: 0 !important;
+    /* ZERO MARGIN */
+    border-radius: 0 !important;
+    color: var(--crt-phosphor-dim) !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    padding: 4px 12px !important;
+    line-height: 18px !important;
+    position: relative;
+}
+
+/* Tab Hover */
+.flexlayout__tab:hover {
+    color: var(--crt-phosphor) !important;
+    background-color: rgba(0, 255, 170, 0.1) !important;
+    text-shadow: 0 0 8px var(--crt-phosphor-glow);
+}
+
+/* Selected Tab - Inverted Block */
+.flexlayout__tab--selected {
+    background-color: var(--crt-phosphor) !important;
+    color: var(--crt-bg) !important;
+    /* Black text on Phosphor bg */
+    border: 1px solid var(--crt-phosphor) !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 10px var(--crt-phosphor-glow);
+}
+
+/* Tab Content - The Grid Cell */
+.flexlayout__tab_content {
+    background-color: var(--crt-panel) !important;
+    border: 1px solid var(--crt-phosphor-dim) !important;
+    border-top: none !important;
+    color: var(--crt-phosphor) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    /* Inner Glow */
+    box-shadow: inset 0 0 20px rgba(0, 255, 170, 0.05);
+}
+
+/* Force Terminal Look on ALL Content */
+.flexlayout__tab_content * {
+    font-family: 'Share Tech Mono', monospace !important;
+    text-shadow: 0 0 2px rgba(0, 255, 170, 0.3);
+    /* Slight bloom */
+}
+
+/* Splitters - The Grid Lines */
+.flexlayout__splitter {
+    background-color: var(--crt-bg) !important;
+    width: 2px !important;
+    /* Thin line */
+    border: none !important;
+    box-sizing: border-box !important;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.flexlayout__splitter:hover {
+    background-color: var(--crt-phosphor) !important;
+    /* Neon green hover */
+    box-shadow: 0 0 8px var(--crt-phosphor) !important;
+    cursor: col-resize;
+    z-index: 100;
+}
+
+.flexlayout__splitter_border {
+    display: none !important;
+}
+
+/* Splitter Drag Proxy - The line shown while dragging */
+.flexlayout__splitter_drag {
+    background-color: var(--crt-phosphor) !important;
+    box-shadow: 0 0 8px var(--crt-phosphor) !important;
+    width: 2px !important;
+    /* Match splitter width */
+    z-index: 9999 !important;
+    opacity: 1 !important;
+}
+
+/* Icons */
+.flexlayout__tab_button_content svg {
+    fill: var(--crt-phosphor) !important;
+    color: var(--crt-phosphor) !important;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    vertical-align: text-bottom;
+    filter: drop-shadow(0 0 2px rgba(0, 255, 170, 0.5));
+}
