@@ -82,6 +82,15 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "[OK] Migraciones ejecutadas" -ForegroundColor Green
 Write-Host ""
 
+# Publicar archivos de idioma en español
+Write-Host "Publicando archivos de idioma en español..." -ForegroundColor Yellow
+docker-compose exec -T app php artisan lang:add es
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ADVERTENCIA: Hubo problemas al publicar archivos de idioma" -ForegroundColor Yellow
+}
+Write-Host "[OK] Archivos de idioma en español publicados" -ForegroundColor Green
+Write-Host ""
+
 # Instalar dependencias de NPM
 Write-Host "Instalando dependencias de NPM..." -ForegroundColor Yellow
 docker-compose exec -T app npm install
