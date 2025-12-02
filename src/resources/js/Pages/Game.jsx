@@ -8,7 +8,7 @@ import Taskbar from '../Components/Game/Taskbar';
 
 // Import Panels and Icons
 import InventoryPanel, { PanelIcon as InventoryPanelIcon } from '../Components/Game/Panels/InventoryPanel';
-import MapPanel, { PanelIcon as MapPanelIcon } from '../Components/Game/Panels/MapPanel';
+import MapPanel, { PanelIcon as MapPanelIcon } from '../Components/Game/Panels/MapPanel/index';
 import StatsPanel, { PanelIcon as StatsPanelIcon } from '../Components/Game/Panels/StatsPanel';
 import ChatPanel, { PanelIcon as ChatPanelIcon } from '../Components/Game/Panels/ChatPanel';
 
