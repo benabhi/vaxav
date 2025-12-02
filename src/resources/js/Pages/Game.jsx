@@ -4,143 +4,20 @@ import RetroModal from '@/Components/RetroUI/RetroModal';
 import { Model } from 'flexlayout-react';
 import FlexLayoutWrapper from '../Components/FlexLayoutWrapper';
 import * as FlexLayout from 'flexlayout-react';
-
-// --- CRT Styled Panels ---
-
-const InventoryPanel = () => {
-    return (
-        <div className="p-2 h-full bg-[#000a05] text-[#00ffaa] font-mono text-xs">
-            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">SISTEMA_INVENTARIO</h2>
-            <ul className="space-y-1">
-                <li className="flex items-center p-1 hover:bg-[#00ffaa] hover:text-black cursor-pointer transition-colors">
-                    <span className="mr-2">►</span> RIFLE_LASER [NIV.3]
-                </li>
-                <li className="flex items-center p-1 hover:bg-[#00ffaa] hover:text-black cursor-pointer transition-colors">
-                    <span className="mr-2">►</span> ESCUDO_ENERGIA [80%]
-                </li>
-                <li className="flex items-center p-1 hover:bg-[#00ffaa] hover:text-black cursor-pointer transition-colors">
-                    <span className="mr-2">►</span> PACK_MEDICO [x5]
-                </li>
-            </ul>
-        </div>
-    );
-};
-
-const MapPanel = () => {
-    return (
-        <div className="h-full bg-[#000a05] text-[#00ffaa] font-mono relative overflow-hidden flex flex-col items-center justify-center">
-            <div className="absolute inset-0 grid grid-cols-[repeat(20,1fr)] grid-rows-[repeat(20,1fr)] opacity-10 pointer-events-none">
-                {Array.from({ length: 400 }).map((_, i) => (
-                    <div key={i} className="border-[0.5px] border-[#00ffaa]"></div>
-                ))}
-            </div>
-
-            <div className="z-10 text-center mb-4">
-                <h2 className="text-lg font-bold tracking-widest text-[#00ffaa] drop-shadow-[0_0_5px_rgba(0,255,170,0.8)]">
-                    SISTEMA_NAV
-                </h2>
-                <p className="text-xs text-[#005533]">SECTOR: ALFA-7 | COORDS: 42.8 / -17.3</p>
-            </div>
-
-            <div className="relative w-48 h-48 border border-[#00ffaa] rounded-full flex items-center justify-center bg-[#001100] shadow-[0_0_15px_rgba(0,255,170,0.2)]">
-                <div className="absolute inset-0 rounded-full border border-[#005533] animate-[spin_4s_linear_infinite]"></div>
-                <div className="absolute inset-2 rounded-full border border-[#005533] animate-[spin_8s_linear_infinite_reverse]"></div>
-                <div className="w-2 h-2 bg-[#00ffaa] rounded-full shadow-[0_0_10px_#00ffaa] animate-pulse"></div>
-            </div>
-        </div>
-    );
-};
-
-const StatsPanel = () => {
-    const [stats] = useState({
-        health: 85,
-        energy: 62,
-        credits: 1250,
-        level: 12
-    });
-
-    return (
-        <div className="p-2 h-full bg-[#000a05] text-[#00ffaa] font-mono text-xs">
-            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">ESTADO_PILOTO</h2>
-            <div className="space-y-3">
-                <div>
-                    <div className="flex justify-between mb-1">
-                        <span>SALUD</span>
-                        <span>{stats.health}%</span>
-                    </div>
-                    <div className="w-full bg-[#001100] h-2 border border-[#005533]">
-                        <div
-                            className="bg-[#00ffaa] h-full shadow-[0_0_8px_#00ffaa]"
-                            style={{ width: `${stats.health}%` }}
-                        ></div>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex justify-between mb-1">
-                        <span>ENERGIA</span>
-                        <span>{stats.energy}%</span>
-                    </div>
-                    <div className="w-full bg-[#001100] h-2 border border-[#005533]">
-                        <div
-                            className="bg-[#00ffaa] h-full shadow-[0_0_8px_#00ffaa] opacity-80"
-                            style={{ width: `${stats.energy}%` }}
-                        ></div>
-                    </div>
-                </div>
-                <div className="pt-2 border-t border-[#005533] mt-2">
-                    <div className="flex justify-between">
-                        <span className="text-[#005533]">CREDITOS</span>
-                        <span>{stats.credits} CR</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-[#005533]">NIVEL</span>
-                        <span>{stats.level}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ChatPanel = () => {
-    const [messages] = useState([
-        { user: 'JUGADOR1', text: '¿Alguien para una misión?' },
-        { user: 'CMD_IA', text: 'Apoyo requerido en Sector 7.' },
-        { user: 'COMERCIANTE', text: 'Vendo munición, barata.' },
-    ]);
-
-    return (
-        <div className="p-2 h-full bg-[#000a05] text-[#00ffaa] font-mono text-xs flex flex-col">
-            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">ENLACE_COMMS</h2>
-            <div className="flex-1 overflow-y-auto space-y-1 mb-2 pr-1">
-                {messages.map((msg, idx) => (
-                    <div key={idx} className="p-1 hover:bg-[#001100]">
-                        <span className="font-bold text-[#00ffaa] opacity-80">[{msg.user}]: </span>
-                        <span className="text-[#00ffaa] opacity-60">{msg.text}</span>
-                    </div>
-                ))}
-            </div>
-            <div className="flex items-center border border-[#005533] bg-[#000500]">
-                <span className="pl-2 text-[#00ffaa]">{">"}</span>
-                <input
-                    type="text"
-                    placeholder="TRANSMITIR..."
-                    className="w-full p-2 bg-transparent text-[#00ffaa] focus:outline-none placeholder-[#005533]"
-                />
-            </div>
-        </div>
-    );
-};
-
 import Taskbar from '../Components/Game/Taskbar';
-import { InventoryIcon, MapIcon, StatsIcon, ChatIcon } from '../Components/RetroUI/RetroIcons';
+
+// Import Panels and Icons
+import InventoryPanel, { PanelIcon as InventoryPanelIcon } from '../Components/Game/Panels/InventoryPanel';
+import MapPanel, { PanelIcon as MapPanelIcon } from '../Components/Game/Panels/MapPanel';
+import StatsPanel, { PanelIcon as StatsPanelIcon } from '../Components/Game/Panels/StatsPanel';
+import ChatPanel, { PanelIcon as ChatPanelIcon } from '../Components/Game/Panels/ChatPanel';
 
 // --- Available Panels Definition ---
 const AVAILABLE_PANELS = [
-    { id: 'inventory', name: 'INVENTARIO', icon: <InventoryIcon />, component: 'inventory', description: 'Gestionar equipo e items' },
-    { id: 'map', name: 'SISTEMA_NAV', icon: <MapIcon />, component: 'map', description: 'Mapa galáctico y navegación' },
-    { id: 'stats', name: 'ESTADO_PILOTO', icon: <StatsIcon />, component: 'stats', description: 'Salud, energía y créditos' },
-    { id: 'chat', name: 'ENLACE_COMMS', icon: <ChatIcon />, component: 'chat', description: 'Comunicación interestelar' },
+    { id: 'inventory', name: 'INVENTARIO', icon: InventoryPanelIcon, component: 'inventory', description: 'Gestionar equipo e items' },
+    { id: 'map', name: 'SISTEMA_NAV', icon: MapPanelIcon, component: 'map', description: 'Mapa galáctico y navegación' },
+    { id: 'stats', name: 'ESTADO_PILOTO', icon: StatsPanelIcon, component: 'stats', description: 'Salud, energía y créditos' },
+    { id: 'chat', name: 'ENLACE_COMMS', icon: ChatPanelIcon, component: 'chat', description: 'Comunicación interestelar' },
 ];
 
 export default function Game() {
@@ -169,7 +46,7 @@ export default function Game() {
                             type: "tab",
                             name: "INVENTARIO",
                             component: "inventory",
-                            config: { icon: <InventoryIcon /> }
+                            config: { icon: InventoryPanelIcon }
                         }
                     ]
                 },
@@ -181,7 +58,7 @@ export default function Game() {
                             type: "tab",
                             name: "SISTEMA_NAV",
                             component: "map",
-                            config: { icon: <MapIcon /> }
+                            config: { icon: MapPanelIcon }
                         }
                     ]
                 }
