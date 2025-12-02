@@ -203,3 +203,17 @@
 .flexlayout__tabset_overflow_button {
     display: none !important;
 }
+
+/* Drag Drop Indicator - The rectangle showing where panel will drop */
+/* Drag Drop Indicator - The rectangle showing where panel will drop */
+.flexlayout__layout .flexlayout__drag_rect,
+.flexlayout__drag_rect,
+.flexlayout__layout .flexlayout__outline_rect,
+.flexlayout__outline_rect {
+    background-color: rgba(0, 255, 170, 0.1) !important;
+    border: 2px solid #00ffaa !important;
+    box-shadow: 0 0 15px rgba(0, 255, 170, 0.6) !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    z-index: 10000 !important;
+}
