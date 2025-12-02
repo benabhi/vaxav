@@ -86,9 +86,48 @@ export const ChatIcon = ({ size = 16, className = "" }) => (
     </svg>
 );
 
+// Icono de Combate - Mira/Target
+export const CombatIcon = ({ size = 16, className = "" }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
+        <circle cx="12" cy="12" r="3" fill="currentColor" />
+        <line x1="12" y1="2" x2="12" y2="6" stroke="currentColor" strokeWidth="2" />
+        <line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" strokeWidth="2" />
+        <line x1="2" y1="12" x2="6" y2="12" stroke="currentColor" strokeWidth="2" />
+        <line x1="18" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="2" />
+    </svg>
+);
+
+// Icono de Construcción - Llave inglesa/Martillo
+export const BuildIcon = ({ size = 16, className = "" }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.7-3.7a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0l-3.7 3.7Z" fill="currentColor" />
+        <path d="M11 9L9 11L2 4L4 2L11 9Z" fill="currentColor" />
+        <path d="M10 14L12 16L19 9L17 7L10 14Z" stroke="currentColor" strokeWidth="2" />
+        <path d="M7 17L9 19L5 23L3 21L7 17Z" stroke="currentColor" strokeWidth="2" />
+        <rect x="2" y="20" width="4" height="2" fill="currentColor" transform="rotate(-45 4 21)" />
+    </svg>
+);
+
 export default {
     InventoryIcon,
     MapIcon,
     StatsIcon,
     ChatIcon,
+    CombatIcon,
+    BuildIcon,
 };
