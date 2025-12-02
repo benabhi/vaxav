@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import RetroInput from './RetroInput';
-import RetroButton from './RetroButton';
+import RetroInput from '../RetroUI/RetroInput';
+import RetroButton from '../RetroUI/RetroButton';
 
-export default function StartMenu({ isOpen, onClose, availablePanels, onAddPanel }) {
+export default function StartMenu({ isOpen, onClose, availablePanels, onAddPanel, onLogout }) {
     const [searchTerm, setSearchTerm] = useState('');
 
     if (!isOpen) return null;
@@ -15,14 +15,14 @@ export default function StartMenu({ isOpen, onClose, availablePanels, onAddPanel
         <div className="absolute bottom-10 left-0 w-64 bg-[#000500] border border-[#00ffaa] shadow-[0_0_20px_rgba(0,255,170,0.2)] z-50 flex flex-col">
             {/* Header */}
             <div className="bg-[#00ffaa] text-black px-2 py-1 font-bold text-sm tracking-widest flex justify-between items-center">
-                <span>SYSTEM_MENU</span>
+                <span>MENU_SISTEMA</span>
                 <span className="text-[10px]">v3.0</span>
             </div>
 
             {/* Search */}
             <div className="p-2 border-b border-[#005533]">
                 <RetroInput
-                    placeholder="SEARCH_MODULE..."
+                    placeholder="BUSCAR_MODULO..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="text-xs"
@@ -52,14 +52,14 @@ export default function StartMenu({ isOpen, onClose, availablePanels, onAddPanel
 
                 {filteredPanels.length === 0 && (
                     <div className="p-4 text-center text-[#005533] text-xs italic">
-                        NO_MODULES_FOUND
+                        NO_HAY_MODULOS
                     </div>
                 )}
             </div>
 
             {/* Footer Actions */}
             <div className="p-2 border-t border-[#005533] bg-[#000a05] flex justify-end">
-                <RetroButton size="sm" variant="danger" onClick={onClose}>SHUTDOWN_MENU</RetroButton>
+                <RetroButton size="sm" variant="danger" onClick={onLogout}>APAGAR_SISTEMA</RetroButton>
             </div>
         </div>
     );

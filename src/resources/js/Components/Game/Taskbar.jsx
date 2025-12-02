@@ -3,7 +3,7 @@ import TaskbarItem from './TaskbarItem';
 import StartMenu from './StartMenu';
 import * as FlexLayout from 'flexlayout-react';
 
-export default function Taskbar({ model, factory, availablePanels, onAddPanel }) {
+export default function Taskbar({ model, factory, availablePanels, onAddPanel, onLogout }) {
     const [startOpen, setStartOpen] = useState(false);
     const [activeTabId, setActiveTabId] = useState(null);
     const [openTabs, setOpenTabs] = useState([]);
@@ -60,6 +60,7 @@ export default function Taskbar({ model, factory, availablePanels, onAddPanel })
                     onClose={() => setStartOpen(false)}
                     availablePanels={availablePanels}
                     onAddPanel={onAddPanel}
+                    onLogout={onLogout}
                 />
                 <button
                     onClick={() => setStartOpen(!startOpen)}
@@ -72,7 +73,7 @@ export default function Taskbar({ model, factory, availablePanels, onAddPanel })
                     `}
                 >
                     <span className="text-base">❖</span>
-                    <span className="text-xs">SYSTEM</span>
+                    <span className="text-xs">SISTEMA</span>
                 </button>
             </div>
 

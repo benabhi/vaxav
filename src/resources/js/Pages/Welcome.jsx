@@ -1,7 +1,10 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import RetroCard from '@/Components/RetroUI/RetroCard';
+import RetroButton from '@/Components/RetroUI/RetroButton';
 
 export default function Welcome() {
+    const user = usePage().props.auth.user;
     return (
         <>
             <Head title="VAXAV_OS | BOOT" />
@@ -18,10 +21,10 @@ export default function Welcome() {
                     <div className="flex items-center gap-4">
                         <span className="font-bold tracking-widest text-[#00ffaa] drop-shadow-[0_0_5px_rgba(0,255,170,0.5)]">VAXAV_OS v3.0</span>
                         <span className="text-[#005533]">|</span>
-                        <span className="animate-pulse text-[#00ffaa]">BOOT_SEQUENCE</span>
+                        <span className="animate-pulse text-[#00ffaa]">SECUENCIA_INICIO</span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-[#00ffaa] opacity-80">
-                        <span>SYS_CHECK: OK</span>
+                        <span>VERIF_SIST: OK</span>
                     </div>
                 </div>
 
@@ -35,43 +38,43 @@ export default function Welcome() {
                         ))}
                     </div>
 
-                    <div className="z-10 text-center space-y-8 max-w-2xl w-full p-8 border border-[#005533] bg-[#000a05] shadow-[0_0_20px_rgba(0,255,170,0.1)] relative">
-                        {/* Corner Accents */}
-                        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#00ffaa]"></div>
-                        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#00ffaa]"></div>
-                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#00ffaa]"></div>
-                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#00ffaa]"></div>
+                    <RetroCard className="text-center space-y-8 max-w-2xl">
 
                         <div>
                             <h1 className="text-6xl font-bold text-[#00ffaa] mb-2 font-['VT323'] tracking-widest drop-shadow-[0_0_10px_rgba(0,255,170,0.8)]">
                                 VAXAV_OS
                             </h1>
                             <p className="text-xl text-[#005533] tracking-[0.5em] animate-pulse">
-                                SYSTEM_READY
+                                SISTEMA_LISTO
                             </p>
                         </div>
 
                         <div className="flex justify-center gap-6">
-                            <Link
-                                href="/game"
-                                className="group relative px-8 py-3 bg-[#001100] border border-[#00ffaa] text-[#00ffaa] font-bold hover:bg-[#00ffaa] hover:text-black transition-all duration-200 overflow-hidden"
-                            >
-                                <span className="relative z-10">INITIALIZE_SYSTEM</span>
-                                <div className="absolute inset-0 bg-[#00ffaa] opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-md"></div>
-                            </Link>
+                            {user ? (
+                                <Link href="/game">
+                                    <RetroButton variant="glow" className="px-8 py-3">
+                                        ENTRAR_SISTEMA
+                                    </RetroButton>
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link href="/login">
+                                        <RetroButton variant="glow" className="px-8 py-3">
+                                            TERMINAL_ACCESO
+                                        </RetroButton>
+                                    </Link>
 
-                            <a
-                                href="https://github.com/caplin/FlexLayout"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-8 py-3 bg-[#000500] border border-[#005533] text-[#005533] hover:text-[#00ffaa] hover:border-[#00ffaa] transition-all duration-200"
-                            >
-                                DOCS_LINK
-                            </a>
+                                    <Link href="/register">
+                                        <RetroButton variant="ghost" className="px-8 py-3 border border-[#005533] text-[#005533] hover:text-[#00ffaa] hover:border-[#00ffaa]">
+                                            NUEVO_PILOTO
+                                        </RetroButton>
+                                    </Link>
+                                </>
+                            )}
                         </div>
 
                         <div className="mt-12 text-left border-t border-[#005533] pt-4">
-                            <p className="mb-2 text-[#005533] text-xs">MODULES_LOADED:</p>
+                            <p className="mb-2 text-[#005533] text-xs">MODULOS_CARGADOS:</p>
                             <div className="grid grid-cols-4 gap-2 text-xs font-mono">
                                 <span className="text-[#00ffaa] opacity-80">[OK] LARAVEL_12</span>
                                 <span className="text-[#00ffaa] opacity-80">[OK] REACT_18</span>
@@ -80,16 +83,16 @@ export default function Welcome() {
                                 <span className="text-[#00ffaa] opacity-80">[OK] FLEXLAYOUT</span>
                                 <span className="text-[#00ffaa] opacity-80">[OK] POSTGRES</span>
                                 <span className="text-[#00ffaa] opacity-80">[OK] REDIS</span>
-                                <span className="text-[#00ffaa] opacity-80 animate-pulse">[..] USER_SESSION</span>
+                                <span className="text-[#00ffaa] opacity-80 animate-pulse">[..] SESION_USUARIO</span>
                             </div>
                         </div>
-                    </div>
+                    </RetroCard>
                 </div>
 
                 {/* System Footer */}
                 <div className="h-8 border-t border-[#005533] bg-[#000500] flex items-center px-4 z-40 relative shrink-0">
                     <span className="text-[#005533] mr-2">{">"}</span>
-                    <span className="animate-pulse text-[#00ffaa]">WAITING_FOR_INPUT...</span>
+                    <span className="animate-pulse text-[#00ffaa]">ESPERANDO_COMANDO...</span>
                 </div>
             </div>
         </>

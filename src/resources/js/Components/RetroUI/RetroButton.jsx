@@ -39,7 +39,8 @@ const RetroButton = ({
         ghost: "bg-transparent text-crt-phosphor/70 border border-transparent hover:text-crt-phosphor hover:bg-crt-phosphor/5 hover:border-crt-phosphor/30",
         danger: "bg-red-900/20 text-red-500 border border-red-500/50 hover:bg-red-500 hover:text-black hover:shadow-[0_0_10px_rgba(239,68,68,0.6)]",
         warning: "bg-orange-900/20 text-orange-500 border border-orange-500/50 hover:bg-orange-500 hover:text-black hover:shadow-[0_0_10px_rgba(249,115,22,0.6)]",
-        retro: "bg-yellow-900/20 text-yellow-500 border border-yellow-500/50 hover:bg-yellow-500 hover:text-black hover:shadow-[0_0_10px_rgba(234,179,8,0.6)]"
+        retro: "bg-yellow-900/20 text-yellow-500 border border-yellow-500/50 hover:bg-yellow-500 hover:text-black hover:shadow-[0_0_10px_rgba(234,179,8,0.6)]",
+        glow: "bg-[#001100] border border-[#00ffaa] text-[#00ffaa] font-bold hover:bg-[#00ffaa] hover:text-black hover:shadow-[0_0_15px_#00ffaa]"
     };
 
     return (
@@ -51,6 +52,11 @@ const RetroButton = ({
         >
             {/* Scanline effect overlay on hover */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-0 opacity-0 group-hover:opacity-30 pointer-events-none bg-[length:100%_2px,3px_100%]"></div>
+
+            {/* Glow effect for glow variant */}
+            {variant === 'glow' && (
+                <div className="absolute inset-0 bg-[#00ffaa] opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-md pointer-events-none"></div>
+            )}
 
             {/* Content */}
             <span className="relative z-10 flex items-center gap-2">

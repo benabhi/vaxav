@@ -1,15 +1,21 @@
-import './bootstrap';
 import '../css/app.css';
+import 'flexlayout-react/style/light.css'; // Base styles for FlexLayout
+import '../css/flexLayout.css'; // Your custom CRT theme for FlexLayout
+import './bootstrap';
 
-import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Vaxav Game';
+const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
+    resolve: (name) =>
+        resolvePageComponent(
+            `./Pages/${name}.jsx`,
+            import.meta.glob('./Pages/**/*.jsx'),
+        ),
     setup({ el, App, props }) {
         const root = createRoot(el);
 

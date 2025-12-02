@@ -41,7 +41,7 @@ const RetroModal = ({
 
     // Variant colors for border/header
     const colors = {
-        default: 'border-crt-phosphor text-crt-phosphor',
+        default: 'border-[#00ffaa] text-[#00ffaa]',
         danger: 'border-red-500 text-red-500',
         warning: 'border-orange-500 text-orange-500'
     };
@@ -61,7 +61,7 @@ const RetroModal = ({
             {/* Modal Panel */}
             <div
                 className={`
-                    relative bg-crt-panel border ${colorClass} shadow-[0_0_20px_rgba(0,0,0,0.5)] 
+                    relative bg-[#000a05] border ${colorClass} shadow-[0_0_20px_rgba(0,0,0,0.5)] 
                     w-full max-w-lg transform transition-all duration-300 ease-out
                     ${animate ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}
                     ${className}
@@ -88,14 +88,7 @@ const RetroModal = ({
                 </div>
 
                 {/* Footer (Optional actions) */}
-                <div className={`p-3 border-t ${colorClass} bg-black/20 flex justify-end gap-2`}>
-                    <RetroButton size="sm" variant="ghost" onClick={onClose}>
-                        CANCEL
-                    </RetroButton>
-                    <RetroButton size="sm" variant={variant === 'default' ? 'primary' : variant} onClick={onClose}>
-                        CONFIRM
-                    </RetroButton>
-                </div>
+
             </div>
         </div>,
         document.body

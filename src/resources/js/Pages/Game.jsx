@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
+import RetroModal from '@/Components/RetroUI/RetroModal';
 import { Model } from 'flexlayout-react';
 import FlexLayoutWrapper from '../Components/FlexLayoutWrapper';
 import * as FlexLayout from 'flexlayout-react';
@@ -9,16 +10,16 @@ import * as FlexLayout from 'flexlayout-react';
 const InventoryPanel = () => {
     return (
         <div className="p-2 h-full bg-[#000a05] text-[#00ffaa] font-mono text-xs">
-            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">INVENTORY_SYSTEM</h2>
+            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">SISTEMA_INVENTARIO</h2>
             <ul className="space-y-1">
                 <li className="flex items-center p-1 hover:bg-[#00ffaa] hover:text-black cursor-pointer transition-colors">
-                    <span className="mr-2">►</span> LASER_RIFLE [LVL.3]
+                    <span className="mr-2">►</span> RIFLE_LASER [NIV.3]
                 </li>
                 <li className="flex items-center p-1 hover:bg-[#00ffaa] hover:text-black cursor-pointer transition-colors">
-                    <span className="mr-2">►</span> ENERGY_SHIELD [80%]
+                    <span className="mr-2">►</span> ESCUDO_ENERGIA [80%]
                 </li>
                 <li className="flex items-center p-1 hover:bg-[#00ffaa] hover:text-black cursor-pointer transition-colors">
-                    <span className="mr-2">►</span> MED_PACK [x5]
+                    <span className="mr-2">►</span> PACK_MEDICO [x5]
                 </li>
             </ul>
         </div>
@@ -36,9 +37,9 @@ const MapPanel = () => {
 
             <div className="z-10 text-center mb-4">
                 <h2 className="text-lg font-bold tracking-widest text-[#00ffaa] drop-shadow-[0_0_5px_rgba(0,255,170,0.8)]">
-                    NAV_SYSTEM
+                    SISTEMA_NAV
                 </h2>
-                <p className="text-xs text-[#005533]">SECTOR: ALPHA-7 | COORDS: 42.8 / -17.3</p>
+                <p className="text-xs text-[#005533]">SECTOR: ALFA-7 | COORDS: 42.8 / -17.3</p>
             </div>
 
             <div className="relative w-48 h-48 border border-[#00ffaa] rounded-full flex items-center justify-center bg-[#001100] shadow-[0_0_15px_rgba(0,255,170,0.2)]">
@@ -60,11 +61,11 @@ const StatsPanel = () => {
 
     return (
         <div className="p-2 h-full bg-[#000a05] text-[#00ffaa] font-mono text-xs">
-            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">PILOT_STATUS</h2>
+            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">ESTADO_PILOTO</h2>
             <div className="space-y-3">
                 <div>
                     <div className="flex justify-between mb-1">
-                        <span>HEALTH</span>
+                        <span>SALUD</span>
                         <span>{stats.health}%</span>
                     </div>
                     <div className="w-full bg-[#001100] h-2 border border-[#005533]">
@@ -76,7 +77,7 @@ const StatsPanel = () => {
                 </div>
                 <div>
                     <div className="flex justify-between mb-1">
-                        <span>ENERGY</span>
+                        <span>ENERGIA</span>
                         <span>{stats.energy}%</span>
                     </div>
                     <div className="w-full bg-[#001100] h-2 border border-[#005533]">
@@ -88,11 +89,11 @@ const StatsPanel = () => {
                 </div>
                 <div className="pt-2 border-t border-[#005533] mt-2">
                     <div className="flex justify-between">
-                        <span className="text-[#005533]">CREDITS</span>
+                        <span className="text-[#005533]">CREDITOS</span>
                         <span>{stats.credits} CR</span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-[#005533]">LEVEL</span>
+                        <span className="text-[#005533]">NIVEL</span>
                         <span>{stats.level}</span>
                     </div>
                 </div>
@@ -103,14 +104,14 @@ const StatsPanel = () => {
 
 const ChatPanel = () => {
     const [messages] = useState([
-        { user: 'PLAYER1', text: 'Anyone for a mission?' },
-        { user: 'CMD_AI', text: 'Support required in Sector 7.' },
-        { user: 'TRADER', text: 'Selling ammo, cheap.' },
+        { user: 'JUGADOR1', text: '¿Alguien para una misión?' },
+        { user: 'CMD_IA', text: 'Apoyo requerido en Sector 7.' },
+        { user: 'COMERCIANTE', text: 'Vendo munición, barata.' },
     ]);
 
     return (
         <div className="p-2 h-full bg-[#000a05] text-[#00ffaa] font-mono text-xs flex flex-col">
-            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">COMMS_LINK</h2>
+            <h2 className="text-sm font-bold mb-2 border-b border-[#005533] pb-1">ENLACE_COMMS</h2>
             <div className="flex-1 overflow-y-auto space-y-1 mb-2 pr-1">
                 {messages.map((msg, idx) => (
                     <div key={idx} className="p-1 hover:bg-[#001100]">
@@ -123,7 +124,7 @@ const ChatPanel = () => {
                 <span className="pl-2 text-[#00ffaa]">{">"}</span>
                 <input
                     type="text"
-                    placeholder="TRANSMIT..."
+                    placeholder="TRANSMITIR..."
                     className="w-full p-2 bg-transparent text-[#00ffaa] focus:outline-none placeholder-[#005533]"
                 />
             </div>
@@ -131,15 +132,15 @@ const ChatPanel = () => {
     );
 };
 
-import Taskbar from '../Components/RetroUI/Taskbar';
+import Taskbar from '../Components/Game/Taskbar';
 import { InventoryIcon, MapIcon, StatsIcon, ChatIcon } from '../Components/RetroUI/RetroIcons';
 
 // --- Available Panels Definition ---
 const AVAILABLE_PANELS = [
-    { id: 'inventory', name: 'INVENTORY', icon: <InventoryIcon />, component: 'inventory', description: 'Manage equipment and items' },
-    { id: 'map', name: 'NAV_SYSTEM', icon: <MapIcon />, component: 'map', description: 'Galaxy map and navigation' },
-    { id: 'stats', name: 'PILOT_STATUS', icon: <StatsIcon />, component: 'stats', description: 'Health, energy, and credits' },
-    { id: 'chat', name: 'COMMS_LINK', icon: <ChatIcon />, component: 'chat', description: 'Interstellar communication' },
+    { id: 'inventory', name: 'INVENTARIO', icon: <InventoryIcon />, component: 'inventory', description: 'Gestionar equipo e items' },
+    { id: 'map', name: 'SISTEMA_NAV', icon: <MapIcon />, component: 'map', description: 'Mapa galáctico y navegación' },
+    { id: 'stats', name: 'ESTADO_PILOTO', icon: <StatsIcon />, component: 'stats', description: 'Salud, energía y créditos' },
+    { id: 'chat', name: 'ENLACE_COMMS', icon: <ChatIcon />, component: 'chat', description: 'Comunicación interestelar' },
 ];
 
 export default function Game() {
@@ -166,7 +167,7 @@ export default function Game() {
                     children: [
                         {
                             type: "tab",
-                            name: "INVENTORY",
+                            name: "INVENTARIO",
                             component: "inventory",
                             config: { icon: <InventoryIcon /> }
                         }
@@ -178,7 +179,7 @@ export default function Game() {
                     children: [
                         {
                             type: "tab",
-                            name: "NAV_SYSTEM",
+                            name: "SISTEMA_NAV",
                             component: "map",
                             config: { icon: <MapIcon /> }
                         }
@@ -192,6 +193,14 @@ export default function Game() {
     const [model, setModel] = useState(layoutModel);
     const [isEmpty, setIsEmpty] = useState(false);
     const [layoutUpdateTick, setLayoutUpdateTick] = useState(0);
+
+    // Logout Modal State
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const { post } = useForm();
+
+    const handleLogout = () => {
+        post(route('logout'));
+    };
 
     // Check for empty state on every render/action
     useEffect(() => {
@@ -290,9 +299,10 @@ export default function Game() {
                         <span className="animate-pulse text-[#00ffaa]">ONLINE</span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-[#00ffaa] opacity-80">
-                        <span>SYS_TIME: {new Date().toLocaleTimeString()}</span>
+                        <span>HORA_SIST: {new Date().toLocaleTimeString()}</span>
                         <span className="text-[#005533]">|</span>
                         <span>MEM: 64TB</span>
+
                     </div>
                 </div>
 
@@ -301,9 +311,9 @@ export default function Game() {
                     {isEmpty && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center z-0 pointer-events-none select-none opacity-50">
                             <div className="text-6xl mb-4 text-[#005533]">VAXAV_OS</div>
-                            <div className="text-xl text-[#00ffaa] animate-pulse">SYSTEM_IDLE</div>
+                            <div className="text-xl text-[#00ffaa] animate-pulse">SISTEMA_INACTIVO</div>
                             <div className="mt-8 text-sm text-[#005533] border border-[#005533] p-2">
-                                {">"} ACCESS_SYSTEM_MENU_TO_INITIATE_MODULES
+                                {">"} ACCEDER_MENU_SISTEMA_PARA_INICIAR_MODULOS
                             </div>
                         </div>
                     )}
@@ -318,8 +328,39 @@ export default function Game() {
                     factory={factory}
                     availablePanels={AVAILABLE_PANELS}
                     onAddPanel={handleAddPanel}
+                    onLogout={() => setShowLogoutModal(true)}
                 />
             </div>
+
+            {/* Logout Confirmation Modal */}
+            <RetroModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                title="CONFIRMAR APAGADO"
+            >
+                <div className="space-y-4">
+                    <p className="text-[#00ffaa] text-sm">
+                        ¿ESTÁ SEGURO QUE DESEA DESCONECTARSE DEL SISTEMA VAXAV?
+                    </p>
+                    <p className="text-[#005533] text-xs">
+                        ADVERTENCIA: LA CONEXIÓN NEURAL SE INTERRUMPIRÁ.
+                    </p>
+                    <div className="flex justify-end gap-4 mt-6">
+                        <button
+                            onClick={() => setShowLogoutModal(false)}
+                            className="px-4 py-2 border border-[#005533] text-[#005533] hover:text-[#00ffaa] hover:border-[#00ffaa] text-xs transition-colors"
+                        >
+                            CANCELAR
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 bg-red-900/20 border border-red-500 text-red-500 hover:bg-red-900/40 text-xs font-bold transition-colors"
+                        >
+                            CONFIRMAR_APAGADO
+                        </button>
+                    </div>
+                </div>
+            </RetroModal>
         </>
     );
 }
