@@ -236,15 +236,8 @@ export default function Game() {
         let parentId = '#0';
         let location = FlexLayout.DockLocation.CENTER;
 
-        // Logic to determine unique name
-        let count = 0;
-        model.visitNodes((node) => {
-            if (node.getType() === 'tab' && node.getComponent() === panelDef.component) {
-                count++;
-            }
-        });
-
-        const newName = count > 0 ? `${panelDef.name} ${count + 1}` : panelDef.name;
+        // Use the base name without auto-numbering
+        const newName = panelDef.name;
 
         // Logic to force split
         // We want to split the currently active tabset, or the root if none.

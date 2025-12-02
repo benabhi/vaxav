@@ -25,7 +25,7 @@ const FlexLayoutWrapper = (props) => {
         if (icon) {
             renderValues.content = (
                 <div className="flex items-center gap-2 group" onMouseDown={handleMiddleClick}>
-                    <span className="w-4 h-4 text-cyan-500 group-hover:text-cyan-300 transition-colors duration-300">
+                    <span className="w-4 h-4 text-[#00ffaa] group-hover:text-[#00ffaa] transition-colors duration-300 drop-shadow-[0_0_2px_rgba(0,255,170,0.5)]">
                         {icon}
                     </span>
                     <span className="font-mono tracking-wider text-sm">
