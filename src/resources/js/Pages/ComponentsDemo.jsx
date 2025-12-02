@@ -149,6 +149,27 @@ export default function ComponentsDemo() {
                             </div>
                         </RetroPanel>
                     </div>
+
+                    {/* Tooltips Section */}
+                    <RetroPanel title="TOOLTIPS DE DATOS">
+                        <div className="flex flex-wrap justify-center gap-12 p-8">
+                            <RetroTooltip content="Datos del sistema principal" position="top">
+                                <span className="border-b border-dashed border-[#00ffaa] cursor-help">INFO SUPERIOR</span>
+                            </RetroTooltip>
+
+                            <RetroTooltip content="Estado: ACTIVO" position="bottom">
+                                <RetroButton size="sm" variant="ghost">HOVER ABAJO</RetroButton>
+                            </RetroTooltip>
+
+                            <RetroTooltip content="Acceso Restringido" position="right">
+                                <span className="text-red-500 cursor-not-allowed">[BLOQUEADO]</span>
+                            </RetroTooltip>
+
+                            <RetroTooltip content="< SISTEMA_NAV >" position="left">
+                                <MapIcon className="text-[#00ffaa] cursor-pointer" />
+                            </RetroTooltip>
+                        </div>
+                    </RetroPanel>
                 </div>
 
                 {/* Modal Instance */}

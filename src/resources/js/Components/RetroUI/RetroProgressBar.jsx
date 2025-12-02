@@ -15,7 +15,7 @@ import React from 'react';
 const RetroProgressBar = ({
     label,
     value = 0,
-    color = 'bg-crt-phosphor',
+    color = 'bg-[#00ffaa]',
     showValue = true,
     segmented = false,
     size = 'md',
@@ -50,8 +50,8 @@ const RetroProgressBar = ({
                             <div
                                 key={i}
                                 className={`flex-1 h-full transition-all duration-300 ${i < activeSegments
-                                        ? `${color} shadow-[0_0_5px_currentColor] opacity-100`
-                                        : 'bg-crt-phosphor-dim/20 opacity-20'
+                                    ? `${color} shadow-[0_0_5px_currentColor] opacity-100`
+                                    : 'bg-crt-phosphor-dim/20 opacity-20'
                                     }`}
                             />
                         ))}
