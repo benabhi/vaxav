@@ -12,6 +12,8 @@
 	activeTab={data.activeTab}
 	action={data.action}
 	systemName={data.pilot.system}
+	notice={data.notice}
+	notices={data.notices}
 >
 	{@render children()}
 </GameShell>

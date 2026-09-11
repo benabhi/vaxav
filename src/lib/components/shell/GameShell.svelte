@@ -11,7 +11,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { Tab } from '$lib/navigation';
-	import type { AccionEnCurso } from '$lib/tipos';
+	import type { AccionEnCurso, Informe } from '$lib/tipos';
+	import ActionNotice from '../game/ActionNotice.svelte';
 	import ChatDock from './ChatDock.svelte';
 	import Neocom from './Neocom.svelte';
 	import StatusBar from './StatusBar.svelte';
@@ -24,9 +25,22 @@
 		activeTab: string;
 		action: AccionEnCurso | null;
 		systemName: string;
+		/** El informe de la acción que se acaba de resolver, si se resolvió alguna. */
+		notice?: Informe | null;
+		/** Las rutas que tienen algo sin leer. */
+		notices?: readonly string[];
 	}
 
-	let { children, tabs = [], activeModule, activeTab, action, systemName }: Props = $props();
+	let {
+		children,
+		tabs = [],
+		activeModule,
+		activeTab,
+		action,
+		systemName,
+		notice = null,
+		notices = []
+	}: Props = $props();
 
 	/** La clave con la que el navegador recuerda si la barra quedó desplegada. */
 	const CLAVE = 'vaxav_neocom';
@@ -56,7 +70,7 @@
 	}
 </script>
 
-<Neocom {expanded} {activeModule} onToggle={alternar} />
+<Neocom {expanded} {activeModule} onToggle={alternar} {notices} />
 
 <!--
 	El chat va acá adentro y no suelto: así el CSS lo corre junto con el contenido
@@ -65,7 +79,7 @@
 <div class="neocom-content min-h-dvh">
 	<StatusBar {action} />
 	{#if tabs.length > 1}
-		<TabBar {tabs} activeRoute={activeTab} />
+		<TabBar {tabs} activeRoute={activeTab} {notices} />
 	{/if}
 	<div
 		class="mx-auto w-full max-w-content px-[0.9rem] py-[1.25rem] xs:px-[1.1rem] xs:py-5 sm:px-6 sm:py-6"
@@ -75,4 +89,14 @@
 		</div>
 	</div>
 	<ChatDock {systemName} />
+	<!--
+		Con llave: dos acciones seguidas tienen que volver a abrir el aviso, y sin
+		esto Svelte reusaría el componente con su `abierto` en falso y el segundo
+		informe no se vería nunca.
+	-->
+	{#if notice}
+		{#key notice.id}
+			<ActionNotice report={notice} />
+		{/key}
+	{/if}
 </div>
