@@ -14,7 +14,7 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { createPilot } from '../services/pilots';
 import { getBody, seedUniverse } from '../services/universe';
 import * as schema from './schema';
-import { pilot, type Pilot } from './schema';
+import { container, fittedModule, itemEntry, itemStack, pilot, ship, type Pilot } from './schema';
 import type { Db } from './types';
 
 /** Una base vacía, con el esquema al día. */
@@ -62,4 +62,31 @@ export function moverPiloto(db: Db, row: Pilot, code: string): Pilot {
 		.where(eq(pilot.id, row.id))
 		.returning()
 		.get();
+}
+
+/**
+ * Deja al piloto sin nave, respetando las claves foráneas.
+ *
+ * Vive acá y no en un test porque lo necesitan varios, y porque el orden en que
+ * hay que borrar es conocimiento del esquema y no de quien prueba: con las
+ * foráneas activas, una nave no se borra dejando huérfanos ni sus módulos
+ * montados ni su bodega.
+ *
+ * Que desguazar se lleve la carga no es un atajo: **la bodega vive en la nave**,
+ * así que perder la nave es perder lo que llevaba.
+ */
+export function desguazar(db: Db, row: Pilot): void {
+	const nave = db.select().from(ship).where(eq(ship.pilotId, row.id)).get();
+	if (!nave) return;
+
+	db.delete(fittedModule).where(eq(fittedModule.shipId, nave.id)).run();
+
+	const bodega = db.select().from(container).where(eq(container.shipId, nave.id)).get();
+	if (bodega) {
+		db.delete(itemEntry).where(eq(itemEntry.containerId, bodega.id)).run();
+		db.delete(itemStack).where(eq(itemStack.containerId, bodega.id)).run();
+		db.delete(container).where(eq(container.id, bodega.id)).run();
+	}
+
+	db.delete(ship).where(eq(ship.id, nave.id)).run();
 }

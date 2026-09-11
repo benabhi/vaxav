@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { body } from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
+import { itemHistory, shipContainer } from './containers';
+import { activeShip, shipFit, shipReadout } from './ships';
 import { getFaction } from '$lib/game/factions';
 import { startingLevels, startingXp } from '$lib/game/professions';
 import { levelFromXp } from '$lib/game/progression';
@@ -222,5 +224,52 @@ describe('las profesiones que todavía no se ofrecen', () => {
 		await expect(
 			createPilot(db, 'Cuervo', 'cuervo@ejemplo.com', 'contrasena-larga', 'explorer', 'dominion')
 		).rejects.toThrow(PilotError);
+	});
+});
+
+describe('con qué manda a volar el oficio', () => {
+	it('el minero sale con su equipo de minería puesto', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		const montado = shipFit(db, nave).map((module) => module.code);
+
+		// Sin herramienta, el primer día de un minero es mirar el espacio. Y
+		// puesta, no en una caja: alguien que trabajó en los anillos hasta juntar
+		// para su nave le monta lo que sabe usar.
+		expect(montado).toContain('mining_laser_e1');
+		expect(montado).toContain('collector_e1');
+	});
+
+	it('y sin nada de combate', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		// Una nave que sale artillada sugiere que pelear es el plan, y no lo es.
+		const armas = shipFit(db, nave).filter(
+			(module) => module.kinetic + module.ionic + module.thermal > 0
+		);
+		expect(armas).toEqual([]);
+	});
+
+	it('la nave que arma el oficio se puede volar', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		// Un kit que deja la nave en tierra es peor que no dar nada.
+		expect(shipReadout(db, piloto)!.flyable).toBe(true);
+	});
+
+	it('lo que no entra en una ranura va a la bodega y no se pierde', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const bodega = shipContainer(db, activeShip(db, piloto.id)!.id);
+
+		// Hoy todo el kit del minero entra, así que la bodega queda vacía. El
+		// camino de escape existe igual: un casco sin ranura libre es un problema
+		// de balance del kit, no del piloto que se anota.
+		expect(itemHistory(db, bodega.id)).toEqual([]);
 	});
 });

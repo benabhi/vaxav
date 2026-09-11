@@ -10,9 +10,8 @@
 
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { fittedModule, ship, type Pilot } from '../db/schema';
-import { crearPiloto, seededDb } from '../db/testing';
-import type { Db } from '../db/types';
+import { fittedModule, ship } from '../db/schema';
+import { crearPiloto, desguazar, seededDb } from '../db/testing';
 import { defaultFit } from '$lib/game/fitting';
 import { STARTING_HULL, coreSlotIndex } from '$lib/game/hulls';
 import { EMPTY } from '$lib/game/modules';
@@ -27,13 +26,6 @@ import {
 	shipHull,
 	shipReadout
 } from './ships';
-
-/** Deja al piloto sin nave, respetando las claves foráneas. */
-function desguazar(db: Db, piloto: Pilot): void {
-	const nave = activeShip(db, piloto.id)!;
-	db.delete(fittedModule).where(eq(fittedModule.shipId, nave.id)).run();
-	db.delete(ship).where(eq(ship.id, nave.id)).run();
-}
 
 describe('el alta de la nave', () => {
 	it('le da nave a un piloto nuevo', async () => {
@@ -61,11 +53,18 @@ describe('el alta de la nave', () => {
 		});
 	});
 
-	it('sale con el resto de las ranuras vacías', async () => {
+	it('sale del astillero con el resto de las ranuras vacías', async () => {
 		// Viene completa, no viene buena: lo que la define lo elige el piloto.
+		//
+		// Se prueba sobre una nave recién salida del astillero y no sobre la del
+		// piloto, porque encima de ésta el oficio monta su equipo. Son **dos reglas
+		// distintas** —cómo sale una nave y con qué te manda a volar tu oficio— y
+		// mezclarlas haría que cambiar un kit rompiera el test del astillero.
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const nave = activeShip(db, piloto.id)!;
+		desguazar(db, piloto);
+
+		const nave = createStarterShip(db, piloto.id);
 		const hull = shipHull(nave);
 		const fit = shipFit(db, nave);
 		hull.slots.forEach((slot, i) => {

@@ -199,6 +199,36 @@ export function defaultFit(hull: Hull): readonly ShipModule[] {
 	});
 }
 
+/**
+ * Pone un módulo en la primera ranura libre donde entre.
+ *
+ * Existe para el equipo con el que arranca una profesión: el oficio dice **qué**
+ * trae, no en qué ranura, porque la ranura depende del casco y un día el minero
+ * va a salir en otra nave. Devuelve `null` si no entra en ninguna, que es
+ * información —el kit no encaja en ese casco— y no un error que haya que atrapar.
+ *
+ * La primera libre y no la mejor: elegir la mejor sería una decisión de
+ * equipamiento, y ésa es del jugador.
+ */
+export function placeInFreeSlot(
+	hull: Hull,
+	codes: readonly string[],
+	module: ShipModule
+): string[] | null {
+	const index = hull.slots.findIndex(
+		(slot, i) =>
+			codes[i] === '' &&
+			slot.kind === module.kind &&
+			slot.size >= module.size &&
+			slot.core === module.core
+	);
+	if (index < 0) return null;
+
+	const puesto = [...codes];
+	puesto[index] = module.code;
+	return puesto;
+}
+
 /** Reconstruye una configuración desde los códigos guardados por ranura. */
 export function fitFromCodes(hull: Hull, codes: readonly string[]): readonly ShipModule[] {
 	if (codes.length !== hull.slots.length) {

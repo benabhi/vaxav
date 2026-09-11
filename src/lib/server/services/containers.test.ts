@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { container, station } from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
 import { activeShip } from './ships';
 import {
@@ -25,11 +26,24 @@ import {
 } from './containers';
 import type { Db } from '../db/types';
 
-/** Un piloto con su nave y la bodega de esa nave, que es el caso de siempre. */
+/**
+ * Un piloto con una bodega **vacía** para trabajar.
+ *
+ * Es la de una estación y no la de la nave a propósito: la de la nave ya viene
+ * con lo que le dejó el oficio, y un test de inventario que arranca con algo
+ * adentro mide dos cosas a la vez. Que las dos clases de bodega se comporten
+ * igual es además lo que se quiere probar.
+ */
 async function conBodega(db: Db, callsign = 'Halcon') {
 	const piloto = await crearPiloto(db, callsign);
 	const nave = activeShip(db, piloto.id)!;
-	return { piloto, nave, bodega: shipContainer(db, nave.id) };
+	const puerto = db.select().from(station).get()!;
+	const bodega = db
+		.insert(container)
+		.values({ kind: 'station', pilotId: piloto.id, stationId: puerto.id })
+		.returning()
+		.get();
+	return { piloto, nave, bodega };
 }
 
 describe('la bodega de una nave', () => {
