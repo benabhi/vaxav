@@ -61,7 +61,7 @@
 				<div
 					class="w-full border border-l-[3px] p-[0.9rem]
 						{informe.unread
-						? 'border-border-soft border-l-data bg-surface-strong shadow-data-inset-left'
+						? 'aviso-panel border-border-soft border-l-data bg-surface-strong'
 						: 'border-border-soft border-l-border-soft bg-surface'}"
 				>
 					<ActionReport report={informe} />

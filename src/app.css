@@ -190,12 +190,6 @@
 	--shadow-glow: 0 0 24px rgb(255 122 26 / 0.16);
 	/* El halo del cian, para lo que avisa: un aviso no es una selección. */
 	--shadow-data-glow: 0 0 24px rgb(79 210 238 / 0.28);
-	/* El mismo halo, pero **hacia adentro**: lo que se enciende es el borde que
-	 * avisa y el pedazo de baldosa pegado a él, no un aura alrededor de todo el
-	 * botón. Un halo exterior desdibuja el contorno y compite con el borde naranja
-	 * de lo seleccionado; uno interior se lee como que el borde ilumina. */
-	--shadow-data-inset-left: inset 16px 0 20px -14px rgb(79 210 238 / 0.85);
-	--shadow-data-inset-bottom: inset 0 -16px 20px -14px rgb(79 210 238 / 0.85);
 	--shadow-glow-strong: 0 0 34px rgb(255 122 26 / 0.3);
 	--shadow-focus: 0 0 12px rgb(255 122 26 / 0.45);
 
@@ -475,40 +469,53 @@ body {
 	0%,
 	100% {
 		border-color: var(--color-data);
-		box-shadow: var(--aviso-halo);
 	}
 	50% {
-		border-color: rgb(79 210 238 / 0.25);
-		box-shadow: none;
+		border-color: rgb(79 210 238 / 0.3);
 	}
 }
 
 /*
- * Cada lugar dice de qué lado entra su halo, y la animación lo lee con `var`.
- * Así hay **una sola** animación para los dos: si fueran dos, el día que cambie
- * el ritmo habría que acordarse de cambiarlo dos veces.
+ * El halo entra desde el borde que avisa y se apaga enseguida. Es un **degradado
+ * de un solo lado** y no una sombra interior: una sombra con desenfoque pinta los
+ * cuatro bordes por poco que se la empuje, y eso dibuja el rectángulo del botón
+ * —justo lo que no queremos, porque el contorno recto y apagado es medio lenguaje
+ * del HUD—. Un degradado no puede hacer eso: nace en un borde y muere antes de
+ * llegar a la mitad.
+ *
+ * El halo **no titila, titila el borde**. Pulsar también el relleno convierte un
+ * aviso discreto en una baliza, y lo que tiene que llamar la atención es la línea
+ * de color, no la baldosa entera.
  */
 .aviso-izquierda {
-	--aviso-halo: var(--shadow-data-inset-left);
 	border-left-color: var(--color-data);
+	background-image: linear-gradient(to right, rgb(79 210 238 / 0.13), transparent 42%);
 	animation: vaxav-aviso 1.4s ease-in-out infinite;
 }
 
 .aviso-abajo {
-	--aviso-halo: var(--shadow-data-inset-bottom);
 	border-bottom-color: var(--color-data);
+	background-image: linear-gradient(to top, rgb(79 210 238 / 0.13), transparent 42%);
 	animation: vaxav-aviso 1.4s ease-in-out infinite;
 }
 
 /*
+ * El mismo halo en un panel, sin titileo: una lista con filas que parpadean es
+ * ruido, y ahí el cian ya alcanza para distinguir lo que no se leyó.
+ */
+.aviso-panel {
+	background-image: linear-gradient(to right, rgb(79 210 238 / 0.1), transparent 28%);
+}
+
+/*
  * Quien pidió menos movimiento igual tiene que enterarse: se apaga el titileo y
- * queda el borde encendido, que es la mitad de la señal y la que importa.
+ * queda el borde encendido con su halo, que es la mitad de la señal y la que
+ * importa.
  */
 @media (prefers-reduced-motion: reduce) {
 	.aviso-izquierda,
 	.aviso-abajo {
 		animation: none;
-		box-shadow: var(--aviso-halo);
 	}
 }
 
