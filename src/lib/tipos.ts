@@ -173,3 +173,53 @@ export interface Sistema {
 	readonly hasShip: boolean;
 	readonly actionInProgress: boolean;
 }
+
+/** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */
+export interface FilaRanura {
+	readonly index: number;
+	readonly kind: string;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	/** Qué es esta ranura: el sistema esencial, o el tipo con su clase. */
+	readonly title: string;
+	readonly classLabel: string;
+	readonly moduleName: string;
+	/**
+	 * Clase y calificación de lo montado (`2A`), o la clase de la ranura vacía
+	 * (`c2`). Es lo que se lee dentro del círculo sin pasar el mouse.
+	 */
+	readonly badge: string;
+	readonly filled: boolean;
+	readonly selected: boolean;
+	/** Posición en el anillo, en porcentaje del cuadro. */
+	readonly left: string;
+	readonly top: string;
+}
+
+/** Las ranuras de una categoría, para la lista que acompaña al anillo. */
+export interface GrupoRanuras {
+	readonly label: string;
+	readonly icon: IconName;
+	readonly rows: readonly FilaRanura[];
+}
+
+/**
+ * La nave del piloto, tal como sale de la base.
+ *
+ * Va cruda a propósito: el casco, lo montado y las habilidades alcanzan para que
+ * la pantalla calcule sola la hoja de rendimiento y las opciones de cada ranura,
+ * que son reglas puras. Así el interruptor de habilidades y elegir una ranura no
+ * cuestan una ida y vuelta.
+ */
+export interface Nave {
+	readonly hullCode: string;
+	/** Un código de módulo por ranura. Vacío quiere decir ranura libre. */
+	readonly fitted: readonly string[];
+	readonly pilotLevels: Readonly<Record<string, number>>;
+	/** Dónde está atracado el piloto y qué módulos tiene ese lugar. */
+	readonly stationName: string;
+	readonly stationServices: readonly string[];
+	/** Si puede tocar la nave acá y ahora, y por qué no si no puede. */
+	readonly canRefit: boolean;
+	readonly refitBlocked: string;
+}
