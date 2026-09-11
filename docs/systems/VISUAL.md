@@ -135,6 +135,27 @@ pasa en el bolsillo tanto como en el escritorio.
 - En pantallas chicas se esconde lo prescindible antes que apretarlo: en la barra
   de estado, primero se va el reloj y quedan la ubicación y los créditos.
 
+### Lo que todavía no entra en un teléfono
+
+Dos cosas quedan sin resolver, y son la misma: hay anchos fijos que no se pueden
+comprimir sin romper lo que sostienen.
+
+**El árbol del sistema.** Sus cuatro columnas de la derecha —explorado, tipo,
+distancia y acciones— son de ancho fijo y suman 16,75 rem; con las guías del
+árbol, la casilla del ícono y el nombre, la fila necesita 34 rem para no
+desalinearse. En 375 px eso no entra de ninguna manera sin cambiarle la forma a
+la fila. Hoy **se desliza** dentro de su panel, como la barra de pestañas: la
+geometría queda idéntica en cualquier ancho y en teléfono se arrastra para llegar
+al botón de viajar. Es un paliativo, no una vista de teléfono.
+
+**El marco del juego.** Abajo de unos 400 px, la barra de estado y el chat se
+salen del ancho y hacen que la página entera se desplace de costado. Le pasa a
+todas las pantallas de adentro, no a una.
+
+Las dos salidas que hay sobre la mesa para el árbol: **apilar** las cuatro
+columnas como una fila de etiquetas debajo de la descripción, o **esconder**
+"Explorado" y "Tipo" en angosto, que hoy dicen lo mismo en las trece filas.
+
 ## La portada
 
 No es una página de producto: es la **intro del juego**. Logotipo grabado sobre
