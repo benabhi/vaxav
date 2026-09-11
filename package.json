@@ -17,7 +17,8 @@
 		"test:e2e": "playwright install && playwright test",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"db:seed": "tsx --env-file=.env scripts/sembrar.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -42,6 +43,7 @@
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",
+		"tsx": "^4.23.13",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.0.16",
@@ -49,6 +51,7 @@
 		"vitest-browser-svelte": "^3.1.0"
 	},
 	"dependencies": {
+		"@node-rs/argon2": "^2.2.1",
 		"better-sqlite3": "^13.0.2"
 	}
 }
