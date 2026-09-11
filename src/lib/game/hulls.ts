@@ -164,13 +164,13 @@ function coreSlots(size: number): SlotSpec[] {
  */
 export const HULLS: readonly Hull[] = [
 	{
-		code: 'estribo',
-		name: 'Estribo',
+		code: 'pioner',
+		name: 'Pioner',
 		role: 'Lanzadera inicial',
 		description:
-			'La pieza donde apoyás el pie para subirte a algo más grande. ' +
-			'Mediocre en todo a propósito: vuela, carga poco y aguanta menos, ' +
-			'pero es tuya desde el primer minuto.',
+			'El casco con el que se abrió el sector, y con el que sigue entrando ' +
+			'todo el mundo. Mediocre en todo a propósito: vuela, carga poco y ' +
+			'aguanta menos, pero es tuya desde el primer minuto.',
 		dockSize: 'small',
 		mass: 180,
 		cargo: 200,
@@ -309,7 +309,7 @@ export const HULLS: readonly Hull[] = [
 ];
 
 /** Con qué casco arranca un piloto recién creado. */
-export const STARTING_HULL = 'estribo';
+export const STARTING_HULL = 'pioner';
 
 /** El catálogo indexado por código. */
 const BY_CODE: Readonly<Record<string, Hull>> = Object.fromEntries(

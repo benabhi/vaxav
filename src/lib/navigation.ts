@@ -64,7 +64,7 @@ export const MODULES: readonly Module[] = [
 				pending:
 					'Los atributos de tu nave: casco, combustible, energía ' +
 					'disponible y los bonos que le dan tus habilidades. Todavía ' +
-					'no tenés nave; la primera, una lanzadera Estribo, llega ' +
+					'no tenés nave; la primera, una lanzadera Pioner, llega ' +
 					'con el hangar.',
 				phase: 'F6'
 			},
