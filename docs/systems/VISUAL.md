@@ -55,7 +55,12 @@ Eurostile del juego, los íconos son de Phosphor y el logotipo es propio.
 5. **Mayúsculas para las etiquetas**, con el interletrado abierto. El texto
    corrido va en caja normal: en mayúsculas no se leen párrafos.
 6. **El halo es sutil.** Si se nota como efecto, está de más.
-7. **Sin modo claro.** La estética es de una sola pieza: en claro no queda otra
+7. **Lo que avisa se enciende hacia adentro.** El borde que avisa —el izquierdo
+   de una entrada del Neocom, el de abajo de una pestaña— ilumina el pedazo de
+   baldosa pegado a él, no un aura alrededor. Un halo exterior desdibuja el
+   contorno recto y compite con el naranja de lo seleccionado; uno interior se lee
+   como que el borde está encendido, que es lo que se quiso decir.
+8. **Sin modo claro.** La estética es de una sola pieza: en claro no queda otra
    versión, queda rota. El conmutador de tema se eliminó.
 
 ## Color

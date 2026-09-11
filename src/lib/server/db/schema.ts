@@ -22,6 +22,7 @@ import {
 	type AnySQLiteColumn
 } from 'drizzle-orm/sqlite-core';
 import { ACTION_KINDS } from '$lib/game/actions';
+import { CONTAINER_KINDS } from '$lib/game/items';
 import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
 import { BODY_KINDS, CORPORATION_KINDS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
 
@@ -618,6 +619,153 @@ export const pilotSkillRelations = relations(pilotSkill, ({ one }) => ({
 	pilot: one(pilot, { fields: [pilotSkill.pilotId], references: [pilot.id] })
 }));
 
+// --- Lo que se tiene: bodegas, montones y los dos libros ---------------------
+
+/**
+ * Una bodega: el lugar donde viven las cosas.
+ *
+ * Es una tabla propia y no dos columnas anulables en el inventario, y ésa es la
+ * decisión importante. Con `shipId` y `stationId` anulables en cada montón, la
+ * restricción "un solo montón por ítem y por lugar" necesitaría un índice único
+ * sobre columnas nulas —y tanto SQLite como PostgreSQL tratan los nulos como
+ * distintos entre sí, así que la restricción no restringiría nada y el mineral se
+ * duplicaría sin que nada lo frene—. Con un `containerId`, el índice único es
+ * trivial.
+ *
+ * De paso compra barato lo que viene: la bodega de una corporación es una fila
+ * con otra columna, y un hangar de naves guardadas es otra `kind`. Ninguna de las
+ * dos obliga a tocar `item_stack`.
+ */
+export const container = sqliteTable(
+	'container',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+
+		/** De qué es esta bodega. Define cuál de las referencias de abajo va llena. */
+		kind: text('kind', { enum: CONTAINER_KINDS }).notNull(),
+
+		/** La bodega de una nave: viaja con ella. */
+		shipId: integer('ship_id').references(() => ship.id),
+
+		/**
+		 * La bodega que un piloto tiene alquilada en una estación: se queda ahí.
+		 * Las dos columnas van juntas, porque cada piloto tiene la suya en cada
+		 * estación.
+		 */
+		pilotId: integer('pilot_id').references(() => pilot.id),
+		stationId: integer('station_id').references(() => station.id),
+
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		uniqueIndex('container_ship_unico').on(table.shipId),
+		uniqueIndex('container_station_unico').on(table.pilotId, table.stationId),
+		index('container_pilot_idx').on(table.pilotId)
+	]
+);
+
+/**
+ * Un montón de un ítem dentro de una bodega.
+ *
+ * Todo es **fungible**: dos ejemplares del mismo módulo son hoy indistinguibles,
+ * así que guardar uno por fila sería pagar por una diferencia que no existe. El
+ * día que haya desgaste o ingeniería, `module_instance` cuelga del **mismo
+ * contenedor** y migra unas pocas filas de módulos —no los millones de unidades
+ * de mineral, que van a seguir siendo fungibles para siempre—.
+ *
+ * `quantity` es un **caché del libro de ítems**: la verdad es la suma de los
+ * asientos, y hay con qué recalcularla. Cero no es una fila en cero: es una fila
+ * que se borra, porque un inventario lleno de ceros crece para siempre.
+ */
+export const itemStack = sqliteTable(
+	'item_stack',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		containerId: integer('container_id')
+			.notNull()
+			.references(() => container.id),
+		/** El código del catálogo de `game/items`. */
+		itemCode: text('item_code').notNull(),
+		/** Unidades. Nunca negativo. */
+		quantity: integer('quantity').notNull().default(0)
+	},
+	(table) => [
+		uniqueIndex('item_stack_unico').on(table.containerId, table.itemCode),
+		// Para poder preguntar cuánto de un ítem hay en todo el juego, que es la
+		// consulta con la que se audita una economía.
+		index('item_stack_item_idx').on(table.itemCode)
+	]
+);
+
+/**
+ * El libro mayor de créditos: un asiento por cada movimiento de plata.
+ *
+ * Regla del proyecto: **todo movimiento de valor deja asiento**, y el saldo es la
+ * suma de los asientos y no un número que se edita. Sumar seis años de asientos
+ * en cada carga de pantalla no es viable, así que `pilot.credits` se conserva
+ * como caché —y lo escribe **un solo módulo**, el servicio de billetera, en la
+ * misma transacción que el asiento—.
+ *
+ * `balanceAfter` es lo que hace que una desviación se detecte sin recorrer todo:
+ * el último asiento y `pilot.credits` tienen que coincidir siempre.
+ */
+export const creditEntry = sqliteTable(
+	'credit_entry',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		/** Con signo: positivo lo que entra, negativo lo que sale. */
+		amount: integer('amount').notNull(),
+		/** El saldo que dejó este asiento. */
+		balanceAfter: integer('balance_after').notNull(),
+		/** Por qué se movió: `ore_sale`, `module_purchase`, y las que vengan. */
+		kind: text('kind').notNull(),
+		/** Dónde pasó, si pasó en algún lado. */
+		bodyId: integer('body_id').references(() => body.id),
+		/** El informe que lo explica, si nació de una acción. */
+		logId: integer('log_id').references(() => pilotLog.id),
+		memo: text('memo').notNull().default(''),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [index('credit_entry_pilot_idx').on(table.pilotId, table.createdAt)]
+);
+
+/**
+ * El libro mayor de ítems: un asiento por cada cosa que entra o sale.
+ *
+ * Son dos libros y no uno porque las preguntas son dos y distintas: "qué
+ * movimientos tuvo mi billetera" y "de dónde salió esta unidad de iridio". En una
+ * sola tabla, la mitad de las columnas estaría vacía en cada fila y las dos
+ * consultas saldrían peor. Cuando una operación mueve plata y carga, los dos
+ * asientos se escriben en la misma transacción.
+ */
+export const itemEntry = sqliteTable(
+	'item_entry',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		containerId: integer('container_id')
+			.notNull()
+			.references(() => container.id),
+		itemCode: text('item_code').notNull(),
+		/** Con signo: positivo lo que entra, negativo lo que sale. */
+		quantity: integer('quantity').notNull(),
+		/** Cómo quedó el montón después de este asiento. */
+		quantityAfter: integer('quantity_after').notNull(),
+		/** Por qué se movió: `mined`, `sold`, `bought`, `granted`, `transferred`. */
+		kind: text('kind').notNull(),
+		/** El otro lado de un traslado, cuando lo hay. */
+		counterpartId: integer('counterpart_id').references((): AnySQLiteColumn => container.id),
+		logId: integer('log_id').references(() => pilotLog.id),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		index('item_entry_container_idx').on(table.containerId, table.createdAt),
+		index('item_entry_item_idx').on(table.itemCode, table.createdAt)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -637,3 +785,7 @@ export type FittedModule = typeof fittedModule.$inferSelect;
 export type PilotAction = typeof pilotAction.$inferSelect;
 export type PilotLog = typeof pilotLog.$inferSelect;
 export type PilotPool = typeof pilotPool.$inferSelect;
+export type Container = typeof container.$inferSelect;
+export type ItemStack = typeof itemStack.$inferSelect;
+export type CreditEntry = typeof creditEntry.$inferSelect;
+export type ItemEntry = typeof itemEntry.$inferSelect;

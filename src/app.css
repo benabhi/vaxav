@@ -190,6 +190,12 @@
 	--shadow-glow: 0 0 24px rgb(255 122 26 / 0.16);
 	/* El halo del cian, para lo que avisa: un aviso no es una selección. */
 	--shadow-data-glow: 0 0 24px rgb(79 210 238 / 0.28);
+	/* El mismo halo, pero **hacia adentro**: lo que se enciende es el borde que
+	 * avisa y el pedazo de baldosa pegado a él, no un aura alrededor de todo el
+	 * botón. Un halo exterior desdibuja el contorno y compite con el borde naranja
+	 * de lo seleccionado; uno interior se lee como que el borde ilumina. */
+	--shadow-data-inset-left: inset 16px 0 20px -14px rgb(79 210 238 / 0.85);
+	--shadow-data-inset-bottom: inset 0 -16px 20px -14px rgb(79 210 238 / 0.85);
 	--shadow-glow-strong: 0 0 34px rgb(255 122 26 / 0.3);
 	--shadow-focus: 0 0 12px rgb(255 122 26 / 0.45);
 
@@ -469,7 +475,7 @@ body {
 	0%,
 	100% {
 		border-color: var(--color-data);
-		box-shadow: var(--shadow-data-glow);
+		box-shadow: var(--aviso-halo);
 	}
 	50% {
 		border-color: rgb(79 210 238 / 0.25);
@@ -477,12 +483,19 @@ body {
 	}
 }
 
+/*
+ * Cada lugar dice de qué lado entra su halo, y la animación lo lee con `var`.
+ * Así hay **una sola** animación para los dos: si fueran dos, el día que cambie
+ * el ritmo habría que acordarse de cambiarlo dos veces.
+ */
 .aviso-izquierda {
+	--aviso-halo: var(--shadow-data-inset-left);
 	border-left-color: var(--color-data);
 	animation: vaxav-aviso 1.4s ease-in-out infinite;
 }
 
 .aviso-abajo {
+	--aviso-halo: var(--shadow-data-inset-bottom);
 	border-bottom-color: var(--color-data);
 	animation: vaxav-aviso 1.4s ease-in-out infinite;
 }
@@ -495,7 +508,7 @@ body {
 	.aviso-izquierda,
 	.aviso-abajo {
 		animation: none;
-		box-shadow: var(--shadow-data-glow);
+		box-shadow: var(--aviso-halo);
 	}
 }
 
