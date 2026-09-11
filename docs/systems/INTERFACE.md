@@ -1,7 +1,10 @@
 # Interfaz del juego
 
-> El marco está **implementado**: Neocom, barra de estado y las siete secciones.
-> Lo que falta es el contenido de cada una, que llega con su fase.
+> El marco está **implementado**: Neocom, barra de estado y pestañas.
+>
+> **El menú muestra sólo lo que funciona.** Una entrada que lleva a un cartel es
+> una puerta cerrada con el nombre puesto, y prometer es peor que no ofrecer: el
+> Neocom crece cuando hay algo detrás.
 >
 > Ver también: [identidad visual](VISUAL.md) · [acciones](ACTIONS.md)
 
@@ -37,16 +40,15 @@ Todo el árbol vive en `src/lib/navigation.ts`, que es de donde salen el Neocom,
 barras de pestañas y el registro de rutas: una pantalla nueva se agrega en un solo
 lugar y aparece en los tres.
 
-| Módulo      | Pestañas                             |
-| ----------- | ------------------------------------ |
-| Piloto      | Información · Habilidades · Bitácora |
-| Nave        | Ficha · Equipamiento · Bodega        |
-| Navegación  | Ubicación · Sistema · Galaxia        |
-| Mercado     | Comprar · Vender · Mis órdenes       |
-| Billetera   | _(sin pestañas)_                     |
-| Propiedades | Bodegas · Naves                      |
-| Mensajes    | Recibidos · Enviados                 |
-| Corporación | Resumen · Miembros                   |
+| Módulo     | Pestañas                             |
+| ---------- | ------------------------------------ |
+| Piloto     | Información · Habilidades · Bitácora |
+| Nave       | Ficha                                |
+| Navegación | Ubicación · Sistema                  |
+
+Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
+pantallas: la bodega y la billetera vuelven con los ítems, el mercado con la
+venta, la galaxia con el segundo sistema.
 
 **Las distancias se miden desde el piloto.** En la lista de cuerpos de un
 sistema, cuán lejos está algo _del cuerpo que orbita_ no sirve para decidir nada:
@@ -63,11 +65,11 @@ Barra lateral izquierda fija, tomada de Elite Dangerous y EVE, con el bloque
 naranja del nombre del juego arriba de todo, **del mismo alto que la barra de
 estado**: los dos terminan sobre la misma línea, así el trazo del HUD cruza la
 pantalla entera sin un escalón entre la barra lateral y el contenido. El alto es
-un token compartido (`TOPBAR_HEIGHT`) para que no se puedan separar. Lleva a los ocho módulos, **en una
+un token compartido (`TOPBAR_HEIGHT`) para que no se puedan separar. Lleva a los módulos que existen, **en una
 lista plana**, y al pie —separada del resto— tiene la salida.
 
 Se probó agruparlos en bloques con rótulo —Piloto, Operaciones, Social— y se
-descartó: con ocho entradas, los rótulos ensucian más de lo que ordenan. Se
+descartó: con pocas entradas, los rótulos ensucian más de lo que ordenan. Se
 descartó también agruparlos en entradas, que habría dejado el mercado a dos clics
 y detrás de un nombre que no lo nombra. **Una entrada por destino, todo a un
 clic.**
@@ -160,8 +162,9 @@ Detalles que definen si se siente bien:
 
 ### El chat
 
-> **La ventana está**, con contenido de maqueta. Lo que falta es que las líneas
-> sean de verdad.
+> **Sin construir.** Hubo una ventana con líneas inventadas y se sacó: una maqueta
+> que parece funcionar promete algo que no existe, igual que un cartel de fase. El
+> diseño de abajo queda en pie para cuando se haga de verdad.
 
 Siempre a mano, como el indicador. Es lo que convierte una simulación en un lugar
 con gente.
@@ -177,8 +180,7 @@ con gente.
   encendidas, y en esquinas distintas ninguna tapa a la otra.
 - Es lo único del juego que ocurre **en tiempo real**; todo lo demás tarda.
 - Por dentro no va a vivir en el estado de la aplicación, por lo que explica
-  [arquitectura](ARCHITECTURE.md). Hoy sí, porque es una maqueta y no hay nada
-  que sostener entre jugadores.
+  [arquitectura](ARCHITECTURE.md).
 
 ### Área central
 
