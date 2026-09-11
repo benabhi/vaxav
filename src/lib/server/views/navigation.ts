@@ -75,7 +75,6 @@ export function buildModuleTiles(
 		name: spec.name,
 		icon: serviceIcon(code as StationServiceKind),
 		summary: spec.summary,
-		phase: spec.phase,
 		available: instalados.has(code as StationServiceKind)
 	}));
 }

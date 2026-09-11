@@ -4,16 +4,12 @@
 	`tabs` es opcional: un módulo de una sola pantalla no dibuja barra. Cuando la
 	hay, va entre la barra de estado y el contenido, igual que en el juego, y el
 	título de la pantalla queda debajo.
-
-	El chat cuelga del pie en todas las pantallas: no es una sección, es algo que
-	está encendido mientras se juega.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { Tab } from '$lib/navigation';
 	import type { AccionEnCurso, Informe } from '$lib/tipos';
 	import ActionNotice from '../game/ActionNotice.svelte';
-	import ChatDock from './ChatDock.svelte';
 	import Neocom from './Neocom.svelte';
 	import StatusBar from './StatusBar.svelte';
 	import TabBar from './TabBar.svelte';
@@ -24,7 +20,6 @@
 		activeModule: string;
 		activeTab: string;
 		action: AccionEnCurso | null;
-		systemName: string;
 		/** El informe de la acción que se acaba de resolver, si se resolvió alguna. */
 		notice?: Informe | null;
 		/** Las rutas que tienen algo sin leer. */
@@ -37,7 +32,6 @@
 		activeModule,
 		activeTab,
 		action,
-		systemName,
 		notice = null,
 		notices = []
 	}: Props = $props();
@@ -73,8 +67,8 @@
 <Neocom {expanded} {activeModule} onToggle={alternar} {notices} />
 
 <!--
-	El chat va acá adentro y no suelto: así el CSS lo corre junto con el contenido
-	cuando el Neocom se pliega.
+	El contenido va en su propio contenedor: así el CSS lo corre junto cuando el
+	Neocom se pliega.
 -->
 <div class="neocom-content min-h-dvh">
 	<StatusBar {action} />
@@ -88,7 +82,6 @@
 			{@render children()}
 		</div>
 	</div>
-	<ChatDock {systemName} />
 	<!--
 		Con llave: dos acciones seguidas tienen que volver a abrir el aviso, y sin
 		esto Svelte reusaría el componente con su `abierto` en falso y el segundo

@@ -35,11 +35,10 @@ describe('el mosaico de módulos', () => {
 		expect(baldosas.map((b) => b.code)).toEqual(Object.keys(SERVICES));
 	});
 
-	it('trae el nombre, el resumen y la fase de cada módulo', () => {
+	it('trae el nombre y el resumen de cada módulo', () => {
 		const astillero = buildModuleTiles(['shipyard']).find((b) => b.code === 'shipyard')!;
 		expect(astillero.name).toBe(SERVICES.shipyard.name);
 		expect(astillero.summary).toBe(SERVICES.shipyard.summary);
-		expect(astillero.phase).toBe(SERVICES.shipyard.phase);
 	});
 });
 
