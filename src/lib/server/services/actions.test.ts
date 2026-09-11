@@ -62,7 +62,7 @@ describe('dar la orden de viajar', () => {
 
 		// Los propulsores de mejor calificación empujan más y pesan un poco más.
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[coreSlotIndex(hull, 'thrusters')] = 'thrusters_b2';
+		codigos[coreSlotIndex(hull, 'thrusters')] = 'thrusters_a2';
 		saveFit(db, nave, codigos);
 
 		const conMejores = travelDurationSeconds(distancia, shipReadout(db, piloto)!.speed);

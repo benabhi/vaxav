@@ -82,10 +82,10 @@ describe('la puerta con llave del equipamiento', () => {
 		const piloto = await crearPiloto(db);
 		const nave = activeShip(db, piloto.id)!;
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[0] = 'mining_laser_a1';
+		codigos[0] = 'mining_laser_e1';
 
 		refit(db, piloto, codigos);
-		expect(shipFit(db, nave)[0].code).toBe('mining_laser_a1');
+		expect(shipFit(db, nave)[0].code).toBe('mining_laser_e1');
 	});
 
 	it('se niega en viaje y dice por qué', async () => {
@@ -127,7 +127,7 @@ describe('la puerta con llave del equipamiento', () => {
 		const antes = shipFit(db, nave).map((module) => module.code);
 
 		const codigos = [...antes];
-		codigos[0] = 'mining_laser_a1';
+		codigos[0] = 'mining_laser_e1';
 		const movido = moverPiloto(db, piloto, 'anfora_i');
 
 		expect(() => refit(db, movido, codigos)).toThrow(ShipError);

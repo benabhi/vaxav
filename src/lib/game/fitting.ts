@@ -190,12 +190,12 @@ export function defaultFit(hull: Hull): readonly ShipModule[] {
 				`${hull.name} pide un ${slot.core} de clase ${slot.size} y no hay ninguno en el catálogo`
 			);
 		}
-		// El más grande que entre, en su escalón de entrada: una nave de astillero
-		// viene completa, no viene buena. Y además el escalón A no pide
+		// El más grande que entre, en su escalón más modesto: una nave de astillero
+		// viene completa, no viene buena. Y el escalón de abajo no pide
 		// habilidades, así que un piloto nuevo puede volarla.
 		const largest = Math.max(...options.map((module) => module.size));
 		const sized = options.filter((module) => module.size === largest);
-		return sized.reduce((best, module) => (module.tier < best.tier ? module : best));
+		return sized.reduce((best, module) => (module.tier > best.tier ? module : best));
 	});
 }
 

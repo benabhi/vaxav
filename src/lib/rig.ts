@@ -94,7 +94,7 @@ function slotRow(
 		title: slotTitle(slot.kind, slot.core),
 		classLabel: `Clase ${slot.size}`,
 		moduleName: montado ? module.name : 'Vacía',
-		badge: montado ? `${module.tier}${module.size}` : `c${slot.size}`,
+		badge: montado ? `${module.size}${module.tier}` : `c${slot.size}`,
 		filled: montado,
 		selected: index === selected,
 		left: position.left,

@@ -102,7 +102,7 @@
 				).map((disponible) => ({
 					code: disponible.module.code,
 					name: disponible.module.name,
-					tier: `${disponible.module.tier}${disponible.module.size}`,
+					tier: `${disponible.module.size}${disponible.module.tier}`,
 					summary: moduleSummary(disponible.module),
 					icon: moduleIcon(disponible.module),
 					mounted: disponible.module.code === ship.fitted[selected],

@@ -46,7 +46,7 @@ describe('qué se puede montar acá y ahora', () => {
 
 	it('deja montar lo de la bodega aunque la estación no surta', () => {
 		// Lo que traés puesto sirve en cualquier lado: por eso lo traés.
-		const laser = getModule('mining_laser_a1');
+		const laser = getModule('mining_laser_e1');
 		const disponibles = availableForSlot('hardpoint', 1, null, SIN_EQUIPAMIENTO, [laser]);
 		expect(disponibles.map((item) => item.module)).toEqual([laser]);
 		expect(disponibles[0].source).toBe('cargo');
@@ -54,14 +54,14 @@ describe('qué se puede montar acá y ahora', () => {
 
 	it('pone la bodega primero', () => {
 		// Lo que ya tenés se usa antes que lo que hay que conseguir.
-		const laser = getModule('mining_laser_a1');
+		const laser = getModule('mining_laser_e1');
 		const disponibles = availableForSlot('hardpoint', 1, null, CON_EQUIPAMIENTO, [laser]);
 		expect(disponibles[0].module).toEqual(laser);
 		expect(disponibles[0].source).toBe('cargo');
 	});
 
 	it('no repite un módulo que está en los dos lugares', () => {
-		const laser = getModule('mining_laser_a1');
+		const laser = getModule('mining_laser_e1');
 		const disponibles = availableForSlot('hardpoint', 1, null, CON_EQUIPAMIENTO, [laser]);
 		const codigos = disponibles.map((item) => item.module.code);
 		expect(new Set(codigos).size).toBe(codigos.length);
@@ -69,7 +69,7 @@ describe('qué se puede montar acá y ahora', () => {
 
 	it('no ofrece de la bodega lo que no entra en la ranura', () => {
 		// Llevar un módulo de clase 2 no lo hace entrar en una ranura de clase 1.
-		const grande = getModule('mining_laser_a2');
+		const grande = getModule('mining_laser_e2');
 		expect(availableForSlot('hardpoint', 1, null, [], [grande])).toEqual([]);
 	});
 

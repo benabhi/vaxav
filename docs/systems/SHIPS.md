@@ -122,21 +122,23 @@ Dos ejes, y cada uno contesta una pregunta distinta.
 La **clase**, de 1 a 8, es el tamaño: en una ranura de clase 4 entra un módulo de
 clase 4 o menor, nunca uno mayor. Es lo único que decide si **entra**.
 
-El **escalón** es la letra, y es la **puerta de habilidad**. Un módulo B rinde más
-que su A, cuesta más y pide habilidades entrenadas; también aprieta más la
-potencia y el cómputo, así que en una nave chica o con el cómputo al límite el A
-puede ser la elección correcta. La letra **corre hacia adelante** —A es la de
-entrada, B la avanzada, y queda lugar para una C—, de modo que el orden
-alfabético es el orden de progresión.
+El **escalón** es la letra, de **E a A**, y es la **puerta de habilidad**. Un
+módulo A rinde más que su E, cuesta más y pide habilidades entrenadas; también
+aprieta más la potencia y el cómputo, así que en una nave chica o con el cómputo
+al límite el E puede ser la elección correcta.
 
-Un módulo se nombra por las dos cosas, escalón y clase: **A2**, **B3**.
+El piso y el techo son fijos: se llenan los escalones del medio sin mover nunca
+los extremos ni renombrar lo que ya existe. Hoy sólo se usan los dos puntas, E y
+A.
 
-> **Antes había una calificación A-E** heredada de Elite Dangerous, donde A era el
-> tope y la escalera iba para atrás. Se sacó por dos razones. La primera es que el
-> catálogo no la sostenía: de las cinco letras sólo dos se usaban como escalera, y
-> en la mitad de los módulos la letra no significaba nada —existía un `armor_plate`
-> D y no había con qué compararlo—. La segunda es que mezclaba dos cosas en una
-> sola letra: el escalón tecnológico y el compromiso de diseño.
+Un módulo se nombra por las dos cosas, clase y escalón: **2E**, **3A**.
+
+> **Antes la letra era una "calificación"** que mezclaba dos cosas: el escalón
+> tecnológico y el compromiso de diseño. Y el catálogo no la sostenía —de las cinco
+> letras sólo dos se usaban como escalera, y en la mitad de los módulos la letra no
+> significaba nada: existía un `armor_plate` D sin nada con qué compararlo, y
+> `cargo_rack` iba 1D, 2C, 3C sin ninguna lógica—. Ahora la letra es sólo el
+> escalón, el compromiso va en el adjetivo, y todos los módulos la usan igual.
 
 ### El compromiso va en el nombre
 
