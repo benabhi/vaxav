@@ -63,7 +63,7 @@ npx tsx --env-file=.env -e "…createPilot(db, 'Halcon_7', 'halcon@ejemplo.com',
 | Esquema | `src/lib/server/db/schema.ts` — 15 tablas | Migración inicial aplicada |
 | Servicios | `src/lib/server/services/` — 7 módulos | |
 | Siembra | `scripts/sembrar.ts` | Idempotente, mismo conteo que el original |
-| Tests | 301, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
+| Tests | 313, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
 
 **Las reglas del juego se verificaron numéricamente**, no a ojo: los 47 módulos,
 los 5 cascos y el plano completo del sistema Ánfora se **generaron** importando
@@ -72,9 +72,9 @@ campo por campo para los cinco cascos, con y sin habilidades. Dan idéntico.
 
 ### La interfaz
 
-54 componentes en `src/lib/components/`: juego (8), tipografía (9), paneles (7),
-marco del juego (7), formularios (6), medidores (4), disposición (4), marca (3),
-botones (2), íconos (2), flotantes (2).
+59 componentes en `src/lib/components/`: juego (13), tipografía (9), marco del
+juego (7), paneles (7), formularios (6), medidores (4), disposición (4), marca
+(3), botones (2), flotantes (2), íconos (2).
 
 Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 
@@ -88,6 +88,7 @@ Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 | `/opciones` | Panel de 28 rem, campos de 40 px, y el cambio de contraseña probado de verdad: la vieja deja de entrar y la nueva entra |
 | `/navegacion` Ubicación | Baldosa de 120 px en grilla de 1/2/3 columnas, proporción 2:1 entre las dos columnas, y a 320 px de ancho no se excede un solo elemento |
 | `/navegacion/sistema` | El brazo del codo cae en 422 y el centro de la casilla del ícono también; el tallo de un padre termina justo donde arranca el codo de su hijo, en la misma columna |
+| `/nave` Ficha | Montar sube la potencia de 20 a 25 MW y baja la velocidad de 200 a 193; el interruptor de habilidades pasa el alcance de 2,7 a 3,2 al sin ir al servidor; el anillo queda cuadrado (295×295) a 380 px |
 | Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir |
 
 **`/opciones` no dibuja barra de pestañas, y el original sí.** Es la única
@@ -113,33 +114,14 @@ reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
 
 En este orden, que es el de menor a mayor riesgo.
 
-### 1. `/nave` — el equipamiento
+### 1. Los tests que faltan
 
-- **Fuente**: `../vaxav-old/vaxav/pages/ship.py` y `state/ship.py`
-- **Componentes que faltan**: `FittingRig`, `SlotNode`, `ShipSchematic`,
-  `IntegrityReadings` (`components/fitting_rig.py`), `SlotList`
-  (`components/slot_list.py`)
-- Las posiciones de las ranuras del anillo se calculan en el servidor con
-  `math.radians(-90 + puesto * 360 / total)` y `RING_RADIUS = 39` (% del lado).
-  Conviene una función pura en `src/lib/server/views/ship.ts`, así se puede probar
-  como el resto
-- Los tres anillos concéntricos: escudo 66 % **punteado** —gris si no hay
-  generador—, blindaje 54 %, casco 42 %
-- El esquema de la nave es un SVG propio de alambre, `viewBox="0 0 100 100"`, con
-  el path del casco, las nervaduras y las toberas
-- **Se guarda en cada cambio, no hay botón de aplicar**: `refit` ya es la puerta
-  con llave y revierte si el servicio se niega
-- El anillo y la lista comparten la ranura seleccionada
-
-### 2. Los tests que faltan
-
-- Los constructores de vistas que faltan: el de las filas del árbol y el del
-  anillo del equipamiento. El de la ubicación ya tiene los suyos, en
-  `src/lib/server/views/navigation.test.ts`
+- Ya no falta ninguno de los constructores de vistas: ubicación y árbol en
+  `src/lib/server/views/navigation.test.ts`, anillo en `src/lib/rig.test.ts`
 - El humo de rutas con Playwright: visitar las 23 y comprobar que ninguna entrada
   del Neocom lleva a un 404
 
-### 3. La documentación
+### 2. La documentación
 
 Todavía **no se portó nada de `docs/`**, y es lo último que queda para que no haya
 rastro de Reflex:
@@ -182,6 +164,7 @@ src/
 │   ├── game/                Reglas puras. Sin base, sin SvelteKit
 │   ├── format.ts            De dato a texto: rótulos, íconos, romanos, miles
 │   ├── navigation.ts        El árbol de módulos y pestañas
+│   ├── rig.ts               El anillo de equipamiento, para los dos lados
 │   ├── routes.ts            Las URL, en español
 │   ├── chat.ts              La maqueta del chat
 │   ├── tipos.ts             Lo que viaja del servidor a la pantalla
@@ -189,6 +172,7 @@ src/
 │   └── server/
 │       ├── db/              Esquema, conexión y la base de los tests
 │       ├── services/        Operaciones sobre la base
+│       ├── portraits.ts     Recorre static/portraits/ y reparte caras
 │       └── views/           Constructores de filas, puros y testeables
 └── routes/
     ├── (auth)/              Ingreso y alta. Guard inverso en su layout
@@ -220,6 +204,12 @@ cualquier ancho y en teléfono se arrastra para llegar al botón de viajar. Es u
 paliativo deliberado, no una vista de teléfono. El original ni siquiera hace eso
 —desborda la página entera—, así que acá no hay nada que copiar: lo que venga es
 diseño nuevo y se decide con la migración terminada.
+
+**El marco del juego tampoco entra en un teléfono.** Abajo de unos 400 px, la
+barra de estado y el chat se salen del ancho y hacen que la página entera se
+desplace de costado. Es de antes de todo esto y le pasa a **todas** las pantallas
+del juego, no a una: ninguna de las portadas nuevas aporta un solo píxel de
+desborde. Se arregla junto con lo del árbol, que es el mismo problema.
 
 Las dos salidas que quedaron sobre la mesa: **apilar** las cuatro columnas como
 una fila de etiquetas debajo de la descripción, o **esconder** "Explorado" y
@@ -306,7 +296,7 @@ veía mal.
 Además:
 
 ```bash
-npm run test:unit -- --run   # los 301
+npm run test:unit -- --run   # los 313
 npm run check                # tipos
 npm run lint                 # formato y reglas
 ```
