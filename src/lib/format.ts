@@ -387,8 +387,8 @@ export function bonusTargetLabel(target: BonusTarget): string {
  * dibuja es presentación.
  *
  * La clave es la familia del módulo, así que las variantes de una misma
- * —`plant_2e` y `plant_2a`— comparten dibujo: son la misma pieza en distinta
- * calificación, y distinguirlas por ícono sería mentir.
+ * —`plant_a2` y `plant_b2`— comparten dibujo: son la misma pieza en distinto
+ * escalón, y distinguirlas por ícono sería mentir.
  *
  * **Los siete internos esenciales llevan íconos distintos entre sí**, y ésa es
  * la razón de que esta tabla exista: con un engranaje para todos, la planta, los
@@ -425,9 +425,9 @@ const MODULE_ICONS: Record<string, IconName> = {
 /**
  * La familia de un módulo, sacada de su código.
  *
- * `plant_2e` y `plant_3a` son la misma pieza en distinto tamaño y calificación,
- * así que comparten familia. El sufijo es siempre clase y calificación, de modo
- * que la familia es todo lo que va antes del último guion bajo.
+ * `plant_a2` y `plant_b3` son la misma pieza en distinto escalón y tamaño, así
+ * que comparten familia. El sufijo es siempre escalón y clase, de modo que la
+ * familia es todo lo que va antes del último guion bajo.
  */
 export function moduleFamily(code: string): string {
 	const corte = code.lastIndexOf('_');

@@ -18,7 +18,7 @@ import {
 	maxedSkills
 } from './fitting';
 import { CORE_ORDER, HULLS, STARTING_HULL, coreSlotIndex, getHull } from './hulls';
-import { EMPTY, MODULES, RATINGS, getModule, modulesForSlot } from './modules';
+import { EMPTY, MODULES, TIERS, getModule, modulesForSlot } from './modules';
 import { SKILLS } from './skills';
 
 const inicial = getHull(STARTING_HULL);
@@ -109,7 +109,7 @@ describe('el catálogo de módulos', () => {
 			expect(module.name.trim(), module.code).not.toBe('');
 			expect(module.size, module.code).toBeGreaterThanOrEqual(1);
 			expect(module.size, module.code).toBeLessThanOrEqual(8);
-			expect(RATINGS, module.code).toContain(module.rating);
+			expect(TIERS, module.code).toContain(module.tier);
 			expect(module.description.trim(), module.code).not.toBe('');
 		}
 	});
@@ -200,7 +200,7 @@ describe('la configuración de fábrica', () => {
 	});
 
 	it('no se reconstruye con la cantidad equivocada de ranuras', () => {
-		expect(() => fitFromCodes(inicial, ['plant_2e'])).toThrow();
+		expect(() => fitFromCodes(inicial, ['plant_a2'])).toThrow();
 	});
 });
 
@@ -220,10 +220,10 @@ describe('los presupuestos', () => {
 		const fit = [...defaultFit(inicial)];
 		// Lo más caro en cómputo del catálogo, todo junto: sensores finos, un
 		// generador de escudo y un escáner.
-		fit[coreSlotIndex(inicial, 'sensors')] = getModule('sensors_2a');
+		fit[coreSlotIndex(inicial, 'sensors')] = getModule('sensors_b2');
 		inicial.slots.forEach((slot, i) => {
-			if (slot.kind === 'optional' && slot.size >= 2) fit[i] = getModule('shield_gen_2a');
-			else if (slot.kind === 'utility') fit[i] = getModule('scanner_1e');
+			if (slot.kind === 'optional' && slot.size >= 2) fit[i] = getModule('shield_gen_a2');
+			else if (slot.kind === 'utility') fit[i] = getModule('scanner_a1');
 		});
 
 		const readout = buildReadout(inicial, fit);
@@ -250,10 +250,10 @@ describe('los presupuestos', () => {
 	it('dicen con el número cuánta potencia falta', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mining_laser_2a');
-		fit[1] = getModule('mining_laser_2a');
+		fit[0] = getModule('mining_laser_a2');
+		fit[1] = getModule('mining_laser_a2');
 		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'optional' && slot.size === 3) fit[i] = getModule('shield_gen_3a');
+			if (slot.kind === 'optional' && slot.size === 3) fit[i] = getModule('shield_gen_a3');
 		});
 
 		const readout = buildReadout(hull, fit);
@@ -275,7 +275,7 @@ describe('lo que se divide por la masa', () => {
 		const cargada = [...liviana];
 		inicial.slots.forEach((slot, i) => {
 			// La placa de blindaje no pide energía: sólo pesa.
-			if (slot.kind === 'utility') cargada[i] = getModule('armor_plate_1d');
+			if (slot.kind === 'utility') cargada[i] = getModule('armor_plate_a1');
 		});
 
 		const antes = buildReadout(inicial, liviana);
@@ -316,7 +316,7 @@ describe('los bonos', () => {
 	it('aumentan el rendimiento al entrenar minería', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mining_laser_1e');
+		fit[0] = getModule('mining_laser_a1');
 
 		const sinEntrenar = buildReadout(hull, fit);
 		const entrenado = buildReadout(hull, fit, { mining: 5 });
@@ -350,8 +350,8 @@ describe('el acumulador', () => {
 	it('se declara estable sólo si la recarga alcanza', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mining_laser_2a');
-		fit[1] = getModule('mining_laser_2a');
+		fit[0] = getModule('mining_laser_a2');
+		fit[1] = getModule('mining_laser_a2');
 
 		const readout = buildReadout(hull, fit);
 		expect(readout.stable).toBe(readout.drainPerHour <= readout.rechargePerHour);
@@ -361,11 +361,11 @@ describe('el acumulador', () => {
 		// Es la traducción del manejo en vivo de EVE a una sola cuenta.
 		const hull = getHull('percal');
 		const modesto = [...defaultFit(hull)];
-		modesto[0] = getModule('mining_laser_2a');
-		modesto[1] = getModule('mining_laser_2a');
+		modesto[0] = getModule('mining_laser_a2');
+		modesto[1] = getModule('mining_laser_a2');
 
 		const mejor = [...modesto];
-		mejor[coreSlotIndex(hull, 'distributor')] = getModule('distributor_3a');
+		mejor[coreSlotIndex(hull, 'distributor')] = getModule('distributor_b3');
 
 		const conPoco = buildReadout(hull, modesto);
 		const conMucho = buildReadout(hull, mejor);
@@ -386,7 +386,7 @@ describe('la supervivencia y el daño', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
 		const indice = hull.slots.findIndex((slot) => slot.kind === 'optional' && slot.size >= 2);
-		fit[indice] = getModule('shield_gen_2a');
+		fit[indice] = getModule('shield_gen_a2');
 		expect(buildReadout(hull, fit).shield).toBeGreaterThan(0);
 	});
 
@@ -403,7 +403,7 @@ describe('la supervivencia y el daño', () => {
 	it('da daño de su tipo y sólo de ése al montar un arma', () => {
 		const hull = getHull('alabarda');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('ion_emitter_1c');
+		fit[0] = getModule('ion_emitter_a1');
 
 		const readout = buildReadout(hull, fit);
 		expect(readout.dps.ionic).toBeGreaterThan(0);
@@ -414,7 +414,7 @@ describe('la supervivencia y el daño', () => {
 	it('aumenta el daño al entrenar puntería', () => {
 		const hull = getHull('alabarda');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mass_cannon_2c');
+		fit[0] = getModule('mass_cannon_a2');
 
 		const sinEntrenar = buildReadout(hull, fit);
 		const entrenado = buildReadout(hull, fit, { gunnery: 5 });
@@ -429,7 +429,7 @@ describe('la supervivencia y el daño', () => {
 			fit[0] = getModule(code);
 			return buildReadout(hull, fit).totalDps;
 		};
-		expect(dps('thermal_lance_2c')).toBeLessThan(dps('mass_cannon_2c'));
+		expect(dps('thermal_lance_a2')).toBeLessThan(dps('mass_cannon_a2'));
 	});
 });
 

@@ -89,9 +89,9 @@ describe('las ranuras dibujadas', () => {
 
 		for (const slot of slots) {
 			expect(slot.filled).toBe(deFabrica[slot.index] !== '');
-			// Lo montado muestra clase y calificación; lo vacío, la clase de la
-			// ranura. Es lo que se lee adentro del círculo sin pasar el mouse.
-			expect(slot.badge).toMatch(slot.filled ? /^\d[A-E]$/ : /^c\d$/);
+			// Lo montado muestra escalón y clase; lo vacío, la clase de la ranura. Es
+			// lo que se lee adentro del círculo sin pasar el mouse.
+			expect(slot.badge).toMatch(slot.filled ? /^[AB]\d$/ : /^c\d$/);
 		}
 	});
 

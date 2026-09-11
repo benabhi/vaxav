@@ -115,25 +115,51 @@ Cuatro tipos, tomados de Elite Dangerous porque separan bien las decisiones:
 | **Internos esenciales** | Lo que la nave necesita para volar. **Se mejoran, no se quitan** | Planta, propulsores, motor de salto, distribuidor, sensores, soporte vital, tanque |
 | **Internos opcionales** | Lo que define a qué se dedica la nave                            | Bodega, generador de escudo, refinería                                             |
 
-### Clase y calificación
+### Clase y escalón
 
-Cada ranura tiene una **clase**, de 1 a 8, que es su tamaño: en una de clase 4
-entra un módulo de clase 4 o menor, nunca uno mayor.
+Dos ejes, y cada uno contesta una pregunta distinta.
 
-Cada módulo tiene además una **calificación**, de A a E, que no es "mejor a peor"
-sino un compromiso distinto:
+La **clase**, de 1 a 8, es el tamaño: en una ranura de clase 4 entra un módulo de
+clase 4 o menor, nunca uno mayor. Es lo único que decide si **entra**.
 
-|       | Carácter                                               |
-| ----- | ------------------------------------------------------ |
-| **A** | El más capaz, el más caro y el que más energía consume |
-| **B** | El más resistente y el más pesado                      |
-| **C** | El equilibrado                                         |
-| **D** | El más liviano: menos capacidad, más alcance de salto  |
-| **E** | El más barato y el más modesto                         |
+El **escalón** es la letra, y es la **puerta de habilidad**. Un módulo B rinde más
+que su A, cuesta más y pide habilidades entrenadas; también aprieta más la
+potencia y el cómputo, así que en una nave chica o con el cómputo al límite el A
+puede ser la elección correcta. La letra **corre hacia adelante** —A es la de
+entrada, B la avanzada, y queda lugar para una C—, de modo que el orden
+alfabético es el orden de progresión.
 
-Un módulo se nombra por las dos cosas: **3A**, **5D**, **1E**. Que la D sea la
-liviana y la A la potente es lo que hace que **no haya una configuración óptima,
-sino una para cada oficio**.
+Un módulo se nombra por las dos cosas, escalón y clase: **A2**, **B3**.
+
+> **Antes había una calificación A-E** heredada de Elite Dangerous, donde A era el
+> tope y la escalera iba para atrás. Se sacó por dos razones. La primera es que el
+> catálogo no la sostenía: de las cinco letras sólo dos se usaban como escalera, y
+> en la mitad de los módulos la letra no significaba nada —existía un `armor_plate`
+> D y no había con qué compararlo—. La segunda es que mezclaba dos cosas en una
+> sola letra: el escalón tecnológico y el compromiso de diseño.
+
+### El compromiso va en el nombre
+
+Dentro de un mismo escalón y una misma clase puede haber varias versiones, y lo
+que las distingue es **qué recurso ahorra cada una**. Se nombran con un
+vocabulario cerrado que se repite en todas las familias, así que se entiende sin
+abrir la ficha y escala a cientos de módulos sin inventar cientos de nombres:
+
+| Adjetivo        | Qué sacrifica y qué gana                              |
+| --------------- | ----------------------------------------------------- |
+| **Compacto**    | Rinde algo menos, pide mucho menos cómputo y potencia |
+| **Sobrio**      | Rinde menos, consume mucho menos acumulador           |
+| **Persistente** | Ciclo más largo, drenaje mucho menor                  |
+| **Amplio**      | Más capacidad, ciclo más lento                        |
+| **Focalizado**  | Más alcance, menos potencia bruta                     |
+
+Es lo que hace que **no haya una configuración óptima, sino una para cada
+oficio**: un módulo que parece peor por sus números es la elección correcta en la
+nave donde el que parece mejor directamente no entra.
+
+El catálogo de hoy todavía no tiene versiones alternativas —una sola por familia,
+escalón y clase—, así que ningún módulo lleva adjetivo. Se suman cuando haya con
+qué compararlos.
 
 ## Los tres tipos de daño
 

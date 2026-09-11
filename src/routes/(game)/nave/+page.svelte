@@ -102,7 +102,7 @@
 				).map((disponible) => ({
 					code: disponible.module.code,
 					name: disponible.module.name,
-					rating: `${disponible.module.size}${disponible.module.rating}`,
+					tier: `${disponible.module.tier}${disponible.module.size}`,
 					summary: moduleSummary(disponible.module),
 					icon: moduleIcon(disponible.module),
 					mounted: disponible.module.code === ship.fitted[selected],
@@ -414,7 +414,7 @@
 												? 'text-on-accent'
 												: 'text-data'}"
 										>
-											{option.rating}
+											{option.tier}
 										</span>
 									</div>
 									<span

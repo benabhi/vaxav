@@ -96,7 +96,7 @@ describe('guardar y volver a leer', () => {
 		const nave = activeShip(db, piloto.id)!;
 
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[0] = 'mining_laser_1e';
+		codigos[0] = 'mining_laser_a1';
 		saveFit(db, nave, codigos);
 
 		expect(shipFit(db, nave).map((module) => module.code)).toEqual(codigos);
@@ -109,7 +109,7 @@ describe('guardar y volver a leer', () => {
 		const nave = activeShip(db, piloto.id)!;
 
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[0] = 'mining_laser_1e';
+		codigos[0] = 'mining_laser_a1';
 		saveFit(db, nave, codigos);
 		codigos[0] = '';
 		saveFit(db, nave, codigos);
@@ -141,7 +141,7 @@ describe('guardar y volver a leer', () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
 		const nave = activeShip(db, piloto.id)!;
-		expect(() => saveFit(db, nave, ['plant_2e'])).toThrow(ShipError);
+		expect(() => saveFit(db, nave, ['plant_a2'])).toThrow(ShipError);
 	});
 
 	it('dice claro que un casco inventado no está en el catálogo', async () => {
@@ -189,7 +189,7 @@ describe('la hoja de rendimiento', () => {
 		const antes = shipReadout(db, piloto)!.speed;
 		const codigos = shipFit(db, nave).map((module) => module.code);
 		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'utility') codigos[i] = 'armor_plate_1d';
+			if (slot.kind === 'utility') codigos[i] = 'armor_plate_a1';
 		});
 		saveFit(db, nave, codigos);
 
@@ -204,7 +204,7 @@ describe('la hoja de rendimiento', () => {
 
 		const antes = shipReadout(db, piloto)!.speed;
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[coreSlotIndex(hull, 'thrusters')] = 'thrusters_2a';
+		codigos[coreSlotIndex(hull, 'thrusters')] = 'thrusters_b2';
 		saveFit(db, nave, codigos);
 
 		expect(shipReadout(db, piloto)!.speed).toBeGreaterThan(antes);
