@@ -90,6 +90,20 @@ describe('dar la orden de viajar', () => {
 		expect(() => startTravel(db, piloto, getBody(db, 'anfora_ii')!)).toThrow(ActionError);
 	});
 
+	it('se niega a viajar a un cuerpo de otro sistema', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const destino = getBody(db, 'anfora_i')!;
+
+		// Un cuerpo de otro sistema. Sin la guarda, esto hacía estallar el cálculo
+		// de distancia con un error que el form action no atrapa, y al jugador le
+		// salía un 500 en vez de un motivo.
+		const ajeno = { ...destino, systemId: destino.systemId + 1 };
+
+		expect(() => startTravel(db, piloto, ajeno)).toThrow(ActionError);
+		expect(currentAction(db, piloto.id)).toBeNull();
+	});
+
 	it('se niega a viajar al lugar donde ya se está', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
@@ -145,6 +159,26 @@ describe('resolver la orden', () => {
 			.all()
 			.find((row) => row.skill === 'navigation')!;
 		expect(fila.xp).toBe(xpPrevio);
+	});
+
+	it('una clase de acción desconocida no mueve al piloto ni le paga', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const destino = getBody(db, 'anfora_estrella')!;
+		const orden = startTravel(db, piloto, destino);
+
+		// Una orden de una versión más nueva del juego. Perderla sería peor que
+		// dejarla esperando, así que no se resuelve y **tampoco se borra**.
+		db.update(pilotAction)
+			.set({ kind: 'no_existe' as 'travel', startedAt: new Date(Date.now() - 3_600_000) })
+			.where(eq(pilotAction.id, orden.id))
+			.run();
+
+		expect(resolveIfDue(db, piloto)).toBeNull();
+
+		const despues = db.select().from(pilot).where(eq(pilot.id, piloto.id)).get()!;
+		expect(despues.locationId).toBe(piloto.locationId);
+		expect(currentAction(db, piloto.id)).not.toBeNull();
 	});
 
 	it('sólo la resuelve una vez', async () => {

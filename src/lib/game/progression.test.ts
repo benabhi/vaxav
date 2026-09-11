@@ -13,7 +13,6 @@ import {
 	LEVEL_THRESHOLDS,
 	MAX_LEVEL,
 	actionXpPool,
-	distributeXp,
 	levelFromXp,
 	levelProgress,
 	xpForLevel,
@@ -105,27 +104,5 @@ describe('el pozo de una acción', () => {
 
 	it('no acepta una acción que dure menos que nada', () => {
 		expect(() => actionXpPool(-1)).toThrow();
-	});
-
-	it('le da el pozo entero a la principal y su parte a cada secundaria', () => {
-		// El otro ejemplo del diseño: 600 a Minería, 90 a cada secundaria.
-		const reparto = distributeXp(600, 'mining', ['stowage', 'prospecting']);
-		expect(reparto).toEqual({ mining: 600, stowage: 90, prospecting: 90 });
-	});
-
-	it('no reparte las secundarias entre ellas', () => {
-		// Sumar secundarias no le baja la experiencia a las que ya estaban.
-		const dos = distributeXp(600, 'mining', ['stowage', 'prospecting']);
-		const tres = distributeXp(600, 'mining', ['stowage', 'prospecting', 'refining']);
-		expect(tres.stowage).toBe(dos.stowage);
-	});
-
-	it('admite una acción sin secundarias', () => {
-		expect(distributeXp(120, 'navigation')).toEqual({ navigation: 120 });
-	});
-
-	it('se niega a repartir a una habilidad inexistente', () => {
-		expect(() => distributeXp(100, 'warp_drive')).toThrow();
-		expect(() => distributeXp(100, 'mining', ['warp_drive'])).toThrow();
 	});
 });

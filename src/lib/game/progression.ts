@@ -9,7 +9,6 @@
  */
 
 import { truncate } from './math';
-import { getSkill } from './skills';
 
 export const MAX_LEVEL = 5;
 
@@ -27,13 +26,6 @@ export const LEVEL_THRESHOLDS: readonly number[] = [0, 100, 400, 1300, 4000, 121
 
 /** Cuánta experiencia reparte un minuto de acción, antes de la dificultad. */
 export const XP_PER_MINUTE = 10;
-
-/**
- * Fracción del pozo que recibe cada habilidad secundaria. No se divide entre
- * ellas: cada una recibe esta porción, así una acción con muchas secundarias no
- * castiga a ninguna.
- */
-export const SECONDARY_SHARE = 0.15;
 
 /**
  * Experiencia acumulada que hace falta para *tener* `level`.
@@ -91,29 +83,6 @@ export function levelProgress(xp: number, difficulty: number): number {
 export function actionXpPool(minutes: number, difficultyFactor: number = 1): number {
 	if (minutes < 0) throw new RangeError('Una acción no puede durar menos que nada');
 	return truncate(minutes * XP_PER_MINUTE * difficultyFactor);
-}
-
-/**
- * Reparte el pozo de una acción entre la habilidad principal y las secundarias.
- *
- * La principal se lleva el pozo completo; cada secundaria, su fracción. Si una
- * habilidad aparece como principal y como secundaria, se le suman las dos
- * porciones en vez de perderse una.
- */
-export function distributeXp(
-	pool: number,
-	primary: string,
-	secondaries: readonly string[] = []
-): Record<string, number> {
-	// Falla temprano y con un mensaje claro si el catálogo no la conoce.
-	getSkill(primary);
-
-	const awarded: Record<string, number> = { [primary]: pool };
-	for (const code of secondaries) {
-		getSkill(code);
-		awarded[code] = (awarded[code] ?? 0) + truncate(pool * SECONDARY_SHARE);
-	}
-	return awarded;
 }
 
 /**

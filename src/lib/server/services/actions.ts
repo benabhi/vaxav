@@ -8,21 +8,33 @@
  * La resolución es perezosa: no hay ningún proceso corriendo en segundo plano.
  * `resolveIfDue` se llama al consultar —típicamente al cargar una pantalla— y
  * sólo entonces se aplica lo que ya venció.
+ *
+ * **Resolver es un despachador, no un procedimiento.** Lo que toda acción
+ * comparte —quedarse con la fila, depositar en un pozo, escribir el informe—
+ * vive una sola vez acá; lo que cada una hace de propio vive en su resolvedor.
+ * Antes esto estaba cableado a viajar, y una acción que no se mueve de lugar
+ * habría teletransportado al piloto sin que nada fallara.
  */
 
 import { and, eq } from 'drizzle-orm';
 import { body, pilot, pilotAction, type Body, type Pilot, type PilotAction } from '../db/schema';
 import type { Db } from '../db/types';
-import { TRAVEL_FAMILY, travelDurationSeconds } from '$lib/game/actions';
+import {
+	TRAVEL_FAMILY,
+	TRAVEL_KIND,
+	travelDurationSeconds,
+	type ActionKind
+} from '$lib/game/actions';
 import { actionXpPool } from '$lib/game/progression';
+import type { SkillFamily } from '$lib/game/skills';
 import { skillFamilyLabel } from '$lib/format';
 import { deposit } from './pools';
 import { recordEntry, type PoolDeposit } from './log';
 import { shipReadout } from './ships';
 import { situation } from './status';
-import { bodyDistance } from './universe';
+import { bodyDistance, getBodyById } from './universe';
 
-export const TRAVEL_KIND = 'travel';
+export { TRAVEL_KIND };
 
 /** La acción no se puede iniciar. El mensaje se le muestra al jugador. */
 export class ActionError extends Error {}
@@ -43,6 +55,52 @@ export interface ActionReport {
 	/** Lo que la acción depositó en el pozo de su rama. */
 	readonly deposit: PoolDeposit;
 }
+
+/**
+ * Lo que un resolvedor decide, y lo único que decide.
+ *
+ * Todo lo demás —reclamar la fila, escribir el informe, no cobrar dos veces— lo
+ * hace el despachador, así que una acción nueva no puede olvidarse de ninguna de
+ * esas tres cosas.
+ */
+interface Resolution {
+	/** A qué rama le paga esta acción. */
+	readonly family: SkillFamily;
+	/** Cuánta experiencia deja. */
+	readonly xp: number;
+	/**
+	 * Dónde termina el piloto, o `null` si **no se mueve**. Minar y refinar
+	 * ocurren donde estás parado, y la diferencia tiene que poder decirse.
+	 */
+	readonly movesTo: number | null;
+}
+
+/** Cómo se resuelve una clase de acción, una vez que la fila ya es nuestra. */
+type Resolver = (tx: Db, row: Pilot, claimed: PilotAction) => Resolution;
+
+/**
+ * Viajar: el piloto queda en el destino y la experiencia va a Pilotaje.
+ *
+ * La experiencia va al **pozo de la rama** y no a la habilidad que se usó. Es lo
+ * que convierte especializarse en una decisión: el que viaja junta Pilotaje y
+ * después elige si lo gasta en Navegación o en abrir otra cosa. Ver
+ * docs/systems/SKILLS.md.
+ */
+const resolveTravel: Resolver = (_tx, _row, claimed) => ({
+	family: TRAVEL_FAMILY,
+	xp: actionXpPool(claimed.durationSeconds / 60),
+	movesTo: claimed.destinationBodyId
+});
+
+/**
+ * El registro de resolvedores, uno por clase de acción.
+ *
+ * Está tipado contra `ActionKind`, así que agregar una clase sin su resolvedor
+ * no compila. Es la única forma de que el despachador no se olvide de nada.
+ */
+const RESOLVERS: Readonly<Record<ActionKind, Resolver>> = {
+	travel: resolveTravel
+};
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
 export function currentAction(db: Db, pilotId: number): PilotAction | null {
@@ -69,6 +127,15 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 	if (!readout.flyable) throw new ActionError('Tu nave no está en condiciones de volar.');
 	if (destination.id === row.locationId) throw new ActionError('Ya estás ahí.');
 
+	// Viajar es dentro del sistema; entre sistemas se salta por una puerta. Sin
+	// esta guarda, un pedido armado a mano con un cuerpo de otro sistema hace
+	// estallar `bodyDistance` con un error que el form action no atrapa, y al
+	// jugador le sale un 500 en vez de un motivo.
+	const origin = getBodyById(db, row.locationId);
+	if (origin && destination.systemId !== origin.systemId) {
+		throw new ActionError('Ese cuerpo está en otro sistema.');
+	}
+
 	const distance = bodyDistance(db, row.locationId, destination.id);
 	const duration = travelDurationSeconds(distance, readout.speed);
 
@@ -88,12 +155,12 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 /**
  * Si la orden en curso ya venció, la aplica y la borra.
  *
- * Mover al piloto, repartir la experiencia y borrar la fila pasa en la misma
- * transacción: a mitad de camino dejaría un viaje fantasma o un piloto que llegó
- * sin haber cobrado nada.
+ * Aplicar el resultado, depositar la experiencia, escribir el informe y borrar la
+ * fila pasa en la misma transacción: a mitad de camino dejaría una orden fantasma
+ * o un piloto que terminó sin haber cobrado nada.
  *
- * **Se resuelve exactamente una vez.** La transacción empieza por quedarse con
- * la fila —un borrado condicional que devuelve lo que borró— y sólo el que se la
+ * **Se resuelve exactamente una vez.** La transacción empieza por quedarse con la
+ * fila —un borrado condicional que devuelve lo que borró— y sólo el que se la
  * lleva reparte el botín. Dos consultas simultáneas entregarían el premio dos
  * veces si primero leyeran y después borraran.
  */
@@ -103,6 +170,13 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 
 	const due = new Date(pending.startedAt.getTime() + pending.durationSeconds * 1000);
 	if (new Date() < due) return null;
+
+	// Se busca el resolvedor **antes** de reclamar la fila. Un `kind` que este
+	// código no conoce es una orden de una versión más nueva, y perderla sería
+	// peor que dejarla esperando: el piloto queda trabado hasta que el juego sepa
+	// resolverla, pero no se le borra nada.
+	const resolve = RESOLVERS[pending.kind as ActionKind];
+	if (!resolve) return null;
 
 	return db.transaction((tx) => {
 		// Quedarse con la fila es lo primero: si otro llegó antes, no hay nada que
@@ -114,31 +188,27 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 			.get();
 		if (!claimed) return null;
 
-		const destination = tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
-		const origin = tx.select().from(body).where(eq(body.id, claimed.originBodyId)).get();
+		const outcome = resolve(tx, row, claimed);
 
-		const ganado = actionXpPool(claimed.durationSeconds / 60);
+		// Sólo se mueve el que se mueve. Minar ocurre donde estás parado.
+		if (outcome.movesTo !== null) {
+			tx.update(pilot).set({ locationId: outcome.movesTo }).where(eq(pilot.id, row.id)).run();
+		}
 
-		tx.update(pilot)
-			.set({ locationId: claimed.destinationBodyId })
-			.where(eq(pilot.id, row.id))
-			.run();
-
-		// La experiencia va al **pozo de la rama** y no a la habilidad que se usó.
-		// Es lo que convierte especializarse en una decisión: el que viaja junta
-		// Pilotaje y después elige si lo gasta en Navegación o en abrir otra cosa.
-		// Ver docs/systems/SKILLS.md.
-		const { before, after } = deposit(tx, row.id, TRAVEL_FAMILY, ganado);
+		const { before, after } = deposit(tx, row.id, outcome.family, outcome.xp);
 		const depositado: PoolDeposit = {
-			family: TRAVEL_FAMILY,
-			familyName: skillFamilyLabel(TRAVEL_FAMILY),
-			xp: ganado,
+			family: outcome.family,
+			familyName: skillFamilyLabel(outcome.family),
+			xp: outcome.xp,
 			before,
 			after
 		};
 
-		// El informe va en la misma transacción que el resultado: si se aplicó el
-		// viaje y se depositó la experiencia, la bitácora tiene que decirlo. Un
+		const destination = tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
+		const origin = tx.select().from(body).where(eq(body.id, claimed.originBodyId)).get();
+
+		// El informe va en la misma transacción que el resultado: si se aplicó la
+		// acción y se depositó la experiencia, la bitácora tiene que decirlo. Un
 		// informe perdido es una acción que el jugador no sabe que ocurrió.
 		const recorded = recordEntry(tx, row.id, {
 			kind: claimed.kind,

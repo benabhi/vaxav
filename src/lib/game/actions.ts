@@ -35,10 +35,17 @@ export const REFERENCE_SPEED = 190;
 // lo que la regla de "una sola bolsa" de ACTIONS.md quiere evitar.
 
 /**
- * Habilidades que reparte un viaje: Navegación se lleva el pozo completo,
- * Eficiencia de combustible su fracción de secundaria (ver `progression`).
+ * Las clases de acción que el juego sabe resolver.
+ *
+ * Es una tupla y no texto libre a propósito: el `kind` viaja hasta dos tablas, y
+ * con más de una acción un error de tipeo llegaría a la base sin que nada lo
+ * frene. Cada entrada de acá necesita su resolvedor en
+ * `server/services/actions.ts`, y un test lo verifica.
  */
-export const TRAVEL_PRIMARY_SKILL = 'navigation';
+export const ACTION_KINDS = ['travel'] as const;
+export type ActionKind = (typeof ACTION_KINDS)[number];
+
+export const TRAVEL_KIND: ActionKind = 'travel';
 
 /**
  * La rama a la que viajar le deposita la experiencia.
@@ -49,7 +56,6 @@ export const TRAVEL_PRIMARY_SKILL = 'navigation';
  * descubrirse leyendo el catálogo.
  */
 export const TRAVEL_FAMILY: SkillFamily = 'piloting';
-export const TRAVEL_SECONDARY_SKILLS = ['fuel_efficiency'] as const;
 
 /**
  * Duración de un viaje entre dos cuerpos del mismo sistema, en segundos.
