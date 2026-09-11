@@ -112,3 +112,64 @@ export interface Ubicacion {
 	readonly agents: readonly FilaAgente[];
 	readonly agentCount: string;
 }
+
+/**
+ * Un cuerpo del sistema, listo para dibujar como fila del árbol.
+ *
+ * Trae resuelto su lugar en el árbol —qué guías dibujar, si es el último hijo,
+ * si se puede plegar— porque eso es forma del árbol y no una decisión de la
+ * pantalla. La pantalla dibuja lo que le dan.
+ *
+ * **No trae `expanded`**: plegar es estado de interfaz y vive en el navegador.
+ */
+export interface FilaCuerpo {
+	readonly code: string;
+	readonly name: string;
+	readonly kind: string;
+	readonly icon: IconName;
+	readonly depth: number;
+	/**
+	 * Una guía por columna de ancestro: `true` si la rama que pasa por esa
+	 * columna todavía tiene algo abajo, y entonces su línea vertical atraviesa
+	 * esta fila.
+	 */
+	readonly rails: readonly boolean[];
+	/** Último hijo de su padre: se dibuja el codo del árbol y no la horquilla. */
+	readonly isLast: boolean;
+	/** Si algo lo orbita. Sólo estas filas se pueden plegar. */
+	readonly hasChildren: boolean;
+	readonly explored: boolean;
+	readonly exploration: string;
+	readonly explorationIcon: IconName;
+	/** Cuán lejos está del piloto, no de lo que orbita. Vacío en su propia fila. */
+	readonly distance: string;
+	/** Cuánto tardaría llegar, ya calculado. Vacío en la propia fila. */
+	readonly travelLabel: string;
+	readonly description: string;
+	readonly isStation: boolean;
+	readonly corporation: string;
+	readonly corporationKind: string;
+	readonly owner: string;
+	readonly services: readonly string[];
+	/** Marca dónde está parado el piloto ahora mismo. */
+	readonly isHere: boolean;
+}
+
+/** El sistema donde está el piloto, con todos sus cuerpos. */
+export interface Sistema {
+	readonly name: string;
+	readonly description: string;
+	readonly region: string;
+	readonly constellation: string;
+	readonly controlledBy: string;
+	readonly government: string;
+	readonly security: string;
+	readonly coordinates: string;
+	readonly bodyCount: string;
+	readonly stationCount: string;
+	readonly exploredCount: string;
+	readonly bodies: readonly FilaCuerpo[];
+	/** Lo único que el botón de viajar necesita para saber si mostrarse bloqueado. */
+	readonly hasShip: boolean;
+	readonly actionInProgress: boolean;
+}

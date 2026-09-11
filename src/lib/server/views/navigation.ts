@@ -10,8 +10,18 @@ import { eq } from 'drizzle-orm';
 import { body, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
-import { bodyDetail, type AgentInfo } from '../services/universe';
+import { currentAction } from '../services/actions';
+import { activeShip, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
+import {
+	bodyDetail,
+	bodyDistance,
+	systemOverview,
+	systemTree,
+	type AgentInfo,
+	type SystemNode
+} from '../services/universe';
+import { REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
 import { FACTIONS } from '$lib/game/factions';
 import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
 import { SERVICES, type StationServiceKind } from '$lib/game/universe';
@@ -19,13 +29,24 @@ import {
 	bodyKindIcon,
 	bodyKindLabel,
 	corporationKindLabel,
+	explorationIcon,
 	explorationLabel,
+	governmentLabel,
 	missionKindIcon,
 	missionKindLabel,
 	roman,
-	serviceIcon
+	securityLabel,
+	serviceIcon,
+	serviceLabel,
+	thousands
 } from '$lib/format';
-import type { BaldosaModulo, FilaAgente, Ubicacion } from '$lib/tipos';
+import type { BaldosaModulo, FilaAgente, FilaCuerpo, Sistema, Ubicacion } from '$lib/tipos';
+
+/**
+ * Mientras Ánfora sea el único sistema, es el que se muestra. Cuando el piloto
+ * pueda moverse entre sistemas, saldrá de dónde esté parado.
+ */
+const DEFAULT_SYSTEM = 'anfora';
 
 /**
  * La reputación del piloto con cada facción todavía no se guarda: la escriben
@@ -166,5 +187,139 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		moduleCount: isStation ? `${detail.services.length} de ${Object.keys(SERVICES).length}` : '',
 		agents,
 		agentCount: isStation ? `${abiertos} de ${agents.length}` : ''
+	};
+}
+
+/**
+ * Aplana el árbol en filas, calculando las guías de cada una.
+ *
+ * Las guías se llevan en una pila mientras se baja: al llegar a un nodo se
+ * recorta a su profundidad —lo que sobra son ramas ya cerradas— y queda una
+ * marca por ancestro, que dice si la línea de ese ancestro sigue bajando. Es la
+ * forma barata de dibujar un árbol con una lista plana.
+ *
+ * La columna `k` es la de los codos de los nodos de profundidad `k+1`, así que
+ * la marca que va ahí es la del ancestro de profundidad `k+1`: de ahí el
+ * corrimiento de uno. Se descarta la primera, la de la estrella, que no tiene
+ * hermanos ni columna donde caer.
+ *
+ * De paso, cada fila que no sea la del piloto lleva **su distancia desde donde
+ * está el piloto** y cuánto tardaría llegar. La distancia al cuerpo que se
+ * orbita no sirve para decidir nada: lo que un piloto necesita saber es cuán
+ * lejos está *de él*, y ese número es además el que explica el tiempo de viaje
+ * que ve al lado.
+ */
+export function buildBodyRows(
+	db: Db,
+	nodes: readonly SystemNode[],
+	here: string,
+	originId: number | null,
+	speed: number
+): readonly FilaCuerpo[] {
+	const filas: FilaCuerpo[] = [];
+	const sigue: boolean[] = [];
+
+	for (const node of nodes) {
+		sigue.length = node.depth;
+		const esAqui = node.body.code === here;
+
+		let distance = '';
+		let travelLabel = '';
+		if (!esAqui && originId !== null) {
+			const unidades = bodyDistance(db, originId, node.body.id);
+			distance = `${thousands(unidades)} ud`;
+			travelLabel = `${travelDurationSeconds(unidades, speed)}s`;
+		}
+
+		filas.push({
+			code: node.body.code,
+			name: node.body.name,
+			kind: bodyKindLabel(node.body.kind),
+			icon: bodyKindIcon(node.body.kind),
+			depth: node.depth,
+			rails: sigue.slice(1),
+			isLast: node.isLast,
+			hasChildren: node.hasChildren,
+			explored: node.body.explored,
+			exploration: explorationLabel(node.body.explored),
+			explorationIcon: explorationIcon(node.body.explored),
+			distance,
+			travelLabel,
+			description: node.body.description,
+			isStation: node.station !== null,
+			corporation: node.corporation?.name ?? '',
+			corporationKind: node.corporation ? corporationKindLabel(node.corporation.kind) : '',
+			owner: node.corporation ? factionName(node.corporation.faction) : '',
+			services: node.services.map(serviceLabel).sort(),
+			isHere: esAqui
+		});
+
+		// Para los hijos: la línea de este nodo sigue si le quedan hermanos.
+		sigue.push(!node.isLast);
+	}
+
+	return filas;
+}
+
+/** Lo que muestra la pestaña Sistema cuando no hay universo sembrado. */
+function uncharted(): Sistema {
+	return {
+		name: 'Sin cartografiar',
+		description: 'La base no tiene universo cargado. Corré `npm run db:seed` para sembrarlo.',
+		region: '',
+		constellation: '',
+		controlledBy: '',
+		government: '',
+		security: '',
+		coordinates: '',
+		bodyCount: '',
+		stationCount: '',
+		exploredCount: '',
+		bodies: [],
+		hasShip: false,
+		actionInProgress: false
+	};
+}
+
+/**
+ * El sistema actual y todos sus cuerpos, en una sola pasada.
+ *
+ * La velocidad sale de la hoja de rendimiento de su nave, que ya trae adentro el
+ * bono de Navegación y el del casco: la duración que se muestra en cada fila es
+ * exactamente la que se va a cobrar.
+ */
+export function buildSystemView(db: Db, row: Pilot): Sistema {
+	const overview = systemOverview(db, DEFAULT_SYSTEM);
+	// Sin universo sembrado no hay nada que dibujar, y decirlo es mejor que
+	// mostrar una pantalla vacía sin explicación.
+	if (overview === null) return uncharted();
+
+	const system = overview.system;
+	const here = db.select().from(body).where(eq(body.id, row.locationId)).get();
+	const readout = shipReadout(db, row);
+
+	return {
+		name: system.name,
+		description: system.description,
+		region: overview.region.name,
+		constellation: overview.constellation.name,
+		controlledBy: system.controllingFaction
+			? factionName(system.controllingFaction)
+			: 'Espacio libre',
+		government: governmentLabel(system.government),
+		security: securityLabel(overview.security),
+		coordinates: `${system.x} · ${system.y} · ${system.z}`,
+		bodyCount: String(overview.bodyCount),
+		stationCount: String(overview.stationCount),
+		exploredCount: `${overview.exploredCount} de ${overview.bodyCount}`,
+		bodies: buildBodyRows(
+			db,
+			systemTree(db, DEFAULT_SYSTEM),
+			here?.code ?? '',
+			row.locationId,
+			readout?.speed ?? REFERENCE_SPEED
+		),
+		hasShip: activeShip(db, row.id) !== null,
+		actionInProgress: currentAction(db, row.id) !== null
 	};
 }
