@@ -153,6 +153,11 @@
 	 *
 	 * Del 5 en adelante los saltos se agrandan: en una pantalla densa, la
 	 * diferencia entre 20 y 24 px no se lee, y la que separa secciones sí.
+	 *
+	 * **Ojo:** a partir del 5 el número deja de ser «un cuarto de rem por
+	 * unidad». `p-5` son 1,5 rem y `p-6` son 2. Una medida de 1,25 rem no está en
+	 * la escala y se escribe `p-[1.25rem]`; escribir `p-5` esperando 1,25 es el
+	 * error fácil, y no se nota hasta que algo queda cuatro píxeles corrido.
 	 */
 	--spacing-5: 1.5rem; /* 24px */
 	--spacing-6: 2rem; /* 32px */
