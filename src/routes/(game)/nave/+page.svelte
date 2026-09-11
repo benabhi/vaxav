@@ -110,8 +110,7 @@
 					summary: moduleSummary(disponible.module),
 					icon: moduleIcon(disponible.module),
 					mounted: disponible.module.code === ship.fitted[selected],
-					source: disponible.source === 'cargo' ? 'En la bodega' : 'En la estación',
-					sourceIcon: disponible.source === 'cargo' ? ('package' as const) : ('buildings' as const)
+					from: disponible.source
 				}))
 			: []
 	);
@@ -122,6 +121,26 @@
 	 * Nombra el lugar: "acá no hay nada" es una queja, "no hay nada en Planta
 	 * Escarcha" es una instrucción para ir a otro lado.
 	 */
+	/**
+	 * Lo montable, **separado por de dónde sale**.
+	 *
+	 * Sin separar, la lista se lee como un inventario: uno abre una ranura, ve
+	 * ocho módulos y cree que los tiene. Con dos bloques rotulados queda claro de
+	 * una que lo de arriba viaja con la nave y lo de abajo se queda en la estación
+	 * si te vas, que es la diferencia que importa antes de zarpar.
+	 */
+	let grouped = $derived(
+		[
+			{ source: 'cargo', title: 'Lo que llevás', hint: 'Viaja con la nave' },
+			{ source: 'station', title: 'Lo que ofrece la estación', hint: 'Se queda acá si te vas' }
+		]
+			.map((grupo) => ({
+				...grupo,
+				options: options.filter((option) => option.from === grupo.source)
+			}))
+			.filter((grupo) => grupo.options.length > 0)
+	);
+
 	let nothingAvailable = $derived(
 		hasSelection && options.length === 0
 			? `Nada para esta ranura en ${ship.stationName || 'este lugar'}.`
@@ -333,9 +352,15 @@
 			</div>
 		</Panel>
 
-		<!-- El banco de trabajo: qué se le puede montar a la ranura abierta. -->
+		<!--
+			Qué se le puede montar a la ranura abierta.
+			**No es un taller**: acá no se fabrica nada, se monta y se desmonta. Es el
+			mismo servicio de Equipamiento que ofrece la estación, y por eso se llama
+			igual. Fabricar se hace en el Taller, que es otro módulo de estación y se
+			entra desde Ubicación.
+		-->
 		{#if hasSelection}
-			<TitledPanel title="Banco de trabajo" detail={selectedTitle} class="w-full">
+			<TitledPanel title="Equipamiento" detail={selectedTitle} class="w-full">
 				<div class="flex w-full flex-col gap-2">
 					<!--
 						Por qué no se puede tocar la nave, si no se puede. Un banco de
@@ -386,67 +411,74 @@
 						<p class="text-1 text-warning">{nothingAvailable}</p>
 					{/if}
 
-					{#each options as option (option.code)}
-						<form method="POST" action="?/montar" use:enhance class="w-full">
-							<input type="hidden" name="ranura" value={selected} />
-							<input type="hidden" name="modulo" value={option.code} />
-							<button
-								type="submit"
-								disabled={!ship.canRefit}
-								class="w-full border border-l-[3px] border-border-soft px-3 py-[0.6rem] text-left
+					<!--
+						Dos bloques rotulados y no una lista sola: abrir una ranura y ver
+						ocho módulos se lee como un inventario. Lo que llevás va primero,
+						porque es lo que podés usar en cualquier lado.
+
+						Y la diferencia se repite en cada fila: **lo tuyo tiene borde
+						izquierdo y fondo, lo de la estación va plano**. El encabezado
+						alcanza para entenderlo una vez; el borde, para no tener que subir a
+						releerlo cuando la lista es larga.
+					-->
+					{#each grouped as grupo (grupo.source)}
+						<div class="mt-2 flex w-full flex-wrap items-baseline gap-2 first:mt-0">
+							<Label>{grupo.title}</Label>
+							<span class="font-mono text-[0.62rem] text-text-muted">{grupo.hint}</span>
+							<div class="grow"></div>
+							<span class="font-mono text-[0.62rem] text-text-muted">
+								{grupo.options.length}
+							</span>
+						</div>
+
+						{#each grupo.options as option (option.code)}
+							<form method="POST" action="?/montar" use:enhance class="w-full">
+								<input type="hidden" name="ranura" value={selected} />
+								<input type="hidden" name="modulo" value={option.code} />
+								<button
+									type="submit"
+									disabled={!ship.canRefit}
+									class="w-full border border-l-[3px] border-border-soft px-3 py-[0.6rem] text-left
 									transition-[background-color,color] disabled:cursor-not-allowed disabled:opacity-45
 									{option.mounted
-									? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
-									: 'border-l-border-soft bg-surface text-text-strong hover:bg-surface-hover'}"
-							>
-								<div class="flex w-full flex-col items-start gap-1">
-									<div class="flex w-full items-center gap-2">
-										<Icon
-											name={option.icon}
-											weight="duotone"
-											size="0.95rem"
-											class={option.mounted ? 'text-on-accent' : 'text-accent'}
-										/>
+										? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
+										: option.from === 'cargo'
+											? 'border-l-accent-dim bg-surface text-text-strong hover:bg-surface-hover'
+											: 'border-l-transparent bg-transparent text-text-body hover:bg-surface-hover'}"
+								>
+									<div class="flex w-full flex-col items-start gap-1">
+										<div class="flex w-full items-center gap-2">
+											<Icon
+												name={option.icon}
+												weight="duotone"
+												size="0.95rem"
+												class={option.mounted ? 'text-on-accent' : 'text-accent'}
+											/>
+											<span
+												class="min-w-0 font-display text-[0.82rem] font-bold tracking-display uppercase"
+											>
+												{option.name}
+											</span>
+											<div class="grow"></div>
+											<span
+												class="shrink-0 font-mono text-[0.75rem] {option.mounted
+													? 'text-on-accent'
+													: 'text-data'}"
+											>
+												{option.tier}
+											</span>
+										</div>
 										<span
-											class="min-w-0 font-display text-[0.82rem] font-bold tracking-display uppercase"
-										>
-											{option.name}
-										</span>
-										<div class="grow"></div>
-										<span
-											class="shrink-0 font-mono text-[0.75rem] {option.mounted
+											class="font-mono text-1 leading-[1.4] {option.mounted
 												? 'text-on-accent'
-												: 'text-data'}"
+												: 'text-text-muted'}"
 										>
-											{option.tier}
+											{option.summary}
 										</span>
 									</div>
-									<span
-										class="font-mono text-1 leading-[1.4] {option.mounted
-											? 'text-on-accent'
-											: 'text-text-muted'}"
-									>
-										{option.summary}
-									</span>
-									<!--
-										De dónde sale. Un módulo que no está en ningún lado no se
-										puede montar, así que decir dónde está es parte de ofrecerlo.
-									-->
-									<span
-										class="flex items-center gap-[0.3rem] {option.mounted
-											? 'text-on-accent'
-											: 'text-accent-dim'}"
-									>
-										<Icon name={option.sourceIcon} weight="fill" size="0.7rem" />
-										<span
-											class="font-display text-[0.6rem] font-semibold tracking-label whitespace-nowrap uppercase"
-										>
-											{option.source}
-										</span>
-									</span>
-								</div>
-							</button>
-						</form>
+								</button>
+							</form>
+						{/each}
 					{/each}
 				</div>
 			</TitledPanel>

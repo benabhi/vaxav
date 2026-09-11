@@ -171,7 +171,7 @@ export function ensureEveryPilotHasAShip(db: Db): number {
  * Cambia la configuración de la nave del piloto, si es que puede.
  *
  * Es la puerta con llave; `saveFit` es la escritura cruda, que usan la siembra y
- * las pruebas. La interfaz ya apaga el banco de trabajo cuando no se puede, pero
+ * las pruebas. La interfaz ya apaga el equipamiento cuando no se puede, pero
  * **el servicio no confía sólo en eso**: nadie más que él escribe en la base.
  */
 export function refit(db: Db, row: Pilot, codes: readonly string[]): void {

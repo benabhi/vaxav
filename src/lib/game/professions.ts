@@ -82,13 +82,22 @@ const CATALOG = [
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'mechanics', level: 1 }
 		],
-		// Sale con un equipo de minería armado, no con piezas sueltas: alguien que
-		// trabajó en los anillos hasta juntar para su nave le monta lo que sabe
-		// usar. Sin armas: no es su oficio, y una nave que sale artillada sugiere
-		// que pelear es el plan.
+		// Lo justo para trabajar y nada más: el láser puesto, una bodega chica y
+		// un láser de repuesto en la caja. Alguien que trabajó en los anillos
+		// hasta juntar para su nave le monta lo que sabe usar, pero no le sobra
+		// para llenar las ranuras —y que sobren es media gracia del juego, porque
+		// la ranura vacía es la que hace pensar—.
+		//
+		// El repuesto no es adorno: un láser es lo primero que se rompe y lo
+		// primero que se mejora, y tenerlo en bodega enseña que la bodega también
+		// sirve para eso.
+		//
+		// Sin armas: no es su oficio, y una nave que sale artillada sugiere que
+		// pelear es el plan.
 		kit: [
 			{ item: 'mining_laser_e1', quantity: 1, fitted: true },
-			{ item: 'collector_e1', quantity: 1, fitted: true }
+			{ item: 'cargo_rack_e1', quantity: 1, fitted: true },
+			{ item: 'mining_laser_e1', quantity: 1, fitted: false }
 		],
 		playable: true
 	},
