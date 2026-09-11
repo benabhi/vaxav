@@ -21,8 +21,8 @@ import {
 	uniqueIndex,
 	type AnySQLiteColumn
 } from 'drizzle-orm/sqlite-core';
-import { APPEARANCES, MISSION_KINDS } from '../game/agents';
-import { BODY_KINDS, CORPORATION_KINDS, GOVERNMENTS, STATION_SERVICES } from '../game/universe';
+import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
+import { BODY_KINDS, CORPORATION_KINDS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
 
 /** Ahora, en segundos desde la época. */
 const NOW = sql`(unixepoch())`;

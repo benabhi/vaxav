@@ -4,10 +4,10 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { body } from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
-import { getFaction } from '../game/factions';
-import { startingLevels, startingXp } from '../game/professions';
-import { levelFromXp } from '../game/progression';
-import { getSkill } from '../game/skills';
+import { getFaction } from '$lib/game/factions';
+import { startingLevels, startingXp } from '$lib/game/professions';
+import { levelFromXp } from '$lib/game/progression';
+import { getSkill } from '$lib/game/skills';
 import {
 	PilotError,
 	authenticate,

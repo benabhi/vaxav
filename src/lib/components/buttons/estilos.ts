@@ -24,7 +24,7 @@ export const BUTTON_VARIANTS = {
 export type ButtonVariant = keyof typeof BUTTON_VARIANTS;
 
 export const BUTTON_SIZES = {
-	'1': 'text-[0.7rem] px-[0.7rem] py-[0.3rem] h-7',
+	'1': 'text-[0.7rem] px-[0.7rem] py-[0.3rem] h-[1.75rem]',
 	'2': 'text-[0.78rem] px-4 py-[0.45rem] h-[2.15rem]',
 	'3': 'text-[0.88rem] px-[1.6rem] py-[0.65rem] h-11'
 } as const;

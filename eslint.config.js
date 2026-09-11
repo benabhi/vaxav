@@ -34,8 +34,13 @@ export default defineConfig(
 		}
 	},
 	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {}
+		rules: {
+			// Las rutas del juego viven en src/lib/routes.ts y src/lib/navigation.ts,
+			// que es la misma centralización que esta regla busca. La aplicación no
+			// se sirve bajo un prefijo, así que `resolve()` no agregaría nada y
+			// obligaría a convertir a mano cada ruta que sale del árbol de
+			// navegacion, que son cadenas y no literales.
+			'svelte/no-navigation-without-resolve': 'off'
+		}
 	}
 );

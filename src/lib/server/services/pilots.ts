@@ -10,8 +10,8 @@
 import { count, eq, sql } from 'drizzle-orm';
 import { pilot, pilotSkill, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
-import { getFaction } from '../game/factions';
-import { getProfession, startingXp } from '../game/professions';
+import { getFaction } from '$lib/game/factions';
+import { getProfession, startingXp } from '$lib/game/professions';
 import { hashPassword, needsRehash, verifyPassword } from './passwords';
 import { createStarterShip } from './ships';
 import { UniverseError, requireStation } from './universe';

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { freshDb, seededDb } from '../db/testing';
-import { allAgents, allBodies, CORPORATIONS } from '../game/universe';
+import { allAgents, allBodies, CORPORATIONS } from '$lib/game/universe';
 import {
 	bodyDetail,
 	bodyDistance,

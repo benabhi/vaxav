@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex items-center gap-1 {extra}">
-	{#each { length: total } as _, index (index)}
+	{#each { length: total }, index (index)}
 		<div
 			class="h-2 grow border border-border-soft transition-[background-color] {filled > index
 				? 'bg-accent'

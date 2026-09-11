@@ -20,11 +20,11 @@ import {
 	fitFromCodes,
 	type Readout,
 	type SkillLevels
-} from '../game/fitting';
-import { STARTING_HULL, getHull, type Hull } from '../game/hulls';
-import type { ShipModule } from '../game/modules';
-import { levelFromXp } from '../game/progression';
-import { SKILLS, type SkillCode } from '../game/skills';
+} from '$lib/game/fitting';
+import { STARTING_HULL, getHull, type Hull } from '$lib/game/hulls';
+import type { ShipModule } from '$lib/game/modules';
+import { levelFromXp } from '$lib/game/progression';
+import { SKILLS, type SkillCode } from '$lib/game/skills';
 import { situation } from './status';
 
 /** La nave no está donde debería. El mensaje se le muestra al jugador. */

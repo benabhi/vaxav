@@ -7,13 +7,13 @@
  */
 
 import type { IconName } from '$lib/icons';
-import type { MissionKind } from '$lib/server/game/agents';
-import type { DamageType } from '$lib/server/game/damage';
-import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/server/game/hulls';
-import type { ShipModule } from '$lib/server/game/modules';
-import { startingLevels } from '$lib/server/game/professions';
-import { MAX_LEVEL } from '$lib/server/game/progression';
-import { getSkill } from '$lib/server/game/skills';
+import type { MissionKind } from '$lib/game/agents';
+import type { DamageType } from '$lib/game/damage';
+import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
+import type { ShipModule } from '$lib/game/modules';
+import { startingLevels } from '$lib/game/professions';
+import { MAX_LEVEL } from '$lib/game/progression';
+import { getSkill, type SkillFamily } from '$lib/game/skills';
 import {
 	SERVICES,
 	type BodyKind,
@@ -21,7 +21,7 @@ import {
 	type Government,
 	type SecurityLevel,
 	type StationServiceKind
-} from '$lib/server/game/universe';
+} from '$lib/game/universe';
 
 /** Una habilidad va del 0 al 5, así que su ficha son cinco estrellas. */
 export const MAX_STARS = MAX_LEVEL;
@@ -43,6 +43,20 @@ export function skillsSummary(profession: string): string {
 	return Object.entries(startingLevels(profession))
 		.map(([skill, level]) => `${getSkill(skill).name} ${roman(level)}`)
 		.join(' · ');
+}
+
+const SKILL_FAMILIES: Record<SkillFamily, string> = {
+	piloting: 'Pilotaje',
+	engineering: 'Ingeniería',
+	extraction: 'Extracción',
+	trade: 'Comercio',
+	combat: 'Combate',
+	science: 'Ciencias'
+};
+
+/** Cómo se llama una rama del árbol de habilidades en pantalla. */
+export function skillFamilyLabel(family: string): string {
+	return SKILL_FAMILIES[family as SkillFamily] ?? family;
 }
 
 /** Los tres estados en que puede estar una estrella de una habilidad. */
@@ -386,4 +400,18 @@ export function moduleFamily(code: string): string {
  */
 export function moduleIcon(module: Pick<ShipModule, 'code' | 'kind'>): IconName {
 	return MODULE_ICONS[moduleFamily(module.code)] ?? slotKindIcon(module.kind);
+}
+
+/**
+ * Cuánto falta, escrito para leerse de un vistazo.
+ *
+ * Con minutos cuando los hay: "3 m 20 s" se entiende de una, y "200 s" hay que
+ * dividirlo mentalmente.
+ */
+export function remainingLabel(seconds: number): string {
+	const total = Math.trunc(Math.max(0, seconds));
+	if (total >= 60) {
+		return `${Math.floor(total / 60)} m ${String(total % 60).padStart(2, '0')} s`;
+	}
+	return `${total} s`;
 }

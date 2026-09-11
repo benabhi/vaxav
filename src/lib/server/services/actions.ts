@@ -25,8 +25,8 @@ import {
 	TRAVEL_PRIMARY_SKILL,
 	TRAVEL_SECONDARY_SKILLS,
 	travelDurationSeconds
-} from '../game/actions';
-import { actionXpPool, distributeXp } from '../game/progression';
+} from '$lib/game/actions';
+import { actionXpPool, distributeXp } from '$lib/game/progression';
 import { shipReadout } from './ships';
 import { situation } from './status';
 import { bodyDistance } from './universe';

@@ -29,7 +29,7 @@ import {
 	type System
 } from '../db/schema';
 import type { Db } from '../db/types';
-import type { AgentBlueprint } from '../game/agents';
+import type { AgentBlueprint } from '$lib/game/agents';
 import {
 	CORPORATIONS,
 	GALAXY,
@@ -40,7 +40,7 @@ import {
 	type GalaxyBlueprint,
 	type SecurityLevel,
 	type StationServiceKind
-} from '../game/universe';
+} from '$lib/game/universe';
 
 /** El universo no está donde debería. El mensaje se le muestra a quien opera. */
 export class UniverseError extends Error {}
@@ -333,6 +333,16 @@ export function seedUniverse(db: Db, blueprint: GalaxyBlueprint = GALAXY): SeedC
 /** Busca un cuerpo por su código. */
 export function getBody(db: Db, code: string): Body | null {
 	return db.select().from(body).where(eq(body.code, code)).get() ?? null;
+}
+
+/**
+ * Busca un cuerpo por su id.
+ *
+ * Existe además de `getBody` porque lo guardado en una orden en curso son ids,
+ * no códigos: el origen y el destino de un viaje se leen así.
+ */
+export function getBodyById(db: Db, id: number): Body | null {
+	return db.select().from(body).where(eq(body.id, id)).get() ?? null;
 }
 
 /**

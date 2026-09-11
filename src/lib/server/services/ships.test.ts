@@ -13,9 +13,9 @@ import { describe, expect, it } from 'vitest';
 import { fittedModule, ship, type Pilot } from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
 import type { Db } from '../db/types';
-import { defaultFit } from '../game/fitting';
-import { STARTING_HULL, coreSlotIndex } from '../game/hulls';
-import { EMPTY } from '../game/modules';
+import { defaultFit } from '$lib/game/fitting';
+import { STARTING_HULL, coreSlotIndex } from '$lib/game/hulls';
+import { EMPTY } from '$lib/game/modules';
 import {
 	ShipError,
 	activeShip,

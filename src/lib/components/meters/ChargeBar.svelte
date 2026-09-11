@@ -19,7 +19,7 @@
 </script>
 
 <div class="flex items-center gap-1 {extra}">
-	{#each { length: segments } as _, index (index)}
+	{#each { length: segments }, index (index)}
 		<div
 			class="h-[0.6rem] grow transition-[background-color,box-shadow] {filled > index
 				? 'bg-accent shadow-glow'

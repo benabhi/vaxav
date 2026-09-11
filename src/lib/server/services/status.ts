@@ -21,8 +21,8 @@ import {
 	refitBlockedReason,
 	statusFor,
 	type PilotStatus
-} from '../game/status';
-import type { StationServiceKind } from '../game/universe';
+} from '$lib/game/status';
+import type { StationServiceKind } from '$lib/game/universe';
 import { bodyDetail } from './universe';
 
 /**
