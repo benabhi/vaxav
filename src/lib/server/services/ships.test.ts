@@ -12,6 +12,15 @@ import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { fittedModule, ship } from '../db/schema';
 import { crearPiloto, desguazar, seededDb } from '../db/testing';
+import {
+	auditStacks,
+	cargoHold,
+	fitsUnits,
+	itemHistory,
+	moveItem,
+	quantityOf,
+	shipContainer
+} from './containers';
 import { defaultFit } from '$lib/game/fitting';
 import { STARTING_HULL, coreSlotIndex } from '$lib/game/hulls';
 import { EMPTY } from '$lib/game/modules';
@@ -21,6 +30,7 @@ import {
 	createStarterShip,
 	ensureEveryPilotHasAShip,
 	pilotSkillLevels,
+	refit,
 	saveFit,
 	shipFit,
 	shipHull,
@@ -247,5 +257,101 @@ describe('el reparto de naves', () => {
 
 		const nave = createStarterShip(db, piloto.id);
 		expect(shipFit(db, nave)).toEqual(defaultFit(shipHull(nave)));
+	});
+});
+
+describe('bajar y subir modulos mueve la carga', () => {
+	/** El índice de la ranura donde el minero trae su láser. */
+	function anclaje(
+		db: ReturnType<typeof seededDb>,
+		piloto: Awaited<ReturnType<typeof crearPiloto>>
+	) {
+		const nave = activeShip(db, piloto.id)!;
+		const codes = shipFit(db, nave).map((module) => module.code);
+		return { nave, codes, index: codes.indexOf('mining_laser_e1') };
+	}
+
+	it('lo que se baja vuelve a la bodega', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const { nave, codes, index } = anclaje(db, piloto);
+		const bodega = shipContainer(db, nave.id);
+		const antes = quantityOf(db, bodega.id, 'mining_laser_e1');
+
+		const vaciada = [...codes];
+		vaciada[index] = '';
+		refit(db, piloto, vaciada);
+
+		// Desmontar era tirar el módulo a la basura sin decirlo, que es la clase de
+		// pérdida silenciosa que arruina la confianza en un inventario.
+		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(antes + 1);
+		expect(shipFit(db, nave)[index].code).toBe('');
+	});
+
+	it('lo que se sube desde la bodega sale de la bodega', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const { nave, codes, index } = anclaje(db, piloto);
+		const bodega = shipContainer(db, nave.id);
+
+		// Se baja y se vuelve a subir: tiene que quedar como estaba.
+		const vaciada = [...codes];
+		vaciada[index] = '';
+		refit(db, piloto, vaciada);
+		const conDosEnBodega = quantityOf(db, bodega.id, 'mining_laser_e1');
+
+		refit(db, piloto, codes);
+
+		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(conDosEnBodega - 1);
+		expect(shipFit(db, nave)[index].code).toBe('mining_laser_e1');
+	});
+
+	it('lo que surte la estación no sale de la bodega', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const { nave, codes, index } = anclaje(db, piloto);
+		const bodega = shipContainer(db, nave.id);
+
+		// Un módulo que no tenías lo pone la estación, y la bodega no se entera.
+		const conCanon = [...codes];
+		conCanon[index] = 'mass_cannon_e1';
+		refit(db, piloto, conCanon);
+
+		expect(quantityOf(db, bodega.id, 'mass_cannon_e1')).toBe(0);
+		// Y el láser que estaba puesto sí volvió a la caja.
+		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(2);
+	});
+
+	it('cada cambio deja su asiento', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const { nave, codes, index } = anclaje(db, piloto);
+		const bodega = shipContainer(db, nave.id);
+
+		const vaciada = [...codes];
+		vaciada[index] = '';
+		refit(db, piloto, vaciada);
+
+		expect(itemHistory(db, bodega.id)[0].kind).toBe('unfitted');
+		expect(auditStacks(db, bodega.id)).toEqual([]);
+	});
+
+	it('se niega si lo que bajás no entra en la bodega', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const { nave, codes } = anclaje(db, piloto);
+		const bodega = shipContainer(db, nave.id);
+
+		// Se llena la bodega de mineral hasta que no quepa un módulo más.
+		const libre = cargoHold(db, bodega.id, shipReadout(db, piloto)!.cargo).freeTenths;
+		moveItem(db, bodega.id, 'ferrous_silicate', fitsUnits(libre, 'ferrous_silicate'), 'mined');
+
+		const sinBodega = [...codes];
+		sinBodega[codes.indexOf('cargo_rack_e1')] = '';
+
+		// Bajar la bodega adicional achica el lugar justo cuando esa misma bodega
+		// necesita entrar: mirar la capacidad de antes dejaría pasar esto.
+		expect(() => refit(db, piloto, sinBodega)).toThrow(ShipError);
+		expect(shipFit(db, nave).map((m) => m.code)).toEqual(codes);
 	});
 });

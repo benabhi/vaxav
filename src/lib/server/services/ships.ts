@@ -22,9 +22,11 @@ import {
 	type SkillLevels
 } from '$lib/game/fitting';
 import { STARTING_HULL, getHull, type Hull } from '$lib/game/hulls';
+import { capacityTenths, volumeOf } from '$lib/game/items';
 import type { ShipModule } from '$lib/game/modules';
 import { levelFromXp } from '$lib/game/progression';
 import { SKILLS, type SkillCode } from '$lib/game/skills';
+import { moveItem, quantityOf, shipContainer, usedVolume } from './containers';
 import { situation } from './status';
 
 /** La nave no está donde debería. El mensaje se le muestra al jugador. */
@@ -168,11 +170,44 @@ export function ensureEveryPilotHasAShip(db: Db): number {
 }
 
 /**
+ * Qué ranuras cambiaron entre dos configuraciones.
+ *
+ * Devuelve por separado lo que se baja y lo que se sube, que es lo que hace
+ * falta para mover la carga. Un módulo que se queda donde estaba no aparece: no
+ * pasó por la bodega, así que no tiene por qué dejar asiento.
+ */
+function fitChanges(
+	before: readonly string[],
+	after: readonly string[]
+): { removed: string[]; added: string[] } {
+	const removed: string[] = [];
+	const added: string[] = [];
+
+	for (let index = 0; index < after.length; index++) {
+		const antes = before[index] ?? '';
+		const despues = after[index];
+		if (antes === despues) continue;
+		if (antes !== '') removed.push(antes);
+		if (despues !== '') added.push(despues);
+	}
+
+	return { removed, added };
+}
+
+/**
  * Cambia la configuración de la nave del piloto, si es que puede.
  *
  * Es la puerta con llave; `saveFit` es la escritura cruda, que usan la siembra y
  * las pruebas. La interfaz ya apaga el equipamiento cuando no se puede, pero
  * **el servicio no confía sólo en eso**: nadie más que él escribe en la base.
+ *
+ * **Un módulo que se baja no desaparece: va a la bodega.** Y uno que se sube
+ * sale de la bodega si lo tenías, o de la estación si no. Sin esto, desmontar
+ * era tirar el módulo a la basura sin decirlo, que es la clase de pérdida
+ * silenciosa que arruina la confianza en un inventario.
+ *
+ * Todo pasa en una transacción con la escritura del equipamiento: una bodega que
+ * recibe un módulo que la nave todavía tiene puesto es un módulo duplicado.
  */
 export function refit(db: Db, row: Pilot, codes: readonly string[]): void {
 	const now = situation(db, row);
@@ -181,5 +216,41 @@ export function refit(db: Db, row: Pilot, codes: readonly string[]): void {
 	const found = activeShip(db, row.id);
 	if (!found) throw new ShipError('No tenés ninguna nave.');
 
-	saveFit(db, found, codes);
+	const hull = shipHull(found);
+
+	db.transaction((tx) => {
+		const before = shipFit(tx, found).map((module) => module.code);
+		const { removed, added } = fitChanges(before, codes);
+
+		const bodega = shipContainer(tx, found.id);
+
+		// La capacidad que va a tener **después**: bajar una bodega adicional
+		// achica el lugar justo cuando esa misma bodega necesita entrar. Mirar la
+		// capacidad de antes dejaría pasar configuraciones imposibles.
+		const skills = pilotSkillLevels(tx, row.id);
+		const despues = buildReadout(hull, fitFromCodes(hull, codes), skills);
+
+		let libre = capacityTenths(despues.cargo) - usedVolume(tx, bodega.id);
+		for (const code of added) {
+			// Si lo tenías, sale de la bodega y hace lugar; si no, lo surte la
+			// estación y la bodega no se entera.
+			if (quantityOf(tx, bodega.id, code) > 0) libre += volumeOf(code, 1);
+		}
+		for (const code of removed) libre -= volumeOf(code, 1);
+
+		if (libre < 0) {
+			throw new ShipError('No hay lugar en la bodega para lo que estás bajando.');
+		}
+
+		for (const code of added) {
+			if (quantityOf(tx, bodega.id, code) > 0) {
+				moveItem(tx, bodega.id, code, -1, 'fitted');
+			}
+		}
+		for (const code of removed) {
+			moveItem(tx, bodega.id, code, 1, 'unfitted');
+		}
+
+		saveFit(tx, found, codes);
+	});
 }

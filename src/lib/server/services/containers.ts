@@ -24,7 +24,17 @@ import { capacityTenths, getItem, volumeOf } from '$lib/game/items';
 export class CargoError extends Error {}
 
 /** Por qué se movió algo. Queda escrito en el asiento. */
-export const ITEM_MOVES = ['mined', 'sold', 'bought', 'granted', 'transferred'] as const;
+export const ITEM_MOVES = [
+	'mined',
+	'sold',
+	'bought',
+	'granted',
+	'transferred',
+	/** Salió de la bodega para montarse en una ranura. */
+	'fitted',
+	/** Se bajó de una ranura y volvió a la bodega. */
+	'unfitted'
+] as const;
 export type ItemMove = (typeof ITEM_MOVES)[number];
 
 /** Lo que hay en una bodega, con lo que ocupa. */
