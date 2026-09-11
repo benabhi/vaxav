@@ -33,7 +33,7 @@ mejor y desbloquear habilidades nuevas.
 Las etapas van por **dependencia**: sin contenedor el mineral no tiene dónde caer,
 sin mineral no hay qué vender, sin plata no hay con qué comprar.
 
-### 0 · Desmontaje y enderezado · **en curso**
+### 0 · Desmontaje y enderezado · **hecho**
 
 La única que no agrega un verbo. Va primera porque las siguientes tocan los mismos
 archivos.
@@ -43,7 +43,7 @@ archivos.
 - ~~El sistema sale de dónde está el piloto, no de una constante.~~
 - ~~Ofrecer sólo la profesión que tiene algo que hacer.~~
 - ~~La calificación A-E pasa a ser el escalón tecnológico.~~
-- Enderezar la documentación que quedó vieja.
+- ~~Enderezar la documentación que quedó vieja.~~
 
 ### 1 · Ítems, bodega y libro mayor
 
