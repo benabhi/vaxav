@@ -63,7 +63,7 @@ npx tsx --env-file=.env -e "…createPilot(db, 'Halcon_7', 'halcon@ejemplo.com',
 | Esquema | `src/lib/server/db/schema.ts` — 15 tablas | Migración inicial aplicada |
 | Servicios | `src/lib/server/services/` — 7 módulos | |
 | Siembra | `scripts/sembrar.ts` | Idempotente, mismo conteo que el original |
-| Tests | 295, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
+| Tests | 301, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
 
 **Las reglas del juego se verificaron numéricamente**, no a ojo: los 47 módulos,
 los 5 cascos y el plano completo del sistema Ánfora se **generaron** importando
@@ -72,9 +72,9 @@ campo por campo para los cinco cascos, con y sin habilidades. Dan idéntico.
 
 ### La interfaz
 
-52 componentes en `src/lib/components/`: tipografía (9), paneles (7), marco del
-juego (7), juego (7), formularios (6), medidores (4), disposición (4), marca (3),
-botones (2), íconos (2), popover (1).
+54 componentes en `src/lib/components/`: juego (8), tipografía (9), paneles (7),
+marco del juego (7), formularios (6), medidores (4), disposición (4), marca (3),
+botones (2), íconos (2), flotantes (2).
 
 Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 
@@ -87,6 +87,7 @@ Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 | `/registro` | Solapas de 36×92 solapadas 0,7 rem, tarjeta elegida con borde de 3 px en `#FF7A1A` sobre `rgba(255,122,26,.16)` y halo de 24 px |
 | `/opciones` | Panel de 28 rem, campos de 40 px, y el cambio de contraseña probado de verdad: la vieja deja de entrar y la nueva entra |
 | `/navegacion` Ubicación | Baldosa de 120 px en grilla de 1/2/3 columnas, proporción 2:1 entre las dos columnas, y a 320 px de ancho no se excede un solo elemento |
+| `/navegacion/sistema` | El brazo del codo cae en 422 y el centro de la casilla del ícono también; el tallo de un padre termina justo donde arranca el codo de su hijo, en la misma columna |
 | Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir |
 
 **`/opciones` no dibuja barra de pestañas, y el original sí.** Es la única
@@ -112,28 +113,7 @@ reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
 
 En este orden, que es el de menor a mayor riesgo.
 
-### 1. `/navegacion/sistema` — el árbol del sistema
-
-**La pantalla más frágil de todas.** El árbol se dibuja con cajas de 1 px y
-columnas de ancho fijo; un píxel de más desalinea todo.
-
-- **Fuente**: `../vaxav-old/vaxav/pages/navigation.py` (`navigation_system`), unas
-  mil líneas
-- `systemTree` ya devuelve los nodos aplanados con `depth`, `isLast` y
-  `hasChildren`, que es la forma del árbol: la pantalla sólo dibuja
-- Constantes que hay que copiar tal cual: `RAIL_WIDTH 1rem`,
-  `CONNECTOR_CENTER 1.725rem`, `HEAD_HEIGHT 2.85rem`,
-  `EXPLORATION_COL_WIDTH 5.25rem`, `KIND_COL_WIDTH 4.25rem`,
-  `DISTANCE_COL_WIDTH 2.75rem`, `ACTION_BUTTON_WIDTH 4.5rem`
-- Falta un `HoverCard` propio, hermano del `Popover` que ya está: lo usan los
-  avisos del botón de viajar ("Ya hay una orden en curso", "Necesitás una nave")
-- El popover de "ESTÁS AQUÍ" es **uno solo** para toda la pantalla, no uno por
-  fila: con trece filas el posicionamiento se volvía errático
-- "Mostrar ubicación" despliega los ancestros, lleva la vista a `#vaxav-aqui` y le
-  pone la clase `vaxav-flash` por 1800 ms. La animación ya está en `app.css`
-- Viajar es un form action que llama `startTravel`
-
-### 2. `/nave` — el equipamiento
+### 1. `/nave` — el equipamiento
 
 - **Fuente**: `../vaxav-old/vaxav/pages/ship.py` y `state/ship.py`
 - **Componentes que faltan**: `FittingRig`, `SlotNode`, `ShipSchematic`,
@@ -151,7 +131,7 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   con llave y revierte si el servicio se niega
 - El anillo y la lista comparten la ranura seleccionada
 
-### 3. Los tests que faltan
+### 2. Los tests que faltan
 
 - Los constructores de vistas que faltan: el de las filas del árbol y el del
   anillo del equipamiento. El de la ubicación ya tiene los suyos, en
@@ -159,7 +139,7 @@ columnas de ancho fijo; un píxel de más desalinea todo.
 - El humo de rutas con Playwright: visitar las 23 y comprobar que ninguna entrada
   del Neocom lleva a un 404
 
-### 4. La documentación
+### 3. La documentación
 
 Todavía **no se portó nada de `docs/`**, y es lo último que queda para que no haya
 rastro de Reflex:
@@ -228,6 +208,23 @@ los dos lados —los rótulos, los catálogos de la pantalla de alta—, y bajo
 - Los componentes de interfaz son **siempre propios**, sin librerías de terceros
 - Commits en español, imperativo, sin co-autores ni menciones a asistentes
 
+## Pendiente de diseño, para cuando la migración termine
+
+**El árbol del sistema en un teléfono.** Sus cuatro columnas de la derecha son de
+ancho fijo y suman 16,75 rem; con el árbol, la casilla del ícono y el nombre, la
+fila necesita 34 rem para no desalinearse. En 375 px eso no entra de ninguna
+forma sin cambiar la forma de la fila.
+
+Hoy **se desliza**, como la barra de pestañas: la geometría queda idéntica en
+cualquier ancho y en teléfono se arrastra para llegar al botón de viajar. Es un
+paliativo deliberado, no una vista de teléfono. El original ni siquiera hace eso
+—desborda la página entera—, así que acá no hay nada que copiar: lo que venga es
+diseño nuevo y se decide con la migración terminada.
+
+Las dos salidas que quedaron sobre la mesa: **apilar** las cuatro columnas como
+una fila de etiquetas debajo de la descripción, o **esconder** "Explorado" y
+"Tipo" en angosto, que hoy dicen lo mismo en las trece filas.
+
 ## Trampas que costaron caro
 
 Las cuatro que hay que tener presentes antes de escribir una línea de interfaz.
@@ -269,6 +266,14 @@ efectivos y los presupuestos: o sea, en el balance.
 regla del juego los usa donde el original usaba el operador equivalente. No usar
 `Math.round` en nada que sea balance.
 
+### 4. La escala de Radix está embebida en todo el original
+
+`size="2"`, `spacing="3"`, `weight="medium"` no son valores literales. Las
+equivalencias ya están resueltas en `app.css` (`--text-1` a `--text-9` con su
+interlineado e interletrado, `--spacing-5` a `--spacing-9`). Un `rx.text(size="2")`
+es `text-2`; un `rx.heading(size="5")` es `text-5` pero con el interlineado de
+título, que es más corto.
+
 ### 5. Tailwind no ve un archivo nuevo hasta que se reinicia el servidor
 
 Un componente recién creado se dibuja con las clases que ya existían en otra
@@ -283,14 +288,6 @@ Del mismo orden: **medir con el panel del navegador oculto devuelve valores
 viejos**. La página no se redibuja mientras no se ve, así que `getComputedStyle`
 contesta lo de antes del último cambio. Más de un "bug" de esta migración fue
 eso.
-
-### 4. La escala de Radix está embebida en todo el original
-
-`size="2"`, `spacing="3"`, `weight="medium"` no son valores literales. Las
-equivalencias ya están resueltas en `app.css` (`--text-1` a `--text-9` con su
-interlineado e interletrado, `--spacing-5` a `--spacing-9`). Un `rx.text(size="2")`
-es `text-2`; un `rx.heading(size="5")` es `text-5` pero con el interlineado de
-título, que es más corto.
 
 ## Cómo se verifica que quedó igual
 
@@ -309,7 +306,7 @@ veía mal.
 Además:
 
 ```bash
-npm run test:unit -- --run   # los 295
+npm run test:unit -- --run   # los 301
 npm run check                # tipos
 npm run lint                 # formato y reglas
 ```
