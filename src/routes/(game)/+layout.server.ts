@@ -7,38 +7,37 @@
  *    cada página: agregar una pantalla nueva no debería obligar a acordarse de
  *    protegerla, y la protección tiene que estar en el servidor y no en que el
  *    Neocom no muestre el enlace.
- * 2. **La resolución perezosa.** Si la orden en curso ya venció, se aplica antes
- *    de dibujar nada. No hay ningún proceso de fondo: lo que resuelve una acción
- *    es que alguien la mire.
- * 3. **El piloto y la orden**, que son lo que dibujan el Neocom y la barra de
+ * 2. **El piloto y la orden**, que son lo que dibujan el Neocom y la barra de
  *    estado en todas las pantallas.
+ * 3. **El aviso y las notificaciones.** Si la orden se acaba de resolver, el
+ *    informe salta en el acto; y venga de donde venga, el Neocom marca que hay
+ *    algo sin leer hasta que el piloto abra la bitácora.
+ *
+ * **Resolver la orden vencida ya no pasa acá**: lo hace `hooks.server.ts`, que
+ * corre antes que todo `load`. Este layout y las páginas cargan en paralelo, así
+ * que si el piloto se movía en este archivo, la página ya había leído la fila
+ * anterior y dibujaba el lugar de salida.
  */
 
 import { redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { pilot as pilotTable } from '$lib/server/db/schema';
-import { currentAction, resolveIfDue } from '$lib/server/services/actions';
+import { pilotLog } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import { currentAction } from '$lib/server/services/actions';
+import { unreadCount } from '$lib/server/services/log';
 import { getBodyById } from '$lib/server/services/universe';
+import { buildInforme } from '$lib/server/views/log';
 import { buildPilotView } from '$lib/server/views/pilot';
-import { moduleForRoute, tabForRoute } from '$lib/navigation';
+import { LOG_TAB, moduleForRoute, tabForRoute } from '$lib/navigation';
 import { LOGIN_ROUTE } from '$lib/routes';
-import type { AccionEnCurso } from '$lib/tipos';
+import type { AccionEnCurso, Informe } from '$lib/tipos';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const pilot = locals.pilot;
 	if (!pilot) redirect(303, LOGIN_ROUTE);
 
-	// Se resuelve antes de leer nada más: si el viaje terminó, el piloto ya está
-	// en su destino cuando la pantalla se dibuja. Y como resolverlo lo movió, la
-	// fila que trajo el hook quedó vieja: hay que releerla.
-	const llegada = resolveIfDue(db, pilot);
-	const actual = llegada
-		? (db.select().from(pilotTable).where(eq(pilotTable.id, pilot.id)).get() ?? pilot)
-		: pilot;
-
-	const pending = currentAction(db, actual.id);
+	const pending = currentAction(db, pilot.id);
 	const action: AccionEnCurso | null = pending
 		? {
 				kind: pending.kind,
@@ -51,12 +50,32 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 			}
 		: null;
 
+	// El informe se arma desde la fila que quedó escrita y no desde lo que
+	// devolvió la resolución: así el aviso dice literalmente lo mismo que la
+	// bitácora, porque lee lo mismo.
+	const llegada = locals.resolved;
+	const fila = llegada
+		? db.select().from(pilotLog).where(eq(pilotLog.id, llegada.id)).get()
+		: undefined;
+	const notice: Informe | null = fila ? buildInforme(db, pilot.id, fila) : null;
+
+	// Las rutas que tienen algo sin leer. Hoy sólo la bitácora avisa; el día que
+	// las misiones o los mensajes también lo hagan, se suman acá.
+	//
+	// Estando parado en la pantalla que avisa, no avisa: el `load` de la página es
+	// el que marca leído y corre en paralelo con éste, así que sin esta condición
+	// el Neocom seguiría titilando justo en el render en que el jugador ya entró.
+	const enLaPantalla = url.pathname === LOG_TAB;
+	const notices = !enLaPantalla && unreadCount(db, pilot.id) > 0 ? [LOG_TAB] : [];
+
 	const module = moduleForRoute(url.pathname);
 	const tab = tabForRoute(url.pathname);
 
 	return {
-		pilot: buildPilotView(db, actual),
+		pilot: buildPilotView(db, pilot),
 		action,
+		notice,
+		notices,
 		activeModule: module?.code ?? '',
 		activeTab: tab?.route ?? '',
 		tabs: module?.tabs ?? [],
