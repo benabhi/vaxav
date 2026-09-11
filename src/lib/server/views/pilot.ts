@@ -12,10 +12,10 @@ import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
 import { levelFromXp, levelProgress } from '$lib/game/progression';
-import { SKILL_LIST } from '$lib/game/skills';
+import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
-import { roman, starStates, thousands } from '$lib/format';
-import type { FilaHabilidad, PilotoConectado } from '$lib/tipos';
+import { roman, skillFamilyIcon, skillFamilyLabel, starStates, thousands } from '$lib/format';
+import type { FilaHabilidad, PilotoConectado, RamaXp } from '$lib/tipos';
 
 /**
  * Traduce experiencia cruda a filas listas para mostrar.
@@ -43,6 +43,41 @@ export function buildSkillRows(xpBySkill: Readonly<Record<string, number>>): Fil
 	return rows;
 }
 
+/**
+ * Cuánta experiencia lleva el piloto en cada rama del árbol.
+ *
+ * Es la suma de lo que tienen sus habilidades de esa familia. Se recorre el
+ * catálogo y no lo que el piloto tiene, para que las seis ramas salgan siempre y
+ * en el mismo orden: una rama en cero también informa —dice por dónde no fue—, y
+ * una lista que cambia de largo según el piloto no se puede comparar de un
+ * vistazo.
+ *
+ * **Cuando llegue el pozo por familia** —decidido y sin implementar, ver
+ * docs/systems/SKILLS.md— este mismo número pasa a ser el pozo gastable: lo que
+ * una acción deposita en la rama y el jugador reparte entre sus habilidades. La
+ * ficha no cambia de lugar ni de forma; cambia lo que el número significa.
+ */
+export function buildFamilyXp(xpBySkill: Readonly<Record<string, number>>): RamaXp[] {
+	const ramas = SKILL_FAMILIES.map((family) => {
+		const skills = SKILL_LIST.filter((skill) => skill.family === family);
+		const entrenadas = skills.filter((skill) => (xpBySkill[skill.code] ?? 0) > 0);
+		return {
+			family,
+			name: skillFamilyLabel(family),
+			icon: skillFamilyIcon(family),
+			xp: skills.reduce((suma, skill) => suma + (xpBySkill[skill.code] ?? 0), 0),
+			trained: entrenadas.length,
+			total: skills.length,
+			share: 0
+		};
+	});
+
+	// La barra compara contra la rama más cargada: lo que interesa leer no es el
+	// número absoluto sino dónde está puesto el esfuerzo.
+	const techo = Math.max(...ramas.map((rama) => rama.xp), 1);
+	return ramas.map((rama) => ({ ...rama, share: Math.round((rama.xp * 100) / techo) }));
+}
+
 /** Créditos con separador de miles y su unidad, como en el HUD. */
 export function creditsLabel(credits: number): string {
 	return `${thousands(credits)} CR`;
@@ -64,6 +99,8 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 
 	const station = place?.name ?? '';
 	const systemName = home?.name ?? '';
+	// Una sola lectura: la usan tanto las filas de habilidades como las ramas.
+	const xp = skillXp(db, row.id);
 
 	return {
 		callsign: row.callsign,
@@ -78,6 +115,7 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		credits: row.credits,
 		creditsLabel: creditsLabel(row.credits),
 		locationLabel: locationLabel(station, systemName),
-		skills: buildSkillRows(skillXp(db, row.id))
+		skills: buildSkillRows(xp),
+		families: buildFamilyXp(xp)
 	};
 }

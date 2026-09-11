@@ -52,6 +52,8 @@ export interface PilotoConectado {
 	readonly creditsLabel: string;
 	readonly locationLabel: string;
 	readonly skills: readonly FilaHabilidad[];
+	/** Cuánta experiencia lleva en cada rama del árbol. */
+	readonly families: readonly RamaXp[];
 }
 
 /** Un módulo de la estación, listo para dibujar en el mosaico. */
@@ -224,15 +226,32 @@ export interface Nave {
 	readonly refitBlocked: string;
 }
 
-/** Una línea de la experiencia repartida por una acción. */
+/**
+ * Una línea de la experiencia repartida por una acción.
+ *
+ * Lleva el nivel **de ese momento** y no el de hoy: la bitácora es un registro,
+ * así que un informe de la semana pasada tiene que seguir contando lo que pasó
+ * la semana pasada.
+ */
 export interface GananciaXp {
 	readonly skill: string;
 	readonly name: string;
+	/** A qué rama del árbol pertenece: Pilotaje, Extracción, Combate… */
+	readonly family: string;
 	readonly xp: number;
+	/** La experiencia acumulada que tenía antes y la que quedó. */
+	readonly before: number;
+	readonly after: number;
 	/** El nivel al que quedó la habilidad después de sumar, en romanos. */
 	readonly level: string;
+	/** En el que estaba antes. Distinto del anterior quiere decir que subió. */
+	readonly levelBefore: string;
+	/** Si esta acción la hizo subir de nivel: lo que el jugador estaba esperando. */
+	readonly leveledUp: boolean;
 	/** Cuánto lleva del nivel siguiente, de 0 a 100. */
 	readonly progress: number;
+	/** Cuánto le falta al siguiente, en puntos. Cero si ya está al tope. */
+	readonly toNext: number;
 }
 
 /**
@@ -260,6 +279,8 @@ export interface Informe {
 	/** Las lecturas del informe: rótulo y valor, en orden. */
 	readonly details: readonly { readonly label: string; readonly value: string }[];
 	readonly xp: readonly GananciaXp[];
+	/** Todo lo que repartió la acción, sumado. */
+	readonly xpTotal: number;
 	readonly unread: boolean;
 }
 
@@ -269,4 +290,26 @@ export interface PaginaBitacora {
 	readonly total: number;
 	readonly page: number;
 	readonly pages: number;
+}
+
+/**
+ * La experiencia que el piloto acumuló en una rama del árbol.
+ *
+ * Hoy es la **suma de lo que tienen sus habilidades** de esa familia, que es lo
+ * que se puede decir con verdad: la experiencia va derecha a la habilidad que la
+ * usó. Cuando llegue el pozo por familia —decidido y sin implementar, ver
+ * docs/systems/SKILLS.md— esta misma ficha pasa a mostrar el pozo, que es un
+ * número gastable, sin cambiar de lugar ni de forma.
+ */
+export interface RamaXp {
+	readonly family: string;
+	readonly name: string;
+	readonly icon: IconName;
+	/** Experiencia acumulada en las habilidades de la rama. */
+	readonly xp: number;
+	/** Cuántas habilidades de la rama tiene entrenadas, de cuántas hay. */
+	readonly trained: number;
+	readonly total: number;
+	/** Cuánto pesa esta rama sobre la que más tiene, de 0 a 100. */
+	readonly share: number;
 }

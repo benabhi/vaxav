@@ -16,7 +16,7 @@ function sembrarInformes(db: Db, pilotId: number, cuantos: number): void {
 			durationSeconds: 60 + i,
 			originBodyId: origen.id,
 			destinationBodyId: destino.id,
-			xpAwarded: { navigation: 10 + i }
+			xp: [{ skill: 'navigation', xp: 10 + i, before: 0, after: 10 + i }]
 		});
 	}
 }
@@ -32,7 +32,10 @@ describe('escribir un informe', () => {
 			durationSeconds: 99,
 			originBodyId: piloto.locationId,
 			destinationBodyId: destino.id,
-			xpAwarded: { navigation: 16, fuel_efficiency: 2 }
+			xp: [
+				{ skill: 'navigation', xp: 16, before: 100, after: 116 },
+				{ skill: 'fuel_efficiency', xp: 2, before: 0, after: 2 }
+			]
 		});
 
 		expect(fila.kind).toBe('travel');
@@ -40,7 +43,10 @@ describe('escribir un informe', () => {
 		expect(fila.destinationBodyId).toBe(destino.id);
 		// Nace sin leer: es lo que enciende la notificación.
 		expect(fila.readAt).toBeNull();
-		expect(JSON.parse(fila.xpAwarded)).toEqual({ navigation: 16, fuel_efficiency: 2 });
+		expect(JSON.parse(fila.xpAwarded)).toEqual([
+			{ skill: 'navigation', xp: 16, before: 100, after: 116 },
+			{ skill: 'fuel_efficiency', xp: 2, before: 0, after: 2 }
+		]);
 	});
 });
 

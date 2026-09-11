@@ -17,13 +17,31 @@ import type { Db } from '../db/types';
 /** Cuántos informes entran en una página de la bitácora. */
 export const PAGE_SIZE = 10;
 
+/**
+ * Lo que una acción le dejó a una habilidad.
+ *
+ * Se guarda la experiencia **antes y después**, y no el nivel: el nivel se
+ * deriva de la dificultad de la habilidad, que se puede rebalancear; los puntos
+ * son el hecho. Con los dos números el informe puede decir en qué nivel quedó y,
+ * sobre todo, **si subió**, que es lo único que el jugador estaba esperando.
+ *
+ * Guardar el antes es lo que hace que la bitácora sea un registro y no una foto
+ * del presente: sin él, un informe de hace una hora mostraría el nivel de hoy.
+ */
+export interface XpChange {
+	readonly skill: string;
+	readonly xp: number;
+	readonly before: number;
+	readonly after: number;
+}
+
 /** Lo que hace falta para escribir un informe. */
 export interface LogEntry {
 	readonly kind: string;
 	readonly durationSeconds: number;
 	readonly originBodyId: number | null;
 	readonly destinationBodyId: number | null;
-	readonly xpAwarded: Readonly<Record<string, number>>;
+	readonly xp: readonly XpChange[];
 }
 
 /** Una página de la bitácora, con lo que hace falta para dibujar el paginador. */
@@ -51,7 +69,7 @@ export function recordEntry(db: Db, pilotId: number, entry: LogEntry): PilotLog 
 			durationSeconds: entry.durationSeconds,
 			originBodyId: entry.originBodyId,
 			destinationBodyId: entry.destinationBodyId,
-			xpAwarded: JSON.stringify(entry.xpAwarded)
+			xpAwarded: JSON.stringify(entry.xp)
 		})
 		.returning()
 		.get();

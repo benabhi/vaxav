@@ -126,11 +126,16 @@ describe('resolver la orden', () => {
 
 		expect(parte).not.toBeNull();
 		expect(parte!.destinationName).toBe(destino.name);
-		expect(parte!.xpAwarded.navigation).toBeGreaterThan(0);
+		const navegacion = parte!.xp.find((fila) => fila.skill === 'navigation')!;
+		expect(navegacion.xp).toBeGreaterThan(0);
+		// El informe guarda el antes y el después, que es lo que le deja decir si
+		// subió de nivel sin depender de cuánto tenga el piloto hoy.
+		expect(navegacion.after).toBe(navegacion.before + navegacion.xp);
 		// Con viajes de pocos segundos el pozo es chico y el 15 % de secundaria
 		// puede redondear a 0 — legítimo, no un error. Lo que importa es que la
-		// clave está y nunca es negativa.
-		expect(parte!.xpAwarded.fuel_efficiency).toBeGreaterThanOrEqual(0);
+		// habilidad está y nunca es negativa.
+		const combustible = parte!.xp.find((fila) => fila.skill === 'fuel_efficiency')!;
+		expect(combustible.xp).toBeGreaterThanOrEqual(0);
 
 		const despues = db.select().from(pilot).where(eq(pilot.id, piloto.id)).get()!;
 		expect(despues.locationId).toBe(destino.id);
@@ -144,7 +149,7 @@ describe('resolver la orden', () => {
 			.where(eq(pilotSkill.pilotId, piloto.id))
 			.all()
 			.find((row) => row.skill === 'navigation')!;
-		expect(fila.xp).toBe(xpPrevio + parte!.xpAwarded.navigation);
+		expect(fila.xp).toBe(xpPrevio + navegacion.xp);
 	});
 
 	it('sólo la resuelve una vez', async () => {

@@ -27,7 +27,7 @@ import {
 	travelDurationSeconds
 } from '$lib/game/actions';
 import { actionXpPool, distributeXp } from '$lib/game/progression';
-import { recordEntry } from './log';
+import { recordEntry, type XpChange } from './log';
 import { shipReadout } from './ships';
 import { situation } from './status';
 import { bodyDistance } from './universe';
@@ -50,7 +50,7 @@ export interface ActionReport {
 	readonly originName: string;
 	readonly destinationName: string;
 	readonly durationSeconds: number;
-	readonly xpAwarded: Record<string, number>;
+	readonly xp: readonly XpChange[];
 }
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
@@ -129,6 +129,18 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 		const pool = actionXpPool(claimed.durationSeconds / 60);
 		const awarded = distributeXp(pool, TRAVEL_PRIMARY_SKILL, TRAVEL_SECONDARY_SKILLS);
 
+		// Cuánto tenía antes, para que el informe pueda decir si subió de nivel.
+		// Se lee acá adentro y de una: es la foto del momento exacto en que se
+		// reparte, que es lo que la bitácora tiene que recordar.
+		const antes = Object.fromEntries(
+			tx
+				.select()
+				.from(pilotSkill)
+				.where(eq(pilotSkill.pilotId, row.id))
+				.all()
+				.map((fila) => [fila.skill, fila.xp])
+		);
+
 		tx.update(pilot)
 			.set({ locationId: claimed.destinationBodyId })
 			.where(eq(pilot.id, row.id))
@@ -149,12 +161,17 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 		// El informe va en la misma transacción que el resultado: si se aplicó el
 		// viaje y se repartió la experiencia, la bitácora tiene que decirlo. Un
 		// informe perdido es una acción que el jugador no sabe que ocurrió.
+		const cambios: XpChange[] = Object.entries(awarded).map(([skill, xp]) => {
+			const previo = antes[skill] ?? 0;
+			return { skill, xp, before: previo, after: previo + xp };
+		});
+
 		const recorded = recordEntry(tx, row.id, {
 			kind: claimed.kind,
 			durationSeconds: claimed.durationSeconds,
 			originBodyId: claimed.originBodyId,
 			destinationBodyId: claimed.destinationBodyId,
-			xpAwarded: awarded
+			xp: cambios
 		});
 
 		return {
@@ -163,7 +180,7 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 			originName: origin?.name ?? '',
 			destinationName: destination?.name ?? '',
 			durationSeconds: claimed.durationSeconds,
-			xpAwarded: awarded
+			xp: cambios
 		};
 	});
 }

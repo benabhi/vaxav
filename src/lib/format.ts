@@ -78,6 +78,26 @@ const SKILL_FAMILIES: Record<SkillFamily, string> = {
 	science: 'Ciencias'
 };
 
+/**
+ * El dibujo de cada rama del árbol.
+ *
+ * Misma razón que el de los oficios y el de los cuerpos: a qué se dedica una
+ * rama es contenido del juego, con qué ícono se la dibuja es presentación.
+ */
+const SKILL_FAMILY_ICONS: Record<SkillFamily, IconName> = {
+	piloting: 'compass',
+	engineering: 'wrench',
+	extraction: 'diamond',
+	trade: 'scales',
+	combat: 'crosshair',
+	science: 'atom'
+};
+
+/** El ícono de Phosphor que le toca a una rama del árbol. */
+export function skillFamilyIcon(family: string): IconName {
+	return SKILL_FAMILY_ICONS[family as SkillFamily] ?? 'circles-three';
+}
+
 /** Cómo se llama una rama del árbol de habilidades en pantalla. */
 export function skillFamilyLabel(family: string): string {
 	return SKILL_FAMILIES[family as SkillFamily] ?? family;

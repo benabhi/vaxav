@@ -12,11 +12,10 @@
 import { inArray } from 'drizzle-orm';
 import { body, type PilotLog } from '../db/schema';
 import type { Db } from '../db/types';
-import { logPage, type LogPage } from '../services/log';
-import { skillXp } from '../services/pilots';
-import { levelFromXp, levelProgress } from '$lib/game/progression';
+import { logPage, type LogPage, type XpChange } from '../services/log';
+import { MAX_LEVEL, levelFromXp, levelProgress, xpForLevel } from '$lib/game/progression';
 import { getSkill } from '$lib/game/skills';
-import { remainingLabel, roman } from '$lib/format';
+import { remainingLabel, roman, skillFamilyLabel } from '$lib/format';
 import type { IconName } from '$lib/icons';
 import type { GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
 
@@ -40,42 +39,75 @@ function kindOf(kind: string): { label: string; icon: IconName } {
 }
 
 /**
- * Lo que la experiencia repartida dejó en cada habilidad.
+ * Lo que la acción le dejó a cada habilidad, con el nivel de **ese** momento.
  *
- * El nivel y el avance salen de la experiencia **acumulada** del piloto, no de
- * la que dio esta acción: lo que el jugador quiere saber al leer "+120 XP a
- * Navegación" es en qué nivel quedó, no cuánto sumó en el vacío.
+ * El antes y el después salen de la fila y no del piloto de hoy: la bitácora es
+ * un registro, y un informe de la semana pasada tiene que seguir contando lo que
+ * pasó la semana pasada.
  */
-function buildXp(
-	awarded: Readonly<Record<string, number>>,
-	totals: Readonly<Record<string, number>>
-): GananciaXp[] {
+function buildXp(cambios: readonly XpChange[]): GananciaXp[] {
 	const filas: GananciaXp[] = [];
-	for (const [skill, xp] of Object.entries(awarded)) {
-		if (!xp) continue;
-		const spec = getSkill(skill);
-		const total = totals[skill] ?? xp;
+
+	for (const cambio of cambios) {
+		if (!cambio.xp) continue;
+		const spec = getSkill(cambio.skill);
+
+		const nivelAntes = levelFromXp(cambio.before, spec.difficulty);
+		const nivel = levelFromXp(cambio.after, spec.difficulty);
+		const siguiente =
+			nivel >= MAX_LEVEL ? 0 : Math.max(0, xpForLevel(nivel + 1, spec.difficulty) - cambio.after);
+
 		filas.push({
-			skill,
+			skill: cambio.skill,
 			name: spec.name,
-			xp,
-			level: roman(levelFromXp(total, spec.difficulty)),
-			progress: Math.trunc(levelProgress(total, spec.difficulty) * 100)
+			family: skillFamilyLabel(spec.family),
+			xp: cambio.xp,
+			before: cambio.before,
+			after: cambio.after,
+			// El nivel 0 no tiene romano, y "nivel · 11 %" se lee roto. Acá es
+			// legítimo decirlo con un cero: una habilidad recién empezada está en
+			// cero y el informe tiene que poder contarlo.
+			level: roman(nivel) || '0',
+			levelBefore: roman(nivelAntes) || '0',
+			leveledUp: nivel > nivelAntes,
+			progress: Math.trunc(levelProgress(cambio.after, spec.difficulty) * 100),
+			toNext: siguiente
 		});
 	}
-	// El que más dio primero: es el que explica la acción.
-	return filas.sort((a, b) => b.xp - a.xp);
+
+	// El que más dio primero: es el que explica la acción. Un salto de nivel se
+	// adelanta a todo, porque es lo único que el jugador estaba esperando.
+	return filas.sort((a, b) => Number(b.leveledUp) - Number(a.leveledUp) || b.xp - a.xp);
 }
 
-/** Lo que se guardó como JSON, de vuelta a un objeto, sin romperse si vino mal. */
-function parseXp(raw: string): Record<string, number> {
+/**
+ * Lo que se guardó como JSON, de vuelta a cambios, sin romperse si vino mal.
+ *
+ * Acepta también la forma vieja —un objeto de código a puntos, sin el antes— que
+ * es lo que se escribió antes de que la bitácora guardara el salto de nivel.
+ * Esas filas no pueden decir si subieron, y es lo honesto: no se guardó.
+ */
+function parseXp(raw: string): XpChange[] {
+	let parsed: unknown;
 	try {
-		const parsed: unknown = JSON.parse(raw);
-		return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {};
+		parsed = JSON.parse(raw);
 	} catch {
 		// Una fila corrupta no puede dejar la bitácora entera sin dibujar.
-		return {};
+		return [];
 	}
+
+	if (Array.isArray(parsed)) return parsed as XpChange[];
+
+	if (parsed && typeof parsed === 'object') {
+		return Object.entries(parsed as Record<string, number>).map(([skill, xp]) => ({
+			skill,
+			xp,
+			before: 0,
+			after: xp
+		}));
+	}
+
+	return [];
 }
 
 /**
@@ -84,11 +116,7 @@ function parseXp(raw: string): Record<string, number> {
  * Los nombres de los cuerpos llegan ya resueltos: la bitácora es una lista y
  * consultarlos por fila sería una consulta por renglón para nombrar dos lugares.
  */
-function buildEntry(
-	row: PilotLog,
-	names: ReadonlyMap<number, string>,
-	totals: Readonly<Record<string, number>>
-): Informe {
+function buildEntry(row: PilotLog, names: ReadonlyMap<number, string>): Informe {
 	const { label, icon } = kindOf(row.kind);
 	const origin = row.originBodyId === null ? '' : (names.get(row.originBodyId) ?? '');
 	const destination =
@@ -100,6 +128,8 @@ function buildEntry(
 		details.push({ label: 'Duración', value: remainingLabel(row.durationSeconds) });
 	}
 
+	const xp = buildXp(parseXp(row.xpAwarded));
+
 	return {
 		id: row.id,
 		kind: row.kind,
@@ -109,7 +139,8 @@ function buildEntry(
 		place: destination || origin,
 		at: row.createdAt.getTime(),
 		details,
-		xp: buildXp(parseXp(row.xpAwarded), totals),
+		xp,
+		xpTotal: xp.reduce((suma, fila) => suma + fila.xp, 0),
 		unread: row.readAt === null
 	};
 }
@@ -134,10 +165,9 @@ function bodyNames(db: Db, rows: readonly PilotLog[]): Map<number, string> {
 /** Convierte una página cruda de la bitácora en informes listos para dibujar. */
 export function buildLogPage(db: Db, pilotId: number, page: LogPage): PaginaBitacora {
 	const names = bodyNames(db, page.entries);
-	const totals = skillXp(db, pilotId);
 
 	return {
-		entries: page.entries.map((row) => buildEntry(row, names, totals)),
+		entries: page.entries.map((row) => buildEntry(row, names)),
 		total: page.total,
 		page: page.page,
 		pages: page.pages
@@ -156,6 +186,6 @@ export function buildBitacora(db: Db, pilotId: number, page = 1): PaginaBitacora
  * para que el aviso y la bitácora digan literalmente lo mismo: si alguna vez se
  * separan, es porque hay dos fuentes.
  */
-export function buildInforme(db: Db, pilotId: number, row: PilotLog): Informe {
-	return buildEntry(row, bodyNames(db, [row]), skillXp(db, pilotId));
+export function buildInforme(db: Db, row: PilotLog): Informe {
+	return buildEntry(row, bodyNames(db, [row]));
 }

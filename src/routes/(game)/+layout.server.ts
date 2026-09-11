@@ -57,7 +57,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const fila = llegada
 		? db.select().from(pilotLog).where(eq(pilotLog.id, llegada.id)).get()
 		: undefined;
-	const notice: Informe | null = fila ? buildInforme(db, pilot.id, fila) : null;
+	const notice: Informe | null = fila ? buildInforme(db, fila) : null;
 
 	// Las rutas que tienen algo sin leer. Hoy sólo la bitácora avisa; el día que
 	// las misiones o los mensajes también lo hagan, se suman acá.

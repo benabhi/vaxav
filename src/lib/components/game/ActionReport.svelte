@@ -7,12 +7,16 @@
 	mismo, y que agregar un dato al informe lo agregue en los dos.
 
 	La forma sale de docs/systems/ACTIONS.md: titular arriba con la hora a la
-	derecha, el lugar debajo, después las lecturas y al final la experiencia, con
-	el nivel al que quedó cada habilidad. Un "+120 XP" suelto no dice nada; "+120
-	XP, nivel II al 61 %" sí.
+	derecha, el lugar debajo, después las lecturas y al final la experiencia. El
+	titular es genérico —van a ser muchas acciones— y lo que cambia es cuál fue.
+
+	**La experiencia se cuenta entera**, que es el punto: cuánto dio, a qué rama
+	pertenece cada habilidad, en qué nivel quedó, cuánto le falta al siguiente y,
+	sobre todo, **si subió**. Un "+120 XP" suelto no dice nada.
 -->
 <script lang="ts">
 	import Icon from '../Icon.svelte';
+	import ProgressBar from '../meters/ProgressBar.svelte';
 	import Label from '../typography/Label.svelte';
 	import { thousands } from '$lib/format';
 	import type { Informe } from '$lib/tipos';
@@ -37,8 +41,7 @@
 		if (minutos < 60) return `hace ${minutos} min`;
 		const horas = Math.floor(minutos / 60);
 		if (horas < 24) return `hace ${horas} h`;
-		const dias = Math.floor(horas / 24);
-		return `hace ${dias} d`;
+		return `hace ${Math.floor(horas / 24)} d`;
 	}
 
 	let cuando = $derived(hace(report.at));
@@ -89,20 +92,64 @@
 	{/if}
 
 	{#if report.xp.length}
-		<div class="flex w-full flex-col gap-1 border-t border-border-soft pt-2">
+		<div class="flex w-full flex-col gap-2 border-t border-border-soft pt-2">
+			<div class="flex w-full items-center gap-3">
+				<Label>Experiencia</Label>
+				<div class="grow"></div>
+				<span class="font-mono text-[0.72rem] text-data">+{thousands(report.xpTotal)} XP</span>
+			</div>
+
 			{#each report.xp as ganancia (ganancia.skill)}
-				<div class="flex w-full flex-wrap items-center gap-2">
-					<span
-						class="min-w-0 flex-[1_1_auto] overflow-hidden font-display text-[0.72rem] font-semibold
-							tracking-display text-ellipsis whitespace-nowrap text-text-strong uppercase"
-					>
-						{ganancia.name}
-					</span>
-					<span class="shrink-0 font-mono text-[0.75rem] text-data">
-						+{thousands(ganancia.xp)} XP
-					</span>
-					<span class="shrink-0 font-mono text-[0.68rem] whitespace-nowrap text-text-muted">
-						nivel {ganancia.level} · {ganancia.progress} %
+				<div class="flex w-full flex-col gap-1">
+					<div class="flex w-full flex-wrap items-baseline gap-2">
+						<span
+							class="min-w-0 overflow-hidden font-display text-[0.74rem] font-semibold tracking-display
+								text-ellipsis whitespace-nowrap text-text-strong uppercase"
+						>
+							{ganancia.name}
+						</span>
+						<span class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase">
+							{ganancia.family}
+						</span>
+						<div class="grow"></div>
+						<span class="shrink-0 font-mono text-[0.75rem] text-data">
+							+{thousands(ganancia.xp)} XP
+						</span>
+					</div>
+
+					<div class="flex w-full items-center gap-2">
+						<div class="min-w-0 flex-[1_1_0]">
+							<ProgressBar
+								percent={ganancia.progress}
+								color={ganancia.leveledUp ? 'var(--color-data)' : 'var(--color-accent)'}
+							/>
+						</div>
+						<!--
+							Subir de nivel es lo único que el jugador estaba esperando, así que
+							se dice con todas las letras y no escondido en un porcentaje.
+						-->
+						{#if ganancia.leveledUp}
+							<span
+								class="flex shrink-0 items-center gap-1 border border-data px-[0.35rem] py-[0.05rem]
+									font-display text-[0.6rem] font-bold tracking-label whitespace-nowrap text-data uppercase"
+							>
+								<Icon name="star" weight="fill" size="0.55rem" />
+								Nivel {ganancia.level}
+							</span>
+						{:else}
+							<span class="shrink-0 font-mono text-[0.66rem] whitespace-nowrap text-text-muted">
+								nivel {ganancia.level} · {ganancia.progress} %
+							</span>
+						{/if}
+					</div>
+
+					<span class="font-mono text-[0.62rem] text-text-muted">
+						{thousands(ganancia.after)} XP
+						{#if ganancia.toNext > 0}
+							· faltan {thousands(ganancia.toNext)} para el nivel siguiente
+						{:else}
+							· al tope
+						{/if}
 					</span>
 				</div>
 			{/each}
