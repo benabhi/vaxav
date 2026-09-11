@@ -63,6 +63,10 @@ la rama se borra. En GitHub existe solamente `main`.
   `static/icons/<peso>/`, y se usan con el componente `Icon`. No sumar otra
   familia de íconos ni tirar de un CDN.
 - **Los componentes de interfaz son siempre propios**, sin librerías de terceros.
+- **Toda pantalla importante tiene su figura**: un dibujo propio que informa por
+  su forma —el anillo de la nave, el árbol del sistema, el hexágono del piloto—,
+  en SVG propio y sin librerías de gráficos. Una por pantalla, siempre con su
+  lista al lado. Ver CLAUDE.md §2.
 - **La interfaz imita el HUD de Elite Dangerous lo más fielmente posible.** Ante
   cualquier duda de diseño, la respuesta es cómo lo resuelve ese juego, no lo que
   parezca razonable. No tiene modo claro. Los tokens están en `src/app.css` y el

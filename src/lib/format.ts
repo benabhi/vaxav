@@ -93,6 +93,25 @@ const SKILL_FAMILY_ICONS: Record<SkillFamily, IconName> = {
 	science: 'atom'
 };
 
+/**
+ * El escudo de cada facción.
+ *
+ * Vienen sobre negro, así que quien los dibuja los funde con `screen`: el negro
+ * desaparece y queda el emblema apoyado sobre el panel. Cada uno trae su propio
+ * color —rojo, azul y verde—, y es la única excepción a la regla del acento
+ * único: un escudo es identidad, no interfaz.
+ */
+const FACTION_CRESTS: Record<string, string> = {
+	dominion: '/factions/dominion.webp',
+	concord: '/factions/concord.webp',
+	pact: '/factions/pact.webp'
+};
+
+/** La imagen del escudo de una facción, o cadena vacía si no tiene. */
+export function factionCrest(code: string): string {
+	return FACTION_CRESTS[code] ?? '';
+}
+
 /** El ícono de Phosphor que le toca a una rama del árbol. */
 export function skillFamilyIcon(family: string): IconName {
 	return SKILL_FAMILY_ICONS[family as SkillFamily] ?? 'circles-three';

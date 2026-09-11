@@ -37,6 +37,17 @@ export interface FilaHabilidad {
 	readonly stars: readonly StarState[];
 }
 
+/** La nave del piloto, resumida para la credencial. */
+export interface NaveDelPiloto {
+	readonly name: string;
+	readonly role: string;
+	readonly shield: string;
+	readonly armor: string;
+	readonly structure: string;
+	/** Si la configuración que lleva se puede volar. */
+	readonly flyable: boolean;
+}
+
 /** Lo que toda pantalla del juego sabe del piloto conectado. */
 export interface PilotoConectado {
 	readonly callsign: string;
@@ -54,6 +65,19 @@ export interface PilotoConectado {
 	readonly skills: readonly FilaHabilidad[];
 	/** Cuánta experiencia lleva en cada rama del árbol. */
 	readonly families: readonly RamaXp[];
+	/** Desde cuándo vuela, en milisegundos UTC. */
+	readonly since: number;
+	/**
+	 * A qué corporación pertenece. Vacío quiere decir independiente: las
+	 * corporaciones de jugadores llegan en F12 (docs/systems/CORPORATIONS.md),
+	 * así que hoy no hay ninguna a la que pertenecer y la ficha lo dice.
+	 */
+	readonly corporation: string;
+	/** Qué está haciendo ahora mismo, en una palabra. */
+	readonly statusLabel: string;
+	readonly inTransit: boolean;
+	/** La nave que lleva, o `null` si no tiene ninguna. */
+	readonly ship: NaveDelPiloto | null;
 }
 
 /** Un módulo de la estación, listo para dibujar en el mosaico. */

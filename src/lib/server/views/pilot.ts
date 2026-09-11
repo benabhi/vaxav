@@ -14,8 +14,10 @@ import { getProfession } from '$lib/game/professions';
 import { levelFromXp, levelProgress } from '$lib/game/progression';
 import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
+import { shipReadout } from '../services/ships';
+import { situation } from '../services/status';
 import { roman, skillFamilyIcon, skillFamilyLabel, starStates, thousands } from '$lib/format';
-import type { FilaHabilidad, PilotoConectado, RamaXp } from '$lib/tipos';
+import type { FilaHabilidad, NaveDelPiloto, PilotoConectado, RamaXp } from '$lib/tipos';
 
 /**
  * Traduce experiencia cruda a filas listas para mostrar.
@@ -101,6 +103,21 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 	const systemName = home?.name ?? '';
 	// Una sola lectura: la usan tanto las filas de habilidades como las ramas.
 	const xp = skillXp(db, row.id);
+	const ahora = situation(db, row);
+
+	// La nave, resumida: el nombre, el rol y las tres capas. El detalle entero
+	// está a una pestaña de distancia y no tiene por qué repetirse acá.
+	const readout = shipReadout(db, row);
+	const ship: NaveDelPiloto | null = readout
+		? {
+				name: readout.hull.name,
+				role: readout.hull.role,
+				shield: thousands(readout.shield),
+				armor: thousands(readout.armor),
+				structure: thousands(readout.structure),
+				flyable: readout.flyable
+			}
+		: null;
 
 	return {
 		callsign: row.callsign,
@@ -116,6 +133,13 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		creditsLabel: creditsLabel(row.credits),
 		locationLabel: locationLabel(station, systemName),
 		skills: buildSkillRows(xp),
-		families: buildFamilyXp(xp)
+		families: buildFamilyXp(xp),
+		since: row.createdAt.getTime(),
+		// Las corporaciones de jugadores llegan en F12: hoy no hay ninguna a la
+		// que pertenecer, y decirlo es mejor que esconder el renglón.
+		corporation: '',
+		statusLabel: ahora.inTransit ? 'En tránsito' : 'Atracado',
+		inTransit: ahora.inTransit,
+		ship
 	};
 }

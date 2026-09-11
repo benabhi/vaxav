@@ -115,6 +115,27 @@ texto (`Minería II · Estiba II`), y en **estrellas** cuando tienen su propio
 lugar en pantalla. Son dos representaciones del mismo dato para dos usos
 distintos.
 
+## La figura de la pantalla
+
+Toda pantalla importante tiene **una figura**: un dibujo propio que dice lo que la
+pantalla dice, pero por su forma. El anillo de equipamiento en Nave, el árbol de
+cuerpos en Sistema, el hexágono de ramas en Piloto.
+
+Existe por una razón concreta. Un juego de paneles apilados es coherente y
+**monótono**: todas las pantallas se ven igual, y la que se está mirando se
+reconoce por el título y no por la pantalla. La figura le da a cada una algo que
+es suyo sin sacarla del lenguaje.
+
+El examen es uno solo: **si el dibujo se ve igual con datos distintos, es
+decoración y sobra**. El hexágono de un minero y el de un artillero son dos
+siluetas distintas; un anillo con el escudo montado y otro sin él se distinguen
+de lejos. Eso es lo que separa una figura de un adorno.
+
+Las reglas están en `CLAUDE.md` §2. En resumen: una por pantalla, nunca en lugar
+de los números sino al lado, dibujada a mano en SVG propio —nada de librerías de
+gráficos, que traen su propio aspecto— y con el alto saliendo de `aspect-ratio`
+para que achicar la columna no la deforme.
+
 ## Responsivo
 
 **El juego tiene que poder jugarse desde un teléfono.** Es un juego de sesiones
