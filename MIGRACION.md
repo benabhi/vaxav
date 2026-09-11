@@ -85,7 +85,17 @@ Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 | `/piloto` | Pestañas en 208/344/476 con 132×36, 129×36 y 104×36; Neocom de 208 px; marca 207×52 |
 | `/piloto/habilidades` | |
 | `/registro` | Solapas de 36×92 solapadas 0,7 rem, tarjeta elegida con borde de 3 px en `#FF7A1A` sobre `rgba(255,122,26,.16)` y halo de 24 px |
+| `/opciones` | Panel de 28 rem, campos de 40 px, y el cambio de contraseña probado de verdad: la vieja deja de entrar y la nueva entra |
 | Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir |
+
+**`/opciones` no dibuja barra de pestañas, y el original sí.** Es la única
+diferencia deliberada de toda la migración. El original se contradice ahí:
+`game_shell` documenta que un módulo de una sola pantalla no dibuja barra y
+`pending.py` lo respeta —por eso Billetera no la tiene—, pero `options.py` le
+pasa las pestañas sin preguntar y termina dibujando una barra con una sola
+pestaña. Se eligió la regla, que es la que `hasTabs` ya codifica en
+`navigation.ts`, y no el descuido. Si algún día se quiere la barra, es cambiar
+`tabs.length > 1` en `GameShell`.
 
 **`/registro` es la excepción al método**: `../vaxav-old/` ya no tiene su entorno
 de Python, así que no se lo pudo levantar para comparar lado a lado. Se portó
@@ -101,14 +111,7 @@ reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
 
 En este orden, que es el de menor a mayor riesgo.
 
-### 1. `/opciones` — cambiar la contraseña
-
-El más corto. `changePassword` ya existe y exige la contraseña actual.
-
-- **Fuente**: `../vaxav-old/vaxav/pages/options.py`
-- Falta cablear `SuccessCallout`, que ya está escrito
-
-### 2. `/navegacion` — Ubicación
+### 1. `/navegacion` — Ubicación
 
 - **Fuente**: `../vaxav-old/vaxav/pages/navigation.py` (`navigation_location`) y
   `state/navigation.py`
@@ -122,7 +125,7 @@ El más corto. `changePassword` ya existe y exige la contraseña actual.
 - En tránsito la pestaña no describe la estación que ya se dejó atrás:
   `situation(...).inTransit` manda
 
-### 3. `/navegacion/sistema` — el árbol del sistema
+### 2. `/navegacion/sistema` — el árbol del sistema
 
 **La pantalla más frágil de todas.** El árbol se dibuja con cajas de 1 px y
 columnas de ancho fijo; un píxel de más desalinea todo.
@@ -143,7 +146,7 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   pone la clase `vaxav-flash` por 1800 ms. La animación ya está en `app.css`
 - Viajar es un form action que llama `startTravel`
 
-### 4. `/nave` — el equipamiento
+### 3. `/nave` — el equipamiento
 
 - **Fuente**: `../vaxav-old/vaxav/pages/ship.py` y `state/ship.py`
 - **Componentes que faltan**: `FittingRig`, `SlotNode`, `ShipSchematic`,
@@ -161,14 +164,14 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   con llave y revierte si el servicio se niega
 - El anillo y la lista comparten la ranura seleccionada
 
-### 5. Los tests que faltan
+### 4. Los tests que faltan
 
 - Los constructores de vistas (`src/lib/server/views/`), que es donde va a vivir
   la lógica de las filas del árbol y del anillo
 - El humo de rutas con Playwright: visitar las 23 y comprobar que ninguna entrada
   del Neocom lleva a un 404
 
-### 6. La documentación
+### 5. La documentación
 
 Todavía **no se portó nada de `docs/`**, y es lo último que queda para que no haya
 rastro de Reflex:
