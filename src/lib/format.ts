@@ -11,7 +11,7 @@ import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
 import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
 import type { ShipModule } from '$lib/game/modules';
-import { startingLevels } from '$lib/game/professions';
+import { startingLevels, type ProfessionCode } from '$lib/game/professions';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { getSkill, type SkillFamily } from '$lib/game/skills';
 import {
@@ -43,6 +43,30 @@ export function skillsSummary(profession: string): string {
 	return Object.entries(startingLevels(profession))
 		.map(([skill, level]) => `${getSkill(skill).name} ${roman(level)}`)
 		.join(' · ');
+}
+
+/**
+ * El dibujo de cada oficio.
+ *
+ * Vive acá y no en el catálogo de profesiones por la misma razón que el de los
+ * cuerpos y el de los módulos: a qué se dedicaba el piloto antes de comprarse la
+ * nave es contenido del juego, con qué ícono se lo dibuja es presentación.
+ *
+ * El tipo exige una entrada por profesión declarada, así que sumar un oficio al
+ * catálogo sin darle dibujo no compila.
+ */
+const PROFESSION_ICONS: Record<ProfessionCode, IconName> = {
+	miner: 'diamond',
+	explorer: 'binoculars',
+	hauler: 'package',
+	trader: 'scales',
+	escort: 'shield',
+	technician: 'wrench'
+};
+
+/** El ícono de Phosphor que le toca a un oficio. */
+export function professionIcon(code: string): IconName {
+	return PROFESSION_ICONS[code as ProfessionCode] ?? 'circles-three';
 }
 
 const SKILL_FAMILIES: Record<SkillFamily, string> = {

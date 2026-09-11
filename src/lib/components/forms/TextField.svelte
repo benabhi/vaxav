@@ -8,13 +8,19 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
 
-	interface Props extends HTMLInputAttributes {
+	interface Props extends Omit<HTMLInputAttributes, 'value'> {
 		label: string;
 		name: string;
 		hint?: string;
+		/**
+		 * Enlazable, para los formularios que además del envío necesitan lo
+		 * escrito: el alta parte la cuenta en pasos y el campo deja de existir al
+		 * pasar al siguiente, así que lo tipeado tiene que vivir afuera.
+		 */
+		value?: string;
 	}
 
-	let { label, name, hint = '', ...rest }: Props = $props();
+	let { label, name, hint = '', value = $bindable(''), ...rest }: Props = $props();
 </script>
 
 <div class="flex w-full flex-col items-start gap-2">
@@ -29,6 +35,7 @@
 			transition-[border-color,box-shadow] placeholder:text-text-muted hover:border-border focus:border-accent
 			focus:shadow-glow focus:outline-none"
 		{...rest}
+		bind:value
 	/>
 	{#if hint}
 		<p class="text-1 text-text-muted">{hint}</p>
