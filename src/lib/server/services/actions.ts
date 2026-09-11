@@ -27,6 +27,7 @@ import {
 	travelDurationSeconds
 } from '$lib/game/actions';
 import { actionXpPool, distributeXp } from '$lib/game/progression';
+import { recordEntry } from './log';
 import { shipReadout } from './ships';
 import { situation } from './status';
 import { bodyDistance } from './universe';
@@ -36,10 +37,19 @@ export const TRAVEL_KIND = 'travel';
 /** La acción no se puede iniciar. El mensaje se le muestra al jugador. */
 export class ActionError extends Error {}
 
-/** Lo que pasó al resolverse una acción, para informar en la interfaz. */
+/**
+ * Lo que pasó al resolverse una acción.
+ *
+ * Es a la vez lo que se le muestra al jugador en el acto y lo que queda escrito
+ * en la bitácora: el mismo informe en dos lugares, porque es el mismo hecho. El
+ * `id` es el de la fila del registro, para poder enlazarla.
+ */
 export interface ActionReport {
+	readonly id: number;
 	readonly kind: string;
+	readonly originName: string;
 	readonly destinationName: string;
+	readonly durationSeconds: number;
 	readonly xpAwarded: Record<string, number>;
 }
 
@@ -114,6 +124,7 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 		if (!claimed) return null;
 
 		const destination = tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
+		const origin = tx.select().from(body).where(eq(body.id, claimed.originBodyId)).get();
 
 		const pool = actionXpPool(claimed.durationSeconds / 60);
 		const awarded = distributeXp(pool, TRAVEL_PRIMARY_SKILL, TRAVEL_SECONDARY_SKILLS);
@@ -135,9 +146,23 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 				.run();
 		}
 
-		return {
+		// El informe va en la misma transacción que el resultado: si se aplicó el
+		// viaje y se repartió la experiencia, la bitácora tiene que decirlo. Un
+		// informe perdido es una acción que el jugador no sabe que ocurrió.
+		const recorded = recordEntry(tx, row.id, {
 			kind: claimed.kind,
+			durationSeconds: claimed.durationSeconds,
+			originBodyId: claimed.originBodyId,
+			destinationBodyId: claimed.destinationBodyId,
+			xpAwarded: awarded
+		});
+
+		return {
+			id: recorded.id,
+			kind: claimed.kind,
+			originName: origin?.name ?? '',
 			destinationName: destination?.name ?? '',
+			durationSeconds: claimed.durationSeconds,
 			xpAwarded: awarded
 		};
 	});
