@@ -63,7 +63,7 @@ npx tsx --env-file=.env -e "…createPilot(db, 'Halcon_7', 'halcon@ejemplo.com',
 | Esquema | `src/lib/server/db/schema.ts` — 15 tablas | Migración inicial aplicada |
 | Servicios | `src/lib/server/services/` — 7 módulos | |
 | Siembra | `scripts/sembrar.ts` | Idempotente, mismo conteo que el original |
-| Tests | 285, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
+| Tests | 295, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
 
 **Las reglas del juego se verificaron numéricamente**, no a ojo: los 47 módulos,
 los 5 cascos y el plano completo del sistema Ánfora se **generaron** importando
@@ -72,8 +72,8 @@ campo por campo para los cinco cascos, con y sin habilidades. Dan idéntico.
 
 ### La interfaz
 
-48 componentes en `src/lib/components/`: tipografía (9), paneles (7), marco del
-juego (7), formularios (6), medidores (4), disposición (4), juego (3), marca (3),
+52 componentes en `src/lib/components/`: tipografía (9), paneles (7), marco del
+juego (7), juego (7), formularios (6), medidores (4), disposición (4), marca (3),
 botones (2), íconos (2), popover (1).
 
 Pantallas terminadas y **verificadas midiendo los dos navegadores**:
@@ -86,6 +86,7 @@ Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 | `/piloto/habilidades` | |
 | `/registro` | Solapas de 36×92 solapadas 0,7 rem, tarjeta elegida con borde de 3 px en `#FF7A1A` sobre `rgba(255,122,26,.16)` y halo de 24 px |
 | `/opciones` | Panel de 28 rem, campos de 40 px, y el cambio de contraseña probado de verdad: la vieja deja de entrar y la nueva entra |
+| `/navegacion` Ubicación | Baldosa de 120 px en grilla de 1/2/3 columnas, proporción 2:1 entre las dos columnas, y a 320 px de ancho no se excede un solo elemento |
 | Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir |
 
 **`/opciones` no dibuja barra de pestañas, y el original sí.** Es la única
@@ -111,21 +112,7 @@ reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
 
 En este orden, que es el de menor a mayor riesgo.
 
-### 1. `/navegacion` — Ubicación
-
-- **Fuente**: `../vaxav-old/vaxav/pages/navigation.py` (`navigation_location`) y
-  `state/navigation.py`
-- **Componentes que faltan**: `ModuleGrid`, `ModuleTile`, `ActionTile`
-  (`components/mosaic.py`), `AgentCard` y `AgentPortrait` (`components/agents.py`)
-- Falta portar `portraits.py` a `src/lib/portraits.ts`: recorre
-  `static/portraits/` sólo por nombre de archivo y reparte con `blake2b` para que
-  el reparto sea estable entre arranques
-- El mosaico tiene **tres estados** por baldosa y hay que respetarlos: disponible,
-  elegida (rellena de naranja) y no disponible (apagada, sin responder al clic)
-- En tránsito la pestaña no describe la estación que ya se dejó atrás:
-  `situation(...).inTransit` manda
-
-### 2. `/navegacion/sistema` — el árbol del sistema
+### 1. `/navegacion/sistema` — el árbol del sistema
 
 **La pantalla más frágil de todas.** El árbol se dibuja con cajas de 1 px y
 columnas de ancho fijo; un píxel de más desalinea todo.
@@ -146,7 +133,7 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   pone la clase `vaxav-flash` por 1800 ms. La animación ya está en `app.css`
 - Viajar es un form action que llama `startTravel`
 
-### 3. `/nave` — el equipamiento
+### 2. `/nave` — el equipamiento
 
 - **Fuente**: `../vaxav-old/vaxav/pages/ship.py` y `state/ship.py`
 - **Componentes que faltan**: `FittingRig`, `SlotNode`, `ShipSchematic`,
@@ -164,14 +151,15 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   con llave y revierte si el servicio se niega
 - El anillo y la lista comparten la ranura seleccionada
 
-### 4. Los tests que faltan
+### 3. Los tests que faltan
 
-- Los constructores de vistas (`src/lib/server/views/`), que es donde va a vivir
-  la lógica de las filas del árbol y del anillo
+- Los constructores de vistas que faltan: el de las filas del árbol y el del
+  anillo del equipamiento. El de la ubicación ya tiene los suyos, en
+  `src/lib/server/views/navigation.test.ts`
 - El humo de rutas con Playwright: visitar las 23 y comprobar que ninguna entrada
   del Neocom lleva a un 404
 
-### 5. La documentación
+### 4. La documentación
 
 Todavía **no se portó nada de `docs/`**, y es lo último que queda para que no haya
 rastro de Reflex:
@@ -281,6 +269,21 @@ efectivos y los presupuestos: o sea, en el balance.
 regla del juego los usa donde el original usaba el operador equivalente. No usar
 `Math.round` en nada que sea balance.
 
+### 5. Tailwind no ve un archivo nuevo hasta que se reinicia el servidor
+
+Un componente recién creado se dibuja con las clases que ya existían en otra
+parte y **sin las suyas propias**: las que sólo aparecen en ese archivo no están
+en el CSS todavía. Se ve como un componente a medio estilar —altos que no son,
+colores que faltan— y no como un error.
+
+`npm run dev` de nuevo y listo. Antes de salir a buscar por qué una clase no
+aplica, reiniciar.
+
+Del mismo orden: **medir con el panel del navegador oculto devuelve valores
+viejos**. La página no se redibuja mientras no se ve, así que `getComputedStyle`
+contesta lo de antes del último cambio. Más de un "bug" de esta migración fue
+eso.
+
 ### 4. La escala de Radix está embebida en todo el original
 
 `size="2"`, `spacing="3"`, `weight="medium"` no son valores literales. Las
@@ -306,7 +309,7 @@ veía mal.
 Además:
 
 ```bash
-npm run test:unit -- --run   # los 285
+npm run test:unit -- --run   # los 295
 npm run check                # tipos
 npm run lint                 # formato y reglas
 ```
@@ -352,6 +355,13 @@ No se agregaron pantallas ni mecánicas, no se completó nada de lo que está en
 construcción y no se movió el balance. El azul del fondo del documento sigue sin
 coincidir con `DATA_ACCENT`, porque así estaba. Lo que sí se sacó fue el código
 muerto: `vaxav-pulse`, `RADIUS_PILL`, `reset_fit`, `has_ship`, `pilots_in`,
-`choice_section` y `FACTION_ICONS` estaban declarados y sin un solo uso. Los dos
-últimos los daba por pendientes este mismo documento, hasta que se fue a buscar
-quién los llamaba y la respuesta fue nadie.
+`choice_section`, `FACTION_ICONS` y `location_services` estaban declarados y sin
+un solo uso. Varios los daba por pendientes este mismo documento, hasta que se
+fue a buscar quién los llamaba y la respuesta fue nadie.
+
+Dos correcciones más al propio documento, por si vuelven a confundir: `ActionTile`
+no es de Ubicación sino de la pestaña Sistema, que lo usa para "Mostrar
+ubicación"; y los retratos no podían ir en `src/lib/portraits.ts` porque recorren
+el disco, así que viven en `src/lib/server/portraits.ts`. Su reparto es estable
+pero **no da la misma cara que el original**: `blake2b` con `digest_size=8` no se
+puede reproducir con lo que expone Node, y se usó sha-256 recortado.
