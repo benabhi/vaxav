@@ -1,0 +1,161 @@
+/**
+ * Los informes de la bitácora, listos para dibujar.
+ *
+ * Un informe dice qué se hizo, dónde, cuánto tardó y cuánta experiencia dejó a
+ * cada habilidad —con el nivel al que quedó, que es lo que convierte un número
+ * suelto en un avance. El formato está en docs/systems/ACTIONS.md.
+ *
+ * La misma forma alimenta el aviso que salta al resolverse una acción y cada
+ * fila de la bitácora: es el mismo hecho contado una sola vez.
+ */
+
+import { inArray } from 'drizzle-orm';
+import { body, type PilotLog } from '../db/schema';
+import type { Db } from '../db/types';
+import { logPage, type LogPage } from '../services/log';
+import { skillXp } from '../services/pilots';
+import { levelFromXp, levelProgress } from '$lib/game/progression';
+import { getSkill } from '$lib/game/skills';
+import { remainingLabel, roman } from '$lib/format';
+import type { IconName } from '$lib/icons';
+import type { GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
+
+/**
+ * El titular de todo informe de acción.
+ *
+ * Es el mismo siempre y a propósito: van a ser muchas acciones —viajar, minar,
+ * refinar, entregar— y todas responden a la misma pregunta al volver, "¿terminó
+ * lo que había pedido?". Qué acción fue lo dice el renglón de abajo.
+ */
+const ACTION_TITLE = 'Acción terminada';
+
+/** Cómo se llama cada clase de acción, y con qué se la dibuja. */
+const KINDS: Record<string, { label: string; icon: IconName }> = {
+	travel: { label: 'Viaje', icon: 'rocket-launch' }
+};
+
+/** El nombre y el ícono de una clase de acción, o algo genérico si es nueva. */
+function kindOf(kind: string): { label: string; icon: IconName } {
+	return KINDS[kind] ?? { label: 'Acción', icon: 'clipboard-text' };
+}
+
+/**
+ * Lo que la experiencia repartida dejó en cada habilidad.
+ *
+ * El nivel y el avance salen de la experiencia **acumulada** del piloto, no de
+ * la que dio esta acción: lo que el jugador quiere saber al leer "+120 XP a
+ * Navegación" es en qué nivel quedó, no cuánto sumó en el vacío.
+ */
+function buildXp(
+	awarded: Readonly<Record<string, number>>,
+	totals: Readonly<Record<string, number>>
+): GananciaXp[] {
+	const filas: GananciaXp[] = [];
+	for (const [skill, xp] of Object.entries(awarded)) {
+		if (!xp) continue;
+		const spec = getSkill(skill);
+		const total = totals[skill] ?? xp;
+		filas.push({
+			skill,
+			name: spec.name,
+			xp,
+			level: roman(levelFromXp(total, spec.difficulty)),
+			progress: Math.trunc(levelProgress(total, spec.difficulty) * 100)
+		});
+	}
+	// El que más dio primero: es el que explica la acción.
+	return filas.sort((a, b) => b.xp - a.xp);
+}
+
+/** Lo que se guardó como JSON, de vuelta a un objeto, sin romperse si vino mal. */
+function parseXp(raw: string): Record<string, number> {
+	try {
+		const parsed: unknown = JSON.parse(raw);
+		return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {};
+	} catch {
+		// Una fila corrupta no puede dejar la bitácora entera sin dibujar.
+		return {};
+	}
+}
+
+/**
+ * Arma un informe a partir de su fila.
+ *
+ * Los nombres de los cuerpos llegan ya resueltos: la bitácora es una lista y
+ * consultarlos por fila sería una consulta por renglón para nombrar dos lugares.
+ */
+function buildEntry(
+	row: PilotLog,
+	names: ReadonlyMap<number, string>,
+	totals: Readonly<Record<string, number>>
+): Informe {
+	const { label, icon } = kindOf(row.kind);
+	const origin = row.originBodyId === null ? '' : (names.get(row.originBodyId) ?? '');
+	const destination =
+		row.destinationBodyId === null ? '' : (names.get(row.destinationBodyId) ?? '');
+
+	const details: { label: string; value: string }[] = [];
+	if (origin) details.push({ label: 'Salida', value: origin });
+	if (row.durationSeconds) {
+		details.push({ label: 'Duración', value: remainingLabel(row.durationSeconds) });
+	}
+
+	return {
+		id: row.id,
+		kind: row.kind,
+		title: ACTION_TITLE,
+		kindLabel: label,
+		icon,
+		place: destination || origin,
+		at: row.createdAt.getTime(),
+		details,
+		xp: buildXp(parseXp(row.xpAwarded), totals),
+		unread: row.readAt === null
+	};
+}
+
+/** Los nombres de todos los cuerpos que menciona una tanda de informes. */
+function bodyNames(db: Db, rows: readonly PilotLog[]): Map<number, string> {
+	const ids = new Set<number>();
+	for (const row of rows) {
+		if (row.originBodyId !== null) ids.add(row.originBodyId);
+		if (row.destinationBodyId !== null) ids.add(row.destinationBodyId);
+	}
+	if (ids.size === 0) return new Map();
+
+	const found = db
+		.select({ id: body.id, name: body.name })
+		.from(body)
+		.where(inArray(body.id, [...ids]))
+		.all();
+	return new Map(found.map((fila) => [fila.id, fila.name]));
+}
+
+/** Convierte una página cruda de la bitácora en informes listos para dibujar. */
+export function buildLogPage(db: Db, pilotId: number, page: LogPage): PaginaBitacora {
+	const names = bodyNames(db, page.entries);
+	const totals = skillXp(db, pilotId);
+
+	return {
+		entries: page.entries.map((row) => buildEntry(row, names, totals)),
+		total: page.total,
+		page: page.page,
+		pages: page.pages
+	};
+}
+
+/** La página que pidió la pantalla de la bitácora. */
+export function buildBitacora(db: Db, pilotId: number, page = 1): PaginaBitacora {
+	return buildLogPage(db, pilotId, logPage(db, pilotId, page));
+}
+
+/**
+ * El informe de una fila suelta, que es lo que muestra el aviso al volver.
+ *
+ * Se lo arma desde la fila ya escrita y no desde lo que devolvió la resolución
+ * para que el aviso y la bitácora digan literalmente lo mismo: si alguna vez se
+ * separan, es porque hay dos fuentes.
+ */
+export function buildInforme(db: Db, pilotId: number, row: PilotLog): Informe {
+	return buildEntry(row, bodyNames(db, [row]), skillXp(db, pilotId));
+}

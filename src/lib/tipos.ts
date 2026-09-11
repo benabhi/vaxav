@@ -223,3 +223,50 @@ export interface Nave {
 	readonly canRefit: boolean;
 	readonly refitBlocked: string;
 }
+
+/** Una línea de la experiencia repartida por una acción. */
+export interface GananciaXp {
+	readonly skill: string;
+	readonly name: string;
+	readonly xp: number;
+	/** El nivel al que quedó la habilidad después de sumar, en romanos. */
+	readonly level: string;
+	/** Cuánto lleva del nivel siguiente, de 0 a 100. */
+	readonly progress: number;
+}
+
+/**
+ * El informe de una acción resuelta.
+ *
+ * Es la misma pieza en dos lugares: el aviso que salta al volver y cada fila de
+ * la bitácora. Que sea una sola forma es lo que hace que digan exactamente lo
+ * mismo. Ver docs/systems/ACTIONS.md.
+ */
+export interface Informe {
+	readonly id: number;
+	readonly kind: string;
+	/**
+	 * El titular, igual para toda acción: "Acción terminada". Genérico a
+	 * propósito —van a ser muchas— y lo que cambia es `kindLabel`.
+	 */
+	readonly title: string;
+	/** Qué acción fue: "Viaje", "Extracción", "Refinado". */
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	/** Dónde terminó: el titular del informe. */
+	readonly place: string;
+	/** Milisegundos desde la época, en UTC, para que el navegador lo fecha. */
+	readonly at: number;
+	/** Las lecturas del informe: rótulo y valor, en orden. */
+	readonly details: readonly { readonly label: string; readonly value: string }[];
+	readonly xp: readonly GananciaXp[];
+	readonly unread: boolean;
+}
+
+/** Una página de la bitácora, con lo que hace falta para dibujar el paginador. */
+export interface PaginaBitacora {
+	readonly entries: readonly Informe[];
+	readonly total: number;
+	readonly page: number;
+	readonly pages: number;
+}
