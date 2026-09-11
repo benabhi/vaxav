@@ -1,7 +1,12 @@
 # Profesiones
 
-> **Propuesta.** Los repartos son un borrador; el presupuesto común sí es la idea
-> de fondo. Nada está implementado todavía.
+> **Implementado.** El alta reparte el presupuesto de 1.000 puntos y el piloto
+> arranca con esas habilidades entrenadas. Los repartos siguen siendo un borrador.
+
+> **Hoy sólo se ofrece el minero.** Una profesión se elige cuando hay algo que
+> hacer con ella, y es la única con actividades propias. Las otras cinco se quedan
+> en el catálogo —siguen verificando el presupuesto y los pilotos que ya las tengan
+> siguen jugando— pero no aparecen en el alta.
 >
 > Ver también: [habilidades](SKILLS.md) · [facciones](FACTIONS.md) ·
 > [naves](SHIPS.md)

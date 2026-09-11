@@ -161,7 +161,7 @@ Detalles que definen si se siente bien:
 ### El chat
 
 > **La ventana está**, con contenido de maqueta. Lo que falta es que las líneas
-> sean de verdad, que es el trabajo de F9.
+> sean de verdad.
 
 Siempre a mano, como el indicador. Es lo que convierte una simulación en un lugar
 con gente.
@@ -204,7 +204,7 @@ cuando el piloto está atracado.
 - Al lado, en columna angosta, la ficha del lugar. Es la única pantalla del juego
   a dos columnas, y ésa es exactamente la idea.
 
-Vive en `src/lib/components/` y es reutilizable: en F15, cuando un jugador
+Vive en `src/lib/components/` y es reutilizable: el día que un jugador
 instale módulos en su estación, la baldosa apagada **es** la ranura vacía.
 
 ### El anillo de equipamiento

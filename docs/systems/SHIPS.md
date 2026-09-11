@@ -3,7 +3,7 @@
 > **Implementado**: el catálogo de cascos y módulos, la calculadora, la pantalla
 > de equipamiento y el **hangar** —cada piloto tiene su nave guardada y viaja con
 > ella—. Falta poder tener **más de una**, comprarlas, y todo lo que depende del
-> **combate** (F14).
+> **combate**, que todavía no existe.
 >
 > Ver también: [habilidades](SKILLS.md) · [acciones](ACTIONS.md) ·
 > [universo](UNIVERSE.md) · [interfaz](INTERFACE.md)
@@ -190,7 +190,7 @@ dónde me van a romper".
 
 **No es un atajo que haya que rehacer.** Las resistencias por casco y por módulo
 —módulos de resistencia, perfiles por nave— son un modificador _encima_ de esta
-tabla, y llegan con el combate en **F14**. Una nave sin ellos se comporta
+tabla, y llegan **con el combate**. Una nave sin ellos se comporta
 exactamente como hoy, así que no hay migración pendiente.
 
 ### La regla de balance del híbrido
@@ -276,7 +276,7 @@ disponible, la pantalla nombra el lugar —«Nada para esta ranura en Planta
 Escarcha»—, porque «acá no hay nada» es una queja y con el nombre es una
 instrucción para ir a otro lado.
 
-La bodega arranca vacía: qué lleva un piloto es parte del hangar, que es F6.
+La bodega arranca vacía: qué lleva un piloto llega con los ítems y el hangar.
 
 ## Cómo está construido
 
@@ -323,25 +323,30 @@ la unidad más chica, y la coma aparece recién al escribirlo en pantalla.
 ## Qué consume cada número: la auditoría
 
 Un módulo se gana su lugar si algo lee lo que produce. Esta tabla dice qué lee
-cada cosa y cuándo, para que se vea de un vistazo qué es contenido vivo y qué
-está esperando su fase:
+cada cosa, para que se vea de un vistazo qué es contenido vivo y qué todavía no
+lo es:
 
-| Lo que produce un módulo        | Quién lo lee                            | Cuándo |
-| ------------------------------- | --------------------------------------- | ------ |
-| Masa, empuje, potencia de salto | Viajar: duración y autonomía            | **ya** |
-| Bodega                          | Cuántos viajes hacen falta              | **ya** |
-| Potencia, cómputo               | El propio equipamiento: si entra o no   | **ya** |
-| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | **ya** |
-| Rendimiento de extracción       | Minar                                   | F8     |
-| Escudo, blindaje, daño por tipo | Combate                                 | F14    |
-| Alcance de sensores             | Explorar y cartografiar                 | F13    |
-| Firma                           | Qué tan fácil te encuentran             | F14    |
+| Lo que produce un módulo        | Quién lo lee                            | Estado  |
+| ------------------------------- | --------------------------------------- | ------- |
+| Masa y empuje                   | Viajar: la duración real                | **ya**  |
+| Potencia y cómputo              | El propio equipamiento: si entra o no   | **ya**  |
+| Bodega                          | Cuánto te traés de un cinturón          | Etapa 2 |
+| Rendimiento de extracción       | Minar                                   | Etapa 2 |
+| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | Etapa 2 |
+| Potencia de salto y combustible | Qué puertas podés usar, y cuántas veces | Etapa 6 |
+| Escudo, blindaje, daño por tipo | Combate                                 | Combate |
+| Alcance de sensores             | Explorar y prospectar                   | Después |
+| Firma                           | Qué tan fácil te encuentran             | Combate |
 
-**Lo que hoy no lo lee nadie se dice acá:** el alcance de sensores y la firma
-cambian números en la hoja de rendimiento, pero **ninguna acción los consume
-todavía**. Están porque el fitting sin ellos sería un rompecabezas de una sola
-dimensión, y porque su fase ya tiene nombre. El día que una de esas filas quede
-sin fase, el módulo sobra.
+**Lo que hoy no lee nadie se dice acá.** De los 25 números que devuelve la
+calculadora, sólo la velocidad y el permiso de volar cambian el resultado de una
+acción; el resto todavía se dibuja nada más. Eso es una deuda, no una
+característica, y esta tabla es la lista de lo que hay que pagar. **El día que una
+fila se quede sin nadie que la lea, el número sobra.**
+
+Mientras tanto, un número que nada consume **no se le muestra al jugador**: la
+ficha enseña lo que algo usa. Un panel de aguante que ninguna mecánica puede
+gastar es una promesa escrita con cifras.
 
 ## Reglas de diseño
 

@@ -1,7 +1,9 @@
 # Habilidades
 
-> **Propuesta.** Las mecánicas son la intención de diseño; los números están para
-> discutirse y corregirse. Nada de esto está implementado todavía.
+> **Implementado en parte.** La curva, los niveles, los prerrequisitos y el pozo
+> por familia funcionan, y se ven en `/piloto/habilidades`. Falta el laboratorio:
+> hoy toda habilidad del catálogo está disponible desde el primer día. Los números
+> están para discutirse y corregirse.
 >
 > Ver también: [acciones y XP](ACTIONS.md) · [naves](SHIPS.md) ·
 > [facciones](FACTIONS.md) · [diseño general](../DESIGN.md)

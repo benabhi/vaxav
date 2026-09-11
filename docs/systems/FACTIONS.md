@@ -54,13 +54,13 @@ los originales.
 
 Las lecturas son datos, no adorno:
 
-| Lectura             | De dónde sale                                                               |
-| ------------------- | --------------------------------------------------------------------------- |
-| Gobierno            | De la facción                                                               |
-| Estación de partida | De la facción                                                               |
-| Sistema             | De la facción                                                               |
-| Sistemas            | Hoy una constante: Ánfora es el único que existe. Se cuenta de verdad en F5 |
-| Pilotos             | **Real**, contado en la base al abrir el alta                               |
+| Lectura             | De dónde sale                                      |
+| ------------------- | -------------------------------------------------- |
+| Gobierno            | De la facción                                      |
+| Estación de partida | De la facción                                      |
+| Sistema             | De la facción                                      |
+| Sistemas            | Sale de la base. Hoy Ánfora es el único que existe |
+| Pilotos             | **Real**, contado en la base al abrir el alta      |
 
 **Nada se parte en dos renglones.** Es la regla que ordena esta pantalla, y de
 ella salen tres decisiones:
