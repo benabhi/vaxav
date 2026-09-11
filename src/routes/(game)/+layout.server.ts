@@ -59,6 +59,29 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		action,
 		activeModule: module?.code ?? '',
 		activeTab: tab?.route ?? '',
-		tabs: module?.tabs ?? []
+		tabs: module?.tabs ?? [],
+		// De acá sale el título de la pestaña del navegador y, para las pantallas
+		// anunciadas y sin construir, todo lo que dibujan. Sale del árbol de
+		// navegación para que una pantalla nueva no haya que declararla dos veces.
+		title: titulo(module?.label ?? '', tab?.label ?? ''),
+		screen: {
+			moduleLabel: module?.label ?? '',
+			moduleIcon: module?.icon ?? 'circles-three',
+			tabLabel: tab?.label ?? '',
+			pending: tab?.pending ?? '',
+			phase: tab?.phase ?? ''
+		}
 	};
 };
+
+/**
+ * El título de la pestaña del navegador.
+ *
+ * Un módulo de una sola pantalla no repite su nombre dos veces: "Billetera ·
+ * Vaxav" y no "Billetera · Billetera · Vaxav".
+ */
+function titulo(moduleLabel: string, tabLabel: string): string {
+	if (!moduleLabel) return 'Vaxav';
+	if (tabLabel === moduleLabel) return `${moduleLabel} · Vaxav`;
+	return `${tabLabel} · ${moduleLabel} · Vaxav`;
+}
