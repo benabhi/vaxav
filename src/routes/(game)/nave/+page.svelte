@@ -40,6 +40,7 @@
 	import { buildReadout, maxedSkills } from '$lib/game/fitting';
 	import { SLOT_KINDS, getHull } from '$lib/game/hulls';
 	import { availableForSlot } from '$lib/game/inventory';
+	import { getModule } from '$lib/game/modules';
 	import { getSkill } from '$lib/game/skills';
 	import type { StationServiceKind } from '$lib/game/universe';
 	import { buildRingSlots, buildSlotGroups, fittedModules, moduleSummary } from '$lib/rig';
@@ -91,7 +92,8 @@
 	 *
 	 * Sólo lo que está en la bodega o en la estación donde está el piloto: un
 	 * módulo que no está en ningún lado no se puede montar, y ofrecerlo sería
-	 * mentir. La bodega va vacía hasta que exista el hangar.
+	 * mentir. Lo de la bodega va primero: lo que traés puesto se usa antes que lo
+	 * que hay que conseguir.
 	 */
 	let options = $derived(
 		slotSpec
@@ -99,7 +101,8 @@
 					slotSpec.kind,
 					slotSpec.size,
 					slotSpec.core,
-					ship.stationServices as StationServiceKind[]
+					ship.stationServices as StationServiceKind[],
+					ship.cargoModules.map(getModule)
 				).map((disponible) => ({
 					code: disponible.module.code,
 					name: disponible.module.name,

@@ -65,6 +65,10 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/nave',
 				label: 'Ficha'
+			},
+			{
+				route: '/nave/bodega',
+				label: 'Bodega'
 			}
 		]
 	},
@@ -80,6 +84,17 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/navegacion/sistema',
 				label: 'Sistema'
+			}
+		]
+	},
+	{
+		code: 'wallet',
+		label: 'Billetera',
+		icon: 'wallet',
+		tabs: [
+			{
+				route: '/billetera',
+				label: 'Billetera'
 			}
 		]
 	}

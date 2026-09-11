@@ -230,6 +230,14 @@ export interface Nave {
 	/** Dónde está atracado el piloto y qué módulos tiene ese lugar. */
 	readonly stationName: string;
 	readonly stationServices: readonly string[];
+	/**
+	 * Los códigos de los módulos que lleva en la bodega.
+	 *
+	 * Un módulo que está en la bodega se puede montar en cualquier lado; uno de la
+	 * estación, sólo mientras estés ahí. Sin esto, la lista de lo montable sale
+	 * igual en un puesto de hielo que en un astillero.
+	 */
+	readonly cargoModules: readonly string[];
 	/** Si puede tocar la nave acá y ahora, y por qué no si no puede. */
 	readonly canRefit: boolean;
 	readonly refitBlocked: string;
@@ -400,5 +408,59 @@ export interface Arbol {
 	readonly skills: readonly FilaArbol[];
 	/** Cuántas tiene empezadas, de cuántas hay. */
 	readonly trained: number;
+	readonly total: number;
+}
+
+/** Una línea de la bodega: un montón de algo, con lo que ocupa y lo que vale. */
+export interface FilaCarga {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	readonly quantity: number;
+	/** Lo que ocupa este montón, ya escrito en metros cúbicos. */
+	readonly volume: string;
+	/** Cuánto pesa sobre lo ocupado, de 0 a 100. Es lo que dibuja la barra. */
+	readonly share: number;
+	/** Lo que valdría a precio de referencia, para saber si vale el viaje. */
+	readonly value: string;
+}
+
+/**
+ * La bodega de la nave, lista para dibujar.
+ *
+ * Lleva lo ocupado **y** el tope porque la pregunta de una bodega nunca es
+ * cuánto llevás: es cuánto más entra.
+ */
+export interface Bodega {
+	readonly shipName: string;
+	readonly lines: readonly FilaCarga[];
+	readonly used: string;
+	readonly capacity: string;
+	readonly free: string;
+	/** Cuánto va lleno, de 0 a 100. */
+	readonly percent: number;
+	readonly totalValue: string;
+}
+
+/** Un movimiento de la billetera, listo para dibujar. */
+export interface MovimientoBilletera {
+	readonly id: number;
+	readonly at: number;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	/** Con su signo y su unidad: "+480 CR", "−1.200 CR". */
+	readonly amount: string;
+	readonly incoming: boolean;
+	/** El saldo con el que quedó, que es lo que hace auditable el libro. */
+	readonly balanceAfter: string;
+	readonly memo: string;
+	readonly place: string;
+}
+
+/** La billetera del piloto: el saldo y el libro que lo explica. */
+export interface Billetera {
+	readonly balance: string;
+	readonly entries: readonly MovimientoBilletera[];
 	readonly total: number;
 }
