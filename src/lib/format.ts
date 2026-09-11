@@ -122,26 +122,6 @@ export function skillFamilyLabel(family: string): string {
 	return SKILL_FAMILIES[family as SkillFamily] ?? family;
 }
 
-/** Los tres estados en que puede estar una estrella de una habilidad. */
-export type StarState = 'full' | 'half' | 'empty';
-
-/**
- * Las cinco estrellas de una habilidad, según nivel y avance.
- *
- * Una estrella llena por cada nivel alcanzado, media si hay avance hacia el
- * siguiente, y vacías las que faltan. Es la lectura de un vistazo que un número
- * no da: cinco estrellas dicen "cuánto falta" sin hacer ninguna cuenta.
- */
-export function starStates(level: number, progress = 0): StarState[] {
-	const stars: StarState[] = [];
-	for (let index = 0; index < MAX_STARS; index++) {
-		if (level > index) stars.push('full');
-		else if (level === index && progress > 0) stars.push('half');
-		else stars.push('empty');
-	}
-	return stars;
-}
-
 // --- Universo ----------------------------------------------------------------
 
 const BODY_KINDS: Record<BodyKind, string> = {

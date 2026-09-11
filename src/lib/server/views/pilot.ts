@@ -11,55 +11,33 @@ import { body, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
-import { levelFromXp, levelProgress } from '$lib/game/progression';
 import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
+import { pools } from '../services/pools';
 import { shipReadout } from '../services/ships';
 import { situation } from '../services/status';
-import { roman, skillFamilyIcon, skillFamilyLabel, starStates, thousands } from '$lib/format';
-import type { FilaHabilidad, NaveDelPiloto, PilotoConectado, RamaXp } from '$lib/tipos';
+import { skillFamilyIcon, skillFamilyLabel, thousands } from '$lib/format';
+import type { NaveDelPiloto, PilotoConectado, RamaXp } from '$lib/tipos';
 
 /**
- * Traduce experiencia cruda a filas listas para mostrar.
+ * Cómo le fue al piloto en cada rama del árbol: lo invertido y lo que hay en el
+ * pozo.
  *
- * Se recorre el catálogo y no el diccionario para que el orden sea siempre el
- * mismo: el del árbol de habilidades, agrupado por familia.
+ * Son **dos números por rama y no uno**. Lo invertido es la suma de lo que
+ * tienen sus habilidades: dice quién es el piloto hoy. El pozo es lo que una
+ * acción depositó y todavía no se gastó: dice qué puede ser mañana. Mirar uno
+ * solo deja afuera media respuesta —un piloto con cuatro mil sin invertir en
+ * Extracción no es "alguien que no mina", es alguien a punto de serlo.
+ *
+ * Se recorre el catálogo y no lo que el piloto tiene, para que las seis ramas
+ * salgan siempre y en el mismo orden: una rama en cero también informa —dice por
+ * dónde no fue—, y una lista que cambia de largo según el piloto no se puede
+ * comparar de un vistazo.
  */
-export function buildSkillRows(xpBySkill: Readonly<Record<string, number>>): FilaHabilidad[] {
-	const rows: FilaHabilidad[] = [];
-	for (const skill of SKILL_LIST) {
-		const xp = xpBySkill[skill.code];
-		if (!xp) continue;
-		const level = levelFromXp(xp, skill.difficulty);
-		const progress = levelProgress(xp, skill.difficulty);
-		rows.push({
-			code: skill.code,
-			name: skill.name,
-			family: skill.family,
-			level: roman(level),
-			xp,
-			progress: Math.trunc(progress * 100),
-			stars: starStates(level, progress)
-		});
-	}
-	return rows;
-}
-
-/**
- * Cuánta experiencia lleva el piloto en cada rama del árbol.
- *
- * Es la suma de lo que tienen sus habilidades de esa familia. Se recorre el
- * catálogo y no lo que el piloto tiene, para que las seis ramas salgan siempre y
- * en el mismo orden: una rama en cero también informa —dice por dónde no fue—, y
- * una lista que cambia de largo según el piloto no se puede comparar de un
- * vistazo.
- *
- * **Cuando llegue el pozo por familia** —decidido y sin implementar, ver
- * docs/systems/SKILLS.md— este mismo número pasa a ser el pozo gastable: lo que
- * una acción deposita en la rama y el jugador reparte entre sus habilidades. La
- * ficha no cambia de lugar ni de forma; cambia lo que el número significa.
- */
-export function buildFamilyXp(xpBySkill: Readonly<Record<string, number>>): RamaXp[] {
+export function buildFamilyXp(
+	xpBySkill: Readonly<Record<string, number>>,
+	pools: Readonly<Partial<Record<string, number>>> = {}
+): RamaXp[] {
 	const ramas = SKILL_FAMILIES.map((family) => {
 		const skills = SKILL_LIST.filter((skill) => skill.family === family);
 		const entrenadas = skills.filter((skill) => (xpBySkill[skill.code] ?? 0) > 0);
@@ -68,16 +46,23 @@ export function buildFamilyXp(xpBySkill: Readonly<Record<string, number>>): Rama
 			name: skillFamilyLabel(family),
 			icon: skillFamilyIcon(family),
 			xp: skills.reduce((suma, skill) => suma + (xpBySkill[skill.code] ?? 0), 0),
+			pool: pools[family] ?? 0,
 			trained: entrenadas.length,
 			total: skills.length,
-			share: 0
+			share: 0,
+			poolShare: 0
 		};
 	});
 
-	// La barra compara contra la rama más cargada: lo que interesa leer no es el
-	// número absoluto sino dónde está puesto el esfuerzo.
-	const techo = Math.max(...ramas.map((rama) => rama.xp), 1);
-	return ramas.map((rama) => ({ ...rama, share: Math.round((rama.xp * 100) / techo) }));
+	// **Un solo techo para los dos números**: lo que interesa leer no es el valor
+	// absoluto sino dónde está puesto el esfuerzo, y dos escalas distintas harían
+	// que un pozo chico se dibujara tan grande como una rama entera.
+	const techo = Math.max(...ramas.map((rama) => Math.max(rama.xp, rama.pool)), 1);
+	return ramas.map((rama) => ({
+		...rama,
+		share: Math.round((rama.xp * 100) / techo),
+		poolShare: Math.round((rama.pool * 100) / techo)
+	}));
 }
 
 /** Créditos con separador de miles y su unidad, como en el HUD. */
@@ -104,6 +89,7 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 	// Una sola lectura: la usan tanto las filas de habilidades como las ramas.
 	const xp = skillXp(db, row.id);
 	const ahora = situation(db, row);
+	const pozos = pools(db, row.id);
 
 	// La nave, resumida: el nombre, el rol y las tres capas. El detalle entero
 	// está a una pestaña de distancia y no tiene por qué repetirse acá.
@@ -132,8 +118,7 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		credits: row.credits,
 		creditsLabel: creditsLabel(row.credits),
 		locationLabel: locationLabel(station, systemName),
-		skills: buildSkillRows(xp),
-		families: buildFamilyXp(xp),
+		families: buildFamilyXp(xp, pozos),
 		since: row.createdAt.getTime(),
 		// Las corporaciones de jugadores llegan en F12: hoy no hay ninguna a la
 		// que pertenecer, y decirlo es mejor que esconder el renglón.
