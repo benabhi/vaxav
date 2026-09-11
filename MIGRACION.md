@@ -7,7 +7,7 @@
 
 Vaxav estaba escrito en **Reflex 0.9.10** (Python full-stack) y el framework se
 volvió el cuello de botella: cada interacción viajaba por WebSocket al servidor,
-el indicador de órdenes necesitaba una *tarea de fondo del servidor* tickeando
+el indicador de órdenes necesitaba una _tarea de fondo del servidor_ tickeando
 una vez por segundo **por jugador**, y los props responsivos de Radix obligaban a
 trampas documentadas en el propio `CLAUDE.md`. Para un juego pensado para mucha
 gente en un universo compartido, eso no escala.
@@ -57,13 +57,13 @@ npx tsx --env-file=.env -e "…createPilot(db, 'Halcon_7', 'halcon@ejemplo.com',
 
 ### El servidor, completo
 
-| Capa | Dónde | Estado |
-|---|---|---|
-| Reglas del juego | `src/lib/game/` — 16 módulos | Verificado contra el original |
-| Esquema | `src/lib/server/db/schema.ts` — 15 tablas | Migración inicial aplicada |
-| Servicios | `src/lib/server/services/` — 7 módulos | |
-| Siembra | `scripts/sembrar.ts` | Idempotente, mismo conteo que el original |
-| Tests | 313, en `*.test.ts` junto al código | `npm run test:unit -- --run` |
+| Capa             | Dónde                                     | Estado                                    |
+| ---------------- | ----------------------------------------- | ----------------------------------------- |
+| Reglas del juego | `src/lib/game/` — 16 módulos              | Verificado contra el original             |
+| Esquema          | `src/lib/server/db/schema.ts` — 15 tablas | Migración inicial aplicada                |
+| Servicios        | `src/lib/server/services/` — 7 módulos    |                                           |
+| Siembra          | `scripts/sembrar.ts`                      | Idempotente, mismo conteo que el original |
+| Tests            | 313, en `*.test.ts` junto al código       | `npm run test:unit -- --run`              |
 
 **Las reglas del juego se verificaron numéricamente**, no a ojo: los 47 módulos,
 los 5 cascos y el plano completo del sistema Ánfora se **generaron** importando
@@ -78,18 +78,18 @@ juego (7), paneles (7), formularios (6), medidores (4), disposición (4), marca
 
 Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 
-| Pantalla | Verificación |
-|---|---|
-| `/` portada | Logo 736×246 en top 137, botones 132×44 y 170×44 en top 587, lema 18,4 px con interletrado 4,048 px, pie en top 732 |
-| `/entrar` | Campo 672×40 en (176, 224) con sangría de 11 px, título 24 px/3,36 px, botón 116×44 en top 376 |
-| `/piloto` | Pestañas en 208/344/476 con 132×36, 129×36 y 104×36; Neocom de 208 px; marca 207×52 |
-| `/piloto/habilidades` | |
-| `/registro` | Solapas de 36×92 solapadas 0,7 rem, tarjeta elegida con borde de 3 px en `#FF7A1A` sobre `rgba(255,122,26,.16)` y halo de 24 px |
-| `/opciones` | Panel de 28 rem, campos de 40 px, y el cambio de contraseña probado de verdad: la vieja deja de entrar y la nueva entra |
-| `/navegacion` Ubicación | Baldosa de 120 px en grilla de 1/2/3 columnas, proporción 2:1 entre las dos columnas, y a 320 px de ancho no se excede un solo elemento |
-| `/navegacion/sistema` | El brazo del codo cae en 422 y el centro de la casilla del ícono también; el tallo de un padre termina justo donde arranca el codo de su hijo, en la misma columna |
-| `/nave` Ficha | Montar sube la potencia de 20 a 25 MW y baja la velocidad de 200 a 193; el interruptor de habilidades pasa el alcance de 2,7 a 3,2 al sin ir al servidor; el anillo queda cuadrado (295×295) a 380 px |
-| Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir |
+| Pantalla                 | Verificación                                                                                                                                                                                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/` portada              | Logo 736×246 en top 137, botones 132×44 y 170×44 en top 587, lema 18,4 px con interletrado 4,048 px, pie en top 732                                                                                   |
+| `/entrar`                | Campo 672×40 en (176, 224) con sangría de 11 px, título 24 px/3,36 px, botón 116×44 en top 376                                                                                                        |
+| `/piloto`                | Pestañas en 208/344/476 con 132×36, 129×36 y 104×36; Neocom de 208 px; marca 207×52                                                                                                                   |
+| `/piloto/habilidades`    |                                                                                                                                                                                                       |
+| `/registro`              | Solapas de 36×92 solapadas 0,7 rem, tarjeta elegida con borde de 3 px en `#FF7A1A` sobre `rgba(255,122,26,.16)` y halo de 24 px                                                                       |
+| `/opciones`              | Panel de 28 rem, campos de 40 px, y el cambio de contraseña probado de verdad: la vieja deja de entrar y la nueva entra                                                                               |
+| `/navegacion` Ubicación  | Baldosa de 120 px en grilla de 1/2/3 columnas, proporción 2:1 entre las dos columnas, y a 320 px de ancho no se excede un solo elemento                                                               |
+| `/navegacion/sistema`    | El brazo del codo cae en 422 y el centro de la casilla del ícono también; el tallo de un padre termina justo donde arranca el codo de su hijo, en la misma columna                                    |
+| `/nave` Ficha            | Montar sube la potencia de 20 a 25 MW y baja la velocidad de 200 a 193; el interruptor de habilidades pasa el alcance de 2,7 a 3,2 al sin ir al servidor; el anillo queda cuadrado (295×295) a 380 px |
+| Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir                                                                                                                                                        |
 
 **`/opciones` no dibuja barra de pestañas, y el original sí.** Es la única
 diferencia deliberada de toda la migración. El original se contradice ahí:
@@ -112,39 +112,19 @@ reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
 
 ## Lo que falta
 
-En este orden, que es el de menor a mayor riesgo.
+**Nada.** Las pantallas están todas, los tests también y la documentación ya no
+menciona el framework anterior.
 
-### 1. Los tests que faltan
+La verificación final que este documento pedía —el grep de `reflex`, `python`,
+`sqlmodel`, `alembic` y `radix` sobre todo el repo— deja sólo cuatro aciertos, y
+los cuatro son a propósito: dos en `src/lib/game/math.ts` y uno en `AGENTS.md`
+explican por qué el balance no usa `Math.round`, y uno en
+`src/lib/server/portraits.ts` explica por qué el reparto de caras no da lo mismo
+que el original. No son rastros del framework: son el motivo de que el código sea
+como es.
 
-- Ya no falta ninguno de los constructores de vistas: ubicación y árbol en
-  `src/lib/server/views/navigation.test.ts`, anillo en `src/lib/rig.test.ts`
-- El humo de rutas con Playwright: visitar las 23 y comprobar que ninguna entrada
-  del Neocom lleva a un 404
-
-### 2. La documentación
-
-Todavía **no se portó nada de `docs/`**, y es lo último que queda para que no haya
-rastro de Reflex:
-
-- `CLAUDE.md` — conservar los 8 principios, reescribir las rutas
-  (`vaxav/components/` → `src/lib/components/`, `vaxav/theme.py` → `src/app.css`,
-  `vaxav/game/` → `src/lib/game/`), cambiar la escala de Radix por la de Tailwind
-  y PyPI por npm. **Agregar a §1 la regla de componentes propios.** §8, la de
-  autoría, se conserva tal cual
-- `AGENTS.md` — el original arranca con un bloque `<!-- reflex managed -->` que
-  instala las skills de Reflex. Se borra entero y se reescribe
-- `README.md` — instalación y puesta en marcha, todo nuevo
-- `docs/systems/ARCHITECTURE.md` — la regla 9 y la sección "Escalar" hablan del
-  estado de Reflex y de Redis; la tabla "Lo que ya está decidido" cambia sus dos
-  primeras filas
-- `docs/systems/VISUAL.md` e `INTERFACE.md` — referencias a props de Radix y a
-  `theme.py`
-- Los otros nueve `docs/systems/*.md` más `DESIGN.md`, `MVP.md` y `ROADMAP.md` son
-  de diseño de juego: revisar con
-  `grep -ri "reflex\|python\|sqlmodel\|alembic\|radix"` y corregir lo que aparezca
-
-**Verificación final**: ese mismo grep sobre todo el repo, sin `node_modules`,
-tiene que dar cero.
+Este archivo ya cumplió y se puede borrar. Antes de hacerlo, mudar a algún lado
+la sección "Pendiente de diseño": es lo único que queda vivo acá adentro.
 
 ## Cómo está organizado
 
@@ -188,7 +168,7 @@ los dos lados —los rótulos, los catálogos de la pantalla de alta—, y bajo
 - **Código en inglés**, comentarios y documentación **en español**
 - **URL en español**: son parte de lo que ve el jugador
 - Los grupos de rutas entre paréntesis van en inglés: no son URL
-- Docstring en todo módulo y función pública, explicando el *porqué*
+- Docstring en todo módulo y función pública, explicando el _porqué_
 - Los componentes de interfaz son **siempre propios**, sin librerías de terceros
 - Commits en español, imperativo, sin co-autores ni menciones a asistentes
 
@@ -305,14 +285,14 @@ Y revisar toda pantalla nueva a **375 px de ancho** antes de darla por terminada
 
 ## Decisiones tomadas
 
-| | |
-|---|---|
-| Arquitectura | Monolito SvelteKit: `+page.server.ts` y form actions, Drizzle + better-sqlite3, `adapter-node` |
-| Base | SQLite en desarrollo, en `data/`. Nada específico de SQLite: la portabilidad se sostiene con disciplina |
-| Componentes | Siempre propios. Sin bits-ui ni ninguna librería de terceros |
-| Tests | La suite completa portada a Vitest |
-| TypeScript | 6.0, no 7: `svelte-check` y `typescript-eslint` la rechazan. Cuando la soporten es cambiar un número |
-| Autoría | Commits sin co-autores ni menciones a asistentes, como manda la regla 8 |
+|              |                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| Arquitectura | Monolito SvelteKit: `+page.server.ts` y form actions, Drizzle + better-sqlite3, `adapter-node`          |
+| Base         | SQLite en desarrollo, en `data/`. Nada específico de SQLite: la portabilidad se sostiene con disciplina |
+| Componentes  | Siempre propios. Sin bits-ui ni ninguna librería de terceros                                            |
+| Tests        | La suite completa portada a Vitest                                                                      |
+| TypeScript   | 6.0, no 7: `svelte-check` y `typescript-eslint` la rechazan. Cuando la soporten es cambiar un número    |
+| Autoría      | Commits sin co-autores ni menciones a asistentes, como manda la regla 8                                 |
 
 ## Lo que mejoró con el cambio
 
