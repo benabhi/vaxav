@@ -457,6 +457,93 @@ export const pilotAction = sqliteTable(
 	(table) => [uniqueIndex('pilot_action_pilot_idx').on(table.pilotId)]
 );
 
+/**
+ * El pozo de experiencia de una rama del árbol.
+ *
+ * Una acción no le paga a una habilidad: le paga a la **familia** de la
+ * actividad. Minar deposita en Extracción, y el piloto decide en qué habilidad
+ * de esa rama gastarlo. Ver docs/systems/SKILLS.md.
+ *
+ * Es lo que convierte especializarse en una decisión. Con la experiencia yendo
+ * derecha a la habilidad usada, el que mina se vuelve minero gratis y sin
+ * renunciar a nada; con el pozo, cuatro horas de minería alcanzan para subir
+ * Minería un nivel **o** para abrir dos habilidades nuevas, no para las tres.
+ *
+ * Una fila por piloto y rama, y sólo de las ramas que alguna vez recibieron
+ * algo: una rama sin fila es una rama en cero.
+ */
+export const pilotPool = sqliteTable(
+	'pilot_pool',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		/** El código de la familia: `piloting`, `extraction`, y las demás. */
+		family: text('family').notNull(),
+		/** Lo que queda por gastar. Lo depositado menos lo ya invertido. */
+		xp: integer('xp').notNull().default(0)
+	},
+	// Una fila por piloto y rama: el código lo da por sentado al depositar, y sin
+	// la restricción un duplicado partiría el pozo en dos y se descubriría tarde.
+	(table) => [uniqueIndex('pilot_pool_unico').on(table.pilotId, table.family)]
+);
+
+/**
+ * El informe de una acción ya resuelta: la bitácora del piloto.
+ *
+ * En un juego donde las cosas pasan mientras no estás, la bitácora no es un
+ * adorno: es el relato de tu partida, y lo primero que se lee al volver. Por eso
+ * cada acción que vence deja su fila acá, **en la misma transacción que la
+ * resuelve**: un informe que se pierde es una acción que el jugador no sabe que
+ * ocurrió.
+ *
+ * `readAt` es lo que apaga la notificación del Neocom. Nulo quiere decir que el
+ * piloto todavía no lo vio.
+ */
+export const pilotLog = sqliteTable(
+	'pilot_log',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+
+		/** El mismo vocabulario que `pilot_action`: por ahora sólo "travel". */
+		kind: text('kind').notNull(),
+
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW),
+		/** Cuándo lo vio el piloto. Nulo mientras siga sin leer. */
+		readAt: integer('read_at', { mode: 'timestamp' }),
+
+		/** Cuánto duró la acción que se informa. */
+		durationSeconds: integer('duration_seconds').notNull().default(0),
+
+		/**
+		 * Dónde pasó. Igual que en `pilot_action`, hoy sólo los llena un viaje;
+		 * una acción que no se mueva de lugar los deja nulos.
+		 */
+		originBodyId: integer('origin_body_id').references(() => body.id),
+		destinationBodyId: integer('destination_body_id').references(() => body.id),
+
+		/**
+		 * La experiencia repartida, como objeto JSON de código a puntos.
+		 *
+		 * Va serializado y no en filas aparte porque **es parte del informe, no un
+		 * dato consultable**: nadie va a preguntar "cuántos informes dieron XP de
+		 * Navegación", y una tabla hija obligaría a una consulta por fila para
+		 * dibujar una lista paginada.
+		 */
+		xpAwarded: text('xp_awarded').notNull().default('{}')
+	},
+	// La bitácora se lee siempre igual: la de este piloto, de lo más nuevo a lo
+	// más viejo. El índice es el que sostiene la paginación.
+	(table) => [
+		index('pilot_log_pilot_idx').on(table.pilotId, table.createdAt),
+		index('pilot_log_sin_leer_idx').on(table.pilotId, table.readAt)
+	]
+);
+
 // --- Relaciones --------------------------------------------------------------
 //
 // Declaradas para poder pedir un cuerpo con su estación y su corporación en una
@@ -542,3 +629,5 @@ export type Agent = typeof agent.$inferSelect;
 export type Ship = typeof ship.$inferSelect;
 export type FittedModule = typeof fittedModule.$inferSelect;
 export type PilotAction = typeof pilotAction.$inferSelect;
+export type PilotLog = typeof pilotLog.$inferSelect;
+export type PilotPool = typeof pilotPool.$inferSelect;

@@ -49,12 +49,7 @@ export const MODULES: readonly Module[] = [
 			},
 			{
 				route: '/piloto/bitacora',
-				label: 'Bitácora',
-				pending:
-					'El registro de todo lo que resolviste: qué hiciste, qué ' +
-					'salió y cuánta experiencia dejó. Es lo primero que se lee ' +
-					'al volver, porque las cosas pasan mientras no estás.',
-				phase: 'F7'
+				label: 'Bitácora'
 			}
 		]
 	},
@@ -69,7 +64,7 @@ export const MODULES: readonly Module[] = [
 				pending:
 					'Los atributos de tu nave: casco, combustible, energía ' +
 					'disponible y los bonos que le dan tus habilidades. Todavía ' +
-					'no tenés nave; la primera, una lanzadera Estribo, llega ' +
+					'no tenés nave; la primera, una lanzadera Pioner, llega ' +
 					'con el hangar.',
 				phase: 'F6'
 			},
@@ -248,6 +243,26 @@ export const OPTIONS_MODULE: Module = {
 		}
 	]
 };
+
+/**
+ * La pantalla donde aparecen los informes de las acciones resueltas.
+ *
+ * Vive acá y no en el servicio porque es una decisión de navegación: qué pestaña
+ * se enciende cuando hay algo nuevo. El día que las misiones o los mensajes
+ * también avisen, se suma su ruta y el Neocom y la barra de pestañas se enteran
+ * solos.
+ */
+export const LOG_TAB = '/piloto/bitacora';
+
+/**
+ * Si alguna de las pantallas de un módulo tiene un aviso pendiente.
+ *
+ * El Neocom marca el módulo y la barra marca la pestaña: el jugador ve desde
+ * cualquier pantalla que hay algo, y una vez adentro ve dónde.
+ */
+export function moduleHasNotice(module: Module, notices: readonly string[]): boolean {
+	return module.tabs.some((tab) => notices.includes(tab.route));
+}
 
 /** Todos los módulos que tienen pantalla, incluida la de opciones. */
 export const ALL_MODULES: readonly Module[] = [...MODULES, OPTIONS_MODULE];

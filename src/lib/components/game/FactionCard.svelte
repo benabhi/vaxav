@@ -10,6 +10,7 @@
 	import Icon from '../Icon.svelte';
 	import BodyText from '../typography/BodyText.svelte';
 	import Label from '../typography/Label.svelte';
+	import { factionCrest } from '$lib/format';
 	import type { Faction } from '$lib/game/factions';
 
 	interface Props {
@@ -23,21 +24,7 @@
 
 	let { faction, selected, pilots = 0, systems = 1, onChoose }: Props = $props();
 
-	/**
-	 * El escudo de cada facción. Vienen sobre negro, así que se los funde con
-	 * `screen`: el negro desaparece y queda el emblema apoyado sobre el panel.
-	 *
-	 * Cada uno trae su propio color —rojo, azul y verde—, y es la única excepción
-	 * a la regla del acento único: un escudo es identidad, no interfaz. Alrededor
-	 * todo sigue siendo naranja.
-	 */
-	const CRESTS: Record<string, string> = {
-		dominion: '/factions/dominion.webp',
-		concord: '/factions/concord.webp',
-		pact: '/factions/pact.webp'
-	};
-
-	let crest = $derived(CRESTS[faction.code]);
+	let crest = $derived(factionCrest(faction.code));
 </script>
 
 <!--

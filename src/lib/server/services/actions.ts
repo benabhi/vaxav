@@ -10,23 +10,14 @@
  * sólo entonces se aplica lo que ya venció.
  */
 
-import { and, eq, sql } from 'drizzle-orm';
-import {
-	body,
-	pilot,
-	pilotAction,
-	pilotSkill,
-	type Body,
-	type Pilot,
-	type PilotAction
-} from '../db/schema';
+import { and, eq } from 'drizzle-orm';
+import { body, pilot, pilotAction, type Body, type Pilot, type PilotAction } from '../db/schema';
 import type { Db } from '../db/types';
-import {
-	TRAVEL_PRIMARY_SKILL,
-	TRAVEL_SECONDARY_SKILLS,
-	travelDurationSeconds
-} from '$lib/game/actions';
-import { actionXpPool, distributeXp } from '$lib/game/progression';
+import { TRAVEL_FAMILY, travelDurationSeconds } from '$lib/game/actions';
+import { actionXpPool } from '$lib/game/progression';
+import { skillFamilyLabel } from '$lib/format';
+import { deposit } from './pools';
+import { recordEntry, type PoolDeposit } from './log';
 import { shipReadout } from './ships';
 import { situation } from './status';
 import { bodyDistance } from './universe';
@@ -36,11 +27,21 @@ export const TRAVEL_KIND = 'travel';
 /** La acción no se puede iniciar. El mensaje se le muestra al jugador. */
 export class ActionError extends Error {}
 
-/** Lo que pasó al resolverse una acción, para informar en la interfaz. */
+/**
+ * Lo que pasó al resolverse una acción.
+ *
+ * Es a la vez lo que se le muestra al jugador en el acto y lo que queda escrito
+ * en la bitácora: el mismo informe en dos lugares, porque es el mismo hecho. El
+ * `id` es el de la fila del registro, para poder enlazarla.
+ */
 export interface ActionReport {
+	readonly id: number;
 	readonly kind: string;
+	readonly originName: string;
 	readonly destinationName: string;
-	readonly xpAwarded: Record<string, number>;
+	readonly durationSeconds: number;
+	/** Lo que la acción depositó en el pozo de su rama. */
+	readonly deposit: PoolDeposit;
 }
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
@@ -114,31 +115,46 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 		if (!claimed) return null;
 
 		const destination = tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
+		const origin = tx.select().from(body).where(eq(body.id, claimed.originBodyId)).get();
 
-		const pool = actionXpPool(claimed.durationSeconds / 60);
-		const awarded = distributeXp(pool, TRAVEL_PRIMARY_SKILL, TRAVEL_SECONDARY_SKILLS);
+		const ganado = actionXpPool(claimed.durationSeconds / 60);
 
 		tx.update(pilot)
 			.set({ locationId: claimed.destinationBodyId })
 			.where(eq(pilot.id, row.id))
 			.run();
 
-		for (const [skill, xp] of Object.entries(awarded)) {
-			// Una sola sentencia por habilidad: con el índice único de la tabla, el
-			// conflicto es la señal de que la fila ya existía y hay que sumarle.
-			tx.insert(pilotSkill)
-				.values({ pilotId: row.id, skill, xp })
-				.onConflictDoUpdate({
-					target: [pilotSkill.pilotId, pilotSkill.skill],
-					set: { xp: sql`${pilotSkill.xp} + ${xp}` }
-				})
-				.run();
-		}
+		// La experiencia va al **pozo de la rama** y no a la habilidad que se usó.
+		// Es lo que convierte especializarse en una decisión: el que viaja junta
+		// Pilotaje y después elige si lo gasta en Navegación o en abrir otra cosa.
+		// Ver docs/systems/SKILLS.md.
+		const { before, after } = deposit(tx, row.id, TRAVEL_FAMILY, ganado);
+		const depositado: PoolDeposit = {
+			family: TRAVEL_FAMILY,
+			familyName: skillFamilyLabel(TRAVEL_FAMILY),
+			xp: ganado,
+			before,
+			after
+		};
+
+		// El informe va en la misma transacción que el resultado: si se aplicó el
+		// viaje y se depositó la experiencia, la bitácora tiene que decirlo. Un
+		// informe perdido es una acción que el jugador no sabe que ocurrió.
+		const recorded = recordEntry(tx, row.id, {
+			kind: claimed.kind,
+			durationSeconds: claimed.durationSeconds,
+			originBodyId: claimed.originBodyId,
+			destinationBodyId: claimed.destinationBodyId,
+			deposit: depositado
+		});
 
 		return {
+			id: recorded.id,
 			kind: claimed.kind,
+			originName: origin?.name ?? '',
 			destinationName: destination?.name ?? '',
-			xpAwarded: awarded
+			durationSeconds: claimed.durationSeconds,
+			deposit: depositado
 		};
 	});
 }

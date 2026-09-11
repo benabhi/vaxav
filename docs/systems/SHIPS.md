@@ -180,7 +180,7 @@ si no quedaría de adorno.
 
 | Casco        | Rol               | Bono de rol                      | Carácter                           |
 | ------------ | ----------------- | -------------------------------- | ---------------------------------- |
-| **Estribo**  | Lanzadera inicial | Velocidad, por Navegación        | Mediocre en todo a propósito       |
+| **Pioner**   | Lanzadera inicial | Velocidad, por Navegación        | Mediocre en todo a propósito       |
 | **Mula**     | Carguera          | Bodega, por Ingeniería de bodega | Una bodega con motores             |
 | **Percal**   | Minera            | Extracción, por Minería          | Dos anclajes y casco reforzado     |
 | **Vencejo**  | Exploradora       | Sensores, por Escaneo            | Liviana, callada, de largo alcance |
@@ -218,7 +218,7 @@ es exactamente lo que la regla de "una sola bolsa" quiere evitar.
 
 Con la velocidad de referencia igual a la de una lanzadera de astillero, los
 tiempos calibrados del sistema inicial no se movieron. Lo que cambió es que ahora
-**la masa cuesta tiempo de verdad**: montarle una placa de blindaje al Estribo lo
+**la masa cuesta tiempo de verdad**: montarle una placa de blindaje a la Pioner la
 frena de 200 a 192 u/s, y ese trayecto pasa a tardar más.
 
 ## De dónde sale un módulo

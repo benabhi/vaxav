@@ -20,16 +20,24 @@
 <script lang="ts">
 	import Icon from '../Icon.svelte';
 	import type { IconName } from '$lib/icons';
-	import { MODULES, OPTIONS_MODULE, moduleRoute, type Module } from '$lib/navigation';
+	import {
+		MODULES,
+		OPTIONS_MODULE,
+		moduleHasNotice,
+		moduleRoute,
+		type Module
+	} from '$lib/navigation';
 	import { PILOT_ROUTE } from '$lib/routes';
 
 	interface Props {
 		expanded: boolean;
 		activeModule: string;
 		onToggle: () => void;
+		/** Las rutas que tienen algo sin leer. El módulo que las contenga titila. */
+		notices?: readonly string[];
 	}
 
-	let { expanded, activeModule, onToggle }: Props = $props();
+	let { expanded, activeModule, onToggle, notices = [] }: Props = $props();
 
 	/** Lo que comparten todas las filas: alto, cursor y el movimiento del HUD. */
 	const FILA =
@@ -59,7 +67,17 @@
 
 {#snippet enlace(module: Module)}
 	{@const active = activeModule === module.code}
-	<a href={moduleRoute(module)} title={module.label} class="{FILA} {estado(active)} no-underline">
+	<!--
+		El aviso pisa el borde de la fila, no se suma al lado: es el mismo borde
+		izquierdo que marca la sección abierta, y por eso se lee sin explicación. En
+		la sección que ya estás mirando no hace falta, porque ya llegaste.
+	-->
+	{@const avisa = !active && moduleHasNotice(module, notices)}
+	<a
+		href={moduleRoute(module)}
+		title={avisa ? `${module.label} · hay algo sin leer` : module.label}
+		class="{FILA} {estado(active)} no-underline {avisa ? 'aviso-izquierda' : ''}"
+	>
 		{@render rail(module.icon, active)}
 		{@render nombre(module.label)}
 	</a>

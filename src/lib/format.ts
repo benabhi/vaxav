@@ -78,29 +78,48 @@ const SKILL_FAMILIES: Record<SkillFamily, string> = {
 	science: 'Ciencias'
 };
 
+/**
+ * El dibujo de cada rama del árbol.
+ *
+ * Misma razón que el de los oficios y el de los cuerpos: a qué se dedica una
+ * rama es contenido del juego, con qué ícono se la dibuja es presentación.
+ */
+const SKILL_FAMILY_ICONS: Record<SkillFamily, IconName> = {
+	piloting: 'compass',
+	engineering: 'wrench',
+	extraction: 'diamond',
+	trade: 'scales',
+	combat: 'crosshair',
+	science: 'atom'
+};
+
+/**
+ * El escudo de cada facción.
+ *
+ * Vienen sobre negro, así que quien los dibuja los funde con `screen`: el negro
+ * desaparece y queda el emblema apoyado sobre el panel. Cada uno trae su propio
+ * color —rojo, azul y verde—, y es la única excepción a la regla del acento
+ * único: un escudo es identidad, no interfaz.
+ */
+const FACTION_CRESTS: Record<string, string> = {
+	dominion: '/factions/dominion.webp',
+	concord: '/factions/concord.webp',
+	pact: '/factions/pact.webp'
+};
+
+/** La imagen del escudo de una facción, o cadena vacía si no tiene. */
+export function factionCrest(code: string): string {
+	return FACTION_CRESTS[code] ?? '';
+}
+
+/** El ícono de Phosphor que le toca a una rama del árbol. */
+export function skillFamilyIcon(family: string): IconName {
+	return SKILL_FAMILY_ICONS[family as SkillFamily] ?? 'circles-three';
+}
+
 /** Cómo se llama una rama del árbol de habilidades en pantalla. */
 export function skillFamilyLabel(family: string): string {
 	return SKILL_FAMILIES[family as SkillFamily] ?? family;
-}
-
-/** Los tres estados en que puede estar una estrella de una habilidad. */
-export type StarState = 'full' | 'half' | 'empty';
-
-/**
- * Las cinco estrellas de una habilidad, según nivel y avance.
- *
- * Una estrella llena por cada nivel alcanzado, media si hay avance hacia el
- * siguiente, y vacías las que faltan. Es la lectura de un vistazo que un número
- * no da: cinco estrellas dicen "cuánto falta" sin hacer ninguna cuenta.
- */
-export function starStates(level: number, progress = 0): StarState[] {
-	const stars: StarState[] = [];
-	for (let index = 0; index < MAX_STARS; index++) {
-		if (level > index) stars.push('full');
-		else if (level === index && progress > 0) stars.push('half');
-		else stars.push('empty');
-	}
-	return stars;
 }
 
 // --- Universo ----------------------------------------------------------------

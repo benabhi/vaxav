@@ -188,6 +188,8 @@
 	 */
 	--shadow-*: initial;
 	--shadow-glow: 0 0 24px rgb(255 122 26 / 0.16);
+	/* El halo del cian, para lo que avisa: un aviso no es una selección. */
+	--shadow-data-glow: 0 0 24px rgb(79 210 238 / 0.28);
 	--shadow-glow-strong: 0 0 34px rgb(255 122 26 / 0.3);
 	--shadow-focus: 0 0 12px rgb(255 122 26 / 0.45);
 
@@ -450,6 +452,65 @@ body {
 
 .vaxav-flash {
 	animation: vaxav-flash 1.6s ease-in-out 1;
+}
+
+/* --- Las notificaciones -----------------------------------------------------
+ *
+ * Lo que avisa **titila en cian**, no en naranja: el naranja de esta interfaz
+ * quiere decir "esto es lo que estás mirando", y un aviso es lo contrario —algo
+ * que todavía no miraste. Con los dos del mismo color habría que leer para
+ * distinguirlos, y un aviso se tiene que ver sin leer.
+ *
+ * Es el borde y no un punto ni un número: el Neocom ya usa el borde izquierdo
+ * para marcar la sección abierta, así que el ojo ya está entrenado a mirar ahí.
+ */
+
+@keyframes vaxav-aviso {
+	0%,
+	100% {
+		border-color: var(--color-data);
+		box-shadow: var(--shadow-data-glow);
+	}
+	50% {
+		border-color: rgb(79 210 238 / 0.25);
+		box-shadow: none;
+	}
+}
+
+.aviso-izquierda {
+	border-left-color: var(--color-data);
+	animation: vaxav-aviso 1.4s ease-in-out infinite;
+}
+
+.aviso-abajo {
+	border-bottom-color: var(--color-data);
+	animation: vaxav-aviso 1.4s ease-in-out infinite;
+}
+
+/*
+ * Quien pidió menos movimiento igual tiene que enterarse: se apaga el titileo y
+ * queda el borde encendido, que es la mitad de la señal y la que importa.
+ */
+@media (prefers-reduced-motion: reduce) {
+	.aviso-izquierda,
+	.aviso-abajo {
+		animation: none;
+		box-shadow: var(--shadow-data-glow);
+	}
+}
+
+/* --- El aviso de una acción resuelta ----------------------------------------
+ *
+ * Abajo a la derecha y por encima del chat, que es la esquina donde el juego
+ * pone lo que está encendido. Fijo y no en el flujo: el aviso no puede empujar
+ * la pantalla que el jugador vino a mirar.
+ */
+
+.action-notice {
+	position: fixed;
+	right: 0.75rem;
+	bottom: 3.5rem;
+	z-index: 26;
 }
 
 /* --- El campo de estrellas de la portada -----------------------------------

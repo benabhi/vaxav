@@ -11,36 +11,58 @@ import { body, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
-import { levelFromXp, levelProgress } from '$lib/game/progression';
-import { SKILL_LIST } from '$lib/game/skills';
+import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
-import { roman, starStates, thousands } from '$lib/format';
-import type { FilaHabilidad, PilotoConectado } from '$lib/tipos';
+import { pools } from '../services/pools';
+import { shipReadout } from '../services/ships';
+import { situation } from '../services/status';
+import { skillFamilyIcon, skillFamilyLabel, thousands } from '$lib/format';
+import type { NaveDelPiloto, PilotoConectado, RamaXp } from '$lib/tipos';
 
 /**
- * Traduce experiencia cruda a filas listas para mostrar.
+ * Cómo le fue al piloto en cada rama del árbol: lo invertido y lo que hay en el
+ * pozo.
  *
- * Se recorre el catálogo y no el diccionario para que el orden sea siempre el
- * mismo: el del árbol de habilidades, agrupado por familia.
+ * Son **dos números por rama y no uno**. Lo invertido es la suma de lo que
+ * tienen sus habilidades: dice quién es el piloto hoy. El pozo es lo que una
+ * acción depositó y todavía no se gastó: dice qué puede ser mañana. Mirar uno
+ * solo deja afuera media respuesta —un piloto con cuatro mil sin invertir en
+ * Extracción no es "alguien que no mina", es alguien a punto de serlo.
+ *
+ * Se recorre el catálogo y no lo que el piloto tiene, para que las seis ramas
+ * salgan siempre y en el mismo orden: una rama en cero también informa —dice por
+ * dónde no fue—, y una lista que cambia de largo según el piloto no se puede
+ * comparar de un vistazo.
  */
-export function buildSkillRows(xpBySkill: Readonly<Record<string, number>>): FilaHabilidad[] {
-	const rows: FilaHabilidad[] = [];
-	for (const skill of SKILL_LIST) {
-		const xp = xpBySkill[skill.code];
-		if (!xp) continue;
-		const level = levelFromXp(xp, skill.difficulty);
-		const progress = levelProgress(xp, skill.difficulty);
-		rows.push({
-			code: skill.code,
-			name: skill.name,
-			family: skill.family,
-			level: roman(level),
-			xp,
-			progress: Math.trunc(progress * 100),
-			stars: starStates(level, progress)
-		});
-	}
-	return rows;
+export function buildFamilyXp(
+	xpBySkill: Readonly<Record<string, number>>,
+	pools: Readonly<Partial<Record<string, number>>> = {}
+): RamaXp[] {
+	const ramas = SKILL_FAMILIES.map((family) => {
+		const skills = SKILL_LIST.filter((skill) => skill.family === family);
+		const entrenadas = skills.filter((skill) => (xpBySkill[skill.code] ?? 0) > 0);
+		return {
+			family,
+			name: skillFamilyLabel(family),
+			icon: skillFamilyIcon(family),
+			xp: skills.reduce((suma, skill) => suma + (xpBySkill[skill.code] ?? 0), 0),
+			pool: pools[family] ?? 0,
+			trained: entrenadas.length,
+			total: skills.length,
+			share: 0,
+			poolShare: 0
+		};
+	});
+
+	// **Un solo techo para los dos números**: lo que interesa leer no es el valor
+	// absoluto sino dónde está puesto el esfuerzo, y dos escalas distintas harían
+	// que un pozo chico se dibujara tan grande como una rama entera.
+	const techo = Math.max(...ramas.map((rama) => Math.max(rama.xp, rama.pool)), 1);
+	return ramas.map((rama) => ({
+		...rama,
+		share: Math.round((rama.xp * 100) / techo),
+		poolShare: Math.round((rama.pool * 100) / techo)
+	}));
 }
 
 /** Créditos con separador de miles y su unidad, como en el HUD. */
@@ -64,6 +86,24 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 
 	const station = place?.name ?? '';
 	const systemName = home?.name ?? '';
+	// Una sola lectura: la usan tanto las filas de habilidades como las ramas.
+	const xp = skillXp(db, row.id);
+	const ahora = situation(db, row);
+	const pozos = pools(db, row.id);
+
+	// La nave, resumida: el nombre, el rol y las tres capas. El detalle entero
+	// está a una pestaña de distancia y no tiene por qué repetirse acá.
+	const readout = shipReadout(db, row);
+	const ship: NaveDelPiloto | null = readout
+		? {
+				name: readout.hull.name,
+				role: readout.hull.role,
+				shield: thousands(readout.shield),
+				armor: thousands(readout.armor),
+				structure: thousands(readout.structure),
+				flyable: readout.flyable
+			}
+		: null;
 
 	return {
 		callsign: row.callsign,
@@ -78,6 +118,13 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		credits: row.credits,
 		creditsLabel: creditsLabel(row.credits),
 		locationLabel: locationLabel(station, systemName),
-		skills: buildSkillRows(skillXp(db, row.id))
+		families: buildFamilyXp(xp, pozos),
+		since: row.createdAt.getTime(),
+		// Las corporaciones de jugadores llegan en F12: hoy no hay ninguna a la
+		// que pertenecer, y decirlo es mejor que esconder el renglón.
+		corporation: '',
+		statusLabel: ahora.inTransit ? 'En tránsito' : 'Atracado',
+		inTransit: ahora.inTransit,
+		ship
 	};
 }

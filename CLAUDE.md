@@ -58,6 +58,43 @@ escribirla.
   para los íconos chicos de interfaz, `thin` para lo decorativo grande. El peso
   da jerarquía sin agregar un color.
 
+### La figura de la pantalla
+
+Toda pantalla importante tiene **una figura**: un dibujo propio que dice lo que
+la pantalla dice, pero por su forma. Es lo que le da personalidad a cada una sin
+que ninguna se salga del lenguaje.
+
+Las que ya existen:
+
+| Pantalla             | Su figura                 | Qué se lee sin leer                                           |
+| -------------------- | ------------------------- | ------------------------------------------------------------- |
+| Nave                 | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo |
+| Navegación · Sistema | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                       |
+| Piloto               | El hexágono de ramas      | A qué se dedicó, y en qué está por convertirse                |
+
+Las reglas que las hacen funcionar:
+
+- **Una por pantalla, no una por panel.** Dos figuras compiten y ninguna gana. La
+  que está es la que contesta la pregunta principal de esa pantalla.
+- **Tiene que informar por su forma.** Si el dibujo se ve igual con datos
+  distintos, es decoración y sobra. El hexágono de un minero y el de un artillero
+  son dos siluetas distintas; ése es el examen.
+- **No reemplaza a los números, los acompaña.** Una figura dice bien _cuál_ y mal
+  _cuánto_. Siempre va con su lista al lado —el anillo con las ranuras, el
+  hexágono con las ramas—, que lee los mismos datos y dice las cifras exactas.
+- **Se dibuja con las manos**, en SVG propio o cajas de un píxel. **Nada de
+  librerías de gráficos**: traen su propio aspecto, y acá el aspecto es el
+  producto. Vale la misma regla que para los componentes.
+- **Habla el idioma del HUD**: trazos finos, esquinas rectas salvo donde el
+  círculo signifique algo, el naranja del sistema y el cian sólo para cifras. Una
+  figura tiene que parecer un instrumento de cabina, no un gráfico de tablero.
+- **Aguanta que la achiquen.** El alto sale de `aspect-ratio` y nunca de un valor
+  fijo: un círculo dentro de un rectángulo se vuelve una elipse.
+
+Esto **no contradice la homogeneidad**, la completa: todo se ve igual, y cada
+pantalla tiene una sola cosa que es suya. Sin eso, un juego de paneles apilados
+se vuelve indistinguible de sí mismo pantalla a pantalla.
+
 ## 3. Responsivo, siempre
 
 - **El contenido tiene que verse bien en teléfono y en tableta**, no sólo en

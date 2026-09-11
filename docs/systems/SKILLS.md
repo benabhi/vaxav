@@ -64,6 +64,10 @@ Dos efectos posibles, según la habilidad:
 
 ## Reparto de experiencia
 
+> **Superado por el pozo por familia**, más abajo. Una acción ya no reparte entre
+> habilidades: deposita en la rama. Lo que sigue vale para el reparto del
+> presupuesto de la creación de piloto, que sí se reparte así.
+
 Cada acción define una **habilidad principal** y una lista de **secundarias**,
 para representar que casi nada se hace con una sola destreza.
 
@@ -79,12 +83,14 @@ Minería (principal) recibe 600; Estiba y Prospección (secundarias), 90 cada un
 
 ## Dónde está la escasez: el pozo por familia
 
-> **Decidido, sin implementar.** Hoy la experiencia va derecha a la habilidad que
-> usó la acción. Este cambio llega junto con la lista grande de habilidades.
+> **Implementado.** Las reglas puras están en `src/lib/game/pools.ts`, el gasto
+> contra la base en `src/lib/server/services/pools.ts`, y se ve y se usa en
+> `/piloto/habilidades`. Lo que sigue sin implementar es el laboratorio de más
+> abajo: hoy toda habilidad del catálogo está disponible desde el primer día.
 
-Una acción no le va a pagar experiencia a una habilidad: se la va a pagar a la
-**familia** de la actividad. Minar deposita en el pozo de Extracción, y el
-jugador decide en qué habilidad de esa familia gastarlo.
+Una acción no le paga experiencia a una habilidad: se la paga a la **familia** de
+la actividad. Minar deposita en el pozo de Extracción, y el jugador decide en qué
+habilidad de esa familia gastarlo.
 
 El problema que resuelve es el siguiente. Con la experiencia yendo derecha a la
 habilidad usada, **especializarse no es una decisión: es automático**. El que
@@ -103,6 +109,38 @@ Con pozo por familia:
 
 Ya hay precedente en el juego: la creación de piloto reparte un presupuesto de
 experiencia entre las habilidades de partida. Es la misma idea, para siempre.
+
+### Cómo se gasta
+
+**Se compra el nivel siguiente, entero.** No se vierte experiencia de a poco en
+una habilidad: el botón dice "Subir a nivel 3" y cuesta exactamente lo que falta
+para ese umbral, que sale de la misma curva de arriba. Es una decisión y no un
+grifo —media inversión no existe—, y de paso evita el estado incómodo de tener
+una habilidad a la que le faltan doce puntos sin poder hacer nada al respecto.
+
+Tres cosas pueden trabar una compra, y la pantalla dice **cuál**, en este orden:
+
+1. **Al máximo**: no hay nivel siguiente. Juntar más no cambia nada.
+2. **Requisitos**: le faltan niveles de otra habilidad. Juntar más tampoco.
+3. **Pozo**: le falta experiencia en esa rama. Ésta sí se destraba jugando.
+
+El orden importa porque el motivo es lo que el jugador lee: mandarlo a juntar
+experiencia para algo que está trabado por requisitos es mandarlo a perder el
+tiempo.
+
+La validación se rehace **dentro de la transacción** que descuenta el pozo. Entre
+que la pantalla dibujó el botón y el jugador lo apretó, el pozo pudo gastarse en
+otra pestaña; lo que decide es lo que hay en la base al escribir.
+
+### Dónde se ve
+
+- El **hexágono de Piloto** dibuja las dos métricas superpuestas: lo invertido en
+  naranja lleno, lo que espera en los pozos en cian punteado. La distancia entre
+  las dos líneas es la decisión pendiente.
+- El **informe de cada acción** —el aviso y la bitácora— dice a qué pozo fue,
+  cuánto había y cuánto quedó para gastar.
+- **`/piloto/habilidades`** tiene los seis pozos arriba, con cuántas habilidades
+  de la rama se pueden subir ahora mismo, y el catálogo entero abajo.
 
 ## Cómo se consigue una habilidad: el laboratorio
 

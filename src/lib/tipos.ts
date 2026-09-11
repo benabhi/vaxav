@@ -6,7 +6,6 @@
  */
 
 import type { IconName } from '$lib/icons';
-import type { StarState } from '$lib/format';
 
 /**
  * La orden que el piloto tiene en curso.
@@ -26,15 +25,15 @@ export interface AccionEnCurso {
 	readonly durationSeconds: number;
 }
 
-/** Una habilidad del piloto, ya resuelta para mostrar. */
-export interface FilaHabilidad {
-	readonly code: string;
+/** La nave del piloto, resumida para la credencial. */
+export interface NaveDelPiloto {
 	readonly name: string;
-	readonly family: string;
-	readonly level: string;
-	readonly xp: number;
-	readonly progress: number;
-	readonly stars: readonly StarState[];
+	readonly role: string;
+	readonly shield: string;
+	readonly armor: string;
+	readonly structure: string;
+	/** Si la configuración que lleva se puede volar. */
+	readonly flyable: boolean;
 }
 
 /** Lo que toda pantalla del juego sabe del piloto conectado. */
@@ -51,7 +50,21 @@ export interface PilotoConectado {
 	readonly credits: number;
 	readonly creditsLabel: string;
 	readonly locationLabel: string;
-	readonly skills: readonly FilaHabilidad[];
+	/** Cuánta experiencia lleva en cada rama del árbol. */
+	readonly families: readonly RamaXp[];
+	/** Desde cuándo vuela, en milisegundos UTC. */
+	readonly since: number;
+	/**
+	 * A qué corporación pertenece. Vacío quiere decir independiente: las
+	 * corporaciones de jugadores llegan en F12 (docs/systems/CORPORATIONS.md),
+	 * así que hoy no hay ninguna a la que pertenecer y la ficha lo dice.
+	 */
+	readonly corporation: string;
+	/** Qué está haciendo ahora mismo, en una palabra. */
+	readonly statusLabel: string;
+	readonly inTransit: boolean;
+	/** La nave que lleva, o `null` si no tiene ninguna. */
+	readonly ship: NaveDelPiloto | null;
 }
 
 /** Un módulo de la estación, listo para dibujar en el mosaico. */
@@ -222,4 +235,172 @@ export interface Nave {
 	/** Si puede tocar la nave acá y ahora, y por qué no si no puede. */
 	readonly canRefit: boolean;
 	readonly refitBlocked: string;
+}
+
+/**
+ * Lo que una acción depositó en el pozo de una rama.
+ *
+ * Es lo que el informe cuenta desde que existe el pozo por familia: una acción
+ * le paga a la rama, no a la habilidad, y el piloto decide después en qué
+ * gastarlo.
+ */
+export interface GananciaPozo {
+	readonly family: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly xp: number;
+	/** Lo que había en el pozo antes y lo que quedó para gastar. */
+	readonly before: number;
+	readonly after: number;
+}
+
+/**
+ * Una línea de la experiencia repartida por una acción.
+ *
+ * Lleva el nivel **de ese momento** y no el de hoy: la bitácora es un registro,
+ * así que un informe de la semana pasada tiene que seguir contando lo que pasó
+ * la semana pasada.
+ */
+export interface GananciaXp {
+	readonly skill: string;
+	readonly name: string;
+	/** A qué rama del árbol pertenece: Pilotaje, Extracción, Combate… */
+	readonly family: string;
+	readonly xp: number;
+	/** La experiencia acumulada que tenía antes y la que quedó. */
+	readonly before: number;
+	readonly after: number;
+	/** El nivel al que quedó la habilidad después de sumar, en romanos. */
+	readonly level: string;
+	/** En el que estaba antes. Distinto del anterior quiere decir que subió. */
+	readonly levelBefore: string;
+	/** Si esta acción la hizo subir de nivel: lo que el jugador estaba esperando. */
+	readonly leveledUp: boolean;
+	/** Cuánto lleva del nivel siguiente, de 0 a 100. */
+	readonly progress: number;
+	/** Cuánto le falta al siguiente, en puntos. Cero si ya está al tope. */
+	readonly toNext: number;
+}
+
+/**
+ * El informe de una acción resuelta.
+ *
+ * Es la misma pieza en dos lugares: el aviso que salta al volver y cada fila de
+ * la bitácora. Que sea una sola forma es lo que hace que digan exactamente lo
+ * mismo. Ver docs/systems/ACTIONS.md.
+ */
+export interface Informe {
+	readonly id: number;
+	readonly kind: string;
+	/**
+	 * El titular, igual para toda acción: "Acción terminada". Genérico a
+	 * propósito —van a ser muchas— y lo que cambia es `kindLabel`.
+	 */
+	readonly title: string;
+	/** Qué acción fue: "Viaje", "Extracción", "Refinado". */
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	/** Dónde terminó: el titular del informe. */
+	readonly place: string;
+	/** Milisegundos desde la época, en UTC, para que el navegador lo fecha. */
+	readonly at: number;
+	/** Las lecturas del informe: rótulo y valor, en orden. */
+	readonly details: readonly { readonly label: string; readonly value: string }[];
+	/** El depósito al pozo, que es lo que una acción deja hoy. */
+	readonly deposit: GananciaPozo | null;
+	/**
+	 * La experiencia por habilidad de los informes anteriores al pozo. Vacía en
+	 * los nuevos: hoy una acción no le paga a una habilidad.
+	 */
+	readonly xp: readonly GananciaXp[];
+	/** Todo lo que dejó la acción, sumado. */
+	readonly xpTotal: number;
+	readonly unread: boolean;
+}
+
+/** Una página de la bitácora, con lo que hace falta para dibujar el paginador. */
+export interface PaginaBitacora {
+	readonly entries: readonly Informe[];
+	readonly total: number;
+	readonly page: number;
+	readonly pages: number;
+}
+
+/**
+ * Cómo le fue al piloto en una rama del árbol, **en sus dos números**.
+ *
+ * Son dos cosas distintas y las dos importan: lo que ya se convirtió en niveles
+ * y lo que está esperando en el pozo. Una rama con mucho invertido dice quién es
+ * el piloto; una con mucho pozo dice qué puede ser mañana, y mirar una sola de
+ * las dos deja afuera media respuesta. Ver docs/systems/SKILLS.md.
+ */
+export interface RamaXp {
+	readonly family: string;
+	readonly name: string;
+	readonly icon: IconName;
+	/** Lo ya invertido: la suma de lo que tienen sus habilidades. */
+	readonly xp: number;
+	/** Lo que queda en el pozo de la rama, sin gastar. */
+	readonly pool: number;
+	/** Cuántas habilidades de la rama tiene entrenadas, de cuántas hay. */
+	readonly trained: number;
+	readonly total: number;
+	/** Cuánto pesa lo invertido sobre la rama más cargada, de 0 a 100. */
+	readonly share: number;
+	/**
+	 * Lo mismo para el pozo, **contra el mismo techo**: si cada uno se midiera
+	 * contra su propio máximo, las dos figuras del hexágono no se podrían comparar.
+	 */
+	readonly poolShare: number;
+}
+
+/** Una habilidad del catálogo, con lo que el piloto tiene de ella. */
+export interface FilaArbol {
+	readonly code: string;
+	readonly name: string;
+	readonly family: string;
+	readonly familyName: string;
+	readonly familyIcon: IconName;
+	/** Sobre qué actúa, para el detalle. */
+	readonly governs: string;
+	/** El multiplicador de x1 a x5: cuántas veces cuesta la curva base. */
+	readonly difficulty: number;
+	readonly level: number;
+	/** El nivel en romanos, o "0" cuando todavía no empezó. */
+	readonly levelLabel: string;
+	readonly xp: number;
+	/** Cuánto lleva del nivel siguiente, de 0 a 100. */
+	readonly progress: number;
+	/** Lo que cuesta el salto al nivel siguiente. Cero si está al tope. */
+	readonly cost: number;
+	readonly nextLevel: number;
+	/** Si el pozo de su rama alcanza y los requisitos están. */
+	readonly canInvest: boolean;
+	/** Por qué no se puede, escrito para mostrar. Vacío si se puede. */
+	readonly blocked: string;
+	/** Las habilidades que le faltan, ya con su nombre y nivel. */
+	readonly missing: readonly string[];
+	/** Si el piloto la tiene empezada. */
+	readonly trained: boolean;
+	readonly maxed: boolean;
+}
+
+/** Un pozo listo para mostrar, con lo que hay para gastar. */
+export interface PozoRama {
+	readonly family: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly xp: number;
+	/** Cuántas habilidades de la rama se pueden subir con lo que hay. */
+	readonly affordable: number;
+	readonly total: number;
+}
+
+/** Todo lo que la pantalla de habilidades necesita. */
+export interface Arbol {
+	readonly pools: readonly PozoRama[];
+	readonly skills: readonly FilaArbol[];
+	/** Cuántas tiene empezadas, de cuántas hay. */
+	readonly trained: number;
+	readonly total: number;
 }
