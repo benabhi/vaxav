@@ -1,12 +1,13 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
+import type { Pilot } from '$lib/server/db/schema';
+
 declare global {
 	namespace App {
-		// interface Error {}
-		// interface Locals {}
-		// interface PageData {}
-		// interface PageState {}
-		// interface Platform {}
+		interface Locals {
+			/** El piloto de la sesión abierta, o `null` si no hay ninguna. */
+			pilot: Pilot | null;
+			/** El token de la cookie, para poder cerrarla al salir. */
+			sessionToken: string;
+		}
 	}
 }
 
