@@ -458,6 +458,38 @@ export const pilotAction = sqliteTable(
 );
 
 /**
+ * El pozo de experiencia de una rama del árbol.
+ *
+ * Una acción no le paga a una habilidad: le paga a la **familia** de la
+ * actividad. Minar deposita en Extracción, y el piloto decide en qué habilidad
+ * de esa rama gastarlo. Ver docs/systems/SKILLS.md.
+ *
+ * Es lo que convierte especializarse en una decisión. Con la experiencia yendo
+ * derecha a la habilidad usada, el que mina se vuelve minero gratis y sin
+ * renunciar a nada; con el pozo, cuatro horas de minería alcanzan para subir
+ * Minería un nivel **o** para abrir dos habilidades nuevas, no para las tres.
+ *
+ * Una fila por piloto y rama, y sólo de las ramas que alguna vez recibieron
+ * algo: una rama sin fila es una rama en cero.
+ */
+export const pilotPool = sqliteTable(
+	'pilot_pool',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		/** El código de la familia: `piloting`, `extraction`, y las demás. */
+		family: text('family').notNull(),
+		/** Lo que queda por gastar. Lo depositado menos lo ya invertido. */
+		xp: integer('xp').notNull().default(0)
+	},
+	// Una fila por piloto y rama: el código lo da por sentado al depositar, y sin
+	// la restricción un duplicado partiría el pozo en dos y se descubriría tarde.
+	(table) => [uniqueIndex('pilot_pool_unico').on(table.pilotId, table.family)]
+);
+
+/**
  * El informe de una acción ya resuelta: la bitácora del piloto.
  *
  * En un juego donde las cosas pasan mientras no estás, la bitácora no es un
@@ -598,3 +630,4 @@ export type Ship = typeof ship.$inferSelect;
 export type FittedModule = typeof fittedModule.$inferSelect;
 export type PilotAction = typeof pilotAction.$inferSelect;
 export type PilotLog = typeof pilotLog.$inferSelect;
+export type PilotPool = typeof pilotPool.$inferSelect;

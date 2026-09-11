@@ -1,6 +1,6 @@
 <!--
-	El informe de una acción resuelta: qué se hizo, dónde, cuánto tardó y cuánta
-	experiencia dejó a cada habilidad.
+	El informe de una acción resuelta: qué se hizo, dónde, cuánto tardó y cuánto
+	dejó en el pozo de su rama.
 
 	Es **la misma pieza en dos lugares**: el aviso que salta al volver y cada fila
 	de la bitácora. Que sea una sola es lo que garantiza que digan exactamente lo
@@ -11,8 +11,11 @@
 	titular es genérico —van a ser muchas acciones— y lo que cambia es cuál fue.
 
 	**La experiencia se cuenta entera**, que es el punto: cuánto dio, a qué rama
-	pertenece cada habilidad, en qué nivel quedó, cuánto le falta al siguiente y,
-	sobre todo, **si subió**. Un "+120 XP" suelto no dice nada.
+	fue y cuánto quedó en ese pozo para gastar. Un "+120 XP" suelto no dice nada.
+
+	El bloque por habilidad de más abajo es para los informes **anteriores al pozo
+	por familia**, cuando una acción le pagaba derecho a la habilidad que usó. No
+	se escriben más, pero los que hay tienen que seguir leyéndose.
 -->
 <script lang="ts">
 	import Icon from '../Icon.svelte';
@@ -88,6 +91,45 @@
 					<span class="min-w-0 text-2 text-text-body">{detail.value}</span>
 				</div>
 			{/each}
+		</div>
+	{/if}
+
+	<!--
+		El depósito al pozo de la rama, que es lo que una acción paga hoy.
+
+		Se cuenta entero y no como un "+26 XP" suelto: a qué rama fue —porque el
+		pozo sólo sirve para habilidades de esa rama—, cuánto había y **cuánto quedó
+		para gastar**, que es la pregunta que sigue a "gané 26". Y se dice dónde se
+		gasta, porque una moneda que no se sabe dónde usar no es una recompensa.
+	-->
+	{#if report.deposit}
+		{@const pozo = report.deposit}
+		<div class="flex w-full flex-col gap-2 border-t border-border-soft pt-2">
+			<div class="flex w-full items-center gap-3">
+				<Label>Experiencia</Label>
+				<div class="grow"></div>
+				<span class="font-mono text-[0.72rem] text-data">+{thousands(pozo.xp)} XP</span>
+			</div>
+
+			<div class="flex w-full flex-wrap items-center gap-2">
+				<Icon name={pozo.icon} weight="duotone" size="0.9rem" class="text-accent" />
+				<span
+					class="font-display text-[0.74rem] font-semibold tracking-display text-text-strong uppercase"
+				>
+					Pozo de {pozo.name}
+				</span>
+				<div class="grow"></div>
+				<span class="shrink-0 font-mono text-[0.7rem] whitespace-nowrap text-text-muted">
+					{thousands(pozo.before)} →
+				</span>
+				<span class="shrink-0 font-mono text-[0.82rem] whitespace-nowrap text-data">
+					{thousands(pozo.after)}
+				</span>
+			</div>
+
+			<span class="font-mono text-[0.62rem] text-text-muted">
+				Tenés {thousands(pozo.after)} XP para invertir en habilidades de {pozo.name}.
+			</span>
 		</div>
 	{/if}
 

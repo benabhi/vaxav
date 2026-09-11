@@ -42,7 +42,7 @@ describe('dar la orden de viajar', () => {
 		// La duración sale de la distancia y de la **velocidad real de su nave**,
 		// que ya trae adentro el bono de Navegación con el que el minero arranca.
 		// Se calcula acá en vez de asumir un número, para no depender ni de la XP
-		// inicial de la profesión ni de los propulsores que traiga el Estribo el
+		// inicial de la profesión ni de los propulsores que traiga la Pioner el
 		// día que cambien.
 		const distancia = bodyDistance(db, orden.originBodyId, destino.id);
 		const readout = shipReadout(db, piloto)!;
@@ -126,30 +126,25 @@ describe('resolver la orden', () => {
 
 		expect(parte).not.toBeNull();
 		expect(parte!.destinationName).toBe(destino.name);
-		const navegacion = parte!.xp.find((fila) => fila.skill === 'navigation')!;
-		expect(navegacion.xp).toBeGreaterThan(0);
-		// El informe guarda el antes y el después, que es lo que le deja decir si
-		// subió de nivel sin depender de cuánto tenga el piloto hoy.
-		expect(navegacion.after).toBe(navegacion.before + navegacion.xp);
-		// Con viajes de pocos segundos el pozo es chico y el 15 % de secundaria
-		// puede redondear a 0 — legítimo, no un error. Lo que importa es que la
-		// habilidad está y nunca es negativa.
-		const combustible = parte!.xp.find((fila) => fila.skill === 'fuel_efficiency')!;
-		expect(combustible.xp).toBeGreaterThanOrEqual(0);
+		// La experiencia va al pozo de la rama y no a la habilidad usada: es lo
+		// que convierte especializarse en una decisión (docs/systems/SKILLS.md).
+		expect(parte!.deposit.family).toBe('piloting');
+		expect(parte!.deposit.xp).toBeGreaterThan(0);
+		expect(parte!.deposit.after).toBe(parte!.deposit.before + parte!.deposit.xp);
 
 		const despues = db.select().from(pilot).where(eq(pilot.id, piloto.id)).get()!;
 		expect(despues.locationId).toBe(destino.id);
 		expect(currentAction(db, piloto.id)).toBeNull();
 
-		// El minero ya arrancaba con XP en Navegación: lo que hay que verificar es
-		// el incremento, no el total.
+		// Y la habilidad **no** se movió sola: resolver un viaje ya no entrena
+		// Navegación, la deja pagada en el pozo para que el piloto elija.
 		const fila = db
 			.select()
 			.from(pilotSkill)
 			.where(eq(pilotSkill.pilotId, piloto.id))
 			.all()
 			.find((row) => row.skill === 'navigation')!;
-		expect(fila.xp).toBe(xpPrevio + navegacion.xp);
+		expect(fila.xp).toBe(xpPrevio);
 	});
 
 	it('sólo la resuelve una vez', async () => {

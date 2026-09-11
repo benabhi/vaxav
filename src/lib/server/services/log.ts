@@ -18,15 +18,29 @@ import type { Db } from '../db/types';
 export const PAGE_SIZE = 10;
 
 /**
+ * Lo que una acción depositó en el pozo de una rama.
+ *
+ * Se guarda el antes y el después, no sólo lo ganado: con los dos números el
+ * informe puede decir cuánto quedó para gastar, que es la pregunta que sigue.
+ *
+ * Guardar el antes es además lo que hace que la bitácora sea un registro y no
+ * una foto del presente: sin él, un informe de hace una hora contaría el pozo
+ * de hoy.
+ */
+export interface PoolDeposit {
+	readonly family: string;
+	readonly familyName: string;
+	readonly xp: number;
+	readonly before: number;
+	readonly after: number;
+}
+
+/**
  * Lo que una acción le dejó a una habilidad.
  *
- * Se guarda la experiencia **antes y después**, y no el nivel: el nivel se
- * deriva de la dificultad de la habilidad, que se puede rebalancear; los puntos
- * son el hecho. Con los dos números el informe puede decir en qué nivel quedó y,
- * sobre todo, **si subió**, que es lo único que el jugador estaba esperando.
- *
- * Guardar el antes es lo que hace que la bitácora sea un registro y no una foto
- * del presente: sin él, un informe de hace una hora mostraría el nivel de hoy.
+ * **Forma anterior al pozo por familia.** Ya no se escribe: las acciones
+ * depositan en la rama. Se conserva para poder seguir leyendo los informes que
+ * quedaron escritos antes del cambio.
  */
 export interface XpChange {
 	readonly skill: string;
@@ -41,7 +55,7 @@ export interface LogEntry {
 	readonly durationSeconds: number;
 	readonly originBodyId: number | null;
 	readonly destinationBodyId: number | null;
-	readonly xp: readonly XpChange[];
+	readonly deposit: PoolDeposit;
 }
 
 /** Una página de la bitácora, con lo que hace falta para dibujar el paginador. */
@@ -69,7 +83,7 @@ export function recordEntry(db: Db, pilotId: number, entry: LogEntry): PilotLog 
 			durationSeconds: entry.durationSeconds,
 			originBodyId: entry.originBodyId,
 			destinationBodyId: entry.destinationBodyId,
-			xpAwarded: JSON.stringify(entry.xp)
+			xpAwarded: JSON.stringify({ pool: entry.deposit })
 		})
 		.returning()
 		.get();

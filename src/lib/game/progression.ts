@@ -115,3 +115,16 @@ export function distributeXp(
 	}
 	return awarded;
 }
+
+/**
+ * Lo que cuesta llevar una habilidad al nivel siguiente.
+ *
+ * Es exactamente lo que le falta: el umbral del nivel que viene menos lo que ya
+ * tiene. `null` cuando está al tope, porque no hay nivel siguiente que comprar.
+ *
+ * El costo sale de la misma curva que todo lo demás, así que una habilidad
+ * difícil cuesta más sin que haya una segunda tabla que mantener sincronizada.
+ */
+export function levelUpCost(xp: number, difficulty: number): number | null {
+	return xpToNextLevel(xp, difficulty);
+}

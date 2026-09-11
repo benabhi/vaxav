@@ -8,6 +8,8 @@
  * Corresponde a docs/systems/ACTIONS.md y docs/systems/UNIVERSE.md.
  */
 
+import type { SkillFamily } from './skills';
+
 import { roundHalfEven } from './math';
 
 /**
@@ -37,6 +39,16 @@ export const REFERENCE_SPEED = 190;
  * Eficiencia de combustible su fracción de secundaria (ver `progression`).
  */
 export const TRAVEL_PRIMARY_SKILL = 'navigation';
+
+/**
+ * La rama a la que viajar le deposita la experiencia.
+ *
+ * Se declara y no se deriva de la habilidad principal: el día que una acción
+ * pague a una familia que no es la de su habilidad más obvia —entregar una
+ * misión de combate, por ejemplo—, eso tiene que poder decirse acá y no
+ * descubrirse leyendo el catálogo.
+ */
+export const TRAVEL_FAMILY: SkillFamily = 'piloting';
 export const TRAVEL_SECONDARY_SKILLS = ['fuel_efficiency'] as const;
 
 /**

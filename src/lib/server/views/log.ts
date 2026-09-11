@@ -12,12 +12,12 @@
 import { inArray } from 'drizzle-orm';
 import { body, type PilotLog } from '../db/schema';
 import type { Db } from '../db/types';
-import { logPage, type LogPage, type XpChange } from '../services/log';
+import { logPage, type LogPage, type PoolDeposit, type XpChange } from '../services/log';
 import { MAX_LEVEL, levelFromXp, levelProgress, xpForLevel } from '$lib/game/progression';
 import { getSkill } from '$lib/game/skills';
-import { remainingLabel, roman, skillFamilyLabel } from '$lib/format';
+import { remainingLabel, roman, skillFamilyIcon, skillFamilyLabel } from '$lib/format';
 import type { IconName } from '$lib/icons';
-import type { GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
+import type { GananciaPozo, GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
 
 /**
  * El titular de todo informe de acción.
@@ -39,19 +39,65 @@ function kindOf(kind: string): { label: string; icon: IconName } {
 }
 
 /**
- * Lo que la acción le dejó a cada habilidad, con el nivel de **ese** momento.
+ * El depósito que hizo la acción, listo para dibujar.
  *
- * El antes y el después salen de la fila y no del piloto de hoy: la bitácora es
- * un registro, y un informe de la semana pasada tiene que seguir contando lo que
- * pasó la semana pasada.
+ * Sale de la fila y no del pozo de hoy: la bitácora es un registro, y un informe
+ * de la semana pasada tiene que seguir contando lo que pasó la semana pasada.
  */
-function buildXp(cambios: readonly XpChange[]): GananciaXp[] {
-	const filas: GananciaXp[] = [];
+function buildDeposit(raw: string): GananciaPozo | null {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		// Una fila corrupta no puede dejar la bitácora entera sin dibujar.
+		return null;
+	}
 
+	if (!parsed || typeof parsed !== 'object' || !('pool' in parsed)) return null;
+	const pool = (parsed as { pool: PoolDeposit }).pool;
+	if (!pool || typeof pool.xp !== 'number') return null;
+
+	return {
+		family: pool.family,
+		name: pool.familyName || skillFamilyLabel(pool.family),
+		icon: skillFamilyIcon(pool.family),
+		xp: pool.xp,
+		before: pool.before,
+		after: pool.after
+	};
+}
+
+/**
+ * Lo que la acción le dejó a cada habilidad, en los informes **anteriores al
+ * pozo por familia**.
+ *
+ * Se conserva para no perder lo ya escrito. Acepta las dos formas viejas: la
+ * lista con el antes y el después, y el objeto de código a puntos que fue la
+ * primera de todas.
+ */
+function buildLegacyXp(raw: string): GananciaXp[] {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		return [];
+	}
+
+	let cambios: XpChange[] = [];
+	if (Array.isArray(parsed)) cambios = parsed as XpChange[];
+	else if (parsed && typeof parsed === 'object' && !('pool' in parsed)) {
+		cambios = Object.entries(parsed as Record<string, number>).map(([skill, xp]) => ({
+			skill,
+			xp,
+			before: 0,
+			after: xp
+		}));
+	}
+
+	const filas: GananciaXp[] = [];
 	for (const cambio of cambios) {
 		if (!cambio.xp) continue;
 		const spec = getSkill(cambio.skill);
-
 		const nivelAntes = levelFromXp(cambio.before, spec.difficulty);
 		const nivel = levelFromXp(cambio.after, spec.difficulty);
 		const siguiente =
@@ -64,9 +110,6 @@ function buildXp(cambios: readonly XpChange[]): GananciaXp[] {
 			xp: cambio.xp,
 			before: cambio.before,
 			after: cambio.after,
-			// El nivel 0 no tiene romano, y "nivel · 11 %" se lee roto. Acá es
-			// legítimo decirlo con un cero: una habilidad recién empezada está en
-			// cero y el informe tiene que poder contarlo.
 			level: roman(nivel) || '0',
 			levelBefore: roman(nivelAntes) || '0',
 			leveledUp: nivel > nivelAntes,
@@ -74,40 +117,7 @@ function buildXp(cambios: readonly XpChange[]): GananciaXp[] {
 			toNext: siguiente
 		});
 	}
-
-	// El que más dio primero: es el que explica la acción. Un salto de nivel se
-	// adelanta a todo, porque es lo único que el jugador estaba esperando.
 	return filas.sort((a, b) => Number(b.leveledUp) - Number(a.leveledUp) || b.xp - a.xp);
-}
-
-/**
- * Lo que se guardó como JSON, de vuelta a cambios, sin romperse si vino mal.
- *
- * Acepta también la forma vieja —un objeto de código a puntos, sin el antes— que
- * es lo que se escribió antes de que la bitácora guardara el salto de nivel.
- * Esas filas no pueden decir si subieron, y es lo honesto: no se guardó.
- */
-function parseXp(raw: string): XpChange[] {
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(raw);
-	} catch {
-		// Una fila corrupta no puede dejar la bitácora entera sin dibujar.
-		return [];
-	}
-
-	if (Array.isArray(parsed)) return parsed as XpChange[];
-
-	if (parsed && typeof parsed === 'object') {
-		return Object.entries(parsed as Record<string, number>).map(([skill, xp]) => ({
-			skill,
-			xp,
-			before: 0,
-			after: xp
-		}));
-	}
-
-	return [];
 }
 
 /**
@@ -128,7 +138,8 @@ function buildEntry(row: PilotLog, names: ReadonlyMap<number, string>): Informe 
 		details.push({ label: 'Duración', value: remainingLabel(row.durationSeconds) });
 	}
 
-	const xp = buildXp(parseXp(row.xpAwarded));
+	const deposit = buildDeposit(row.xpAwarded);
+	const xp = deposit ? [] : buildLegacyXp(row.xpAwarded);
 
 	return {
 		id: row.id,
@@ -139,8 +150,9 @@ function buildEntry(row: PilotLog, names: ReadonlyMap<number, string>): Informe 
 		place: destination || origin,
 		at: row.createdAt.getTime(),
 		details,
+		deposit,
 		xp,
-		xpTotal: xp.reduce((suma, fila) => suma + fila.xp, 0),
+		xpTotal: deposit ? deposit.xp : xp.reduce((suma, fila) => suma + fila.xp, 0),
 		unread: row.readAt === null
 	};
 }

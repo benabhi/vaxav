@@ -10,24 +10,14 @@
  * sólo entonces se aplica lo que ya venció.
  */
 
-import { and, eq, sql } from 'drizzle-orm';
-import {
-	body,
-	pilot,
-	pilotAction,
-	pilotSkill,
-	type Body,
-	type Pilot,
-	type PilotAction
-} from '../db/schema';
+import { and, eq } from 'drizzle-orm';
+import { body, pilot, pilotAction, type Body, type Pilot, type PilotAction } from '../db/schema';
 import type { Db } from '../db/types';
-import {
-	TRAVEL_PRIMARY_SKILL,
-	TRAVEL_SECONDARY_SKILLS,
-	travelDurationSeconds
-} from '$lib/game/actions';
-import { actionXpPool, distributeXp } from '$lib/game/progression';
-import { recordEntry, type XpChange } from './log';
+import { TRAVEL_FAMILY, travelDurationSeconds } from '$lib/game/actions';
+import { actionXpPool } from '$lib/game/progression';
+import { skillFamilyLabel } from '$lib/format';
+import { deposit } from './pools';
+import { recordEntry, type PoolDeposit } from './log';
 import { shipReadout } from './ships';
 import { situation } from './status';
 import { bodyDistance } from './universe';
@@ -50,7 +40,8 @@ export interface ActionReport {
 	readonly originName: string;
 	readonly destinationName: string;
 	readonly durationSeconds: number;
-	readonly xp: readonly XpChange[];
+	/** Lo que la acción depositó en el pozo de su rama. */
+	readonly deposit: PoolDeposit;
 }
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
@@ -126,52 +117,35 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 		const destination = tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
 		const origin = tx.select().from(body).where(eq(body.id, claimed.originBodyId)).get();
 
-		const pool = actionXpPool(claimed.durationSeconds / 60);
-		const awarded = distributeXp(pool, TRAVEL_PRIMARY_SKILL, TRAVEL_SECONDARY_SKILLS);
-
-		// Cuánto tenía antes, para que el informe pueda decir si subió de nivel.
-		// Se lee acá adentro y de una: es la foto del momento exacto en que se
-		// reparte, que es lo que la bitácora tiene que recordar.
-		const antes = Object.fromEntries(
-			tx
-				.select()
-				.from(pilotSkill)
-				.where(eq(pilotSkill.pilotId, row.id))
-				.all()
-				.map((fila) => [fila.skill, fila.xp])
-		);
+		const ganado = actionXpPool(claimed.durationSeconds / 60);
 
 		tx.update(pilot)
 			.set({ locationId: claimed.destinationBodyId })
 			.where(eq(pilot.id, row.id))
 			.run();
 
-		for (const [skill, xp] of Object.entries(awarded)) {
-			// Una sola sentencia por habilidad: con el índice único de la tabla, el
-			// conflicto es la señal de que la fila ya existía y hay que sumarle.
-			tx.insert(pilotSkill)
-				.values({ pilotId: row.id, skill, xp })
-				.onConflictDoUpdate({
-					target: [pilotSkill.pilotId, pilotSkill.skill],
-					set: { xp: sql`${pilotSkill.xp} + ${xp}` }
-				})
-				.run();
-		}
+		// La experiencia va al **pozo de la rama** y no a la habilidad que se usó.
+		// Es lo que convierte especializarse en una decisión: el que viaja junta
+		// Pilotaje y después elige si lo gasta en Navegación o en abrir otra cosa.
+		// Ver docs/systems/SKILLS.md.
+		const { before, after } = deposit(tx, row.id, TRAVEL_FAMILY, ganado);
+		const depositado: PoolDeposit = {
+			family: TRAVEL_FAMILY,
+			familyName: skillFamilyLabel(TRAVEL_FAMILY),
+			xp: ganado,
+			before,
+			after
+		};
 
 		// El informe va en la misma transacción que el resultado: si se aplicó el
-		// viaje y se repartió la experiencia, la bitácora tiene que decirlo. Un
+		// viaje y se depositó la experiencia, la bitácora tiene que decirlo. Un
 		// informe perdido es una acción que el jugador no sabe que ocurrió.
-		const cambios: XpChange[] = Object.entries(awarded).map(([skill, xp]) => {
-			const previo = antes[skill] ?? 0;
-			return { skill, xp, before: previo, after: previo + xp };
-		});
-
 		const recorded = recordEntry(tx, row.id, {
 			kind: claimed.kind,
 			durationSeconds: claimed.durationSeconds,
 			originBodyId: claimed.originBodyId,
 			destinationBodyId: claimed.destinationBodyId,
-			xp: cambios
+			deposit: depositado
 		});
 
 		return {
@@ -180,7 +154,7 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 			originName: origin?.name ?? '',
 			destinationName: destination?.name ?? '',
 			durationSeconds: claimed.durationSeconds,
-			xp: cambios
+			deposit: depositado
 		};
 	});
 }
