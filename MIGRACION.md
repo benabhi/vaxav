@@ -17,10 +17,15 @@ el estado funcional exactamente como estaba y la interfaz **idéntica píxel a
 píxel**. No se agregan mecánicas ni pantallas: lo que existía existe igual, y lo
 que estaba "en construcción" sigue en construcción.
 
-El original vive al lado, en `../vaxav-old/`, con su entorno de Python armado y
-funcionando. Es la referencia contra la que se compara todo.
+El original vive al lado, en `../vaxav-old/`. Es la referencia contra la que se
+compara todo. **Su entorno de Python ya no está**: quedó el código, no el
+`.venv`.
 
 ## Arranque rápido
+
+Hace falta **Node 22.12+, 24 o 26**. La línea 25 no sirve: vitest la excluye a
+propósito y el `.npmrc` del proyecto tiene `engine-strict=true`, así que
+`npm install` se planta antes de bajar nada.
 
 ```bash
 npm install
@@ -31,10 +36,11 @@ npm run dev
 Queda en `http://localhost:5173`. La base es SQLite y vive en `data/`, fuera de
 git.
 
-Para comparar contra el original, en otra terminal:
+Para comparar contra el original hay que rearmarle el entorno primero:
 
 ```bash
-cd ../vaxav-old && .venv/Scripts/python.exe -m reflex run
+cd ../vaxav-old && python -m venv .venv && .venv/Scripts/pip install -r requirements.txt
+.venv/Scripts/python.exe -m reflex run
 ```
 
 Queda en `http://localhost:3000`. Los dos pueden correr a la vez. Aviso: al
@@ -66,9 +72,9 @@ campo por campo para los cinco cascos, con y sin habilidades. Dan idéntico.
 
 ### La interfaz
 
-45 componentes en `src/lib/components/`: tipografía (9), paneles (7), marco del
-juego (7), medidores (4), formularios (4), disposición (4), marca (3), botones
-(2), juego (2), íconos (2), popover (1).
+48 componentes en `src/lib/components/`: tipografía (9), paneles (7), marco del
+juego (7), formularios (6), medidores (4), disposición (4), juego (3), marca (3),
+botones (2), íconos (2), popover (1).
 
 Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 
@@ -78,7 +84,15 @@ Pantallas terminadas y **verificadas midiendo los dos navegadores**:
 | `/entrar` | Campo 672×40 en (176, 224) con sangría de 11 px, título 24 px/3,36 px, botón 116×44 en top 376 |
 | `/piloto` | Pestañas en 208/344/476 con 132×36, 129×36 y 104×36; Neocom de 208 px; marca 207×52 |
 | `/piloto/habilidades` | |
+| `/registro` | Solapas de 36×92 solapadas 0,7 rem, tarjeta elegida con borde de 3 px en `#FF7A1A` sobre `rgba(255,122,26,.16)` y halo de 24 px |
 | Las 14 "en construcción" | Una por cada pestaña anunciada y sin construir |
+
+**`/registro` es la excepción al método**: `../vaxav-old/` ya no tiene su entorno
+de Python, así que no se lo pudo levantar para comparar lado a lado. Se portó
+leyendo la fuente y se midieron en el navegador nuevo los valores contra los
+literales de `theme.py`, que es lo más cerca que se puede estar sin los dos
+corriendo. Lo mismo va a pasar con lo que falta, salvo que se rearme el entorno:
+`cd ../vaxav-old && python -m venv .venv && .venv/Scripts/pip install -r requirements.txt`.
 
 El marco del juego está entero: Neocom con sus tres zonas, barra de estado con el
 reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
@@ -87,32 +101,14 @@ reloj UTC y el indicador de órdenes, barra de pestañas, chat y salida.
 
 En este orden, que es el de menor a mayor riesgo.
 
-### 1. `/registro` — el alta de piloto
-
-Cuatro pasos: cuenta, oficio, origen, confirmar. El de más piezas nuevas.
-
-- **Fuente**: `../vaxav-old/vaxav/pages/register.py` y
-  `../vaxav-old/vaxav/state/registration.py`
-- **Componentes que faltan**: `ChoiceCard` y `ChoiceSection`
-  (`components/forms.py`), `StepIndicator` (`components/steps.py`), `FactionCard`
-  (`components/factions.py`)
-- El servicio ya está: `createPilot` valida, crea habilidades y nave en una
-  transacción, y sus 25 tests pasan
-- Los pasos son estado de cliente (runas), no del servidor. Sólo el envío final
-  es un form action
-- `countByFaction` alimenta el contador de pilotos por facción
-- Ojo con las solapas en punta de flecha del indicador de pasos: son dos
-  `clip-path` distintos, uno para el primero y otro con muesca para el resto,
-  con `margin-left: -0.7rem` para que se encastren
-
-### 2. `/opciones` — cambiar la contraseña
+### 1. `/opciones` — cambiar la contraseña
 
 El más corto. `changePassword` ya existe y exige la contraseña actual.
 
 - **Fuente**: `../vaxav-old/vaxav/pages/options.py`
 - Falta cablear `SuccessCallout`, que ya está escrito
 
-### 3. `/navegacion` — Ubicación
+### 2. `/navegacion` — Ubicación
 
 - **Fuente**: `../vaxav-old/vaxav/pages/navigation.py` (`navigation_location`) y
   `state/navigation.py`
@@ -126,7 +122,7 @@ El más corto. `changePassword` ya existe y exige la contraseña actual.
 - En tránsito la pestaña no describe la estación que ya se dejó atrás:
   `situation(...).inTransit` manda
 
-### 4. `/navegacion/sistema` — el árbol del sistema
+### 3. `/navegacion/sistema` — el árbol del sistema
 
 **La pantalla más frágil de todas.** El árbol se dibuja con cajas de 1 px y
 columnas de ancho fijo; un píxel de más desalinea todo.
@@ -147,7 +143,7 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   pone la clase `vaxav-flash` por 1800 ms. La animación ya está en `app.css`
 - Viajar es un form action que llama `startTravel`
 
-### 5. `/nave` — el equipamiento
+### 4. `/nave` — el equipamiento
 
 - **Fuente**: `../vaxav-old/vaxav/pages/ship.py` y `state/ship.py`
 - **Componentes que faltan**: `FittingRig`, `SlotNode`, `ShipSchematic`,
@@ -165,14 +161,14 @@ columnas de ancho fijo; un píxel de más desalinea todo.
   con llave y revierte si el servicio se niega
 - El anillo y la lista comparten la ranura seleccionada
 
-### 6. Los tests que faltan
+### 5. Los tests que faltan
 
 - Los constructores de vistas (`src/lib/server/views/`), que es donde va a vivir
   la lógica de las filas del árbol y del anillo
 - El humo de rutas con Playwright: visitar las 23 y comprobar que ninguna entrada
   del Neocom lleva a un 404
 
-### 7. La documentación
+### 6. La documentación
 
 Todavía **no se portó nada de `docs/`**, y es lo último que queda para que no haya
 rastro de Reflex:
@@ -352,5 +348,7 @@ idénticos.
 No se agregaron pantallas ni mecánicas, no se completó nada de lo que está en
 construcción y no se movió el balance. El azul del fondo del documento sigue sin
 coincidir con `DATA_ACCENT`, porque así estaba. Lo que sí se sacó fue el código
-muerto: `vaxav-pulse`, `RADIUS_PILL`, `reset_fit`, `has_ship` y `pilots_in`
-estaban declarados y sin un solo uso.
+muerto: `vaxav-pulse`, `RADIUS_PILL`, `reset_fit`, `has_ship`, `pilots_in`,
+`choice_section` y `FACTION_ICONS` estaban declarados y sin un solo uso. Los dos
+últimos los daba por pendientes este mismo documento, hasta que se fue a buscar
+quién los llamaba y la respuesta fue nadie.
