@@ -14,7 +14,12 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			// Un solo proceso Node sirve la aplicación y la base SQLite que tiene al lado.
-			adapter: adapter()
+			adapter: adapter(),
+			typescript: {
+				config: (config) => {
+					config.include.push('../drizzle.config.ts');
+				}
+			}
 		})
 	],
 	test: {
