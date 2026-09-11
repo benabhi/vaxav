@@ -1,0 +1,504 @@
+/*
+ * Sistema de diseño de Vaxav.
+ *
+ * Es la única fuente de verdad visual: ninguna pantalla ni componente escribe un
+ * color, una fuente o una medida compartida a mano. Si un valor se usa dos
+ * veces, vive acá.
+ *
+ * La interfaz sigue el lenguaje de Elite Dangerous —naranja sobre casi negro,
+ * paneles translúcidos, esquinas rectas, mayúsculas espaciadas y halo en el
+ * texto— y no tiene modo claro: la estética es de una sola pieza.
+ */
+
+@import 'tailwindcss';
+
+@theme {
+	/* --- Puntos de corte -----------------------------------------------------
+	 *
+	 * Móvil primero. Se reemplazan los de Tailwind por los de Vaxav para que la
+	 * media query del Neocom (48em) caiga exactamente en `sm` y no a mitad de
+	 * camino entre dos escalas.
+	 */
+	--breakpoint-*: initial;
+	--breakpoint-xs: 30rem; /* 480px */
+	--breakpoint-sm: 48rem; /* 768px */
+	--breakpoint-md: 62rem; /* 992px */
+	--breakpoint-lg: 80rem; /* 1280px */
+	--breakpoint-xl: 96rem; /* 1536px */
+
+	/* --- Color ---------------------------------------------------------------
+	 *
+	 * Se borra la paleta de Tailwind: Vaxav tiene la suya y un `text-blue-500`
+	 * suelto rompería la unidad de la interfaz. Los colores son literales y no
+	 * pares claro/oscuro porque no hay una segunda paleta que sostener.
+	 */
+	--color-*: initial;
+	--color-transparent: transparent;
+	--color-current: currentColor;
+
+	/* El vacío. */
+	--color-background: #05070a;
+
+	/* Naranja del HUD, en sus tres intensidades. */
+	--color-accent: #ff7a1a;
+	--color-accent-bright: #ffa45c;
+	--color-accent-dim: #b4550f;
+
+	/* Texto sobre naranja sólido: casi negro, nunca blanco. */
+	--color-on-accent: #0a0704;
+
+	/* Texto. */
+	--color-text-strong: #f5efe8;
+	--color-text-body: #c8bcb0;
+	--color-text-muted: #8a7d70;
+
+	/* Superficies: naranja a muy baja opacidad sobre el fondo, como los paneles
+	 * del juego, que dejan ver lo que hay atrás. */
+	--color-surface: rgb(255 122 26 / 0.05);
+	--color-surface-hover: rgb(255 122 26 / 0.11);
+	--color-surface-strong: rgb(255 122 26 / 0.16);
+	/* Fondo de barras fijas: casi opaco, para que el contenido pase por debajo
+	 * sin ensuciar la lectura. */
+	--color-surface-overlay: rgb(8 10 14 / 0.82);
+
+	--color-border-soft: rgb(255 122 26 / 0.28);
+	--color-border: rgb(255 122 26 / 0.45);
+	--color-border-strong: rgb(255 122 26 / 0.85);
+
+	/* El cian es el segundo color del juego —el del logotipo— y queda reservado
+	 * para cifras y lecturas: en un HUD naranja, un dato en cian se encuentra
+	 * solo. */
+	--color-data: #4fd2ee;
+
+	/* Estados. Se usan poco y siempre para lo mismo. */
+	--color-success: #5bd46b;
+	--color-warning: #ffc14d;
+	--color-danger: #ff4a3d;
+
+	/* Apagados: lo que está fuera de alcance pierde el naranja y queda en un
+	 * blanco casi invisible, que es lo que lo separa de lo disponible. */
+	--color-dead: rgb(255 255 255 / 0.014);
+	--color-dead-border: rgb(255 255 255 / 0.07);
+	--color-dead-edge: rgb(255 255 255 / 0.09);
+	--color-dead-rail: rgb(255 255 255 / 0.12);
+	--color-dead-line: rgb(255 255 255 / 0.14);
+	--color-dead-dash: rgb(255 255 255 / 0.22);
+
+	/* Fondo de los campos y de los avisos: el color del estado al 10 % sobre el
+	 * vacío, que alcanza para teñir sin competir con el texto. */
+	--color-field: rgb(255 122 26 / 0.04);
+	--color-danger-wash: rgb(255 74 61 / 0.1);
+	--color-success-wash: rgb(91 212 107 / 0.1);
+	--color-warning-wash: rgb(255 193 77 / 0.1);
+	/* Casi opaco: el fondo del Neocom y el de una ranura vacía. */
+	--color-well: rgb(8 10 14 / 0.92);
+
+	/* --- Tipografía ----------------------------------------------------------
+	 *
+	 * Las familias se sirven desde el propio proyecto (static/fonts). Elite
+	 * Dangerous usa Eurostile, que es comercial; Rajdhani es lo más cercano que
+	 * hay libre para el HUD y Titillium Web sostiene el texto corrido.
+	 */
+	--font-*: initial;
+	--font-display: 'Rajdhani', 'Titillium Web', system-ui, sans-serif;
+	--font-body: 'Titillium Web', system-ui, -apple-system, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+	/* El HUD escribe en mayúsculas y con el interletrado abierto. Estos valores
+	 * son los que hacen que un texto "suene" a Elite Dangerous. */
+	--tracking-*: initial;
+	--tracking-display: 0.08em;
+	--tracking-title: 0.14em;
+	--tracking-label: 0.22em;
+	--tracking-brand: 0.3em;
+	--tracking-wordmark: 0.34em;
+
+	/* Escala de texto. Numérica y no `sm`/`lg` porque la jerarquía del HUD es
+	 * densa: hay nueve escalones y los nombres se acaban en el cuarto. */
+	--text-*: initial;
+	--text-1: 0.75rem; /* 12px */
+	--text-1--line-height: 1rem; /* 16px */
+	--text-1--letter-spacing: 0.0025em;
+	--text-2: 0.875rem; /* 14px */
+	--text-2--line-height: 1.25rem; /* 20px */
+	--text-3: 1rem; /* 16px */
+	--text-3--line-height: 1.5rem; /* 24px */
+	--text-4: 1.125rem; /* 18px */
+	--text-4--line-height: 1.625rem; /* 26px */
+	--text-4--letter-spacing: -0.0025em;
+	--text-5: 1.25rem; /* 20px */
+	--text-5--line-height: 1.75rem; /* 28px */
+	--text-5--letter-spacing: -0.005em;
+	--text-6: 1.5rem; /* 24px */
+	--text-6--line-height: 1.875rem; /* 30px */
+	--text-6--letter-spacing: -0.00625em;
+	--text-7: 1.75rem; /* 28px */
+	--text-7--line-height: 2.25rem; /* 36px */
+	--text-7--letter-spacing: -0.0075em;
+	--text-8: 2.1875rem; /* 35px */
+	--text-8--line-height: 2.5rem; /* 40px */
+	--text-8--letter-spacing: -0.01em;
+	--text-9: 3.75rem; /* 60px */
+	--text-9--line-height: 3.75rem; /* 60px */
+	--text-9--letter-spacing: -0.025em;
+
+	/* Los títulos respiran menos que el texto corrido: misma medida de letra,
+	 * interlineado más corto. */
+	--leading-title-4: 1.5rem; /* 24px */
+	--leading-title-5: 1.625rem; /* 26px */
+	--leading-title-7: 2.25rem; /* 36px */
+	--leading-title-8: 2.5rem; /* 40px */
+
+	/* --- Espaciado -----------------------------------------------------------
+	 *
+	 * Del 5 en adelante los saltos se agrandan: en una pantalla densa, la
+	 * diferencia entre 20 y 24 px no se lee, y la que separa secciones sí.
+	 */
+	--spacing-5: 1.5rem; /* 24px */
+	--spacing-6: 2rem; /* 32px */
+	--spacing-7: 2.5rem; /* 40px */
+	--spacing-8: 3rem; /* 48px */
+	--spacing-9: 4rem; /* 64px */
+
+	/* Medidas con nombre propio. */
+	--spacing-topbar: 3.25rem; /* Barra superior y bloque de marca: misma línea */
+	--spacing-rail: 3.5rem; /* Ancho del Neocom plegado */
+	--spacing-neocom: 13rem; /* Ancho del Neocom desplegado */
+
+	--container-*: initial;
+	--container-content: 72rem; /* Ancho máximo de una pantalla */
+	--container-reading: 46rem; /* Ancho máximo de algo que se lee de corrido */
+
+	/* --- Forma ---------------------------------------------------------------
+	 *
+	 * Esquinas rectas. En el HUD del juego no hay una sola curva, y es media
+	 * personalidad de la interfaz. `rounded-full` sigue existiendo para los dos
+	 * lugares que sí son círculos: los nodos y los anillos del equipamiento.
+	 */
+	--radius-*: initial;
+
+	/* --- Halo ----------------------------------------------------------------
+	 *
+	 * El brillo del HUD. Sutil: si se nota como efecto, está de más.
+	 */
+	--shadow-*: initial;
+	--shadow-glow: 0 0 24px rgb(255 122 26 / 0.16);
+	--shadow-glow-strong: 0 0 34px rgb(255 122 26 / 0.3);
+	--shadow-focus: 0 0 12px rgb(255 122 26 / 0.45);
+
+	--text-shadow-*: initial;
+	--text-shadow-glow: 0 0 14px rgb(255 122 26 / 0.38);
+	--text-shadow-glow-strong: 0 0 22px rgb(255 122 26 / 0.55);
+
+	/* --- Movimiento ----------------------------------------------------------
+	 *
+	 * Una sola curva y una sola duración para todo: el movimiento tiene que
+	 * pasar desapercibido, no llamar la atención. Se declaran como el valor por
+	 * omisión de `transition-*` para no repetirlos en cada componente.
+	 */
+	--ease-*: initial;
+	--ease-hud: cubic-bezier(0.4, 0, 0.2, 1);
+	--default-transition-timing-function: var(--ease-hud);
+	--default-transition-duration: 160ms;
+}
+
+/* --- Fuentes ---------------------------------------------------------------
+ *
+ * Servidas desde el propio proyecto: la página no sale a buscar nada a
+ * internet. Son subconjuntos latinos, que cubren todo el español. Licencias y
+ * procedencia en static/fonts/LICENCIAS.md.
+ */
+
+@font-face {
+	font-family: 'Rajdhani';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/rajdhani-500-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Rajdhani';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/rajdhani-600-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Rajdhani';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/rajdhani-700-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Titillium Web';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/titillium-web-400-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Titillium Web';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/titillium-web-600-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'JetBrains Mono';
+	font-style: normal;
+	font-weight: 400 500;
+	font-display: swap;
+	src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+/* --- El documento ---------------------------------------------------------- */
+
+:root {
+	color-scheme: dark;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+/*
+ * El vacío detrás del casco: casi negro con una brasa naranja arriba y un resto
+ * de azul abajo, que es de donde sale el color del logotipo.
+ */
+body {
+	min-height: 100dvh;
+	background-color: var(--color-background);
+	background-image:
+		radial-gradient(70rem 34rem at 50% -14rem, rgb(255 122 26 / 0.13), transparent 68%),
+		radial-gradient(52rem 30rem at 88% 104%, rgb(53 199 232 / 0.06), transparent 72%);
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	font-family: var(--font-body);
+	color: var(--color-text-body);
+}
+
+::selection {
+	background-color: rgb(255 122 26 / 0.32);
+	color: #fff3e6;
+}
+
+/* Foco visible y consistente: se ve al navegar con teclado, no al hacer clic. */
+:focus-visible {
+	outline: 1px solid var(--color-accent);
+	outline-offset: 2px;
+	box-shadow: var(--shadow-focus);
+}
+
+/* Barra de desplazamiento al tono, sin bulto. */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border) transparent;
+}
+
+/* --- El Neocom -------------------------------------------------------------
+ *
+ * El ancho y la visibilidad de los nombres son responsabilidad del CSS y no del
+ * estado: que en un teléfono la barra quede siempre plegada no es una
+ * preferencia del jugador, es una cuestión de cuánto ancho hay. La preferencia
+ * —desplegada o no— sólo manda a partir de una pantalla mediana.
+ */
+
+.neocom {
+	position: fixed;
+	inset: 0 auto 0 0;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	width: var(--spacing-rail);
+	background-color: var(--color-well);
+	backdrop-filter: blur(10px);
+	border-right: 1px solid var(--color-border);
+	overflow: hidden;
+	transition: width var(--default-transition-duration) var(--ease-hud);
+}
+
+/*
+ * La marca y las acciones del pie no se mueven; lo que se desplaza es la lista.
+ * Sin esto, en una pantalla baja —un portátil, un teléfono acostado— la lista
+ * empuja "plegar" y "salir" fuera de la vista, que son justo las dos cosas que
+ * siempre tienen que estar a mano.
+ */
+.neocom-fixed {
+	flex: 0 0 auto;
+}
+
+.neocom-scroll {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: none;
+	/*
+	 * Sólo se desvanece el borde de abajo, que es para donde desborda la lista.
+	 * Difuminar también el de arriba lavaba el borde superior del primer ítem
+	 * sin avisar de nada: ahí nunca hay contenido escondido.
+	 */
+	mask-image: linear-gradient(to bottom, #000 calc(100% - 0.75rem), transparent 100%);
+}
+
+.neocom-scroll::-webkit-scrollbar {
+	display: none;
+}
+
+.neocom-rail {
+	width: var(--spacing-rail);
+	min-width: var(--spacing-rail);
+}
+
+/* Sin lugar para el nombre, queda sólo el ícono. */
+.neocom-label {
+	display: none;
+}
+
+.neocom-content {
+	margin-left: var(--spacing-rail);
+	transition: margin-left var(--default-transition-duration) var(--ease-hud);
+}
+
+@media (min-width: 48em) {
+	.neocom.is-expanded {
+		width: var(--spacing-neocom);
+	}
+
+	.neocom.is-expanded .neocom-label {
+		display: block;
+	}
+
+	.neocom.is-expanded + .neocom-content {
+		margin-left: var(--spacing-neocom);
+	}
+}
+
+/* --- El chat ---------------------------------------------------------------
+ *
+ * Abajo a la derecha, del lado opuesto al Neocom a propósito: son las dos cosas
+ * que están siempre encendidas, y en esquinas distintas ninguna tapa a la otra
+ * ni se pisan al plegar la barra.
+ */
+
+.chat-dock {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	z-index: 25;
+	padding-right: 0.75rem;
+}
+
+/* --- La barra de pestañas --------------------------------------------------
+ *
+ * En pantallas angostas se desliza en lugar de partirse en dos renglones, sin
+ * barra de desplazamiento a la vista y con un degradado en los bordes que avisa
+ * que hay más. Así la pantalla se ve igual en el teléfono y en el monitor.
+ */
+
+.tab-bar {
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scrollbar-width: none;
+	-webkit-overflow-scrolling: touch;
+	/* Se desvanecen los dos bordes: hay pestañas tanto a la izquierda como a la
+	   derecha cuando la fila está a mitad de camino. */
+	mask-image: linear-gradient(
+		to right,
+		transparent 0,
+		#000 1.5rem,
+		#000 calc(100% - 1.5rem),
+		transparent 100%
+	);
+}
+
+.tab-bar::-webkit-scrollbar {
+	display: none;
+}
+
+/* --- El destello de "estás acá" --------------------------------------------
+ *
+ * Lo dispara el botón de mostrar ubicación después de llevar la vista hasta la
+ * fila. Va como animación y no como estilo del componente porque una animación
+ * gana sobre el estilo de la fila, que es lo que pinta su fondo, y porque dura
+ * un segundo: no es algo que el servidor tenga que recordar.
+ */
+
+@keyframes vaxav-flash {
+	0%,
+	100% {
+		background-color: var(--color-surface-strong);
+		box-shadow: none;
+	}
+	25%,
+	65% {
+		background-color: rgb(255 122 26 / 0.44);
+		box-shadow: 0 0 34px rgb(255 122 26 / 0.5);
+	}
+}
+
+.vaxav-flash {
+	animation: vaxav-flash 1.6s ease-in-out 1;
+}
+
+/* --- El campo de estrellas de la portada -----------------------------------
+ *
+ * Tres capas de puntos hechas con degradados repetidos —ni una imagen ni un
+ * canvas— desplazándose muy despacio, para dar profundidad sin pedirle nada al
+ * procesador.
+ */
+
+.vaxav-starfield {
+	position: absolute;
+	inset: -20%;
+	pointer-events: none;
+	opacity: 0.7;
+	background-image:
+		radial-gradient(1px 1px at 20% 30%, rgb(255 255 255 / 0.9), transparent),
+		radial-gradient(1px 1px at 70% 65%, rgb(255 255 255 / 0.75), transparent),
+		radial-gradient(1px 1px at 40% 80%, rgb(255 226 196 / 0.8), transparent),
+		radial-gradient(2px 2px at 85% 20%, rgb(180 220 255 / 0.7), transparent),
+		radial-gradient(1px 1px at 10% 70%, rgb(255 255 255 / 0.6), transparent),
+		radial-gradient(1px 1px at 55% 12%, rgb(255 255 255 / 0.5), transparent);
+	background-size:
+		340px 340px,
+		500px 500px,
+		420px 420px,
+		640px 640px,
+		380px 380px,
+		560px 560px;
+	animation: vaxav-drift 240s linear infinite;
+}
+
+@keyframes vaxav-drift {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+	to {
+		transform: translate3d(-340px, -240px, 0);
+	}
+}
+
+/* Respetar a quien pidió menos movimiento en su sistema operativo. */
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	.vaxav-starfield {
+		animation: none;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}

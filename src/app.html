@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="any" />
+
+		<!--
+			Las fuentes se precargan además de declararse en app.css. Sin esto el
+			navegador recién las descubre al parsear el CSS y las trae con baja
+			prioridad: el texto se dibuja primero con la fuente de reemplazo
+			(font-display: swap) y cambia de tamaño cuando llega la real. Ese
+			reflow tardío desincroniza cualquier medición de posición hecha antes
+			— un panel flotante que ancló su lugar contra una fila medida con la
+			fuente de reemplazo queda lejos de su disparador una vez que el
+			cambio corrió las filas siguientes.
+		-->
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+			href="%sveltekit.assets%/fonts/rajdhani-500-latin.woff2"
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+			href="%sveltekit.assets%/fonts/rajdhani-600-latin.woff2"
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+			href="%sveltekit.assets%/fonts/rajdhani-700-latin.woff2"
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+			href="%sveltekit.assets%/fonts/titillium-web-400-latin.woff2"
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+			href="%sveltekit.assets%/fonts/titillium-web-600-latin.woff2"
+		/>
+		<link
+			rel="preload"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
+			href="%sveltekit.assets%/fonts/jetbrains-mono-latin.woff2"
+		/>
+
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
