@@ -38,6 +38,8 @@
 	 * una fecha rendida en el servidor queda vieja apenas se dibuja.
 	 */
 	function hace(at: number): string {
+		// `Math.round` a propósito: esto es tiempo de reloj para una etiqueta, no
+		// un número de balance. La regla del proyecto es sobre lo segundo.
 		const segundos = Math.max(0, Math.round((Date.now() - at) / 1000));
 		if (segundos < 60) return 'recién';
 		const minutos = Math.floor(segundos / 60);

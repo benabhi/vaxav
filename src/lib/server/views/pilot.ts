@@ -11,6 +11,7 @@ import { body, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
+import { roundHalfEven } from '$lib/game/math';
 import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
 import { pools } from '../services/pools';
@@ -60,8 +61,8 @@ export function buildFamilyXp(
 	const techo = Math.max(...ramas.map((rama) => Math.max(rama.xp, rama.pool)), 1);
 	return ramas.map((rama) => ({
 		...rama,
-		share: Math.round((rama.xp * 100) / techo),
-		poolShare: Math.round((rama.pool * 100) / techo)
+		share: roundHalfEven((rama.xp * 100) / techo),
+		poolShare: roundHalfEven((rama.pool * 100) / techo)
 	}));
 }
 
