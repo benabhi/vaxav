@@ -42,11 +42,12 @@
 <div class="flex w-full flex-col items-start gap-4 lg:flex-row">
 	<!--
 		La figura y la lista, como en Nave: el hexágono dice bien **qué forma tiene**
-		este piloto y mal cuánto exactamente; la lista al revés. Las dos leen los
-		mismos seis números.
+		este piloto y mal cuánto exactamente; la lista al revés. Las dos leen las
+		mismas dos métricas de cada rama —lo invertido y lo que espera en el pozo—,
+		que es lo que hace que la figura no sea un adorno.
 	-->
 	<div class="w-full min-w-0 flex-[3_1_0]">
-		<TitledPanel title="Experiencia por rama" detail="Acumulada" class="w-full">
+		<TitledPanel title="Experiencia por rama" detail="Invertida y en pozo" class="w-full">
 			<div class="flex w-full flex-wrap items-start gap-[1.25rem]">
 				<div class="min-w-0 flex-[1_1_16rem]">
 					<SkillHexagon families={data.pilot.families} />

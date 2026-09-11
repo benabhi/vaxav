@@ -70,7 +70,7 @@ Las que ya existen:
 | -------------------- | ------------------------- | ------------------------------------------------------------- |
 | Nave                 | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo |
 | Navegación · Sistema | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                       |
-| Piloto               | El hexágono de ramas      | A qué se dedicó este piloto                                   |
+| Piloto               | El hexágono de ramas      | A qué se dedicó, y en qué está por convertirse                |
 
 Las reglas que las hacen funcionar:
 
