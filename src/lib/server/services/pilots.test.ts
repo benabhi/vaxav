@@ -212,3 +212,15 @@ describe('la validación conjunta de la cuenta', () => {
 		);
 	});
 });
+
+describe('las profesiones que todavía no se ofrecen', () => {
+	it('no se pueden elegir aunque el pedido venga armado a mano', async () => {
+		const db = seededDb();
+
+		// La pantalla dibuja sólo las jugables, pero el servicio no confía en eso:
+		// nadie más que él escribe en la base.
+		await expect(
+			createPilot(db, 'Cuervo', 'cuervo@ejemplo.com', 'contrasena-larga', 'explorer', 'dominion')
+		).rejects.toThrow(PilotError);
+	});
+});

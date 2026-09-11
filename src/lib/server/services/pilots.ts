@@ -159,6 +159,13 @@ export async function createPilot(
 		throw new PilotError('Elegí una profesión y una facción de la lista.');
 	}
 
+	// No alcanza con que exista: tiene que estar ofrecida. La pantalla ya dibuja
+	// sólo las jugables, pero el servicio no confía en eso — un pedido armado a
+	// mano no puede abrir una profesión que todavía no tiene nada que hacer.
+	if (!chosenProfession.playable) {
+		throw new PilotError('Esa profesión todavía no está disponible.');
+	}
+
 	if (callsignTaken(db, callsign)) throw new PilotError(`Ya hay un piloto llamado ${callsign}.`);
 	if (emailTaken(db, email)) throw new PilotError('Ese correo ya está usado por otro piloto.');
 

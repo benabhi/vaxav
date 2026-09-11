@@ -9,6 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+	PLAYABLE_PROFESSIONS,
 	PROFESSIONS,
 	STARTING_XP_BUDGET,
 	getProfession,
@@ -81,5 +82,19 @@ describe('el catálogo de profesiones', () => {
 
 	it('falla con el nombre si la profesión no existe', () => {
 		expect(() => getProfession('pirata')).toThrow(/pirata/);
+	});
+});
+
+describe('cuáles se ofrecen', () => {
+	it('sólo se ofrece la que tiene algo que hacer', () => {
+		// Una profesión se elige cuando hay actividades detrás. Ofrecer explorador
+		// sin exploración es ofrecer un nombre.
+		expect(PLAYABLE_PROFESSIONS.map((profession) => profession.code)).toEqual(['miner']);
+	});
+
+	it('las que no se ofrecen siguen en el catálogo', () => {
+		// Se quedan para que el presupuesto las siga verificando y para que un
+		// piloto que ya las tenga pueda seguir jugando.
+		expect(Object.keys(PROFESSIONS).length).toBeGreaterThan(PLAYABLE_PROFESSIONS.length);
 	});
 });
