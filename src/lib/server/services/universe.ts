@@ -11,6 +11,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import {
 	agent,
+	beltDeposit,
 	body,
 	constellation,
 	corporation,
@@ -37,6 +38,7 @@ import {
 	securityFor,
 	type BodyBlueprint,
 	type CorporationBlueprint,
+	type DepositBlueprint,
 	type GalaxyBlueprint,
 	type SecurityLevel,
 	type StationServiceKind
@@ -200,6 +202,48 @@ function syncAgents(db: Db, stationId: number, agents: readonly AgentBlueprint[]
 }
 
 /** Siembra un cuerpo y todo lo que cuelga de él. Devuelve cuántos escribió. */
+/**
+ * Los depósitos de un cinturón: el contenido, no el estado.
+ *
+ * **Sembrar no rellena los cinturones.** Se tocan el tope y el ritmo de
+ * recuperación —que son contenido y pueden cambiar con el balance— pero nunca lo
+ * que queda ni hasta cuándo se recuperó, que son estado de la partida. Sin esa
+ * distinción, cada `npm run db:seed` devolvería todos los cinturones del juego a
+ * capacidad llena y borraría el trabajo de todos.
+ *
+ * Un mineral que sale del plano sí se borra: dejó de existir ahí.
+ */
+function syncDeposits(db: Db, bodyId: number, deposits: readonly DepositBlueprint[]): void {
+	for (const spec of deposits) {
+		db.insert(beltDeposit)
+			.values({
+				bodyId,
+				oreCode: spec.ore,
+				capacity: spec.capacity,
+				regenPerHour: spec.regenPerHour,
+				// Un cinturón nuevo nace lleno; uno que ya existía conserva lo suyo.
+				remaining: spec.capacity
+			})
+			.onConflictDoUpdate({
+				target: [beltDeposit.bodyId, beltDeposit.oreCode],
+				set: { capacity: spec.capacity, regenPerHour: spec.regenPerHour }
+			})
+			.run();
+	}
+
+	const declarados = deposits.map((spec) => spec.ore);
+	const sobran = db
+		.select()
+		.from(beltDeposit)
+		.where(eq(beltDeposit.bodyId, bodyId))
+		.all()
+		.filter((fila) => !declarados.includes(fila.oreCode));
+
+	for (const fila of sobran) {
+		db.delete(beltDeposit).where(eq(beltDeposit.id, fila.id)).run();
+	}
+}
+
 function seedBody(
 	db: Db,
 	blueprint: BodyBlueprint,
@@ -248,6 +292,8 @@ function seedBody(
 		syncServices(db, saved.id, blueprint.station.services);
 		syncAgents(db, saved.id, blueprint.station.agents);
 	}
+
+	syncDeposits(db, row.id, blueprint.deposits);
 
 	for (const child of blueprint.children) {
 		total += seedBody(db, child, systemId, row.id);

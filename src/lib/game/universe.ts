@@ -222,6 +222,24 @@ export interface BodyBlueprint {
 	 * propio registro de qué descubrió llega con la cartografía, en F13.
 	 */
 	readonly explored: boolean;
+	/**
+	 * Qué minerales tiene y en qué cantidad, si es un cinturón.
+	 *
+	 * Es **contenido**: qué se saca de dónde es la decisión que hace que un
+	 * cinturón valga el viaje o no. Los Anillos tienen lo común en cantidad; el
+	 * Cinturón Exterior tiene lo que el otro no tiene, poco y de recuperación
+	 * lenta, y ésa es toda la razón para irse tan lejos.
+	 */
+	readonly deposits: readonly DepositBlueprint[];
+}
+
+/** Un mineral de un cinturón: cuánto aguanta y a qué ritmo se rehace. */
+export interface DepositBlueprint {
+	readonly ore: string;
+	/** El tope al que se recupera. */
+	readonly capacity: number;
+	/** Unidades que se rehacen por hora. */
+	readonly regenPerHour: number;
 }
 
 /** Una estación sin agentes es normal: la Planta Escarcha no tiene Contactos. */
@@ -246,6 +264,7 @@ function defineBody(spec: BodySpec): BodyBlueprint {
 		description: '',
 		children: [],
 		explored: true,
+		deposits: [],
 		...rest,
 		station: station ? { agents: [], ...station } : null
 	};
@@ -474,7 +493,13 @@ const ANFORA: SystemBlueprint = {
 						name: 'Anillos de Ánfora III',
 						kind: 'belt',
 						orbitDistance: 2,
-						description: 'Denso y bien surtido. Es donde aprende a minar todo el mundo.'
+						description: 'Denso y bien surtido. Es donde aprende a minar todo el mundo.',
+						// Lo común, en cantidad y de recuperación rápida: acá nadie se queda
+						// sin trabajo, y por eso es donde se empieza.
+						deposits: [
+							{ ore: 'ferrous_silicate', capacity: 60_000, regenPerHour: 3_000 },
+							{ ore: 'carbon_chondrite', capacity: 40_000, regenPerHour: 2_000 }
+						]
 					}),
 					defineBody({
 						code: 'muelle_de_los_anillos',
@@ -591,6 +616,12 @@ const ANFORA: SystemBlueprint = {
 				orbitDistance: 520,
 				description:
 					'Disperso y sin vigilancia. Mineral raro para quien se anima a ' + 'estar lejos de todo.',
+				// Lo que el otro cinturón no tiene, y poco: la recuperación lenta es lo
+				// que hace que valga la pena competir por él en vez de acampar.
+				deposits: [
+					{ ore: 'pyroxene', capacity: 9_000, regenPerHour: 260 },
+					{ ore: 'iridium_vein', capacity: 2_400, regenPerHour: 60 }
+				],
 				children: [
 					defineBody({
 						code: 'habitat_talo',

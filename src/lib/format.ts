@@ -7,6 +7,7 @@
  */
 
 import type { IconName } from '$lib/icons';
+import type { ActionKind } from '$lib/game/actions';
 import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
 import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
@@ -384,6 +385,29 @@ const ITEM_KINDS: Record<ItemKind, string> = {
 	ore: 'Mineral',
 	module: 'Módulo'
 };
+
+/**
+ * Cómo se llama una acción en curso, y con qué se la dibuja.
+ *
+ * Vive acá y no en el motor de acciones por la misma razón que el nombre de una
+ * facción: qué hace una acción es regla, cómo se la cuenta es presentación. El
+ * indicador de la barra de estado y la bitácora leen de la misma tabla, así que
+ * una acción nueva se nombra en un solo lugar.
+ */
+const ACTIONS: Record<ActionKind, { label: string; icon: IconName }> = {
+	travel: { label: 'Viajando', icon: 'rocket-launch' },
+	mine: { label: 'Extrayendo', icon: 'diamond' }
+};
+
+/** El nombre de una acción en curso, o algo genérico si es nueva. */
+export function actionLabel(kind: string): string {
+	return ACTIONS[kind as ActionKind]?.label ?? 'Trabajando';
+}
+
+/** El ícono de una acción en curso. */
+export function actionIcon(kind: string): IconName {
+	return ACTIONS[kind as ActionKind]?.icon ?? 'clock';
+}
 
 /** Un entero grande con separador de miles, como el resto del HUD. */
 export function thousands(value: number): string {

@@ -20,21 +20,27 @@ import { and, eq } from 'drizzle-orm';
 import { body, pilot, pilotAction, type Body, type Pilot, type PilotAction } from '../db/schema';
 import type { Db } from '../db/types';
 import {
+	MINE_KIND,
 	TRAVEL_FAMILY,
 	TRAVEL_KIND,
 	travelDurationSeconds,
 	type ActionKind
 } from '$lib/game/actions';
+import { getOre } from '$lib/game/items';
+import { floorDiv } from '$lib/game/math';
+import { MINING_FAMILY, cycleSeconds, yieldPerCycleTenths } from '$lib/game/mining';
 import { actionXpPool } from '$lib/game/progression';
 import type { SkillFamily } from '$lib/game/skills';
 import { skillFamilyLabel } from '$lib/format';
+import { cargoHold, fitsUnits, moveItem, shipContainer } from './containers';
+import { isBelt, miningPlan, takeFromBelt } from './mining';
 import { deposit } from './pools';
 import { recordEntry, type PoolDeposit } from './log';
-import { shipReadout } from './ships';
+import { activeShip, shipReadout } from './ships';
 import { situation } from './status';
 import { bodyDistance, getBodyById } from './universe';
 
-export { TRAVEL_KIND };
+export { MINE_KIND, TRAVEL_KIND };
 
 /** La acción no se puede iniciar. El mensaje se le muestra al jugador. */
 export class ActionError extends Error {}
@@ -73,6 +79,19 @@ interface Resolution {
 	 * ocurren donde estás parado, y la diferencia tiene que poder decirse.
 	 */
 	readonly movesTo: number | null;
+	/**
+	 * Lo que la acción produjo, para que el informe pueda contarlo.
+	 *
+	 * Viajar no produce nada y lo deja vacío; minar deja lo que trajo. Va como
+	 * dato y no como texto armado: el informe lo dibuja la capa de vista, que es
+	 * la que sabe cómo se escriben las cosas en pantalla.
+	 */
+	readonly result?: ActionResult;
+}
+
+/** Lo que una acción produjo, tal como se guarda en el informe. */
+export interface ActionResult {
+	readonly mined?: { readonly ore: string; readonly units: number; readonly cycles: number };
 }
 
 /** Cómo se resuelve una clase de acción, una vez que la fila ya es nuestra. */
@@ -93,13 +112,55 @@ const resolveTravel: Resolver = (_tx, _row, claimed) => ({
 });
 
 /**
+ * Minar: el piloto no se mueve, la carga entra a la bodega y la experiencia va a
+ * Extracción.
+ *
+ * **Lo que sale se recalcula al resolver**, no se guarda al encargar. Entre que
+ * la orden se dio y venció, otro piloto pudo llevarse lo que quedaba y la bodega
+ * pudo cambiar de tamaño: el botín es lo que el cinturón puede dar hoy, acotado
+ * por lo que los ciclos trabajados alcanzan a sacar. Prometer al encargar lo que
+ * el mundo no puede cumplir al entregar es peor que traer menos.
+ */
+const resolveMine: Resolver = (tx, row, claimed) => {
+	const readout = shipReadout(tx, row);
+	const nave = activeShip(tx, row.id);
+	const vacio = { family: MINING_FAMILY, xp: 0, movesTo: null };
+	if (!readout || !nave) return vacio;
+
+	const ore = getOre(claimed.targetCode ?? '');
+	const bodega = shipContainer(tx, nave.id);
+	const hold = cargoHold(tx, bodega.id, readout.cargo);
+
+	// Lo que los ciclos trabajados alcanzan a sacar, contra lo que entra y lo que
+	// queda: el mínimo de los tres es lo que el piloto se lleva de verdad.
+	const seconds = Math.max(1, cycleSeconds(ore));
+	const cycles = Math.max(1, floorDiv(claimed.durationSeconds, seconds));
+	const porCiclo = Math.max(
+		1,
+		floorDiv(yieldPerCycleTenths(readout.miningPerHour), ore.volumeTenths)
+	);
+
+	const posible = Math.min(cycles * porCiclo, fitsUnits(hold.freeTenths, ore.code));
+	const units = takeFromBelt(tx, claimed.originBodyId, ore.code, posible);
+	if (units > 0) moveItem(tx, bodega.id, ore.code, units, 'mined');
+
+	return {
+		family: MINING_FAMILY,
+		xp: actionXpPool(claimed.durationSeconds / 60),
+		movesTo: null,
+		result: { mined: { ore: ore.code, units, cycles } }
+	};
+};
+
+/**
  * El registro de resolvedores, uno por clase de acción.
  *
  * Está tipado contra `ActionKind`, así que agregar una clase sin su resolvedor
  * no compila. Es la única forma de que el despachador no se olvide de nada.
  */
 const RESOLVERS: Readonly<Record<ActionKind, Resolver>> = {
-	travel: resolveTravel
+	travel: resolveTravel,
+	mine: resolveMine
 };
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
@@ -147,6 +208,40 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 			durationSeconds: duration,
 			originBodyId: row.locationId,
 			destinationBodyId: destination.id
+		})
+		.returning()
+		.get();
+}
+
+/**
+ * Ordena extraer un mineral en el cinturón donde está el piloto.
+ *
+ * La duración sale del plan, que mira la nave, la bodega y lo que queda en el
+ * cinturón. Así la orden tarda exactamente lo que la pantalla prometió, que es la
+ * misma regla que ya cumple viajar.
+ */
+export function startMining(db: Db, row: Pilot, oreCode: string): PilotAction {
+	const now = situation(db, row);
+	if (!now.canOrder) throw new ActionError(now.orderBlocked);
+	if (!isBelt(db, row.locationId)) throw new ActionError('Acá no hay nada que extraer.');
+
+	const readout = shipReadout(db, row);
+	if (readout === null) throw new ActionError('Necesitás una nave para extraer.');
+	if (!readout.flyable) throw new ActionError('Tu nave no está en condiciones de trabajar.');
+
+	const plan = miningPlan(db, row, oreCode);
+	if (plan.blocked) throw new ActionError(plan.blocked);
+
+	return db
+		.insert(pilotAction)
+		.values({
+			pilotId: row.id,
+			kind: MINE_KIND,
+			durationSeconds: plan.durationSeconds,
+			originBodyId: row.locationId,
+			// Minar no se mueve de lugar: por eso el destino queda nulo.
+			destinationBodyId: null,
+			targetCode: plan.ore
 		})
 		.returning()
 		.get();
@@ -204,8 +299,12 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 			after
 		};
 
-		const destination = tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
 		const origin = tx.select().from(body).where(eq(body.id, claimed.originBodyId)).get();
+		// Puede no haberlo: minar y refinar ocurren donde estás parado.
+		const destination =
+			claimed.destinationBodyId === null
+				? undefined
+				: tx.select().from(body).where(eq(body.id, claimed.destinationBodyId)).get();
 
 		// El informe va en la misma transacción que el resultado: si se aplicó la
 		// acción y se depositó la experiencia, la bitácora tiene que decirlo. Un
@@ -215,7 +314,8 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 			durationSeconds: claimed.durationSeconds,
 			originBodyId: claimed.originBodyId,
 			destinationBodyId: claimed.destinationBodyId,
-			deposit: depositado
+			deposit: depositado,
+			result: outcome.result ?? {}
 		});
 
 		return {

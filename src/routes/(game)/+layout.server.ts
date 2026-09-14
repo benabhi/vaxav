@@ -28,6 +28,7 @@ import { unreadCount } from '$lib/server/services/log';
 import { getBodyById } from '$lib/server/services/universe';
 import { buildInforme } from '$lib/server/views/log';
 import { buildPilotView } from '$lib/server/views/pilot';
+import { actionIcon, actionLabel } from '$lib/format';
 import { LOG_TAB, moduleForRoute, tabForRoute } from '$lib/navigation';
 import { LOGIN_ROUTE } from '$lib/routes';
 import type { AccionEnCurso, Informe } from '$lib/tipos';
@@ -41,10 +42,14 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const action: AccionEnCurso | null = pending
 		? {
 				kind: pending.kind,
-				label: 'Viajando',
-				icon: 'rocket-launch',
+				label: actionLabel(pending.kind),
+				icon: actionIcon(pending.kind),
 				origin: getBodyById(db, pending.originBodyId)?.name ?? '',
-				destination: getBodyById(db, pending.destinationBodyId)?.name ?? '',
+				// Puede no haber destino: minar ocurre donde estás parado.
+				destination:
+					pending.destinationBodyId === null
+						? ''
+						: (getBodyById(db, pending.destinationBodyId)?.name ?? ''),
 				startedAt: pending.startedAt.getTime(),
 				durationSeconds: pending.durationSeconds
 			}
