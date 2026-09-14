@@ -14,6 +14,7 @@
  * Así no hay redirecciones ni dos URL para la misma pantalla.
  */
 
+import type { StationServiceKind } from '$lib/game/universe';
 import type { IconName } from '$lib/icons';
 
 /**
@@ -167,7 +168,50 @@ export function moduleForRoute(path: string): Module | null {
 	return null;
 }
 
-/** La pestaña exacta de una ruta, o `null`. */
+/**
+ * La pestaña de una ruta, o `null`.
+ *
+ * Una pantalla que **cuelga** de una pestaña enciende esa pestaña: el mercado se
+ * abre desde la ubicación y sigue siendo parte de ella, así que la barra tiene
+ * que seguir diciendo dónde está el piloto y ofrecer la vuelta con un click.
+ * Gana la coincidencia más larga, para que `/piloto/bitacora` no termine
+ * encendiendo `/piloto`.
+ */
 export function tabForRoute(path: string): Tab | null {
-	return TABS.find((tab) => tab.route === path) ?? null;
+	const exacta = TABS.find((tab) => tab.route === path);
+	if (exacta) return exacta;
+
+	const colgadas = TABS.filter((tab) => path.startsWith(`${tab.route}/`)).sort(
+		(a, b) => b.route.length - a.route.length
+	);
+	return colgadas[0] ?? null;
 }
+
+/**
+ * La pantalla de cada módulo de estación, para los que ya tienen una.
+ *
+ * Que falte una entrada significa que ese módulo **todavía no se entra**, y la
+ * baldosa se queda en contar qué hace. Es la misma regla que gobierna el resto
+ * del árbol: no se anuncia una puerta que no abre.
+ *
+ * Las rutas de servicio cuelgan de Ubicación a propósito. Un módulo de estación
+ * es una sala del lugar donde estás parado, no un destino del Neocom: se entra
+ * desde ahí y se vuelve ahí.
+ */
+const SERVICE_ROUTES: Readonly<Partial<Record<StationServiceKind, string>>> = {
+	market: '/navegacion/mercado'
+};
+
+/** La pantalla de un módulo de estación, o vacío si todavía no tiene. */
+export function serviceRoute(service: StationServiceKind): string {
+	return SERVICE_ROUTES[service] ?? '';
+}
+
+/**
+ * Las pantallas de módulo de estación que ya existen.
+ *
+ * El humo las recorre junto con las pestañas: no están en el Neocom, así que sin
+ * esto una sala declarada y sin archivo de ruta no la atraparía nadie hasta que
+ * un jugador hiciera clic en la baldosa.
+ */
+export const SERVICE_SCREENS: readonly string[] = Object.values(SERVICE_ROUTES);

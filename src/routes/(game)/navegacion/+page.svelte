@@ -20,11 +20,14 @@
 	import ModuleGrid from '$lib/components/game/ModuleGrid.svelte';
 	import ModuleTile from '$lib/components/game/ModuleTile.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import CardTitle from '$lib/components/typography/CardTitle.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
+	import { serviceRoute } from '$lib/navigation';
+	import type { StationServiceKind } from '$lib/game/universe';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -54,6 +57,16 @@
 	let chosen = $derived(
 		place.modules.find((module) => module.code === selected && module.available)
 	);
+
+	/**
+	 * La pantalla del módulo elegido, si ya tiene una.
+	 *
+	 * Un módulo de estación es **una sala del lugar donde estás parado**: se entra
+	 * desde acá y se vuelve acá. Los que todavía no tienen pantalla se quedan en
+	 * contar qué hacen, que es la misma regla de siempre: no se anuncia una puerta
+	 * que no abre.
+	 */
+	let door = $derived(chosen ? serviceRoute(chosen.code as StationServiceKind) : '');
 
 	function choose(code: string, available: boolean) {
 		// Un módulo que la estación no tiene no abre nada.
@@ -126,6 +139,12 @@
 										<Label>{chosen.available ? 'Instalado' : 'No instalado'}</Label>
 									</div>
 									<BodyText>{chosen.summary}</BodyText>
+									{#if door}
+										<HudLink href={door} size="1">
+											Entrar
+											<Icon name="caret-right" weight="bold" size="0.7rem" />
+										</HudLink>
+									{/if}
 								</div>
 							</div>
 						</div>

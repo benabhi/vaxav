@@ -13,11 +13,11 @@
 
 import { expect, test, type Page } from '@playwright/test';
 import { PILOTO } from './preparar';
-import { TABS } from '../src/lib/navigation';
+import { SERVICE_SCREENS, TABS } from '../src/lib/navigation';
 import { INDEX_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE } from '../src/lib/routes';
 
 const PUBLICAS = [INDEX_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE];
-const DEL_JUEGO = TABS.map((tab) => tab.route);
+const DEL_JUEGO = [...TABS.map((tab) => tab.route), ...SERVICE_SCREENS];
 
 /** Entra con el piloto del humo y deja la sesión abierta en esa pestaña. */
 async function entrar(page: Page): Promise<void> {

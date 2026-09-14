@@ -525,3 +525,106 @@ export interface Billetera {
 	readonly entries: readonly MovimientoBilletera[];
 	readonly total: number;
 }
+
+/**
+ * La horquilla de una estación, desarmada para poder explicarla.
+ *
+ * Viaja en pedazos y no como un solo porcentaje porque la figura de la pantalla
+ * del mercado es exactamente esto: cuánto se queda la estación y qué lo está
+ * angostando. Un 13 % suelto no enseña nada; "20 de base, −3 por casa comercial,
+ * −4 por Regateo" enseña el juego mientras se lo juega.
+ */
+export interface Horquilla {
+	readonly percent: number;
+	readonly base: number;
+	readonly corporationEdge: number;
+	readonly haggling: number;
+	/** Si el piso fue lo que terminó decidiendo el número. */
+	readonly atFloor: boolean;
+}
+
+/**
+ * Una rama del árbol del mercado.
+ *
+ * Es el examinador de categorías: dos niveles, con los módulos abriéndose por
+ * ranura. El día que haya seiscientos módulos, es lo que hace que encontrar uno
+ * siga siendo posible sin saber cómo se llama.
+ */
+export interface GrupoMercado {
+	readonly code: string;
+	readonly label: string;
+	readonly icon: IconName;
+	/** La rama de la que cuelga, o vacío si es de primer nivel. */
+	readonly parent: string;
+	readonly count: number;
+}
+
+/**
+ * Un renglón del catálogo del mercado, **con los dos lados del mostrador**.
+ *
+ * Comprar y vender son dos caras del mismo ítem, así que van juntas: es lo que
+ * permite mostrar el ítem elegido con sus dos libros de órdenes sin volver a
+ * pedir nada. Y lleva todo resuelto —grupo, clase, escalón, precio, cuánto
+ * tengo— para poder buscar y filtrar en el navegador.
+ */
+export interface FilaMercado {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly kindLabel: string;
+	/** La rama del árbol donde cuelga. */
+	readonly group: string;
+	readonly groupLabel: string;
+	/** Clase y escalón juntos, como los escribe el equipamiento: "2E". */
+	readonly tier: string;
+	readonly size: number;
+	readonly tierLetter: string;
+	/** Lo que ocupa una unidad, ya escrito en metros cúbicos. */
+	readonly volume: string;
+	readonly summary: string;
+	/** Si la estación pone este ítem a la venta, y si lo compra. */
+	readonly sells: boolean;
+	readonly buys: boolean;
+	/**
+	 * El precio de referencia del ítem.
+	 *
+	 * Viaja para que la pantalla pueda rehacer **la cuenta del lote** con las
+	 * mismas funciones puras que usa el servidor: el precio unitario es de
+	 * vitrina y multiplicarlo da un número que no es el que se va a cobrar.
+	 */
+	readonly basePrice: number;
+	/** Lo que cobra por una unidad. */
+	readonly ask: number;
+	readonly askLabel: string;
+	/** Lo que paga por una unidad. */
+	readonly bid: number;
+	readonly bidLabel: string;
+	/** Cuánto tiene el piloto, y en cuál de las dos bodegas. */
+	readonly inShip: number;
+	readonly inStation: number;
+	readonly held: number;
+	/** Lo que pagarían por todo lo que tiene encima, calculado sobre el lote. */
+	readonly holdingValue: number;
+	readonly holdingValueLabel: string;
+}
+
+/** El mostrador de la estación donde está parado el piloto. */
+export interface Mercado {
+	readonly open: boolean;
+	/** Por qué no se puede comerciar acá, si no se puede. */
+	readonly closedReason: string;
+	readonly stationName: string;
+	readonly corporationName: string;
+	readonly corporationKind: string;
+	readonly buysOre: boolean;
+	readonly tradesModules: boolean;
+	readonly balance: string;
+	readonly oreSpread: Horquilla;
+	readonly moduleSpread: Horquilla;
+	readonly groups: readonly GrupoMercado[];
+	readonly items: readonly FilaMercado[];
+	/** Lo que dejaría vender todo lo que el mostrador acepta. */
+	readonly heldTotal: string;
+	/** Lo que entra todavía en la bodega de la nave. */
+	readonly cargoFree: string;
+}
