@@ -63,6 +63,20 @@ export interface Item {
 }
 
 /**
+ * Un mineral, que además de ocupar y valer **cuesta tiempo sacarlo**.
+ *
+ * El ciclo es la dureza escrita en segundos: lo común se desprende rápido, lo
+ * escaso hay que trabajarlo. Es la base de la que parte la duración de una orden
+ * y **no depende del piloto**, que es lo que hace que un mineral difícil siga
+ * siendo difícil por mucho que uno mejore.
+ */
+export interface Ore extends Item {
+	readonly kind: 'ore';
+	/** Lo que tarda un ciclo sobre este mineral, antes de cualquier bono. */
+	readonly cycleSeconds: number;
+}
+
+/**
  * Los minerales que se sacan de un cinturón.
  *
  * Cuatro, en tres escalones de rareza, y repartidos de modo que **el Cinturón
@@ -82,6 +96,7 @@ const ORES = [
 		kind: 'ore',
 		volumeTenths: 10,
 		basePrice: 12,
+		cycleSeconds: 60,
 		description: 'Roca gris con vetas de hierro. El pan de todos los días en los Anillos.'
 	},
 	{
@@ -90,6 +105,7 @@ const ORES = [
 		kind: 'ore',
 		volumeTenths: 10,
 		basePrice: 15,
+		cycleSeconds: 60,
 		description: 'Oscura y quebradiza. Más carbono que metal, y lo suficientemente común.'
 	},
 	{
@@ -98,6 +114,7 @@ const ORES = [
 		kind: 'ore',
 		volumeTenths: 8,
 		basePrice: 44,
+		cycleSeconds: 90,
 		description: 'Cristal verdoso de los bordes fríos. Denso en silicio y difícil de encontrar.'
 	},
 	{
@@ -106,9 +123,10 @@ const ORES = [
 		kind: 'ore',
 		volumeTenths: 6,
 		basePrice: 130,
+		cycleSeconds: 150,
 		description: 'Escaso y pesado. Aparece lejos y nunca en cantidad.'
 	}
-] as const satisfies readonly Item[];
+] as const satisfies readonly Ore[];
 
 /**
  * Lo que ocupa un módulo suelto en la bodega, por clase.
@@ -173,10 +191,23 @@ export function isItem(code: string): boolean {
 }
 
 /** Los minerales, en orden de rareza. Es el orden en que se muestran. */
-export const ORE_LIST: readonly Item[] = ORES;
+export const ORE_LIST: readonly Ore[] = ORES;
 
 /** El código de cualquier mineral del catálogo. */
 export type OreCode = (typeof ORES)[number]['code'];
+
+/** El catálogo de minerales indexado por código. */
+const ORES_BY_CODE = indexByCode(ORES);
+
+/** Busca un mineral por código, o falla diciendo cuál falta. */
+export function getOre(code: string): Ore {
+	return lookup(ORES_BY_CODE, code, 'el mineral');
+}
+
+/** Si ese código es de un mineral. Para validar lo que llega de afuera. */
+export function isOre(code: string): boolean {
+	return code in ORES_BY_CODE;
+}
 
 /**
  * Lo que ocupan `quantity` unidades de un ítem, en décimas de m³.
