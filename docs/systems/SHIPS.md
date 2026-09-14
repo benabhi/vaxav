@@ -98,8 +98,8 @@ el consumo es proporcional a la masa. Se calcula.
 ### Lo que queda afuera, y por qué
 
 - **Tripulación**: sería un buen sumidero de plata —sueldos por día—, y los
-  sumideros importan en una economía de jugadores. Pero sin economía es un número
-  que no hace nada. Vuelve con el mercado.
+  sumideros importan en una economía de jugadores. Ahora que los créditos existen
+  se puede discutir; sigue afuera hasta que haya algo más en qué gastarlos.
 - **Calor**: en Elite es divertido porque se maneja en vivo. Acá sería un segundo
   acumulador con otro nombre.
 - **Maniobrabilidad, cabeceo, convergencia**: no hay vuelo.
@@ -256,9 +256,9 @@ regla, la pantalla de equipamiento ofrece el catálogo entero como si las piezas
 fueran de nadie ni estuvieran en ningún lado.
 
 **Comprar y equipar son dos verbos distintos, en dos pantallas distintas.**
-Comprar es del **mercado**, que es donde van a estar la búsqueda y los filtros el
-día que haya cientos de módulos; equipar es mover lo que ya es tuyo de la bodega a
-una ranura, y al revés. Mezclarlos —una estación que surte el catálogo entero
+Comprar es del **[mercado](MARKET.md)**, que es donde viven la búsqueda y el árbol
+de categorías; equipar es mover lo que ya es tuyo de la bodega a una ranura, y al
+revés. Mezclarlos —una estación que surte el catálogo entero
 desde la ranura— convierte el equipamiento en una lista de compras sin precio y
 deja al mercado sin razón de existir.
 

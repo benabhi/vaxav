@@ -94,8 +94,8 @@
 	 * de cuál sale, y el mismo módulo en las dos aparece dos veces —son dos cosas
 	 * distintas de las que echar mano—.
 	 *
-	 * La estación no *vende* nada acá: comprar es del mercado, que es donde van a
-	 * estar la búsqueda y los filtros el día que haya cientos de módulos.
+	 * La estación no *vende* nada acá: comprar es del mercado, que es donde viven
+	 * la búsqueda y el árbol de categorías.
 	 */
 	let options = $derived.by(() => {
 		if (!slotSpec) return [];

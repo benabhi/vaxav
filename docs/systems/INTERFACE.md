@@ -43,12 +43,24 @@ lugar y aparece en los tres.
 | Módulo     | Pestañas                             |
 | ---------- | ------------------------------------ |
 | Piloto     | Información · Habilidades · Bitácora |
-| Nave       | Ficha                                |
+| Nave       | Ficha · Bodega                       |
 | Navegación | Ubicación · Sistema                  |
+| Billetera  | Billetera                            |
 
 Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
-pantallas: la bodega y la billetera vuelven con los ítems, el mercado con la
-venta, la galaxia con el segundo sistema.
+pantallas: la galaxia llega con el segundo sistema.
+
+### Las salas de una estación
+
+Los módulos de una estación —mercado, taller, laboratorio— **no son entradas del
+Neocom**: son salas del lugar donde el piloto está parado. Se entra desde la
+baldosa del módulo en Ubicación y se vuelve ahí.
+
+Sus rutas cuelgan de la pestaña que las contiene —`/navegacion/mercado`— y **la
+pestaña de arriba se queda encendida**: el piloto sigue estando en Navegación, en
+la ubicación donde atracó, y tiene la vuelta a un clic. Es la regla general de
+que una pantalla colgada de una pestaña enciende esa pestaña, y es lo que permite
+que el juego crezca en profundidad sin agregar un tercer nivel de menú.
 
 **Las distancias se miden desde el piloto.** En la lista de cuerpos de un
 sistema, cuán lejos está algo _del cuerpo que orbita_ no sirve para decidir nada:

@@ -62,6 +62,7 @@ la mecánica es la intención de diseño y los números están para corregirse.
 | [Acciones, tiempo y experiencia](systems/ACTIONS.md) | Cómo se calcula la duración, cómo se resuelve y cómo se reparte la XP           |
 | [El universo](systems/UNIVERSE.md)                   | Jerarquía del mapa, tipos de cuerpo y el sistema inicial                        |
 | [Naves y módulos](systems/SHIPS.md)                  | Atributos del casco, los tres presupuestos, los tipos de daño y el equipamiento |
+| [El mercado](systems/MARKET.md)                      | La horquilla de la estación, qué comercia cada una y dónde queda lo comprado    |
 | [Profesiones](systems/PROFESSIONS.md)                | El oficio previo del piloto y las habilidades con las que arranca               |
 | [Facciones](systems/FACTIONS.md)                     | De dónde viene el piloto y en qué estación empieza                              |
 | [Corporaciones](systems/CORPORATIONS.md)             | Quién opera las estaciones, y la capa entre estación y facción                  |
