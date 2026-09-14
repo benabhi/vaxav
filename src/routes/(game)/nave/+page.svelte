@@ -42,7 +42,6 @@
 	import { availableForSlot } from '$lib/game/inventory';
 	import { getModule } from '$lib/game/modules';
 	import { getSkill } from '$lib/game/skills';
-	import type { StationServiceKind } from '$lib/game/universe';
 	import { buildRingSlots, buildSlotGroups, fittedModules, moduleSummary } from '$lib/rig';
 	import type { PageProps } from './$types';
 
@@ -88,62 +87,51 @@
 	);
 
 	/**
-	 * Qué se le puede montar a la ranura abierta, y de dónde sale.
+	 * Qué se le puede montar a la ranura abierta: **lo que tenés**.
 	 *
-	 * Sólo lo que está en la bodega o en la estación donde está el piloto: un
-	 * módulo que no está en ningún lado no se puede montar, y ofrecerlo sería
-	 * mentir. Lo de la bodega va primero: lo que traés puesto se usa antes que lo
-	 * que hay que conseguir.
+	 * Lo de la bodega, más lo que ya está puesto acá —que también es tuyo y se
+	 * muestra para poder verlo sin abrir otra pantalla—. La estación no surte:
+	 * comprar es del mercado, que es donde van a estar los filtros el día que haya
+	 * cientos de módulos.
 	 */
-	let options = $derived(
-		slotSpec
-			? availableForSlot(
-					slotSpec.kind,
-					slotSpec.size,
-					slotSpec.core,
-					ship.stationServices as StationServiceKind[],
-					ship.cargoModules.map(getModule)
-				).map((disponible) => ({
-					code: disponible.module.code,
-					name: disponible.module.name,
-					tier: `${disponible.module.size}${disponible.module.tier}`,
-					summary: moduleSummary(disponible.module),
-					icon: moduleIcon(disponible.module),
-					mounted: disponible.module.code === ship.fitted[selected],
-					from: disponible.source
-				}))
-			: []
-	);
+	let options = $derived.by(() => {
+		if (!slotSpec) return [];
+
+		const puesto = ship.fitted[selected] ?? '';
+		const enBodega = availableForSlot(
+			slotSpec.kind,
+			slotSpec.size,
+			slotSpec.core,
+			ship.cargoModules.map(getModule)
+		);
+
+		// Lo montado primero y sin repetir: si además llevás uno igual de repuesto,
+		// es el mismo renglón.
+		const todos = puesto ? [getModule(puesto), ...enBodega] : [...enBodega];
+
+		return todos
+			.filter((module, i) => todos.findIndex((otro) => otro.code === module.code) === i)
+			.map((module) => ({
+				code: module.code,
+				name: module.name,
+				tier: `${module.size}${module.tier}`,
+				summary: moduleSummary(module),
+				icon: moduleIcon(module),
+				mounted: module.code === puesto,
+				/** Cuántos llevás sueltos, para saber si te queda repuesto. */
+				spare: ship.cargoModules.filter((code) => code === module.code).length
+			}));
+	});
 
 	/**
 	 * Por qué la ranura abierta no tiene nada para montar, si no tiene.
 	 *
-	 * Nombra el lugar: "acá no hay nada" es una queja, "no hay nada en Planta
-	 * Escarcha" es una instrucción para ir a otro lado.
+	 * Manda al mercado, que es donde se consigue: "no tenés nada" es una queja,
+	 * "compralo en el mercado" es una instrucción.
 	 */
-	/**
-	 * Lo montable, **separado por de dónde sale**.
-	 *
-	 * Sin separar, la lista se lee como un inventario: uno abre una ranura, ve
-	 * ocho módulos y cree que los tiene. Con dos bloques rotulados queda claro de
-	 * una que lo de arriba viaja con la nave y lo de abajo se queda en la estación
-	 * si te vas, que es la diferencia que importa antes de zarpar.
-	 */
-	let grouped = $derived(
-		[
-			{ source: 'cargo', title: 'Lo que llevás', hint: 'Viaja con la nave' },
-			{ source: 'station', title: 'Lo que ofrece la estación', hint: 'Se queda acá si te vas' }
-		]
-			.map((grupo) => ({
-				...grupo,
-				options: options.filter((option) => option.from === grupo.source)
-			}))
-			.filter((grupo) => grupo.options.length > 0)
-	);
-
 	let nothingAvailable = $derived(
 		hasSelection && options.length === 0
-			? `Nada para esta ranura en ${ship.stationName || 'este lugar'}.`
+			? 'No llevás nada que entre en esta ranura. Se compra en el mercado.'
 			: ''
 	);
 
@@ -412,73 +400,67 @@
 					{/if}
 
 					<!--
-						Dos bloques rotulados y no una lista sola: abrir una ranura y ver
-						ocho módulos se lee como un inventario. Lo que llevás va primero,
-						porque es lo que podés usar en cualquier lado.
-
-						Y la diferencia se repite en cada fila: **lo tuyo tiene borde
-						izquierdo y fondo, lo de la estación va plano**. El encabezado
-						alcanza para entenderlo una vez; el borde, para no tener que subir a
-						releerlo cuando la lista es larga.
+						Un renglón por montón. Lo montado va primero y encendido; lo demás
+						es lo que llevás de repuesto y podés poner en su lugar.
 					-->
-					{#each grouped as grupo (grupo.source)}
-						<div class="mt-2 flex w-full flex-wrap items-baseline gap-2 first:mt-0">
-							<Label>{grupo.title}</Label>
-							<span class="font-mono text-[0.62rem] text-text-muted">{grupo.hint}</span>
-							<div class="grow"></div>
-							<span class="font-mono text-[0.62rem] text-text-muted">
-								{grupo.options.length}
-							</span>
-						</div>
-
-						{#each grupo.options as option (option.code)}
-							<form method="POST" action="?/montar" use:enhance class="w-full">
-								<input type="hidden" name="ranura" value={selected} />
-								<input type="hidden" name="modulo" value={option.code} />
-								<button
-									type="submit"
-									disabled={!ship.canRefit}
-									class="w-full border border-l-[3px] border-border-soft px-3 py-[0.6rem] text-left
+					{#each options as option (option.code)}
+						<form method="POST" action="?/montar" use:enhance class="w-full">
+							<input type="hidden" name="ranura" value={selected} />
+							<input type="hidden" name="modulo" value={option.code} />
+							<button
+								type="submit"
+								disabled={!ship.canRefit}
+								class="w-full border border-l-[3px] border-border-soft px-3 py-[0.6rem] text-left
 									transition-[background-color,color] disabled:cursor-not-allowed disabled:opacity-45
 									{option.mounted
-										? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
-										: option.from === 'cargo'
-											? 'border-l-accent-dim bg-surface text-text-strong hover:bg-surface-hover'
-											: 'border-l-transparent bg-transparent text-text-body hover:bg-surface-hover'}"
-								>
-									<div class="flex w-full flex-col items-start gap-1">
-										<div class="flex w-full items-center gap-2">
-											<Icon
-												name={option.icon}
-												weight="duotone"
-												size="0.95rem"
-												class={option.mounted ? 'text-on-accent' : 'text-accent'}
-											/>
-											<span
-												class="min-w-0 font-display text-[0.82rem] font-bold tracking-display uppercase"
-											>
-												{option.name}
-											</span>
-											<div class="grow"></div>
-											<span
-												class="shrink-0 font-mono text-[0.75rem] {option.mounted
-													? 'text-on-accent'
-													: 'text-data'}"
-											>
-												{option.tier}
-											</span>
-										</div>
+									? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
+									: 'border-l-accent-dim bg-surface text-text-strong hover:bg-surface-hover'}"
+							>
+								<div class="flex w-full flex-col items-start gap-1">
+									<div class="flex w-full items-center gap-2">
+										<Icon
+											name={option.icon}
+											weight="duotone"
+											size="0.95rem"
+											class={option.mounted ? 'text-on-accent' : 'text-accent'}
+										/>
 										<span
-											class="font-mono text-1 leading-[1.4] {option.mounted
-												? 'text-on-accent'
-												: 'text-text-muted'}"
+											class="min-w-0 font-display text-[0.82rem] font-bold tracking-display uppercase"
 										>
-											{option.summary}
+											{option.name}
+										</span>
+										<!--
+											Cuántos llevás sueltos. Es lo que decide si desmontar algo
+											deja la ranura realmente vacía o si tenés con qué reemplazarlo.
+										-->
+										{#if option.spare > 0}
+											<span
+												class="shrink-0 font-mono text-[0.66rem] {option.mounted
+													? 'text-on-accent'
+													: 'text-text-muted'}"
+											>
+												×{option.spare} en bodega
+											</span>
+										{/if}
+										<div class="grow"></div>
+										<span
+											class="shrink-0 font-mono text-[0.75rem] {option.mounted
+												? 'text-on-accent'
+												: 'text-data'}"
+										>
+											{option.tier}
 										</span>
 									</div>
-								</button>
-							</form>
-						{/each}
+									<span
+										class="font-mono text-1 leading-[1.4] {option.mounted
+											? 'text-on-accent'
+											: 'text-text-muted'}"
+									>
+										{option.summary}
+									</span>
+								</div>
+							</button>
+						</form>
 					{/each}
 				</div>
 			</TitledPanel>

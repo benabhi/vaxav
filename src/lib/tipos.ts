@@ -229,7 +229,6 @@ export interface Nave {
 	readonly pilotLevels: Readonly<Record<string, number>>;
 	/** Dónde está atracado el piloto y qué módulos tiene ese lugar. */
 	readonly stationName: string;
-	readonly stationServices: readonly string[];
 	/**
 	 * Los códigos de los módulos que lleva en la bodega.
 	 *

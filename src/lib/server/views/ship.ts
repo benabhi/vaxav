@@ -28,7 +28,6 @@ function noShip(): Nave {
 		fitted: [],
 		pilotLevels: {},
 		stationName: '',
-		stationServices: [],
 		cargoModules: [],
 		canRefit: false,
 		refitBlocked: ''
@@ -51,7 +50,6 @@ export function buildShipView(db: Db, row: Pilot): Nave {
 		fitted: shipFit(db, ship).map((module) => module.code),
 		pilotLevels: pilotSkillLevels(db, row.id),
 		stationName: ahora.place,
-		stationServices: [...ahora.services],
 		// Sólo los módulos: el mineral de la bodega no se monta en una ranura.
 		cargoModules: stacks(db, shipContainer(db, ship.id).id)
 			.filter((stack) => getItem(stack.itemCode).kind === 'module')

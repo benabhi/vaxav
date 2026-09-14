@@ -1,97 +1,58 @@
 /**
- * De dónde sale un módulo: la bodega de la nave, o la estación donde estás.
+ * Qué se le puede montar a una ranura: **lo que el piloto tiene**.
  *
  * Sin esto, la pantalla de equipamiento ofrece el catálogo entero como si los
- * módulos no fueran de nadie ni estuvieran en ningún lado. **Un módulo tiene que
- * estar en algún lugar para poder montarlo**, y ese lugar cambia según dónde
- * esté parado el piloto.
+ * módulos no fueran de nadie ni estuvieran en ningún lado. Un módulo tiene que
+ * estar en algún lugar para poder montarlo, y ese lugar es la bodega de la nave.
  *
- * Qué surte una estación no es una tabla nueva: sale de **sus propios módulos**.
- * Una estación ofrece equipamiento si y sólo si tiene el módulo Equipamiento.
- * Puerto Ánfora, el Muelle, Talo y el Amarre Franco lo tienen; la Planta
- * Escarcha no, así que ahí no se puede reconfigurar la nave. Es una regla de una
- * línea que hace que el mapa importe, con datos que ya existen.
+ * **La estación ya no surte módulos.** Antes, estar atracado en un lugar con
+ * Equipamiento hacía aparecer el catálogo entero y gratis, lo que convertía la
+ * ranura en una lista de compras sin precio. Comprar es del **mercado**, que es
+ * donde van a estar los filtros y la búsqueda el día que haya cientos de
+ * módulos; equipar es mover lo que ya es tuyo de la bodega a una ranura y al
+ * revés. Son dos verbos distintos y ahora viven en dos pantallas distintas.
+ *
+ * Lo que la estación sigue decidiendo es **si podés tocar la nave**: hace falta
+ * el módulo de Equipamiento para desarmarla, y eso lo resuelve `status`.
  *
  * Reglas puras: acá no hay base de datos ni piloto. Corresponde a
  * docs/systems/SHIPS.md.
  */
 
 import type { CoreSystem, SlotKind } from './hulls';
-import { type ShipModule, modulesForSlot } from './modules';
-import type { StationServiceKind } from './universe';
-
-/** Dónde está un módulo que se puede montar. */
-export const MODULE_SOURCES = [
-	/** Lo traés puesto: viaja con la nave y lo tenés en cualquier lado. */
-	'cargo',
-	/** Lo tiene la estación donde estás atracado. Si te vas, se queda. */
-	'station'
-] as const;
-
-export type ModuleSource = (typeof MODULE_SOURCES)[number];
-
-/** Un módulo que se puede montar ahora mismo, y de dónde sale. */
-export interface Available {
-	readonly module: ShipModule;
-	readonly source: ModuleSource;
-}
+import type { ShipModule } from './modules';
 
 /**
- * El módulo de estación que habilita reconfigurar una nave. Sin él, la estación
- * es un lugar donde atracar y nada más.
- */
-export const OUTFITTING: StationServiceKind = 'outfitting';
-
-/**
- * ¿Esta estación surte equipamiento?
+ * Qué de la bodega entra en esta ranura.
  *
- * Se pregunta por el módulo de Equipamiento y no por el Astillero: el astillero
- * vende cascos, el equipamiento es el que monta y desmonta piezas. Es la misma
- * división que hacen los dos juegos que se imitan.
- */
-export function stationStocksModules(services: Iterable<StationServiceKind>): boolean {
-	return [...services].includes(OUTFITTING);
-}
-
-/**
- * Qué se le puede montar a una ranura, acá y ahora.
+ * Un módulo entra si es del tipo correcto y **de clase igual o menor**: en una
+ * ranura de clase 3 entra uno de clase 2, nunca uno de clase 4. Los internos
+ * esenciales filtran además por cuál de los siete sistemas son.
  *
- * Primero lo que está en la bodega —lo que traés puesto se usa antes que lo que
- * hay que conseguir— y después lo de la estación. Un módulo que está en los dos
- * lugares aparece una sola vez, como de la bodega: es el que realmente se va a
- * usar.
+ * Se devuelve **un renglón por montón y no por unidad**: llevar tres láseres
+ * iguales no tiene que llenar la lista con el mismo nombre tres veces. Cuál de
+ * los tres se monta es indistinto, porque son fungibles.
  *
- * Sin estación que surta y sin nada en bodega, la lista sale vacía. Eso **no es
- * un error**: es lo que significa estar atracado en un puesto de hielo.
+ * Con la bodega vacía la lista sale vacía. Eso **no es un error**: es lo que
+ * significa no tener repuestos.
  */
 export function availableForSlot(
 	kind: SlotKind,
 	size: number,
 	core: CoreSystem | null,
-	stationServices: Iterable<StationServiceKind> = [],
 	cargo: Iterable<ShipModule> = []
-): readonly Available[] {
-	const fit = modulesForSlot(kind, size, core);
-	const fitCodes = new Set(fit.map((module) => module.code));
-
-	const available: Available[] = [];
-	const seen = new Set<string>();
+): readonly ShipModule[] {
+	const vistos = new Set<string>();
+	const disponibles: ShipModule[] = [];
 
 	for (const module of cargo) {
-		if (fitCodes.has(module.code) && !seen.has(module.code)) {
-			available.push({ module, source: 'cargo' });
-			seen.add(module.code);
-		}
+		if (module.kind !== kind || module.size > size || module.core !== core) continue;
+		if (vistos.has(module.code)) continue;
+		vistos.add(module.code);
+		disponibles.push(module);
 	}
 
-	if (stationStocksModules(stationServices)) {
-		for (const module of fit) {
-			if (!seen.has(module.code)) {
-				available.push({ module, source: 'station' });
-				seen.add(module.code);
-			}
-		}
-	}
-
-	return available;
+	// De mayor a menor clase y después por nombre: el orden del catálogo, para
+	// que la lista no cambie de posición entre dos cargas.
+	return disponibles.sort((a, b) => b.size - a.size || a.name.localeCompare(b.name));
 }

@@ -57,10 +57,15 @@ Cinturones con contenido y agotamiento compartido que se recupera solo, la acci�
 de extraer, y la bodega con capacidad real. Se vuelven mecánicos la bodega, el
 rendimiento de extracción y la estabilidad del acumulador.
 
-### 3 · Vender en crudo
+### 3 · El mercado de la estación
 
-La estación compra a precio fijo, con su asiento en el libro. Acá el bucle se
-cierra por primera vez: viajás, minás, volvés, cobrás.
+Comprar y vender a precio fijo, con su asiento en el libro. Acá el bucle se cierra
+por primera vez: viajás, minás, volvés, cobrás.
+
+**Es la única puerta para conseguir módulos.** El equipamiento ya no los surte, así
+que hasta que esta etapa exista sólo se monta lo que se trae puesto de fábrica. Es
+también donde van la búsqueda y los filtros: el día que haya cientos de módulos, el
+problema no es comprarlos sino encontrarlos.
 
 ### 4 · Requisitos de habilidad e inyecciones
 

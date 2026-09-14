@@ -251,15 +251,25 @@ frena de 200 a 192 u/s, y ese trayecto pasa a tardar más.
 
 ## De dónde sale un módulo
 
-Un módulo tiene que estar **en la bodega de la nave o en la estación donde estás
-atracado** para poder montarlo. Sin esa regla, la pantalla de equipamiento ofrece
-el catálogo entero como si las piezas no fueran de nadie ni estuvieran en ningún
-lado.
+Un módulo tiene que estar **en la bodega de tu nave** para poder montarlo. Sin esa
+regla, la pantalla de equipamiento ofrece el catálogo entero como si las piezas no
+fueran de nadie ni estuvieran en ningún lado.
 
-**Qué surte una estación sale de sus propios módulos**, no de una tabla nueva:
-una estación ofrece equipamiento **si y sólo si tiene el módulo Equipamiento**.
-El astillero vende cascos; el equipamiento monta piezas, que es la misma división
-que hacen los dos juegos que se imitan.
+**Comprar y equipar son dos verbos distintos, en dos pantallas distintas.**
+Comprar es del **mercado**, que es donde van a estar la búsqueda y los filtros el
+día que haya cientos de módulos; equipar es mover lo que ya es tuyo de la bodega a
+una ranura, y al revés. Mezclarlos —una estación que surte el catálogo entero
+desde la ranura— convierte el equipamiento en una lista de compras sin precio y
+deja al mercado sin razón de existir.
+
+**Un módulo que se baja vuelve a la bodega**, y uno que se sube sale de ella. Si
+lo que estás bajando no entra en el lugar que queda, la operación se niega con el
+motivo: desmontar no puede ser una forma silenciosa de tirar una pieza. El cálculo
+del lugar usa la capacidad que la nave va a tener **después**, porque bajar una
+bodega adicional achica el espacio justo cuando esa misma bodega necesita entrar.
+
+Lo que la estación sigue decidiendo es **si podés tocar la nave**: hace falta estar
+atracado y que el lugar tenga el módulo de Equipamiento.
 
 | Estación                                                             | ¿Se puede reconfigurar? |
 | -------------------------------------------------------------------- | ----------------------- |
@@ -269,14 +279,8 @@ que hacen los dos juegos que se imitan.
 Es una regla de una línea que hace que el mapa importe: quedarse sin escudo cerca
 de la Planta Escarcha significa volver a otro lado a montarlo.
 
-**Lo que traés en la bodega sirve en cualquier parte**, y ésa es la gracia de
-traerlo. La lista de opciones dice de dónde sale cada módulo, y **lo que no está
-en ninguno de los dos lugares no aparece**: si una ranura no tiene nada
-disponible, la pantalla nombra el lugar —«Nada para esta ranura en Planta
-Escarcha»—, porque «acá no hay nada» es una queja y con el nombre es una
-instrucción para ir a otro lado.
-
-La bodega arranca vacía: qué lleva un piloto llega con los ítems y el hangar.
+Si una ranura no tiene nada disponible, la pantalla lo dice y manda al mercado:
+«no tenés nada» es una queja, «se compra en el mercado» es una instrucción.
 
 ## Cómo está construido
 
@@ -286,7 +290,7 @@ La bodega arranca vacía: qué lleva un piloto llega con los ítems y el hangar.
 | `src/lib/game/hulls.ts`     | Los cascos, sus atributos y sus ranuras                   |
 | `src/lib/game/modules.ts`   | El catálogo de lo que se monta                            |
 | `src/lib/game/fitting.ts`   | **La calculadora**                                        |
-| `src/lib/game/inventory.ts` | De dónde sale cada módulo                                 |
+| `src/lib/game/inventory.ts` | Qué de la bodega entra en una ranura                      |
 
 ### Nada derivado se guarda
 
