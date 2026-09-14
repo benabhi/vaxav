@@ -12,6 +12,7 @@ import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { fittedModule, ship } from '../db/schema';
 import { crearPiloto, desguazar, seededDb } from '../db/testing';
+import { situation } from './status';
 import {
 	auditStacks,
 	cargoHold,
@@ -19,7 +20,8 @@ import {
 	itemHistory,
 	moveItem,
 	quantityOf,
-	shipContainer
+	shipContainer,
+	stationContainer
 } from './containers';
 import { defaultFit } from '$lib/game/fitting';
 import { STARTING_HULL, coreSlotIndex } from '$lib/game/hulls';
@@ -261,96 +263,112 @@ describe('el reparto de naves', () => {
 });
 
 describe('bajar y subir modulos mueve la carga', () => {
-	/** El índice de la ranura donde el minero trae su láser. */
-	function anclaje(
+	/** El índice de la ranura donde el minero trae su láser, y las dos bodegas. */
+	function bancada(
 		db: ReturnType<typeof seededDb>,
 		piloto: Awaited<ReturnType<typeof crearPiloto>>
 	) {
 		const nave = activeShip(db, piloto.id)!;
 		const codes = shipFit(db, nave).map((module) => module.code);
-		return { nave, codes, index: codes.indexOf('mining_laser_e1') };
+		const ahora = situation(db, piloto);
+		return {
+			nave,
+			codes,
+			index: codes.indexOf('mining_laser_e1'),
+			bodega: shipContainer(db, nave.id),
+			hangar: stationContainer(db, piloto.id, ahora.stationId!)
+		};
 	}
 
-	it('lo que se baja vuelve a la bodega', async () => {
+	it('lo que se baja queda en la estación', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const { nave, codes, index } = anclaje(db, piloto);
-		const bodega = shipContainer(db, nave.id);
-		const antes = quantityOf(db, bodega.id, 'mining_laser_e1');
+		const { nave, codes, index, hangar } = bancada(db, piloto);
 
 		const vaciada = [...codes];
 		vaciada[index] = '';
 		refit(db, piloto, vaciada);
 
-		// Desmontar era tirar el módulo a la basura sin decirlo, que es la clase de
+		// Equipar sólo se puede atracado, así que lo que sale de una ranura sale
+		// ahí. Desmontar era tirar el módulo sin decirlo, que es la clase de
 		// pérdida silenciosa que arruina la confianza en un inventario.
-		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(antes + 1);
+		expect(quantityOf(db, hangar.id, 'mining_laser_e1')).toBe(1);
 		expect(shipFit(db, nave)[index].code).toBe('');
 	});
 
-	it('lo que se sube desde la bodega sale de la bodega', async () => {
+	it('lo que se sube desde la bodega de la nave sale de ahí', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const { nave, codes, index } = anclaje(db, piloto);
-		const bodega = shipContainer(db, nave.id);
+		const { nave, codes, index, bodega } = bancada(db, piloto);
 
-		// Se baja y se vuelve a subir: tiene que quedar como estaba.
+		// El minero trae un repuesto en la nave; se baja el puesto y se sube ése.
 		const vaciada = [...codes];
 		vaciada[index] = '';
 		refit(db, piloto, vaciada);
-		const conDosEnBodega = quantityOf(db, bodega.id, 'mining_laser_e1');
+		refit(db, piloto, codes, 'ship');
 
-		refit(db, piloto, codes);
-
-		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(conDosEnBodega - 1);
+		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(0);
 		expect(shipFit(db, nave)[index].code).toBe('mining_laser_e1');
 	});
 
-	it('lo que surte la estación no sale de la bodega', async () => {
+	it('y lo que se sube desde la estación sale de la estación', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const { nave, codes, index } = anclaje(db, piloto);
-		const bodega = shipContainer(db, nave.id);
+		const { nave, codes, index, bodega, hangar } = bancada(db, piloto);
 
-		// Un módulo que no tenías lo pone la estación, y la bodega no se entera.
+		const vaciada = [...codes];
+		vaciada[index] = '';
+		refit(db, piloto, vaciada);
+		const enBodega = quantityOf(db, bodega.id, 'mining_laser_e1');
+
+		refit(db, piloto, codes, 'station');
+
+		// La pantalla muestra las dos bodegas por separado y el jugador eligió una:
+		// tomar de la otra sería hacerle algo distinto de lo que pidió.
+		expect(quantityOf(db, hangar.id, 'mining_laser_e1')).toBe(0);
+		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(enBodega);
+		expect(shipFit(db, nave)[index].code).toBe('mining_laser_e1');
+	});
+
+	it('no se puede montar lo que no se tiene', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const { nave, codes, index } = bancada(db, piloto);
+
+		// La estación ya no surte el catálogo: comprar es del mercado.
 		const conCanon = [...codes];
 		conCanon[index] = 'mass_cannon_e1';
-		refit(db, piloto, conCanon);
 
-		expect(quantityOf(db, bodega.id, 'mass_cannon_e1')).toBe(0);
-		// Y el láser que estaba puesto sí volvió a la caja.
-		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(2);
+		expect(() => refit(db, piloto, conCanon)).toThrow(ShipError);
+		expect(shipFit(db, nave).map((m) => m.code)).toEqual(codes);
 	});
 
 	it('cada cambio deja su asiento', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const { nave, codes, index } = anclaje(db, piloto);
-		const bodega = shipContainer(db, nave.id);
+		const { codes, index, hangar } = bancada(db, piloto);
 
 		const vaciada = [...codes];
 		vaciada[index] = '';
 		refit(db, piloto, vaciada);
 
-		expect(itemHistory(db, bodega.id)[0].kind).toBe('unfitted');
-		expect(auditStacks(db, bodega.id)).toEqual([]);
+		expect(itemHistory(db, hangar.id)[0].kind).toBe('unfitted');
+		expect(auditStacks(db, hangar.id)).toEqual([]);
 	});
 
-	it('se niega si lo que bajás no entra en la bodega', async () => {
+	it('se niega si al desmontar deja de entrar la carga', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const { nave, codes } = anclaje(db, piloto);
-		const bodega = shipContainer(db, nave.id);
+		const { nave, codes, bodega } = bancada(db, piloto);
 
-		// Se llena la bodega de mineral hasta que no quepa un módulo más.
+		// Se llena la bodega de mineral hasta el tope.
 		const libre = cargoHold(db, bodega.id, shipReadout(db, piloto)!.cargo).freeTenths;
 		moveItem(db, bodega.id, 'ferrous_silicate', fitsUnits(libre, 'ferrous_silicate'), 'mined');
 
 		const sinBodega = [...codes];
 		sinBodega[codes.indexOf('cargo_rack_e1')] = '';
 
-		// Bajar la bodega adicional achica el lugar justo cuando esa misma bodega
-		// necesita entrar: mirar la capacidad de antes dejaría pasar esto.
+		// Bajar una bodega adicional achica el lugar sin sacar nada de adentro.
 		expect(() => refit(db, piloto, sinBodega)).toThrow(ShipError);
 		expect(shipFit(db, nave).map((m) => m.code)).toEqual(codes);
 	});

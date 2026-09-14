@@ -69,6 +69,27 @@ export function shipContainer(db: Db, shipId: number): Container {
 	return db.insert(container).values({ kind: 'ship', shipId }).returning().get();
 }
 
+/**
+ * La bodega que un piloto tiene en una estación, creándola si es la primera vez.
+ *
+ * Es el hangar de EVE: **lo que dejás ahí se queda ahí**. Lo que llevás en la
+ * nave viaja con vos; lo que está en una estación hay que ir a buscarlo. Esa
+ * diferencia es la que hace que el mapa tenga logística y no sólo distancias.
+ *
+ * Se crea al pedirla, igual que la de la nave: nadie alquila un espacio antes de
+ * tener algo que poner en él.
+ */
+export function stationContainer(db: Db, pilotId: number, stationId: number): Container {
+	const found = db
+		.select()
+		.from(container)
+		.where(and(eq(container.pilotId, pilotId), eq(container.stationId, stationId)))
+		.get();
+	if (found) return found;
+
+	return db.insert(container).values({ kind: 'station', pilotId, stationId }).returning().get();
+}
+
 /** Los montones de una bodega, en orden estable. */
 export function stacks(db: Db, containerId: number): readonly ItemStack[] {
 	return db

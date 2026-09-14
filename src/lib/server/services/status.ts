@@ -35,6 +35,13 @@ export interface Situation {
 	readonly status: PilotStatus;
 	/** Cómo se llama el lugar donde está, para poder nombrarlo en los avisos. */
 	readonly place: string;
+	/**
+	 * La estación donde está atracado, o `null` si no está en una.
+	 *
+	 * Es el id de la fila de estación y no el del cuerpo: lo que cuelga de una
+	 * estación —la bodega que alquilás ahí, mañana su mercado— cuelga de eso.
+	 */
+	readonly stationId: number | null;
 	/** Los módulos de la estación, vacío si no está en una. */
 	readonly services: readonly StationServiceKind[];
 
@@ -52,11 +59,13 @@ export interface Situation {
 function describe(
 	status: PilotStatus,
 	place: string,
-	services: readonly StationServiceKind[]
+	services: readonly StationServiceKind[],
+	stationId: number | null = null
 ): Situation {
 	return {
 		status,
 		place,
+		stationId,
 		services,
 		canOrder: canGiveOrders(status),
 		orderBlocked: orderBlockedReason(status),
@@ -88,5 +97,10 @@ export function situation(db: Db, row: Pilot): Situation {
 	if (place.kind !== 'station') return describe(statusFor(false, busy), place.name, []);
 
 	const detail = bodyDetail(db, place.code);
-	return describe(statusFor(true, busy), place.name, detail?.services ?? []);
+	return describe(
+		statusFor(true, busy),
+		place.name,
+		detail?.services ?? [],
+		detail?.station?.id ?? null
+	);
 }

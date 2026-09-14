@@ -13,8 +13,9 @@
 import { eq } from 'drizzle-orm';
 import { ship, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
-import { cargoHold, shipContainer, type CargoHold } from '../services/containers';
+import { cargoHold, shipContainer, stationContainer, type CargoHold } from '../services/containers';
 import { shipReadout } from '../services/ships';
+import { situation } from '../services/status';
 import { baseValueOf, getItem } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { cubicMeters, itemIcon, itemKindLabel, thousands } from '$lib/format';
@@ -28,7 +29,10 @@ const SIN_NAVE: Bodega = {
 	capacity: '0,0',
 	free: '0,0',
 	percent: 0,
-	totalValue: '0'
+	totalValue: '0',
+	stationName: '',
+	stationLines: [],
+	stationValue: '0'
 };
 
 /** Pasa lo que hay en una bodega a filas dibujables. */
@@ -58,6 +62,11 @@ function buildLines(hold: CargoHold): FilaCarga[] {
 	);
 }
 
+/** Lo que vale todo lo que hay en una bodega, a precio de referencia. */
+function valueOf(hold: CargoHold): number {
+	return hold.lines.reduce((total, line) => total + baseValueOf(line.itemCode, line.quantity), 0);
+}
+
 /** Todo lo que la pestaña Bodega necesita, en una sola pasada. */
 export function buildCargoView(db: Db, row: Pilot): Bodega {
 	const nave = db.select().from(ship).where(eq(ship.pilotId, row.id)).get();
@@ -72,6 +81,16 @@ export function buildCargoView(db: Db, row: Pilot): Bodega {
 
 	const lines = buildLines(hold);
 
+	// Y lo que tenga guardado acá, si está atracado. La capacidad que se le pasa
+	// es la propia carga: una bodega de estación no tiene tope todavía, y pasarle
+	// cero haría que todas las barras salieran en cien.
+	const ahora = situation(db, row);
+	const hangar =
+		ahora.stationId === null
+			? null
+			: cargoHold(db, stationContainer(db, row.id, ahora.stationId).id, 0);
+	const stationLines = hangar ? buildLines({ ...hangar, capacityTenths: hangar.usedTenths }) : [];
+
 	return {
 		shipName: nave.name || readout?.hull.name || '',
 		lines,
@@ -82,8 +101,9 @@ export function buildCargoView(db: Db, row: Pilot): Bodega {
 			hold.capacityTenths > 0
 				? Math.min(100, roundHalfEven((hold.usedTenths * 100) / hold.capacityTenths))
 				: 0,
-		totalValue: thousands(
-			hold.lines.reduce((total, line) => total + baseValueOf(line.itemCode, line.quantity), 0)
-		)
+		totalValue: thousands(valueOf(hold)),
+		stationName: hangar ? ahora.place : '',
+		stationLines,
+		stationValue: thousands(hangar ? valueOf(hangar) : 0)
 	};
 }

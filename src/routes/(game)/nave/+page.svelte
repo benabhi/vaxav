@@ -87,51 +87,61 @@
 	);
 
 	/**
-	 * Qué se le puede montar a la ranura abierta: **lo que tenés**.
+	 * Qué se le puede montar a la ranura abierta: **lo que tenés, y dónde está**.
 	 *
-	 * Lo de la bodega, más lo que ya está puesto acá —que también es tuyo y se
-	 * muestra para poder verlo sin abrir otra pantalla—. La estación no surte:
-	 * comprar es del mercado, que es donde van a estar los filtros el día que haya
-	 * cientos de módulos.
+	 * Son dos bodegas distintas y la diferencia importa: lo de la nave viaja con
+	 * vos, lo de la estación hay que venir a buscarlo. Por eso cada renglón dice
+	 * de cuál sale, y el mismo módulo en las dos aparece dos veces —son dos cosas
+	 * distintas de las que echar mano—.
+	 *
+	 * La estación no *vende* nada acá: comprar es del mercado, que es donde van a
+	 * estar la búsqueda y los filtros el día que haya cientos de módulos.
 	 */
 	let options = $derived.by(() => {
 		if (!slotSpec) return [];
 
 		const puesto = ship.fitted[selected] ?? '';
-		const enBodega = availableForSlot(
-			slotSpec.kind,
-			slotSpec.size,
-			slotSpec.core,
-			ship.cargoModules.map(getModule)
-		);
+		const desde = (codes: readonly string[], origin: 'ship' | 'station') =>
+			availableForSlot(slotSpec.kind, slotSpec.size, slotSpec.core, codes.map(getModule)).map(
+				(module) => ({
+					module,
+					origin,
+					units: codes.filter((code) => code === module.code).length
+				})
+			);
 
-		// Lo montado primero y sin repetir: si además llevás uno igual de repuesto,
-		// es el mismo renglón.
-		const todos = puesto ? [getModule(puesto), ...enBodega] : [...enBodega];
+		const guardados = [
+			...desde(ship.cargoModules, 'ship'),
+			...desde(ship.stationModules, 'station')
+		];
 
-		return todos
-			.filter((module, i) => todos.findIndex((otro) => otro.code === module.code) === i)
-			.map((module) => ({
-				code: module.code,
-				name: module.name,
-				tier: `${module.size}${module.tier}`,
-				summary: moduleSummary(module),
-				icon: moduleIcon(module),
-				mounted: module.code === puesto,
-				/** Cuántos llevás sueltos, para saber si te queda repuesto. */
-				spare: ship.cargoModules.filter((code) => code === module.code).length
-			}));
+		// Lo que ya está puesto encabeza la lista aunque no esté en ninguna bodega:
+		// verlo ahí es lo que dice qué hay en la ranura sin abrir otra pantalla.
+		const montado = puesto
+			? [{ module: getModule(puesto), origin: 'fitted' as const, units: 0 }]
+			: [];
+
+		return [...montado, ...guardados].map(({ module, origin, units }) => ({
+			code: module.code,
+			name: module.name,
+			tier: `${module.size}${module.tier}`,
+			summary: moduleSummary(module),
+			icon: moduleIcon(module),
+			origin,
+			units,
+			mounted: origin === 'fitted'
+		}));
 	});
 
 	/**
 	 * Por qué la ranura abierta no tiene nada para montar, si no tiene.
 	 *
 	 * Manda al mercado, que es donde se consigue: "no tenés nada" es una queja,
-	 * "compralo en el mercado" es una instrucción.
+	 * "se compra en el mercado" es una instrucción.
 	 */
 	let nothingAvailable = $derived(
-		hasSelection && options.length === 0
-			? 'No llevás nada que entre en esta ranura. Se compra en el mercado.'
+		hasSelection && options.filter((option) => !option.mounted).length === 0
+			? 'No tenés nada que entre en esta ranura, ni en la nave ni acá. Se compra en el mercado.'
 			: ''
 	);
 
@@ -400,13 +410,14 @@
 					{/if}
 
 					<!--
-						Un renglón por montón. Lo montado va primero y encendido; lo demás
-						es lo que llevás de repuesto y podés poner en su lugar.
+						Un renglón por montón, con **de qué bodega sale**. Lo montado va
+						primero y encendido; lo demás es lo que podés poner en su lugar.
 					-->
-					{#each options as option (option.code)}
+					{#each options as option (`${option.origin}:${option.code}`)}
 						<form method="POST" action="?/montar" use:enhance class="w-full">
 							<input type="hidden" name="ranura" value={selected} />
 							<input type="hidden" name="modulo" value={option.code} />
+							<input type="hidden" name="origen" value={option.origin} />
 							<button
 								type="submit"
 								disabled={!ship.canRefit}
@@ -429,20 +440,39 @@
 										>
 											{option.name}
 										</span>
-										<!--
-											Cuántos llevás sueltos. Es lo que decide si desmontar algo
-											deja la ranura realmente vacía o si tenés con qué reemplazarlo.
-										-->
-										{#if option.spare > 0}
-											<span
-												class="shrink-0 font-mono text-[0.66rem] {option.mounted
-													? 'text-on-accent'
-													: 'text-text-muted'}"
-											>
-												×{option.spare} en bodega
-											</span>
-										{/if}
 										<div class="grow"></div>
+										<!--
+											De qué bodega sale, y cuántos hay ahí. Es la diferencia que
+											importa antes de zarpar: lo de la nave viaja con vos, lo de la
+											estación se queda acá.
+										-->
+										<span
+											class="flex shrink-0 items-center gap-[0.3rem] border px-[0.4rem] py-[0.1rem]
+												{option.mounted
+												? 'border-on-accent/40 text-on-accent'
+												: option.origin === 'ship'
+													? 'border-border-soft text-accent-bright'
+													: 'border-border-soft text-text-muted'}"
+										>
+											<Icon
+												name={option.mounted
+													? 'check'
+													: option.origin === 'ship'
+														? 'package'
+														: 'buildings'}
+												weight="fill"
+												size="0.6rem"
+											/>
+											<span
+												class="font-display text-[0.58rem] font-semibold tracking-label whitespace-nowrap uppercase"
+											>
+												{option.mounted
+													? 'Puesto'
+													: option.origin === 'ship'
+														? `En la nave · ${option.units}`
+														: `En la estación · ${option.units}`}
+											</span>
+										</span>
 										<span
 											class="shrink-0 font-mono text-[0.75rem] {option.mounted
 												? 'text-on-accent'

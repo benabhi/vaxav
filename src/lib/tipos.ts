@@ -230,13 +230,20 @@ export interface Nave {
 	/** Dónde está atracado el piloto y qué módulos tiene ese lugar. */
 	readonly stationName: string;
 	/**
-	 * Los códigos de los módulos que lleva en la bodega.
+	 * Los códigos de los módulos que lleva **en la nave**.
 	 *
-	 * Un módulo que está en la bodega se puede montar en cualquier lado; uno de la
-	 * estación, sólo mientras estés ahí. Sin esto, la lista de lo montable sale
-	 * igual en un puesto de hielo que en un astillero.
+	 * Un montón por código y no una unidad por entrada: son fungibles, así que
+	 * cuál de los tres se monta da igual.
 	 */
 	readonly cargoModules: readonly string[];
+	/**
+	 * Y los que tiene guardados **en esta estación**.
+	 *
+	 * Son las dos bodegas del piloto, y la diferencia importa: lo de la nave viaja
+	 * con vos, lo de la estación hay que venir a buscarlo. Vacío si no está
+	 * atracado.
+	 */
+	readonly stationModules: readonly string[];
 	/** Si puede tocar la nave acá y ahora, y por qué no si no puede. */
 	readonly canRefit: boolean;
 	readonly refitBlocked: string;
@@ -440,6 +447,18 @@ export interface Bodega {
 	/** Cuánto va lleno, de 0 a 100. */
 	readonly percent: number;
 	readonly totalValue: string;
+	/**
+	 * Lo que el piloto tiene guardado **en la estación donde está**, si está en
+	 * una.
+	 *
+	 * Va en la misma pantalla que la bodega de la nave y no en otra: son las dos
+	 * mitades de la misma pregunta —qué tengo y dónde—, y separarlas obligaría a
+	 * ir y volver para compararlas. Sin tope: una estación no cobra por metro
+	 * cúbico todavía.
+	 */
+	readonly stationName: string;
+	readonly stationLines: readonly FilaCarga[];
+	readonly stationValue: string;
 }
 
 /** Un movimiento de la billetera, listo para dibujar. */
