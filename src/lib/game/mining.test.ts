@@ -12,7 +12,6 @@ import {
 	MAX_CYCLES,
 	MIN_CYCLE_PERCENT,
 	MIN_ORDER_SECONDS,
-	REFERENCE_CYCLE_SECONDS,
 	cycleSeconds,
 	planMining,
 	restored,
