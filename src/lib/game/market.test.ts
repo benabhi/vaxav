@@ -13,7 +13,9 @@ import {
 	BASE_SPREAD_PERCENT,
 	MIN_SPREAD_PERCENT,
 	askPrice,
+	askTotal,
 	bidPrice,
+	bidTotal,
 	marketServices,
 	spreadFor
 } from './market';
@@ -102,6 +104,36 @@ describe('los precios', () => {
 		// Una bodega llena de cosas que no se pueden sacar de encima es una bodega
 		// rota, así que el mínimo es un crédito.
 		expect(bidPrice(1, 99)).toBe(1);
+	});
+});
+
+describe('el lote', () => {
+	it('se redondea una vez y no cien', () => {
+		// Cien silicatos a 12 con un 17 % de horquilla: 996, no 100 × 10.
+		expect(bidTotal(12, 100, 17)).toBe(996);
+		expect(bidPrice(12, 17) * 100).toBe(1000);
+	});
+
+	it('deja que el rubro de la corporación se note en el mineral barato', () => {
+		// Es el punto de calcular sobre el lote: por unidad, el 17 % del puerto y
+		// el 14 % de la minera dan los dos 10 créditos, y elegir dónde descargar
+		// dejaría de tener consecuencia justo en el mineral que más se vende.
+		expect(bidPrice(12, 17)).toBe(bidPrice(12, 14));
+		expect(bidTotal(12, 100, 14)).toBeGreaterThan(bidTotal(12, 100, 17));
+	});
+
+	it('nunca paga menos de un crédito por unidad', () => {
+		expect(bidTotal(1, 50, 99)).toBe(50);
+	});
+
+	it('un lote de una unidad es el precio de vitrina', () => {
+		expect(bidTotal(44, 1, 12)).toBe(bidPrice(44, 12));
+		expect(askTotal(44, 1, 12)).toBe(askPrice(44, 12));
+	});
+
+	it('no acepta cantidades negativas', () => {
+		expect(() => bidTotal(12, -1, 20)).toThrow(RangeError);
+		expect(() => askTotal(12, -1, 20)).toThrow(RangeError);
 	});
 });
 

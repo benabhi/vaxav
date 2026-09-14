@@ -147,22 +147,45 @@ export function spreadFor({ itemKind, corporation, hagglingLevel }: SpreadSource
 }
 
 /**
- * Lo que la estación **cobra** por una unidad.
+ * Lo que cuesta un lote entero, con la horquilla aplicada.
  *
- * Redondeo al par y no hacia arriba: es la regla del proyecto para todo número
- * de balance, y acá además evita que la estación se lleve medio crédito de
- * regalo en cada operación.
+ * **El precio se calcula sobre el lote y no por unidad.** No es un detalle de
+ * implementación: con mineral barato, redondear cien veces borra la diferencia
+ * entre una estación y otra —el silicato vale 12, y tanto un 17 % como un 14 %
+ * de horquilla dan 10 créditos la unidad— y el rubro de la corporación deja de
+ * significar nada justo en el mineral que un minero nuevo vende todo el día.
+ * Redondeando una sola vez al final, esos mismos cien silicatos valen 996 o
+ * 1.032 según dónde se descarguen, que es lo que hace que el mapa importe.
+ *
+ * Redondeo al par y no hacia arriba: la regla del proyecto para todo número de
+ * balance.
  */
-export function askPrice(basePrice: number, spreadPercent: number): number {
-	return roundHalfEven((basePrice * (100 + spreadPercent)) / 100);
+export function askTotal(basePrice: number, quantity: number, spreadPercent: number): number {
+	if (quantity < 0) throw new RangeError('Una cantidad no puede ser negativa');
+	return roundHalfEven((basePrice * quantity * (100 + spreadPercent)) / 100);
 }
 
 /**
- * Lo que la estación **paga** por una unidad.
+ * Lo que la estación paga por un lote entero.
  *
- * Nunca menos de un crédito: un ítem que se compra por algo no puede valer cero
- * al venderlo, o la bodega se llena de cosas que no se pueden sacar de encima.
+ * Nunca menos de un crédito por unidad: algo que se compra con plata no puede
+ * valer cero al venderlo, o la bodega se llena de cosas que no hay forma de
+ * sacarse de encima.
  */
+export function bidTotal(basePrice: number, quantity: number, spreadPercent: number): number {
+	if (quantity < 0) throw new RangeError('Una cantidad no puede ser negativa');
+	return Math.max(quantity, roundHalfEven((basePrice * quantity * (100 - spreadPercent)) / 100));
+}
+
+/**
+ * Lo que la estación cobra por una unidad. Es la cifra **de vitrina**: la que se
+ * muestra en la lista, no la que se cobra por un lote.
+ */
+export function askPrice(basePrice: number, spreadPercent: number): number {
+	return askTotal(basePrice, 1, spreadPercent);
+}
+
+/** Lo que la estación paga por una unidad, para mostrar en la lista. */
 export function bidPrice(basePrice: number, spreadPercent: number): number {
-	return Math.max(1, roundHalfEven((basePrice * (100 - spreadPercent)) / 100));
+	return bidTotal(basePrice, 1, spreadPercent);
 }
