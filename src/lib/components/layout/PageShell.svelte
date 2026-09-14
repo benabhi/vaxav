@@ -57,7 +57,7 @@
 				<Wordmark size="text-1" iconSize="0.8rem" />
 				<div class="grow"></div>
 				<p class="font-display text-1 tracking-display text-text-muted uppercase">
-					Proyecto en desarrollo · fase F2
+					Proyecto en desarrollo
 				</p>
 			</div>
 		</Bounded>
