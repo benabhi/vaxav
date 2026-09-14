@@ -1,6 +1,6 @@
 <!--
-	El informe de una acción resuelta: qué se hizo, dónde, cuánto tardó y cuánto
-	dejó en el pozo de su rama.
+	El informe de una acción resuelta: qué se hizo, dónde, cuánto tardó, qué trajo
+	y cuánto dejó en el pozo de su rama.
 
 	Es **la misma pieza en dos lugares**: el aviso que salta al volver y cada fila
 	de la bitácora. Que sea una sola es lo que garantiza que digan exactamente lo
@@ -93,6 +93,38 @@
 					<span class="min-w-0 text-2 text-text-body">{detail.value}</span>
 				</div>
 			{/each}
+		</div>
+	{/if}
+
+	<!--
+		Lo que la acción trajo. Va **antes** de la experiencia porque es lo que el
+		jugador salió a buscar: la experiencia se gana igual, la carga es el motivo
+		del viaje.
+	-->
+	{#if report.loot}
+		{@const carga = report.loot}
+		<div class="flex w-full flex-col gap-2 border-t border-border-soft pt-2">
+			<div class="flex w-full items-center gap-3">
+				<Label>A la bodega</Label>
+				<div class="grow"></div>
+				<span class="font-mono text-[0.72rem] text-data">{carga.value} CR</span>
+			</div>
+
+			<div class="flex w-full flex-wrap items-center gap-2">
+				<Icon name={carga.icon} weight="duotone" size="0.9rem" class="text-accent" />
+				<span
+					class="font-display text-[0.74rem] font-semibold tracking-display text-text-strong uppercase"
+				>
+					{carga.name}
+				</span>
+				<div class="grow"></div>
+				<span class="shrink-0 font-mono text-[0.82rem] whitespace-nowrap text-accent-bright">
+					{thousands(carga.units)} u
+				</span>
+				<span class="shrink-0 font-mono text-[0.7rem] whitespace-nowrap text-text-muted">
+					{carga.volume} m³
+				</span>
+			</div>
 		</div>
 	{/if}
 

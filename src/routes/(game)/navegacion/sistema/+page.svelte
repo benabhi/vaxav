@@ -10,9 +10,9 @@
 -->
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { enhance } from '$app/forms';
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
+	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
@@ -194,21 +194,42 @@
 		>
 			<HoverCard>
 				{#snippet trigger()}
-					<form method="POST" action="?/viajar" use:enhance>
-						<input type="hidden" name="destino" value={body.code} />
-						<HudButton
-							type="submit"
-							variant="outline"
-							size="1"
-							disabled={!canTravel}
-							class="w-[4.5rem] {canTravel ? '' : 'cursor-not-allowed opacity-45'}"
-						>
-							<Icon name="rocket-launch" weight="bold" size="0.75rem" />
-							<span class="overflow-hidden text-[0.7rem] text-ellipsis whitespace-nowrap">
-								{body.travelLabel}
-							</span>
-						</HudButton>
-					</form>
+					<!--
+						Viajar no se ordena de un click: compromete tiempo real y mientras
+						corre no se puede hacer otra cosa. El diálogo dice cuánto cuesta
+						antes de encargarlo.
+					-->
+					<ConfirmAction
+						formAction="?/viajar"
+						title="Viajar a {body.name}"
+						icon="rocket-launch"
+						confirmLabel="Zarpar"
+						disabled={!canTravel}
+						readings={[
+							{ label: 'Distancia', value: body.distance },
+							{ label: 'Duración', value: body.travelLabel }
+						]}
+						note="Mientras dure el viaje no vas a poder dar otra orden."
+					>
+						{#snippet trigger(abrir)}
+							<HudButton
+								type="button"
+								variant="outline"
+								size="1"
+								disabled={!canTravel}
+								onclick={abrir}
+								class="w-[4.5rem] {canTravel ? '' : 'cursor-not-allowed opacity-45'}"
+							>
+								<Icon name="rocket-launch" weight="bold" size="0.75rem" />
+								<span class="overflow-hidden text-[0.7rem] text-ellipsis whitespace-nowrap">
+									{body.travelLabel}
+								</span>
+							</HudButton>
+						{/snippet}
+						{#snippet fields()}
+							<input type="hidden" name="destino" value={body.code} />
+						{/snippet}
+					</ConfirmAction>
 				{/snippet}
 				<FloatingPanel class="px-[0.7rem] py-[0.4rem]">
 					<span

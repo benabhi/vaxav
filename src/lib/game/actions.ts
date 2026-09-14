@@ -42,10 +42,11 @@ export const REFERENCE_SPEED = 190;
  * frene. Cada entrada de acá necesita su resolvedor en
  * `server/services/actions.ts`, y un test lo verifica.
  */
-export const ACTION_KINDS = ['travel'] as const;
+export const ACTION_KINDS = ['travel', 'mine'] as const;
 export type ActionKind = (typeof ACTION_KINDS)[number];
 
 export const TRAVEL_KIND: ActionKind = 'travel';
+export const MINE_KIND: ActionKind = 'mine';
 
 /**
  * La rama a la que viajar le deposita la experiencia.

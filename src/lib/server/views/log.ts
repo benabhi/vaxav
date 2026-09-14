@@ -15,9 +15,19 @@ import type { Db } from '../db/types';
 import { logPage, type LogPage, type PoolDeposit, type XpChange } from '../services/log';
 import { MAX_LEVEL, levelFromXp, levelProgress, xpForLevel } from '$lib/game/progression';
 import { getSkill } from '$lib/game/skills';
-import { remainingLabel, roman, skillFamilyIcon, skillFamilyLabel } from '$lib/format';
-import type { IconName } from '$lib/icons';
-import type { GananciaPozo, GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
+import {
+	actionIcon,
+	actionNoun,
+	cubicMeters,
+	itemIcon,
+	remainingLabel,
+	roman,
+	skillFamilyIcon,
+	skillFamilyLabel,
+	thousands
+} from '$lib/format';
+import { baseValueOf, getItem } from '$lib/game/items';
+import type { GananciaCarga, GananciaPozo, GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
 
 /**
  * El titular de todo informe de acción.
@@ -27,16 +37,6 @@ import type { GananciaPozo, GananciaXp, Informe, PaginaBitacora } from '$lib/tip
  * lo que había pedido?". Qué acción fue lo dice el renglón de abajo.
  */
 const ACTION_TITLE = 'Acción terminada';
-
-/** Cómo se llama cada clase de acción, y con qué se la dibuja. */
-const KINDS: Record<string, { label: string; icon: IconName }> = {
-	travel: { label: 'Viaje', icon: 'rocket-launch' }
-};
-
-/** El nombre y el ícono de una clase de acción, o algo genérico si es nueva. */
-function kindOf(kind: string): { label: string; icon: IconName } {
-	return KINDS[kind] ?? { label: 'Acción', icon: 'clipboard-text' };
-}
 
 /**
  * El depósito que hizo la acción, listo para dibujar.
@@ -121,25 +121,60 @@ function buildLegacyXp(raw: string): GananciaXp[] {
 }
 
 /**
+ * Lo que la acción trajo, listo para dibujar.
+ *
+ * Sale de la columna propia del informe y no de la bodega de hoy: la bitácora es
+ * un registro, y lo que se trajo la semana pasada no cambia porque después se
+ * haya vendido.
+ */
+function buildLoot(raw: string): GananciaCarga | null {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		// Una fila corrupta no puede dejar la bitácora entera sin dibujar.
+		return null;
+	}
+
+	if (!parsed || typeof parsed !== 'object' || !('mined' in parsed)) return null;
+	const mined = (parsed as { mined: { ore?: string; units?: number } }).mined;
+	if (!mined?.ore || !mined.units) return null;
+
+	const item = getItem(mined.ore);
+	return {
+		itemCode: item.code,
+		name: item.name,
+		icon: itemIcon(item),
+		units: mined.units,
+		volume: cubicMeters(item.volumeTenths * mined.units),
+		value: thousands(baseValueOf(item.code, mined.units))
+	};
+}
+
+/**
  * Arma un informe a partir de su fila.
  *
  * Los nombres de los cuerpos llegan ya resueltos: la bitácora es una lista y
  * consultarlos por fila sería una consulta por renglón para nombrar dos lugares.
  */
 function buildEntry(row: PilotLog, names: ReadonlyMap<number, string>): Informe {
-	const { label, icon } = kindOf(row.kind);
+	const label = actionNoun(row.kind);
+	const icon = actionIcon(row.kind);
 	const origin = row.originBodyId === null ? '' : (names.get(row.originBodyId) ?? '');
 	const destination =
 		row.destinationBodyId === null ? '' : (names.get(row.destinationBodyId) ?? '');
 
 	const details: { label: string; value: string }[] = [];
-	if (origin) details.push({ label: 'Salida', value: origin });
+	// "Salida" sólo tiene sentido si se fue a algún lado. Una acción que ocurre
+	// donde estás parado tiene lugar, no origen.
+	if (origin) details.push({ label: destination ? 'Salida' : 'Lugar', value: origin });
 	if (row.durationSeconds) {
 		details.push({ label: 'Duración', value: remainingLabel(row.durationSeconds) });
 	}
 
 	const deposit = buildDeposit(row.xpAwarded);
 	const xp = deposit ? [] : buildLegacyXp(row.xpAwarded);
+	const loot = buildLoot(row.result);
 
 	return {
 		id: row.id,
@@ -151,6 +186,7 @@ function buildEntry(row: PilotLog, names: ReadonlyMap<number, string>): Informe 
 		at: row.createdAt.getTime(),
 		details,
 		deposit,
+		loot,
 		xp,
 		xpTotal: deposit ? deposit.xp : xp.reduce((suma, fila) => suma + fila.xp, 0),
 		unread: row.readAt === null

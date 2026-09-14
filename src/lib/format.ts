@@ -7,12 +7,13 @@
  */
 
 import type { IconName } from '$lib/icons';
+import type { ActionKind } from '$lib/game/actions';
 import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
 import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
-import type { Item, ItemKind } from '$lib/game/items';
+import { getItem, type Item, type ItemKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
-import { startingLevels, type ProfessionCode } from '$lib/game/professions';
+import { startingKit, startingLevels, type ProfessionCode } from '$lib/game/professions';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { getSkill, type SkillFamily } from '$lib/game/skills';
 import {
@@ -43,6 +44,25 @@ export function roman(level: number): string {
 export function skillsSummary(profession: string): string {
 	return Object.entries(startingLevels(profession))
 		.map(([skill, level]) => `${getSkill(skill).name} ${roman(level)}`)
+		.join(' · ');
+}
+
+/**
+ * Con qué equipo sale a volar un oficio, en una línea.
+ *
+ * Va en la pantalla de alta junto a las habilidades: elegir un oficio es elegir
+ * **con qué arrancás**, y hasta ahora sólo se veía la mitad —lo que sabés— y no
+ * la otra —con qué trabajás—. Un minero sin láser es un minero que no puede
+ * minar, y eso tiene que poder leerse antes de elegir.
+ */
+export function kitSummary(profession: string): string {
+	return startingKit(profession)
+		.map((entrada) => {
+			const nombre = getItem(entrada.item).name;
+			const donde = entrada.fitted ? 'montado' : 'en bodega';
+			const cuantos = entrada.quantity > 1 ? ` ×${entrada.quantity}` : '';
+			return `${nombre}${cuantos} (${donde})`;
+		})
 		.join(' · ');
 }
 
@@ -384,6 +404,45 @@ const ITEM_KINDS: Record<ItemKind, string> = {
 	ore: 'Mineral',
 	module: 'Módulo'
 };
+
+/**
+ * Cómo se llama una acción en curso, y con qué se la dibuja.
+ *
+ * Vive acá y no en el motor de acciones por la misma razón que el nombre de una
+ * facción: qué hace una acción es regla, cómo se la cuenta es presentación. El
+ * indicador de la barra de estado y la bitácora leen de la misma tabla, así que
+ * una acción nueva se nombra en un solo lugar.
+ */
+const ACTIONS: Record<ActionKind, { label: string; icon: IconName }> = {
+	travel: { label: 'Viajando', icon: 'rocket-launch' },
+	mine: { label: 'Extrayendo', icon: 'diamond' }
+};
+
+/** El nombre de una acción en curso, o algo genérico si es nueva. */
+export function actionLabel(kind: string): string {
+	return ACTIONS[kind as ActionKind]?.label ?? 'Trabajando';
+}
+
+/** El ícono de una acción, en curso o ya terminada. */
+export function actionIcon(kind: string): IconName {
+	return ACTIONS[kind as ActionKind]?.icon ?? 'clock';
+}
+
+/**
+ * Cómo se nombra una acción **ya terminada**: «Viaje», «Extracción».
+ *
+ * Es el mismo hecho que la etiqueta de arriba pero en otro tiempo verbal:
+ * mientras corre se dice qué estás haciendo, y en la bitácora qué pasó.
+ */
+const ACTION_NOUNS: Record<ActionKind, string> = {
+	travel: 'Viaje',
+	mine: 'Extracción'
+};
+
+/** El nombre de una acción terminada, o algo genérico si es nueva. */
+export function actionNoun(kind: string): string {
+	return ACTION_NOUNS[kind as ActionKind] ?? 'Acción';
+}
 
 /** Un entero grande con separador de miles, como el resto del HUD. */
 export function thousands(value: number): string {

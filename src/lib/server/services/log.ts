@@ -58,6 +58,13 @@ export interface LogEntry {
 	readonly originBodyId: number | null;
 	readonly destinationBodyId: number | null;
 	readonly deposit: PoolDeposit;
+	/**
+	 * Lo que la acción produjo, tal cual lo devolvió su resolvedor.
+	 *
+	 * Va en su propia columna y no adentro de la experiencia: ese campo ya
+	 * arrastra dos formas históricas y no admite una tercera.
+	 */
+	readonly result?: unknown;
 }
 
 /** Una página de la bitácora, con lo que hace falta para dibujar el paginador. */
@@ -85,7 +92,8 @@ export function recordEntry(db: Db, pilotId: number, entry: LogEntry): PilotLog 
 			durationSeconds: entry.durationSeconds,
 			originBodyId: entry.originBodyId,
 			destinationBodyId: entry.destinationBodyId,
-			xpAwarded: JSON.stringify({ pool: entry.deposit })
+			xpAwarded: JSON.stringify({ pool: entry.deposit }),
+			result: JSON.stringify(entry.result ?? {})
 		})
 		.returning()
 		.get();

@@ -1,0 +1,1 @@
+ALTER TABLE `pilot_action` ADD `target_code` text;

@@ -21,10 +21,15 @@
 
 ## Lo que falta
 
-El diagnóstico que ordena todo lo que sigue: el juego tiene las piezas y casi
-ninguna se toca con las demás. De los 25 atributos que calcula una nave, **dos**
-mueven una mecánica; de las 23 habilidades, **trece** no alteran ningún número; la
-bodega es una cifra sin contenido y los créditos no los escribe nadie.
+El diagnóstico que ordenó todo esto: el juego tenía las piezas y casi ninguna se
+tocaba con las demás. De los 25 atributos que calcula una nave, **dos** movían una
+mecánica; de las 23 habilidades, **trece** no alteraban ningún número; la bodega
+era una cifra sin contenido y los créditos no los escribía nadie.
+
+De eso ya se pagó una parte: la bodega tiene contenido, el rendimiento de
+extracción decide cuánto traés, y cuatro habilidades dejaron de ser decorativas.
+Lo que falta es el otro extremo del circuito —vender, comprar, aprender— y ahí es
+donde la plata empieza a existir.
 
 Cerrar el primer circuito completo es lo que convierte eso en un juego: elegir
 minero, viajar al cinturón, minar, volver a una estación, vender, comprar algo
@@ -45,17 +50,22 @@ archivos.
 - ~~La calificación A-E pasa a ser el escalón tecnológico.~~
 - ~~Enderezar la documentación que quedó vieja.~~
 
-### 1 · Ítems, bodega y libro mayor
+### 1 · Ítems, bodega y libro mayor · **hecho**
 
-Contenedores, montones de ítems y los dos libros —créditos e ítems—. Sin esto el
-mineral no tiene dónde caer, y elegir mal la forma del contenedor es lo más caro
-de revertir de todo el plan.
+- ~~Contenedores, montones de ítems y los dos libros —créditos e ítems—.~~
+- ~~La bodega de la nave y la de la estación, con lo que se baja de una ranura.~~
+- ~~El minero sale con su equipo de minería puesto.~~
 
-### 2 · Minar
+### 2 · Minar · **hecho**
 
-Cinturones con contenido y agotamiento compartido que se recupera solo, la acción
-de extraer, y la bodega con capacidad real. Se vuelven mecánicos la bodega, el
-rendimiento de extracción y la estabilidad del acumulador.
+- ~~Cinturones con contenido y agotamiento compartido que se recupera solo.~~
+- ~~La acción de extraer, con la regla del piso de tiempo.~~
+- ~~La bodega con capacidad real, y el informe contando el botín.~~
+- ~~Confirmar antes de encargar una orden.~~
+
+Se volvieron mecánicos la bodega, el rendimiento de extracción y la estabilidad
+del acumulador, y con ellos **Minería, Ingeniería de bodega, Estiba y Gestión de
+energía**.
 
 ### 3 · El mercado de la estación
 
@@ -94,6 +104,12 @@ lo que sólo sale del Cinturón Exterior.
 En orden de valor, no de dificultad: mercado entre pilotos, corporaciones,
 exploración y prospección, drones, combate, y estaciones de jugador. Cada uno
 espera a que el circuito de abajo aguante su peso.
+
+De ésos, el más cercano es **el escáner**: hoy un cinturón revela todo lo que
+tiene apenas llegás, y escanear es lo que convertiría eso en una actividad con
+decisiones propias. Le daría además trabajo a Escaneo, a Prospección y al alcance
+de sensores, que son tres cosas que hoy no mueven ningún número. Ver
+[universo](systems/UNIVERSE.md).
 
 ## Lo que se decide en el camino
 

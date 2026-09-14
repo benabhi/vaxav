@@ -26,7 +26,7 @@
 	import Section from '$lib/components/layout/Section.svelte';
 	import CardTitle from '$lib/components/typography/CardTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
-	import { professionIcon, skillsSummary } from '$lib/format';
+	import { kitSummary, professionIcon, skillsSummary } from '$lib/format';
 	import { FACTION_LIST, GOVERNED_SYSTEMS } from '$lib/game/factions';
 	import { PLAYABLE_PROFESSIONS } from '$lib/game/professions';
 	import { LOGIN_ROUTE } from '$lib/routes';
@@ -157,7 +157,7 @@
 				{#if step === PROFESSION_STEP}
 					<AuthPanel
 						title="El oficio"
-						subtitle="Es a lo que te dedicabas antes de comprarte la nave, y define con qué habilidades arrancás. No te encierra —podés terminar haciendo otra cosa—, sólo que vas a tardar más que quien empezó ahí."
+						subtitle="Es a lo que te dedicabas antes de comprarte la nave: define con qué habilidades arrancás y con qué equipo salís a volar. No te encierra —podés terminar haciendo otra cosa—, sólo que vas a tardar más que quien empezó ahí."
 					>
 						<!--
 							La grilla se achica con la lista: una sola tarjeta metida en una
@@ -170,6 +170,7 @@
 									name={item.name}
 									description={item.description}
 									detail={skillsSummary(item.code)}
+									extra={kitSummary(item.code)}
 									icon={professionIcon(item.code)}
 									selected={profession === item.code}
 									onChoose={() => chooseProfession(item.code)}

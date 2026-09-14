@@ -446,16 +446,28 @@ export const pilotAction = sqliteTable(
 		durationSeconds: integer('duration_seconds').notNull(),
 
 		/**
-		 * Sólo tienen sentido para un viaje; otras acciones —minar, por ejemplo— no
-		 * los van a usar, pero no vale la pena una tabla por tipo de acción todavía
-		 * para uno solo.
+		 * Dónde ocurre la acción, y adónde va si es que va a algún lado.
+		 *
+		 * El destino es **anulable a propósito**: minar y refinar ocurren donde
+		 * estás parado, y una acción que no se mueve tiene que poder decirlo. Es la
+		 * misma forma que ya tiene `pilot_log`, que nació así.
 		 */
 		originBodyId: integer('origin_body_id')
 			.notNull()
 			.references(() => body.id),
-		destinationBodyId: integer('destination_body_id')
-			.notNull()
-			.references(() => body.id)
+		destinationBodyId: integer('destination_body_id').references(() => body.id),
+
+		/**
+		 * Sobre qué trabaja la acción, si trabaja sobre algo.
+		 *
+		 * Minar necesita saber **qué mineral**; refinar y fabricar van a necesitar
+		 * saber qué. Es un código de catálogo y no una clave foránea, igual que el
+		 * casco de una nave: los catálogos son contenido del juego y no filas.
+		 *
+		 * Una columna y no una por acción: son todas la misma pregunta —sobre qué—,
+		 * y una por cada una serían tres columnas vacías en cada fila.
+		 */
+		targetCode: text('target_code')
 	},
 	(table) => [uniqueIndex('pilot_action_pilot_idx').on(table.pilotId)]
 );
@@ -541,7 +553,17 @@ export const pilotLog = sqliteTable(
 		 * Navegación", y una tabla hija obligaría a una consulta por fila para
 		 * dibujar una lista paginada.
 		 */
-		xpAwarded: text('xp_awarded').notNull().default('{}')
+		xpAwarded: text('xp_awarded').notNull().default('{}'),
+
+		/**
+		 * Lo que la acción produjo, como JSON.
+		 *
+		 * Va en su propia columna y no adentro de `xp_awarded`: ese campo ya
+		 * arrastra dos formas históricas, y meterle una tercera obligaría a
+		 * desambiguar por olfato. La bitácora es el relato de la partida; un relato
+		 * que hay que adivinar no sirve.
+		 */
+		result: text('result').notNull().default('{}')
 	},
 	// La bitácora se lee siempre igual: la de este piloto, de lo más nuevo a lo
 	// más viejo. El índice es el que sostiene la paginación.
@@ -618,6 +640,46 @@ export const fittedModuleRelations = relations(fittedModule, ({ one }) => ({
 export const pilotSkillRelations = relations(pilotSkill, ({ one }) => ({
 	pilot: one(pilot, { fields: [pilotSkill.pilotId], references: [pilot.id] })
 }));
+
+/**
+ * Lo que hay en un cinturón y cuánto queda.
+ *
+ * **La reserva es una sola y la comparten todos**: si muchos minan el mismo
+ * cinturón, rinde menos para todos. Eso es lo que convierte al mapa en un lugar
+ * disputado en vez de una lista de destinos, y lo que le da un motivo real a ir
+ * más lejos.
+ *
+ * Se recupera sola con el paso del tiempo, y **la cuenta es perezosa**: se aplica
+ * al mirar el cinturón, no con un proceso recorriendo el universo. Un cinturón
+ * sólo le importa a alguien cuando alguien lo mira. Por eso hace falta
+ * `restoredAt`: dice hasta cuándo se aplicó la recuperación, así llamar dos veces
+ * seguidas no regala mineral.
+ */
+export const beltDeposit = sqliteTable(
+	'belt_deposit',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		/** Un cuerpo de tipo `belt`. */
+		bodyId: integer('body_id')
+			.notNull()
+			.references(() => body.id),
+		/** El código del mineral, del catálogo de `game/items`. */
+		oreCode: text('ore_code').notNull(),
+
+		/** Unidades disponibles ahora mismo. */
+		remaining: integer('remaining').notNull().default(0),
+		/** El tope al que se recupera. */
+		capacity: integer('capacity').notNull().default(0),
+		/** Unidades que se rehacen por hora. */
+		regenPerHour: integer('regen_per_hour').notNull().default(0),
+		/** Hasta cuándo se aplicó la recuperación. */
+		restoredAt: integer('restored_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		uniqueIndex('belt_deposit_unico').on(table.bodyId, table.oreCode),
+		index('belt_deposit_body_idx').on(table.bodyId)
+	]
+);
 
 // --- Lo que se tiene: bodegas, montones y los dos libros ---------------------
 
@@ -789,3 +851,4 @@ export type Container = typeof container.$inferSelect;
 export type ItemStack = typeof itemStack.$inferSelect;
 export type CreditEntry = typeof creditEntry.$inferSelect;
 export type ItemEntry = typeof itemEntry.$inferSelect;
+export type BeltDeposit = typeof beltDeposit.$inferSelect;

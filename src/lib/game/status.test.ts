@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	canGiveOrders,
 	canRefit,
+	isBusy,
 	orderBlockedReason,
 	refitBlockedReason,
 	statusFor
@@ -108,5 +109,33 @@ describe('los motivos', () => {
 			expect(motivo[0]).toBe(motivo[0].toUpperCase());
 			expect(motivo.endsWith('.')).toBe(true);
 		}
+	});
+});
+
+describe('trabajar no es ir en camino', () => {
+	it('una orden que no se mueve deja al piloto donde está', () => {
+		// Minar ocurre en el cinturón; sin esta distinción la pantalla de ubicación
+		// diría que vas viajando y dejaría de describir dónde estás trabajando.
+		expect(statusFor(false, true, false)).toBe('working');
+		expect(statusFor(true, true, false)).toBe('working');
+	});
+
+	it('una orden que se mueve sí', () => {
+		expect(statusFor(false, true, true)).toBe('in_transit');
+		expect(statusFor(true, true, true)).toBe('in_transit');
+	});
+
+	it('las dos impiden dar otra orden', () => {
+		// Una por vez, sin cola, se esté yendo o trabajando.
+		expect(canGiveOrders('working')).toBe(false);
+		expect(canGiveOrders('in_transit')).toBe(false);
+		expect(isBusy('working')).toBe(true);
+		expect(isBusy('docked')).toBe(false);
+	});
+
+	it('y las dos impiden tocar la nave, con motivos distintos', () => {
+		expect(canRefit('working', ['outfitting'])).toBe(false);
+		expect(refitBlockedReason('working', ['outfitting'])).toMatch(/trabajo/);
+		expect(refitBlockedReason('in_transit', ['outfitting'])).toMatch(/viaje/);
 	});
 });

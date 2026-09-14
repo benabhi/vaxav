@@ -21,12 +21,19 @@
 		name: string;
 		description: string;
 		detail: string;
+		/**
+		 * Una segunda línea, cuando una opción se elige por dos cosas distintas.
+		 *
+		 * Un oficio se elige por lo que sabe **y** por con qué sale a volar, y las
+		 * dos tienen que poder leerse antes de decidir.
+		 */
+		extra?: string;
 		selected: boolean;
 		icon?: IconName;
 		onChoose: () => void;
 	}
 
-	let { name, description, detail, selected, icon, onChoose }: Props = $props();
+	let { name, description, detail, extra = '', selected, icon, onChoose }: Props = $props();
 </script>
 
 <button
@@ -50,5 +57,8 @@
 		</div>
 		<BodyText>{description}</BodyText>
 		<p class="font-mono text-1 text-data">{detail}</p>
+		{#if extra}
+			<p class="font-mono text-1 text-accent-dim">{extra}</p>
+		{/if}
 	</div>
 </button>

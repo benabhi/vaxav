@@ -222,6 +222,8 @@ estructuras y entrar por la misma puerta.
   mapa vacío de cien.
 - **Los recursos se agotan y se recuperan.** Un cinturón muy trabajado rinde
   menos por un tiempo: obliga a moverse y genera competencia real entre pilotos.
+  La reserva es **una sola y la comparten todos**, y la recuperación se calcula al
+  mirar el cinturón, sin ningún proceso recorriendo el universo.
 - **Nada es seguro del todo.** La seguridad es un gradiente, no un interruptor:
   cerca de la estación hay vigilancia, en el Cinturón Exterior no hay nadie.
 - **El universo vive en la base de datos**, no en constantes del código: región,
@@ -229,6 +231,28 @@ estructuras y entrar por la misma puerta.
   requiere un despliegue, sólo sembrar de nuevo.
 - **El piloto está parado en un cuerpo**, no en un nombre: su ubicación es una
   clave foránea, así que no puede apuntar a un lugar que no existe.
+
+### Los cinturones, y lo que falta: el escáner
+
+> **Decidido, sin implementar.**
+
+Hoy un cinturón muestra todo lo que tiene apenas llegás: qué minerales hay y
+cuánto queda de cada uno. Es lo mínimo para que minar exista, pero deja afuera lo
+que haría rica la exploración.
+
+Lo que falta es el **escáner**, y con él dos cosas que hoy son gratis:
+
+- **Saber qué hay.** Llegar a un cinturón no debería revelar su composición: eso
+  se escanea. Un cinturón sin escanear muestra que es un cinturón y nada más, y la
+  lectura depende de tus sensores y de **Escaneo**.
+- **Encontrar más.** Un cinturón no es una reserva uniforme: escanear tendría que
+  poder dar con vetas mejores dentro del mismo campo —más cantidad, o mineral que
+  la lectura superficial no ve—, y eso es lo que gobierna **Prospección**.
+
+Es lo que le daría trabajo a dos habilidades que hoy no mueven ningún número, y lo
+que convertiría al alcance de sensores —otro atributo hoy decorativo— en algo que
+se elige al equipar. Y sobre todo: convierte "ir al cinturón" en una actividad con
+decisiones propias en vez de un botón que siempre devuelve lo mismo.
 
 ## Por decidir
 

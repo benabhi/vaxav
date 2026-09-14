@@ -11,6 +11,7 @@ import { body, system as systemTable, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
+import { beltDeposits, miningPlan } from '../services/mining';
 import { activeShip, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
 import {
@@ -23,24 +24,35 @@ import {
 } from '../services/universe';
 import { REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
 import { FACTIONS } from '$lib/game/factions';
+import { baseValueOf, getOre } from '$lib/game/items';
+import { roundHalfEven } from '$lib/game/math';
 import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
 import { SERVICES, type StationServiceKind } from '$lib/game/universe';
 import {
 	bodyKindIcon,
 	bodyKindLabel,
 	corporationKindLabel,
+	cubicMeters,
 	explorationIcon,
 	explorationLabel,
 	governmentLabel,
 	missionKindIcon,
 	missionKindLabel,
+	remainingLabel,
 	roman,
 	securityLabel,
 	serviceIcon,
 	serviceLabel,
 	thousands
 } from '$lib/format';
-import type { BaldosaModulo, FilaAgente, FilaCuerpo, Sistema, Ubicacion } from '$lib/tipos';
+import type {
+	BaldosaModulo,
+	FilaAgente,
+	FilaCuerpo,
+	Sistema,
+	Ubicacion,
+	VetaMineral
+} from '$lib/tipos';
 
 /**
  * La reputación del piloto con cada facción todavía no se guarda: la escriben
@@ -124,7 +136,8 @@ function transit(): Ubicacion {
 		modules: [],
 		moduleCount: '',
 		agents: [],
-		agentCount: ''
+		agentCount: '',
+		ores: []
 	};
 }
 
@@ -149,7 +162,12 @@ function nowhere(): Ubicacion {
  * clase de mentira que hace dudar de todo lo demás.
  */
 export function buildLocationView(db: Db, row: Pilot): Ubicacion {
-	if (situation(db, row).inTransit) return transit();
+	const ahora = situation(db, row);
+	// **Sólo viajar esconde el lugar.** Minar ocurre en el cinturón donde estás:
+	// tapar la pantalla mientras trabajás sería decir que no estás en ningún lado,
+	// que es falso. Lo que sí corresponde es apagar las acciones, y de eso se
+	// encarga el motivo de bloqueo que viaja con cada veta.
+	if (ahora.inTransit) return transit();
 
 	const place = db.select().from(body).where(eq(body.id, row.locationId)).get();
 	const detail = place ? bodyDetail(db, place.code) : null;
@@ -179,7 +197,8 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		modules: isStation ? buildModuleTiles(detail.services) : [],
 		moduleCount: isStation ? `${detail.services.length} de ${Object.keys(SERVICES).length}` : '',
 		agents,
-		agentCount: isStation ? `${abiertos} de ${agents.length}` : ''
+		agentCount: isStation ? `${abiertos} de ${agents.length}` : '',
+		ores: buildOres(db, row, ahora.orderBlocked)
 	};
 }
 
@@ -272,6 +291,41 @@ function uncharted(): Sistema {
 		hasShip: false,
 		actionInProgress: false
 	};
+}
+
+/**
+ * Qué se puede extraer donde está el piloto, con lo que la orden prometería.
+ *
+ * Cada veta trae ya resuelto **cuánto traería y cuánto tardaría con esta nave y
+ * esta bodega**, y no sólo cuánto queda en la roca. Es la diferencia entre un
+ * dato y una decisión: "quedan 48.000 unidades" no dice nada; "traés 225 y tardás
+ * 38 minutos" dice si vale la pena.
+ */
+function buildOres(db: Db, row: Pilot, orderBlocked: string): readonly VetaMineral[] {
+	return beltDeposits(db, row.locationId).map((deposito) => {
+		const ore = getOre(deposito.oreCode);
+		const plan = miningPlan(db, row, deposito.oreCode);
+
+		return {
+			code: ore.code,
+			name: ore.name,
+			description: ore.description,
+			remaining: thousands(deposito.remaining),
+			// Contra su propio tope: es lo que dice si el cinturón está trabajado.
+			share:
+				deposito.capacity > 0
+					? Math.min(100, roundHalfEven((deposito.remaining * 100) / deposito.capacity))
+					: 0,
+			units: plan.units,
+			volume: cubicMeters(plan.units * ore.volumeTenths),
+			value: thousands(baseValueOf(ore.code, plan.units)),
+			duration: remainingLabel(plan.durationSeconds),
+			// El motivo de más arriba gana: con una orden en curso da igual que la
+			// bodega esté vacía, y "ya hay una orden" es lo que el jugador necesita
+			// leer para saber qué hacer.
+			blocked: orderBlocked || plan.blocked
+		};
+	});
 }
 
 /**

@@ -8,6 +8,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { kitSummary } from '$lib/format';
+import { getItem } from './items';
 import {
 	PLAYABLE_PROFESSIONS,
 	PROFESSIONS,
@@ -82,6 +84,38 @@ describe('el catálogo de profesiones', () => {
 
 	it('falla con el nombre si la profesión no existe', () => {
 		expect(() => getProfession('pirata')).toThrow(/pirata/);
+	});
+});
+
+describe('con qué sale a volar', () => {
+	it('el minero trae su láser montado y un repuesto en la caja', () => {
+		const kit = getProfession('miner').kit;
+
+		expect(kit.filter((entrada) => entrada.fitted).map((e) => e.item)).toEqual([
+			'mining_laser_e1',
+			'cargo_rack_e1'
+		]);
+		expect(kit.filter((entrada) => !entrada.fitted).map((e) => e.item)).toEqual([
+			'mining_laser_e1'
+		]);
+	});
+
+	it('el equipo se puede leer en una línea, para la pantalla de alta', () => {
+		// Elegir un oficio es elegir con qué arrancás, y eso tiene que poder leerse
+		// antes de elegir: un minero sin láser es un minero que no puede minar.
+		const linea = kitSummary('miner');
+
+		expect(linea).toContain('Láser de extracción (montado)');
+		expect(linea).toContain('Láser de extracción (en bodega)');
+	});
+
+	it('todo lo del kit existe en el catálogo de ítems', () => {
+		// Un kit que nombra algo inexistente revienta recién al crear un piloto.
+		for (const profession of Object.values(PROFESSIONS)) {
+			for (const entrada of profession.kit) {
+				expect(() => getItem(entrada.item), `${profession.code}: ${entrada.item}`).not.toThrow();
+			}
+		}
 	});
 });
 
