@@ -25,12 +25,36 @@ export interface SkillGrant {
 	readonly level: number;
 }
 
+/** Algo con lo que la profesión te manda a volar. */
+export interface KitEntry {
+	/** El código del catálogo de `game/items`. */
+	readonly item: string;
+	readonly quantity: number;
+	/**
+	 * Si sale **montado** en la nave o guardado en la bodega.
+	 *
+	 * El oficio dice qué trae, no en qué ranura: la ranura depende del casco, y un
+	 * día el minero va a salir en otra nave.
+	 */
+	readonly fitted: boolean;
+}
+
 /** El oficio que tenía el piloto antes de comprarse una nave. */
 export interface Profession {
 	readonly code: string;
 	readonly name: string;
 	readonly description: string;
 	readonly grants: readonly SkillGrant[];
+	/**
+	 * Con qué sale a volar, además de la nave.
+	 *
+	 * **Es otra moneda que la experiencia**: no toca el presupuesto de 1.000
+	 * puntos ni el test que lo verifica. Un oficio te deja lo que sabés y también
+	 * las herramientas con las que trabajabas, y sin herramientas el primer día es
+	 * mirar el espacio.
+	 */
+	readonly kit: readonly KitEntry[];
+
 	/**
 	 * Si se puede elegir en el alta.
 	 *
@@ -58,6 +82,23 @@ const CATALOG = [
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'mechanics', level: 1 }
 		],
+		// Lo justo para trabajar y nada más: el láser puesto, una bodega chica y
+		// un láser de repuesto en la caja. Alguien que trabajó en los anillos
+		// hasta juntar para su nave le monta lo que sabe usar, pero no le sobra
+		// para llenar las ranuras —y que sobren es media gracia del juego, porque
+		// la ranura vacía es la que hace pensar—.
+		//
+		// El repuesto no es adorno: un láser es lo primero que se rompe y lo
+		// primero que se mejora, y tenerlo en bodega enseña que la bodega también
+		// sirve para eso.
+		//
+		// Sin armas: no es su oficio, y una nave que sale artillada sugiere que
+		// pelear es el plan.
+		kit: [
+			{ item: 'mining_laser_e1', quantity: 1, fitted: true },
+			{ item: 'cargo_rack_e1', quantity: 1, fitted: true },
+			{ item: 'mining_laser_e1', quantity: 1, fitted: false }
+		],
 		playable: true
 	},
 	{
@@ -69,6 +110,7 @@ const CATALOG = [
 			{ skill: 'shuttle_handling', level: 2 },
 			{ skill: 'scanning', level: 1 }
 		],
+		kit: [],
 		playable: false
 	},
 	{
@@ -81,6 +123,7 @@ const CATALOG = [
 			{ skill: 'haggling', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
 		],
+		kit: [],
 		playable: false
 	},
 	{
@@ -95,6 +138,7 @@ const CATALOG = [
 			{ skill: 'mechanics', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
 		],
+		kit: [],
 		playable: false
 	},
 	{
@@ -107,6 +151,7 @@ const CATALOG = [
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
 		],
+		kit: [],
 		playable: false
 	},
 	{
@@ -121,6 +166,7 @@ const CATALOG = [
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
 		],
+		kit: [],
 		playable: false
 	}
 ] as const satisfies readonly Profession[];
@@ -175,6 +221,11 @@ export function startingXp(code: string): Record<string, number> {
 	return Object.fromEntries(
 		getProfession(code).grants.map((grant) => [grant.skill, grantCost(grant)])
 	);
+}
+
+/** Con qué manda a volar la profesión: lo montado y lo guardado. */
+export function startingKit(code: string): readonly KitEntry[] {
+	return getProfession(code).kit;
 }
 
 /** Niveles iniciales por habilidad para un piloto de esta profesión. */

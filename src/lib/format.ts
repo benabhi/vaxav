@@ -10,7 +10,8 @@ import type { IconName } from '$lib/icons';
 import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
 import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
-import type { ShipModule } from '$lib/game/modules';
+import type { Item, ItemKind } from '$lib/game/items';
+import { getModule, type ShipModule } from '$lib/game/modules';
 import { startingLevels, type ProfessionCode } from '$lib/game/professions';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { getSkill, type SkillFamily } from '$lib/game/skills';
@@ -351,6 +352,38 @@ export function damageTypeShort(damageType: DamageType): string {
 export function tenths(value: number): string {
 	return `${Math.floor(value / 10)},${Math.abs(value) % 10}`;
 }
+
+/**
+ * Un volumen guardado en décimas de m³, escrito con su coma.
+ *
+ * Siempre con un decimal, aunque sea cero: en una columna de cifras, "30" y
+ * "30,4" alineados uno debajo del otro se leen como dos escalas distintas.
+ */
+export function cubicMeters(tenthsOfCubicMeter: number): string {
+	const entero = Math.trunc(tenthsOfCubicMeter / 10);
+	return `${thousands(entero)},${Math.abs(tenthsOfCubicMeter) % 10}`;
+}
+
+/**
+ * Con qué se dibuja un ítem de la bodega.
+ *
+ * Un módulo guardado usa **el mismo ícono que montado**: es la misma pieza, y
+ * cambiarle el dibujo según dónde esté obligaría a aprender dos veces lo mismo.
+ */
+export function itemIcon(item: Pick<Item, 'code' | 'kind'>): IconName {
+	if (item.kind === 'module') return moduleIcon(getModule(item.code));
+	return 'diamond';
+}
+
+/** Cómo se llama una clase de ítem en pantalla. */
+export function itemKindLabel(kind: ItemKind): string {
+	return ITEM_KINDS[kind];
+}
+
+const ITEM_KINDS: Record<ItemKind, string> = {
+	ore: 'Mineral',
+	module: 'Módulo'
+};
 
 /** Un entero grande con separador de miles, como el resto del HUD. */
 export function thousands(value: number): string {

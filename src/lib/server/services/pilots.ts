@@ -11,9 +11,12 @@ import { count, eq, sql } from 'drizzle-orm';
 import { pilot, pilotSkill, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
-import { getProfession, startingXp } from '$lib/game/professions';
+import { placeInFreeSlot } from '$lib/game/fitting';
+import { getModule } from '$lib/game/modules';
+import { getProfession, startingKit, startingXp } from '$lib/game/professions';
 import { hashPassword, needsRehash, verifyPassword } from './passwords';
-import { createStarterShip } from './ships';
+import { moveItem, shipContainer } from './containers';
+import { createStarterShip, saveFit, shipFit, shipHull } from './ships';
 import { UniverseError, requireStation } from './universe';
 
 export const CALLSIGN_MIN_LENGTH = 3;
@@ -206,7 +209,37 @@ export async function createPilot(
 
 		// Y su nave. Un piloto sin nave no puede hacer nada: sería un piloto a
 		// medias, que es justo lo que este servicio se propuso no dejar existir.
-		createStarterShip(tx, created.id);
+		const nave = createStarterShip(tx, created.id);
+
+		// Con lo que le dio el oficio. Va acá y no en `ships` porque es contenido de
+		// la profesión, y la nave no tiene por qué saber de oficios.
+		//
+		// Lo montado se monta y lo demás va a la bodega: un minero sale con su
+		// equipo armado, no con las piezas en una caja. En qué ranura entra cada
+		// cosa lo decide el casco, no el oficio.
+		const bodega = shipContainer(tx, nave.id);
+		const hull = shipHull(nave);
+		let codes = shipFit(tx, nave).map((module) => module.code);
+
+		for (const entrada of startingKit(chosenProfession.code)) {
+			if (!entrada.fitted) {
+				moveItem(tx, bodega.id, entrada.item, entrada.quantity, 'granted');
+				continue;
+			}
+
+			for (let puestos = 0; puestos < entrada.quantity; puestos++) {
+				const conEso = placeInFreeSlot(hull, codes, getModule(entrada.item));
+				// Si no entra, va a la bodega en vez de perderse. Un casco sin ranura
+				// libre es un problema de balance del kit, no del piloto que se anota.
+				if (conEso === null) {
+					moveItem(tx, bodega.id, entrada.item, 1, 'granted');
+					continue;
+				}
+				codes = conEso;
+			}
+		}
+
+		saveFit(tx, nave, codes);
 
 		return created;
 	});

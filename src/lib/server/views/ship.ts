@@ -10,9 +10,11 @@
 
 import type { Pilot } from '../db/schema';
 import type { Db } from '../db/types';
+import { shipContainer, stacks, stationContainer } from '../services/containers';
 import { activeShip, pilotSkillLevels, shipFit } from '../services/ships';
 import { situation } from '../services/status';
 import { STARTING_HULL } from '$lib/game/hulls';
+import { getItem } from '$lib/game/items';
 import type { Nave } from '$lib/tipos';
 
 /**
@@ -26,10 +28,18 @@ function noShip(): Nave {
 		fitted: [],
 		pilotLevels: {},
 		stationName: '',
-		stationServices: [],
+		cargoModules: [],
+		stationModules: [],
 		canRefit: false,
 		refitBlocked: ''
 	};
+}
+
+/** Los códigos de los módulos que hay en una bodega, uno por montón. */
+function moduleCodes(db: Db, containerId: number): string[] {
+	return stacks(db, containerId)
+		.filter((stack) => getItem(stack.itemCode).kind === 'module')
+		.map((stack) => stack.itemCode);
 }
 
 /** Todo lo que la pestaña Ficha necesita de la base, en una sola pasada. */
@@ -48,7 +58,12 @@ export function buildShipView(db: Db, row: Pilot): Nave {
 		fitted: shipFit(db, ship).map((module) => module.code),
 		pilotLevels: pilotSkillLevels(db, row.id),
 		stationName: ahora.place,
-		stationServices: [...ahora.services],
+		// Sólo los módulos: el mineral de una bodega no se monta en una ranura.
+		cargoModules: moduleCodes(db, shipContainer(db, ship.id).id),
+		stationModules:
+			ahora.stationId === null
+				? []
+				: moduleCodes(db, stationContainer(db, row.id, ahora.stationId).id),
 		canRefit: ahora.canRefit,
 		refitBlocked: ahora.refitBlocked
 	};

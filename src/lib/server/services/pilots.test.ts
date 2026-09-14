@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { body } from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
+import { itemHistory, quantityOf, shipContainer } from './containers';
+import { activeShip, shipFit, shipReadout } from './ships';
 import { getFaction } from '$lib/game/factions';
 import { startingLevels, startingXp } from '$lib/game/professions';
 import { levelFromXp } from '$lib/game/progression';
@@ -222,5 +224,73 @@ describe('las profesiones que todavía no se ofrecen', () => {
 		await expect(
 			createPilot(db, 'Cuervo', 'cuervo@ejemplo.com', 'contrasena-larga', 'explorer', 'dominion')
 		).rejects.toThrow(PilotError);
+	});
+});
+
+describe('con qué manda a volar el oficio', () => {
+	it('el minero sale con su equipo de minería puesto', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		const montado = shipFit(db, nave).map((module) => module.code);
+
+		// Sin herramienta, el primer día de un minero es mirar el espacio. Y
+		// puesta, no en una caja: alguien que trabajó en los anillos hasta juntar
+		// para su nave le monta lo que sabe usar.
+		expect(montado).toContain('mining_laser_e1');
+		expect(montado).toContain('cargo_rack_e1');
+	});
+
+	it('con lo justo: le quedan ranuras libres', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		// Que sobren ranuras es media gracia del juego: la vacía es la que hace
+		// pensar. Un kit que llena la nave no deja nada que decidir.
+		const libres = shipFit(db, nave).filter((module) => module.code === '');
+		expect(libres.length).toBeGreaterThan(0);
+	});
+
+	it('y con un repuesto en la bodega', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const bodega = shipContainer(db, activeShip(db, piloto.id)!.id);
+
+		// Un láser es lo primero que se rompe y lo primero que se mejora.
+		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(1);
+	});
+
+	it('y sin nada de combate', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		// Una nave que sale artillada sugiere que pelear es el plan, y no lo es.
+		const armas = shipFit(db, nave).filter(
+			(module) => module.kinetic + module.ionic + module.thermal > 0
+		);
+		expect(armas).toEqual([]);
+	});
+
+	it('la nave que arma el oficio se puede volar', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		// Un kit que deja la nave en tierra es peor que no dar nada.
+		expect(shipReadout(db, piloto)!.flyable).toBe(true);
+	});
+
+	it('todo lo del oficio queda asentado, hasta lo regalado', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const bodega = shipContainer(db, activeShip(db, piloto.id)!.id);
+
+		// Una unidad que aparece sin asiento es una unidad que después nadie puede
+		// explicar, y da igual que la haya puesto el juego.
+		const libro = itemHistory(db, bodega.id);
+		expect(libro).toHaveLength(1);
+		expect(libro[0].kind).toBe('granted');
 	});
 });

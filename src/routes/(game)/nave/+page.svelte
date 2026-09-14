@@ -40,8 +40,8 @@
 	import { buildReadout, maxedSkills } from '$lib/game/fitting';
 	import { SLOT_KINDS, getHull } from '$lib/game/hulls';
 	import { availableForSlot } from '$lib/game/inventory';
+	import { getModule } from '$lib/game/modules';
 	import { getSkill } from '$lib/game/skills';
-	import type { StationServiceKind } from '$lib/game/universe';
 	import { buildRingSlots, buildSlotGroups, fittedModules, moduleSummary } from '$lib/rig';
 	import type { PageProps } from './$types';
 
@@ -87,41 +87,61 @@
 	);
 
 	/**
-	 * Qué se le puede montar a la ranura abierta, y de dónde sale.
+	 * Qué se le puede montar a la ranura abierta: **lo que tenés, y dónde está**.
 	 *
-	 * Sólo lo que está en la bodega o en la estación donde está el piloto: un
-	 * módulo que no está en ningún lado no se puede montar, y ofrecerlo sería
-	 * mentir. La bodega va vacía hasta que exista el hangar.
+	 * Son dos bodegas distintas y la diferencia importa: lo de la nave viaja con
+	 * vos, lo de la estación hay que venir a buscarlo. Por eso cada renglón dice
+	 * de cuál sale, y el mismo módulo en las dos aparece dos veces —son dos cosas
+	 * distintas de las que echar mano—.
+	 *
+	 * La estación no *vende* nada acá: comprar es del mercado, que es donde van a
+	 * estar la búsqueda y los filtros el día que haya cientos de módulos.
 	 */
-	let options = $derived(
-		slotSpec
-			? availableForSlot(
-					slotSpec.kind,
-					slotSpec.size,
-					slotSpec.core,
-					ship.stationServices as StationServiceKind[]
-				).map((disponible) => ({
-					code: disponible.module.code,
-					name: disponible.module.name,
-					tier: `${disponible.module.size}${disponible.module.tier}`,
-					summary: moduleSummary(disponible.module),
-					icon: moduleIcon(disponible.module),
-					mounted: disponible.module.code === ship.fitted[selected],
-					source: disponible.source === 'cargo' ? 'En la bodega' : 'En la estación',
-					sourceIcon: disponible.source === 'cargo' ? ('package' as const) : ('buildings' as const)
-				}))
-			: []
-	);
+	let options = $derived.by(() => {
+		if (!slotSpec) return [];
+
+		const puesto = ship.fitted[selected] ?? '';
+		const desde = (codes: readonly string[], origin: 'ship' | 'station') =>
+			availableForSlot(slotSpec.kind, slotSpec.size, slotSpec.core, codes.map(getModule)).map(
+				(module) => ({
+					module,
+					origin,
+					units: codes.filter((code) => code === module.code).length
+				})
+			);
+
+		const guardados = [
+			...desde(ship.cargoModules, 'ship'),
+			...desde(ship.stationModules, 'station')
+		];
+
+		// Lo que ya está puesto encabeza la lista aunque no esté en ninguna bodega:
+		// verlo ahí es lo que dice qué hay en la ranura sin abrir otra pantalla.
+		const montado = puesto
+			? [{ module: getModule(puesto), origin: 'fitted' as const, units: 0 }]
+			: [];
+
+		return [...montado, ...guardados].map(({ module, origin, units }) => ({
+			code: module.code,
+			name: module.name,
+			tier: `${module.size}${module.tier}`,
+			summary: moduleSummary(module),
+			icon: moduleIcon(module),
+			origin,
+			units,
+			mounted: origin === 'fitted'
+		}));
+	});
 
 	/**
 	 * Por qué la ranura abierta no tiene nada para montar, si no tiene.
 	 *
-	 * Nombra el lugar: "acá no hay nada" es una queja, "no hay nada en Planta
-	 * Escarcha" es una instrucción para ir a otro lado.
+	 * Manda al mercado, que es donde se consigue: "no tenés nada" es una queja,
+	 * "se compra en el mercado" es una instrucción.
 	 */
 	let nothingAvailable = $derived(
-		hasSelection && options.length === 0
-			? `Nada para esta ranura en ${ship.stationName || 'este lugar'}.`
+		hasSelection && options.filter((option) => !option.mounted).length === 0
+			? 'No tenés nada que entre en esta ranura, ni en la nave ni acá. Se compra en el mercado.'
 			: ''
 	);
 
@@ -330,9 +350,15 @@
 			</div>
 		</Panel>
 
-		<!-- El banco de trabajo: qué se le puede montar a la ranura abierta. -->
+		<!--
+			Qué se le puede montar a la ranura abierta.
+			**No es un taller**: acá no se fabrica nada, se monta y se desmonta. Es el
+			mismo servicio de Equipamiento que ofrece la estación, y por eso se llama
+			igual. Fabricar se hace en el Taller, que es otro módulo de estación y se
+			entra desde Ubicación.
+		-->
 		{#if hasSelection}
-			<TitledPanel title="Banco de trabajo" detail={selectedTitle} class="w-full">
+			<TitledPanel title="Equipamiento" detail={selectedTitle} class="w-full">
 				<div class="flex w-full flex-col gap-2">
 					<!--
 						Por qué no se puede tocar la nave, si no se puede. Un banco de
@@ -383,10 +409,15 @@
 						<p class="text-1 text-warning">{nothingAvailable}</p>
 					{/if}
 
-					{#each options as option (option.code)}
+					<!--
+						Un renglón por montón, con **de qué bodega sale**. Lo montado va
+						primero y encendido; lo demás es lo que podés poner en su lugar.
+					-->
+					{#each options as option (`${option.origin}:${option.code}`)}
 						<form method="POST" action="?/montar" use:enhance class="w-full">
 							<input type="hidden" name="ranura" value={selected} />
 							<input type="hidden" name="modulo" value={option.code} />
+							<input type="hidden" name="origen" value={option.origin} />
 							<button
 								type="submit"
 								disabled={!ship.canRefit}
@@ -394,7 +425,7 @@
 									transition-[background-color,color] disabled:cursor-not-allowed disabled:opacity-45
 									{option.mounted
 									? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
-									: 'border-l-border-soft bg-surface text-text-strong hover:bg-surface-hover'}"
+									: 'border-l-accent-dim bg-surface text-text-strong hover:bg-surface-hover'}"
 							>
 								<div class="flex w-full flex-col items-start gap-1">
 									<div class="flex w-full items-center gap-2">
@@ -410,6 +441,38 @@
 											{option.name}
 										</span>
 										<div class="grow"></div>
+										<!--
+											De qué bodega sale, y cuántos hay ahí. Es la diferencia que
+											importa antes de zarpar: lo de la nave viaja con vos, lo de la
+											estación se queda acá.
+										-->
+										<span
+											class="flex shrink-0 items-center gap-[0.3rem] border px-[0.4rem] py-[0.1rem]
+												{option.mounted
+												? 'border-on-accent/40 text-on-accent'
+												: option.origin === 'ship'
+													? 'border-border-soft text-accent-bright'
+													: 'border-border-soft text-text-muted'}"
+										>
+											<Icon
+												name={option.mounted
+													? 'check'
+													: option.origin === 'ship'
+														? 'package'
+														: 'buildings'}
+												weight="fill"
+												size="0.6rem"
+											/>
+											<span
+												class="font-display text-[0.58rem] font-semibold tracking-label whitespace-nowrap uppercase"
+											>
+												{option.mounted
+													? 'Puesto'
+													: option.origin === 'ship'
+														? `En la nave · ${option.units}`
+														: `En la estación · ${option.units}`}
+											</span>
+										</span>
 										<span
 											class="shrink-0 font-mono text-[0.75rem] {option.mounted
 												? 'text-on-accent'
@@ -424,22 +487,6 @@
 											: 'text-text-muted'}"
 									>
 										{option.summary}
-									</span>
-									<!--
-										De dónde sale. Un módulo que no está en ningún lado no se
-										puede montar, así que decir dónde está es parte de ofrecerlo.
-									-->
-									<span
-										class="flex items-center gap-[0.3rem] {option.mounted
-											? 'text-on-accent'
-											: 'text-accent-dim'}"
-									>
-										<Icon name={option.sourceIcon} weight="fill" size="0.7rem" />
-										<span
-											class="font-display text-[0.6rem] font-semibold tracking-label whitespace-nowrap uppercase"
-										>
-											{option.source}
-										</span>
 									</span>
 								</div>
 							</button>

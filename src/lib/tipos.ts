@@ -229,7 +229,21 @@ export interface Nave {
 	readonly pilotLevels: Readonly<Record<string, number>>;
 	/** Dónde está atracado el piloto y qué módulos tiene ese lugar. */
 	readonly stationName: string;
-	readonly stationServices: readonly string[];
+	/**
+	 * Los códigos de los módulos que lleva **en la nave**.
+	 *
+	 * Un montón por código y no una unidad por entrada: son fungibles, así que
+	 * cuál de los tres se monta da igual.
+	 */
+	readonly cargoModules: readonly string[];
+	/**
+	 * Y los que tiene guardados **en esta estación**.
+	 *
+	 * Son las dos bodegas del piloto, y la diferencia importa: lo de la nave viaja
+	 * con vos, lo de la estación hay que venir a buscarlo. Vacío si no está
+	 * atracado.
+	 */
+	readonly stationModules: readonly string[];
 	/** Si puede tocar la nave acá y ahora, y por qué no si no puede. */
 	readonly canRefit: boolean;
 	readonly refitBlocked: string;
@@ -400,5 +414,71 @@ export interface Arbol {
 	readonly skills: readonly FilaArbol[];
 	/** Cuántas tiene empezadas, de cuántas hay. */
 	readonly trained: number;
+	readonly total: number;
+}
+
+/** Una línea de la bodega: un montón de algo, con lo que ocupa y lo que vale. */
+export interface FilaCarga {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	readonly quantity: number;
+	/** Lo que ocupa este montón, ya escrito en metros cúbicos. */
+	readonly volume: string;
+	/** Cuánto pesa sobre lo ocupado, de 0 a 100. Es lo que dibuja la barra. */
+	readonly share: number;
+	/** Lo que valdría a precio de referencia, para saber si vale el viaje. */
+	readonly value: string;
+}
+
+/**
+ * La bodega de la nave, lista para dibujar.
+ *
+ * Lleva lo ocupado **y** el tope porque la pregunta de una bodega nunca es
+ * cuánto llevás: es cuánto más entra.
+ */
+export interface Bodega {
+	readonly shipName: string;
+	readonly lines: readonly FilaCarga[];
+	readonly used: string;
+	readonly capacity: string;
+	readonly free: string;
+	/** Cuánto va lleno, de 0 a 100. */
+	readonly percent: number;
+	readonly totalValue: string;
+	/**
+	 * Lo que el piloto tiene guardado **en la estación donde está**, si está en
+	 * una.
+	 *
+	 * Va en la misma pantalla que la bodega de la nave y no en otra: son las dos
+	 * mitades de la misma pregunta —qué tengo y dónde—, y separarlas obligaría a
+	 * ir y volver para compararlas. Sin tope: una estación no cobra por metro
+	 * cúbico todavía.
+	 */
+	readonly stationName: string;
+	readonly stationLines: readonly FilaCarga[];
+	readonly stationValue: string;
+}
+
+/** Un movimiento de la billetera, listo para dibujar. */
+export interface MovimientoBilletera {
+	readonly id: number;
+	readonly at: number;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	/** Con su signo y su unidad: "+480 CR", "−1.200 CR". */
+	readonly amount: string;
+	readonly incoming: boolean;
+	/** El saldo con el que quedó, que es lo que hace auditable el libro. */
+	readonly balanceAfter: string;
+	readonly memo: string;
+	readonly place: string;
+}
+
+/** La billetera del piloto: el saldo y el libro que lo explica. */
+export interface Billetera {
+	readonly balance: string;
+	readonly entries: readonly MovimientoBilletera[];
 	readonly total: number;
 }

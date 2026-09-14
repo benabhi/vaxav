@@ -469,33 +469,53 @@ body {
 	0%,
 	100% {
 		border-color: var(--color-data);
-		box-shadow: var(--shadow-data-glow);
 	}
 	50% {
-		border-color: rgb(79 210 238 / 0.25);
-		box-shadow: none;
+		border-color: rgb(79 210 238 / 0.3);
 	}
 }
 
+/*
+ * El halo entra desde el borde que avisa y se apaga enseguida. Es un **degradado
+ * de un solo lado** y no una sombra interior: una sombra con desenfoque pinta los
+ * cuatro bordes por poco que se la empuje, y eso dibuja el rectángulo del botón
+ * —justo lo que no queremos, porque el contorno recto y apagado es medio lenguaje
+ * del HUD—. Un degradado no puede hacer eso: nace en un borde y muere antes de
+ * llegar a la mitad.
+ *
+ * El halo **no titila, titila el borde**. Pulsar también el relleno convierte un
+ * aviso discreto en una baliza, y lo que tiene que llamar la atención es la línea
+ * de color, no la baldosa entera.
+ */
 .aviso-izquierda {
 	border-left-color: var(--color-data);
+	background-image: linear-gradient(to right, rgb(79 210 238 / 0.13), transparent 42%);
 	animation: vaxav-aviso 1.4s ease-in-out infinite;
 }
 
 .aviso-abajo {
 	border-bottom-color: var(--color-data);
+	background-image: linear-gradient(to top, rgb(79 210 238 / 0.13), transparent 42%);
 	animation: vaxav-aviso 1.4s ease-in-out infinite;
 }
 
 /*
+ * El mismo halo en un panel, sin titileo: una lista con filas que parpadean es
+ * ruido, y ahí el cian ya alcanza para distinguir lo que no se leyó.
+ */
+.aviso-panel {
+	background-image: linear-gradient(to right, rgb(79 210 238 / 0.1), transparent 28%);
+}
+
+/*
  * Quien pidió menos movimiento igual tiene que enterarse: se apaga el titileo y
- * queda el borde encendido, que es la mitad de la señal y la que importa.
+ * queda el borde encendido con su halo, que es la mitad de la señal y la que
+ * importa.
  */
 @media (prefers-reduced-motion: reduce) {
 	.aviso-izquierda,
 	.aviso-abajo {
 		animation: none;
-		box-shadow: var(--shadow-data-glow);
 	}
 }
 

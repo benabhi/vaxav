@@ -22,9 +22,11 @@ import {
 	type SkillLevels
 } from '$lib/game/fitting';
 import { STARTING_HULL, getHull, type Hull } from '$lib/game/hulls';
-import type { ShipModule } from '$lib/game/modules';
+import { capacityTenths, type ContainerKind } from '$lib/game/items';
+import { getModule, type ShipModule } from '$lib/game/modules';
 import { levelFromXp } from '$lib/game/progression';
 import { SKILLS, type SkillCode } from '$lib/game/skills';
+import { moveItem, quantityOf, shipContainer, stationContainer, usedVolume } from './containers';
 import { situation } from './status';
 
 /** La nave no está donde debería. El mensaje se le muestra al jugador. */
@@ -168,18 +170,92 @@ export function ensureEveryPilotHasAShip(db: Db): number {
 }
 
 /**
+ * Qué ranuras cambiaron entre dos configuraciones.
+ *
+ * Devuelve por separado lo que se baja y lo que se sube, que es lo que hace
+ * falta para mover la carga. Un módulo que se queda donde estaba no aparece: no
+ * pasó por la bodega, así que no tiene por qué dejar asiento.
+ */
+function fitChanges(
+	before: readonly string[],
+	after: readonly string[]
+): { removed: string[]; added: string[] } {
+	const removed: string[] = [];
+	const added: string[] = [];
+
+	for (let index = 0; index < after.length; index++) {
+		const antes = before[index] ?? '';
+		const despues = after[index];
+		if (antes === despues) continue;
+		if (antes !== '') removed.push(antes);
+		if (despues !== '') added.push(despues);
+	}
+
+	return { removed, added };
+}
+
+/**
  * Cambia la configuración de la nave del piloto, si es que puede.
  *
  * Es la puerta con llave; `saveFit` es la escritura cruda, que usan la siembra y
- * las pruebas. La interfaz ya apaga el banco de trabajo cuando no se puede, pero
+ * las pruebas. La interfaz ya apaga el equipamiento cuando no se puede, pero
  * **el servicio no confía sólo en eso**: nadie más que él escribe en la base.
+ *
+ * **Lo que se baja queda en la estación**, como el hangar de EVE. Es la única
+ * regla que se explica sola: equipar sólo se puede estando atracado, así que lo
+ * que sale de una ranura sale ahí y no hay que preguntarse si entra en la nave.
+ * Para llevárselo, se sube a la bodega desde la pantalla de carga.
+ *
+ * Lo que se monta sale de donde diga `from`, porque la pantalla muestra las dos
+ * bodegas por separado y el jugador eligió una. Tomar de la otra sería hacerle
+ * algo distinto de lo que pidió.
+ *
+ * Todo pasa en una transacción con la escritura del equipamiento: una bodega que
+ * recibe un módulo que la nave todavía tiene puesto es un módulo duplicado.
  */
-export function refit(db: Db, row: Pilot, codes: readonly string[]): void {
+export function refit(
+	db: Db,
+	row: Pilot,
+	codes: readonly string[],
+	from: ContainerKind = 'ship'
+): void {
 	const now = situation(db, row);
 	if (!now.canRefit) throw new ShipError(now.refitBlocked);
+	if (now.stationId === null) throw new ShipError('Hay que estar atracado para equipar.');
 
 	const found = activeShip(db, row.id);
 	if (!found) throw new ShipError('No tenés ninguna nave.');
 
-	saveFit(db, found, codes);
+	const hull = shipHull(found);
+	const stationId = now.stationId;
+
+	db.transaction((tx) => {
+		const before = shipFit(tx, found).map((module) => module.code);
+		const { removed, added } = fitChanges(before, codes);
+
+		const bodega = shipContainer(tx, found.id);
+		const hangar = stationContainer(tx, row.id, stationId);
+		const origen = from === 'ship' ? bodega : hangar;
+
+		for (const code of added) {
+			if (quantityOf(tx, origen.id, code) < 1) {
+				throw new ShipError(`No tenés ${getModule(code).name} en esa bodega.`);
+			}
+			moveItem(tx, origen.id, code, -1, 'fitted');
+		}
+		for (const code of removed) {
+			moveItem(tx, hangar.id, code, 1, 'unfitted');
+		}
+
+		// La capacidad que va a tener **después**: bajar una bodega adicional
+		// achica el lugar sin sacar nada de adentro, así que la carga que ya
+		// llevabas podría dejar de entrar.
+		const skills = pilotSkillLevels(tx, row.id);
+		const despues = buildReadout(hull, fitFromCodes(hull, codes), skills);
+		if (usedVolume(tx, bodega.id) > capacityTenths(despues.cargo)) {
+			throw new ShipError('Con eso desmontado no te entra la carga que llevás.');
+		}
+
+		saveFit(tx, found, codes);
+	});
 }

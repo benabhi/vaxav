@@ -13,6 +13,7 @@ import { db } from '$lib/server/db';
 import { ShipError, activeShip, refit, shipFit } from '$lib/server/services/ships';
 import { buildShipView } from '$lib/server/views/ship';
 import { LOGIN_ROUTE } from '$lib/routes';
+import type { ContainerKind } from '$lib/game/items';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -22,9 +23,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 /** Escribe una configuración entera, o devuelve por qué no se pudo. */
-function guardar(pilot: Parameters<typeof refit>[1], codes: readonly string[]) {
+function guardar(
+	pilot: Parameters<typeof refit>[1],
+	codes: readonly string[],
+	from: ContainerKind
+) {
 	try {
-		refit(db, pilot, codes);
+		refit(db, pilot, codes, from);
 	} catch (error) {
 		if (error instanceof ShipError) return fail(400, { error: error.message });
 		throw error;
@@ -49,6 +54,10 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const index = Number(form.get('ranura'));
 		const code = String(form.get('modulo') ?? '');
+		// De qué bodega sale. La pantalla las muestra por separado y el jugador
+		// eligió una; ante cualquier otra cosa se asume la de la nave, que es la
+		// que siempre está.
+		const origen = form.get('origen') === 'station' ? 'station' : 'ship';
 
 		const codes = shipFit(db, ship).map((module) => module.code);
 		if (!Number.isInteger(index) || index < 0 || index >= codes.length) {
@@ -56,6 +65,6 @@ export const actions: Actions = {
 		}
 
 		codes[index] = code;
-		return guardar(locals.pilot, codes);
+		return guardar(locals.pilot, codes, origen);
 	}
 };

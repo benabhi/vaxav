@@ -81,8 +81,6 @@
 	</div>
 
 	<div class="absolute right-0 bottom-[1.25rem] left-0 z-1 flex justify-center">
-		<p class="font-display text-1 tracking-label text-text-muted uppercase">
-			Fase F2 · en desarrollo
-		</p>
+		<p class="font-display text-1 tracking-label text-text-muted uppercase">En desarrollo</p>
 	</div>
 </BareShell>

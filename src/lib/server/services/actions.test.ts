@@ -2,8 +2,8 @@
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { body, fittedModule, pilot, pilotAction, pilotSkill, ship } from '../db/schema';
-import { crearPiloto, seededDb } from '../db/testing';
+import { body, pilot, pilotAction, pilotSkill } from '../db/schema';
+import { crearPiloto, desguazar, seededDb } from '../db/testing';
 import { travelDurationSeconds } from '$lib/game/actions';
 import { coreSlotIndex } from '$lib/game/hulls';
 import { TRAVEL_KIND, ActionError, currentAction, resolveIfDue, startTravel } from './actions';
@@ -73,11 +73,7 @@ describe('dar la orden de viajar', () => {
 		// El servicio no confía en que la interfaz haya bloqueado el botón.
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		// Primero las ranuras: con las claves foráneas activas, una nave no se
-		// puede borrar dejando huérfano lo que tenía montado.
-		const nave = activeShip(db, piloto.id)!;
-		db.delete(fittedModule).where(eq(fittedModule.shipId, nave.id)).run();
-		db.delete(ship).where(eq(ship.id, nave.id)).run();
+		desguazar(db, piloto);
 
 		expect(() => startTravel(db, piloto, getBody(db, 'anfora_i')!)).toThrow(/nave/);
 	});

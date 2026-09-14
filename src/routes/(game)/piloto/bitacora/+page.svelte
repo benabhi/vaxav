@@ -6,8 +6,11 @@
 	docs/systems/ACTIONS.md.
 
 	Los informes que todavía no se habían visto se dibujan encendidos en cian, el
-	mismo color con el que avisaron desde el Neocom. Es la única vez que se los va
-	a ver así: entrar acá ya los dio por leídos.
+	mismo color con el que avisaron desde el Neocom, y con el halo **hacia
+	adentro**: lo que se enciende es el borde que avisa y el pedazo de panel pegado
+	a él. Un aura alrededor de todo desdibuja el contorno y compite con el naranja
+	de lo seleccionado. Es la única vez que se los va a ver así: entrar acá ya los
+	dio por leídos.
 -->
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
@@ -58,7 +61,7 @@
 				<div
 					class="w-full border border-l-[3px] p-[0.9rem]
 						{informe.unread
-						? 'border-border-soft border-l-data bg-surface-strong shadow-data-glow'
+						? 'aviso-panel border-border-soft border-l-data bg-surface-strong'
 						: 'border-border-soft border-l-border-soft bg-surface'}"
 				>
 					<ActionReport report={informe} />
