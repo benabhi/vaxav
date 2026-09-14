@@ -1,7 +1,11 @@
 # Acciones, tiempo y experiencia
 
-> **Propuesta.** Las mecánicas son la intención de diseño; los números están para
-> discutirse. Nada de esto está implementado todavía.
+> **Implementado en parte.** El motor de acciones existe: se encola una orden por
+> vez, se resuelve de forma perezosa e idempotente y deja su informe en la
+> bitácora. La única acción real es **viajar**. Los números están para discutirse.
+
+> **La experiencia ya no se reparte entre habilidades**: una acción deposita en el
+> pozo de su familia. Ver [habilidades](SKILLS.md).
 >
 > Ver también: [habilidades](SKILLS.md) · [naves](SHIPS.md) ·
 > [universo](UNIVERSE.md) · [interfaz](INTERFACE.md)

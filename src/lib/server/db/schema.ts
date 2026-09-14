@@ -21,6 +21,7 @@ import {
 	uniqueIndex,
 	type AnySQLiteColumn
 } from 'drizzle-orm/sqlite-core';
+import { ACTION_KINDS } from '$lib/game/actions';
 import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
 import { BODY_KINDS, CORPORATION_KINDS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
 
@@ -434,10 +435,11 @@ export const pilotAction = sqliteTable(
 			.references(() => pilot.id),
 
 		/**
-		 * Por ahora sólo "travel"; abre la puerta a "mine" y las demás sin tener
-		 * que agregar otra tabla.
+		 * Qué clase de orden es. Tipado contra el catálogo de `game/actions`: el
+		 * `kind` viaja hasta dos tablas, y un error de tipeo llegaría a la base sin
+		 * que nada lo frene. Abre la puerta a "mine" y las demás sin otra tabla.
 		 */
-		kind: text('kind').notNull(),
+		kind: text('kind', { enum: ACTION_KINDS }).notNull(),
 
 		startedAt: integer('started_at', { mode: 'timestamp' }).notNull().default(NOW),
 		durationSeconds: integer('duration_seconds').notNull(),
@@ -509,8 +511,12 @@ export const pilotLog = sqliteTable(
 			.notNull()
 			.references(() => pilot.id),
 
-		/** El mismo vocabulario que `pilot_action`: por ahora sólo "travel". */
-		kind: text('kind').notNull(),
+		/**
+		 * El mismo vocabulario que `pilot_action`, y por la misma razón. Sin `enum`
+		 * acá, una acción vieja y una nueva podrían nombrarse distinto en el
+		 * informe que en la orden.
+		 */
+		kind: text('kind', { enum: ACTION_KINDS }).notNull(),
 
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW),
 		/** Cuándo lo vio el piloto. Nulo mientras siga sin leer. */

@@ -1,127 +1,100 @@
 # Hoja de ruta
 
-> El orden en que se construye Vaxav y por qué ese orden. Cada fase deja algo que
-> se puede probar; ninguna es sólo andamio.
+> El orden en que se construye Vaxav y por qué ese orden. Cada etapa deja algo que
+> se puede jugar; ninguna es sólo andamio.
 >
 > Ver también: [MVP](MVP.md) · [arquitectura](systems/ARCHITECTURE.md)
 
 ## Hecho
 
-| Fase   | Qué dejó                                                             |
-| ------ | -------------------------------------------------------------------- |
-| **F0** | Esqueleto del proyecto: SvelteKit, estructura, configuración, tests  |
-| **F1** | Sistema de estilos y portada                                         |
-| **F2** | Pilotos: alta en cuatro pasos, ingreso, sesión, base de datos propia |
-| **F3** | Interfaz Elite Dangerous, Neocom y las siete secciones               |
+| Qué                    | Qué dejó                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| Esqueleto              | SvelteKit, estructura, configuración, tests                                  |
+| Estilos y portada      | El sistema de diseño y la página pública                                     |
+| Pilotos                | Alta en cuatro pasos, ingreso, sesión, base propia                           |
+| Interfaz               | El HUD de Elite Dangerous, el Neocom y las pestañas                          |
+| El universo en la base | Región, constelación, sistema, cuerpo y estación como filas; Ánfora sembrado |
+| Naves                  | Cinco cascos, catálogo de módulos, la calculadora de equipamiento            |
+| Motor de acciones      | Encolar, resolver perezoso e idempotente, informar. Primera acción: viajar   |
+| Habilidades            | Curva, prerrequisitos, pozo por familia y la pantalla del árbol              |
+| Bitácora               | El registro paginado de cada acción resuelta, con su aviso al volver         |
 
-## Camino al MVP
+## Lo que falta
 
-Las fases están ordenadas por **dependencia**, no por entusiasmo: cada una
-necesita la anterior.
+El diagnóstico que ordena todo lo que sigue: el juego tiene las piezas y casi
+ninguna se toca con las demás. De los 25 atributos que calcula una nave, **dos**
+mueven una mecánica; de las 23 habilidades, **trece** no alteran ningún número; la
+bodega es una cifra sin contenido y los créditos no los escribe nadie.
 
-### F4 · Cimientos que no se ven
+Cerrar el primer circuito completo es lo que convierte eso en un juego: elegir
+minero, viajar al cinturón, minar, volver a una estación, vender, comprar algo
+mejor y desbloquear habilidades nuevas.
 
-Lo que hay que tener antes de que exista un solo jugador real, porque después
-obliga a tocar todo.
+Las etapas van por **dependencia**: sin contenedor el mineral no tiene dónde caer,
+sin mineral no hay qué vender, sin plata no hay con qué comprar.
 
-- Roles y permisos: jugador, moderador, administrador.
-- Libro mayor de créditos e ítems, con sus asientos.
-- El patrón de resolución idempotente, con su prueba de concurrencia.
-- Tabla de configuración para los números de balance.
-- Las tres facciones definitivas, en reemplazo de las cuatro actuales.
+### 0 · Desmontaje y enderezado · **hecho**
 
-> Es la fase menos vistosa y la más importante. Ver
-> [arquitectura](systems/ARCHITECTURE.md).
+La única que no agrega un verbo. Va primera porque las siguientes tocan los mismos
+archivos.
 
-### F5 · El universo en la base
+- ~~Fuera las pantallas cartel y la maqueta del chat.~~
+- ~~Resolver una acción pasa a ser un despachador por clase.~~
+- ~~El sistema sale de dónde está el piloto, no de una constante.~~
+- ~~Ofrecer sólo la profesión que tiene algo que hacer.~~
+- ~~La calificación A-E pasa a ser el escalón tecnológico.~~
+- ~~Enderezar la documentación que quedó vieja.~~
 
-- Modelo jerárquico: región, sistema, cuerpo, estación.
-- El sistema Ánfora cargado como datos, no como constantes.
-- Servicios de estación como módulos: astillero, equipamiento, refinería, taller.
-- El piloto tiene una posición real y una estación de referencia.
+### 1 · Ítems, bodega y libro mayor
 
-### F6 · Naves y hangar · **en parte**
+Contenedores, montones de ítems y los dos libros —créditos e ítems—. Sin esto el
+mineral no tiene dónde caer, y elegir mal la forma del contenedor es lo más caro
+de revertir de todo el plan.
 
-- ~~Cascos con estadísticas y ranuras por clase.~~
-- ~~Los cinco modelos iniciales.~~
-- ~~Módulos con clase y calificación; catálogo corto pero real.~~
-- ~~Bonos de casco que dependen de habilidades.~~
-- ~~Cada piloto con su nave guardada, y viajar con su velocidad real.~~
-- Falta: tener más de una nave, comprarlas en el astillero, y la bodega.
+### 2 · Minar
 
-### F7 · El motor de acciones · **el corazón**
+Cinturones con contenido y agotamiento compartido que se recupera solo, la acción
+de extraer, y la bodega con capacidad real. Se vuelven mecánicos la bodega, el
+rendimiento de extracción y la estabilidad del acumulador.
 
-- Encolar, resolver de forma perezosa e idempotente, informar.
-- Reparto de experiencia a la habilidad principal y las secundarias.
-- Bitácora de informes.
-- **El indicador siempre visible** de la acción en curso.
-- Primera acción real: **viajar** entre cuerpos del sistema.
+### 3 · Vender en crudo
 
-### F8 · Minería
+La estación compra a precio fijo, con su asiento en el libro. Acá el bucle se
+cierra por primera vez: viajás, minás, volvés, cobrás.
 
-- Extraer en un cinturón, con rendimiento por habilidades, nave y módulos.
-- Bodega con capacidad real y la decisión de qué llevar.
-- Agotamiento y recuperación de los cinturones, con su trabajo periódico.
-- Venta básica a la estación, con su asiento en el libro.
+### 4 · Requisitos de habilidad e inyecciones
 
-### F9 · Gente
+Los módulos y los cascos piden habilidades, y las habilidades se desbloquean
+inyectándolas en el laboratorio de una estación. Va después de vender porque un
+inyector cuesta plata.
 
-- Chat en tiempo real, global y por sistema.
-- Mensajería asíncrona entre pilotos.
-- Perfil público de un piloto.
+### 5 · Refinar
 
-**Acá termina el MVP.** Ver [MVP](MVP.md) para la lista de aceptación.
+La refinería convierte mineral en material, con su merma.
 
-## Después del MVP
+### 6 · La puerta y el segundo sistema
 
-En orden de valor, no de dificultad:
+Las puertas estelares como cuerpos del sistema, el salto como acción, y el
+combustible que se gasta. Se vuelven mecánicos el alcance de salto y la eficiencia
+de combustible.
 
-### F10 · Mercado
+### 7 · El taller
 
-Órdenes de compra y venta por estación, casamiento de órdenes, historial de
-precios. Es el sistema que convierte recursos en economía, y el más grande de
-todos: se lleva su propia serie de fases.
+Recetas de módulos a partir de materiales refinados. El escalón marca qué
+materiales pide: el de entrada se hace con lo de los Anillos, el de arriba exige
+lo que sólo sale del Cinturón Exterior.
 
-### F11 · Industria
+## Después
 
-Refinado, fabricación de módulos y componentes. Le da razón de ser a la minería y
-alimenta al mercado.
-
-### F12 · Corporaciones
-
-Grupos de pilotos, roles internos, bodega compartida, billetera común.
-
-### F13 · La galaxia
-
-Más sistemas, saltos entre ellos, la sección de navegación con su mapa.
-Descubrimiento y cartografía.
-
-### F14 · Combate
-
-Encuentros, pérdida de carga y de nave, seguridad por zonas. El más difícil de
-balancear y el que más daño hace mal hecho: va tarde a propósito.
-
-### F15 · Propiedades y estaciones de jugador
-
-Instalaciones que producen sin el piloto presente. Cierra el círculo de la
-economía.
-
-### Sin fase asignada
-
-- Misiones de NPC y contactos en estación.
-- Ingeniería y modificación de módulos.
-- Reputación por facción con sus consecuencias.
-- Eventos del sector.
+En orden de valor, no de dificultad: mercado entre pilotos, corporaciones,
+exploración y prospección, drones, combate, y estaciones de jugador. Cada uno
+espera a que el circuito de abajo aguante su peso.
 
 ## Lo que se decide en el camino
 
-Preguntas abiertas que van a condicionar fases enteras y conviene resolver antes
-de llegar a ellas:
-
 | Pregunta                                          | Se necesita en |
 | ------------------------------------------------- | -------------- |
-| Ritmo real: ¿cuánto tarda una acción típica?      | F7             |
-| ¿Se puede encolar más de una acción?              | F7             |
-| ¿Qué se pierde al morir: la carga, la nave, nada? | F14            |
-| ¿El mapa es fijo o generado?                      | F13            |
-| ¿Cuánto PvP directo y cuánto conflicto indirecto? | F14            |
+| ¿Se puede encolar más de una acción?              | Etapa 2        |
+| ¿Qué se pierde al morir: la carga, la nave, nada? | Combate        |
+| ¿El mapa es fijo o generado?                      | Etapa 6        |
+| ¿Cuánto PvP directo y cuánto conflicto indirecto? | Combate        |

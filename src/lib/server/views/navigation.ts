@@ -7,7 +7,7 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { body, type Pilot } from '../db/schema';
+import { body, system as systemTable, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
@@ -43,12 +43,6 @@ import {
 import type { BaldosaModulo, FilaAgente, FilaCuerpo, Sistema, Ubicacion } from '$lib/tipos';
 
 /**
- * Mientras Ánfora sea el único sistema, es el que se muestra. Cuando el piloto
- * pueda moverse entre sistemas, saldrá de dónde esté parado.
- */
-const DEFAULT_SYSTEM = 'anfora';
-
-/**
  * La reputación del piloto con cada facción todavía no se guarda: la escriben
  * las misiones, que llegan en F9. Hasta entonces todos empiezan de cero, y la
  * pantalla muestra qué agentes se abren con eso y cuáles no.
@@ -75,7 +69,6 @@ export function buildModuleTiles(
 		name: spec.name,
 		icon: serviceIcon(code as StationServiceKind),
 		summary: spec.summary,
-		phase: spec.phase,
 		available: instalados.has(code as StationServiceKind)
 	}));
 }
@@ -289,13 +282,22 @@ function uncharted(): Sistema {
  * exactamente la que se va a cobrar.
  */
 export function buildSystemView(db: Db, row: Pilot): Sistema {
-	const overview = systemOverview(db, DEFAULT_SYSTEM);
+	// **El sistema sale de dónde está parado el piloto**, no de una constante.
+	// Con un sistema fijo, el día que alguien esté en otro, el árbol se dibuja con
+	// los cuerpos del sistema equivocado y el cálculo de distancia no encuentra
+	// ancestro común: la pantalla revienta y el piloto queda encerrado sin forma
+	// de volver.
+	const here = db.select().from(body).where(eq(body.id, row.locationId)).get();
+	const donde = here
+		? db.select().from(systemTable).where(eq(systemTable.id, here.systemId)).get()
+		: undefined;
+
+	const overview = donde ? systemOverview(db, donde.code) : null;
 	// Sin universo sembrado no hay nada que dibujar, y decirlo es mejor que
 	// mostrar una pantalla vacía sin explicación.
 	if (overview === null) return uncharted();
 
 	const system = overview.system;
-	const here = db.select().from(body).where(eq(body.id, row.locationId)).get();
 	const readout = shipReadout(db, row);
 
 	return {
@@ -314,7 +316,7 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 		exploredCount: `${overview.exploredCount} de ${overview.bodyCount}`,
 		bodies: buildBodyRows(
 			db,
-			systemTree(db, DEFAULT_SYSTEM),
+			systemTree(db, system.code),
 			here?.code ?? '',
 			row.locationId,
 			readout?.speed ?? REFERENCE_SPEED

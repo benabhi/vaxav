@@ -13,6 +13,7 @@
 import { and, count, desc, eq, isNull } from 'drizzle-orm';
 import { pilotLog, type PilotLog } from '../db/schema';
 import type { Db } from '../db/types';
+import type { ActionKind } from '$lib/game/actions';
 
 /** Cuántos informes entran en una página de la bitácora. */
 export const PAGE_SIZE = 10;
@@ -51,7 +52,8 @@ export interface XpChange {
 
 /** Lo que hace falta para escribir un informe. */
 export interface LogEntry {
-	readonly kind: string;
+	/** El mismo vocabulario que las órdenes: un informe informa de una acción. */
+	readonly kind: ActionKind;
 	readonly durationSeconds: number;
 	readonly originBodyId: number | null;
 	readonly destinationBodyId: number | null;

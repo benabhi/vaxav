@@ -1,7 +1,7 @@
 # Corporaciones
 
 > **Implementado en parte**: las corporaciones del mundo existen y operan las
-> estaciones. Las de jugadores llegan en F12.
+> estaciones. Las de jugadores todavía no existen.
 >
 > Ver también: [facciones](FACTIONS.md) · [universo](UNIVERSE.md)
 

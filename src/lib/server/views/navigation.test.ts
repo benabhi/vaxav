@@ -1,6 +1,8 @@
 /** La pestaña Ubicación describe el lugar, y en tránsito no describe ninguno. */
 
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { body, constellation, pilot, system } from '../db/schema';
 import { crearPiloto, moverPiloto, seededDb } from '../db/testing';
 import { startTravel } from '../services/actions';
 import { bodyDetail, getBody, systemTree } from '../services/universe';
@@ -35,11 +37,10 @@ describe('el mosaico de módulos', () => {
 		expect(baldosas.map((b) => b.code)).toEqual(Object.keys(SERVICES));
 	});
 
-	it('trae el nombre, el resumen y la fase de cada módulo', () => {
+	it('trae el nombre y el resumen de cada módulo', () => {
 		const astillero = buildModuleTiles(['shipyard']).find((b) => b.code === 'shipyard')!;
 		expect(astillero.name).toBe(SERVICES.shipyard.name);
 		expect(astillero.summary).toBe(SERVICES.shipyard.summary);
-		expect(astillero.phase).toBe(SERVICES.shipyard.phase);
 	});
 });
 
@@ -216,5 +217,34 @@ describe('el árbol del sistema', () => {
 		const vista = buildSystemView(db, piloto);
 		expect(vista.actionInProgress).toBe(true);
 		expect(vista.hasShip).toBe(true);
+	});
+});
+
+describe('en qué sistema se para el árbol', () => {
+	it('sale de dónde está el piloto y no de una constante', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		// Un segundo sistema, mínimo pero real. Con el sistema cableado a Ánfora,
+		// esto dibujaba los cuerpos del sistema equivocado y el cálculo de
+		// distancia no encontraba ancestro común: la pantalla reventaba y el piloto
+		// quedaba encerrado sin forma de volver.
+		const cadena = db.select().from(constellation).get()!;
+		const otro = db
+			.insert(system)
+			.values({ code: 'brida', name: 'Brida', constellationId: cadena.id })
+			.returning()
+			.get();
+		const estrella = db
+			.insert(body)
+			.values({ code: 'brida_estrella', name: 'Brida', systemId: otro.id, kind: 'star' })
+			.returning()
+			.get();
+		db.update(pilot).set({ locationId: estrella.id }).where(eq(pilot.id, piloto.id)).run();
+
+		const vista = buildSystemView(db, { ...piloto, locationId: estrella.id });
+
+		expect(vista.name).toBe('Brida');
+		expect(vista.bodies.map((fila) => fila.name)).toEqual(['Brida']);
 	});
 });

@@ -45,7 +45,7 @@ test.describe('las rutas del juego', () => {
 		expect(new URL(page.url()).pathname).toBe(LOGIN_ROUTE);
 	});
 
-	test('con sesión, las 20 existen y ninguna es un 404', async ({ page }) => {
+	test('con sesión, todas existen y ninguna es un 404', async ({ page }) => {
 		await entrar(page);
 
 		for (const ruta of DEL_JUEGO) {

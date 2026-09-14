@@ -107,9 +107,8 @@
 
 					<!--
 						El detalle del módulo elegido. Es lo que hace que el mosaico sea
-						interactivo desde hoy en vez de una fila de botones muertos: no se
-						puede entrar todavía, pero se puede ver qué ofrece cada módulo y en
-						qué fase llega.
+						interactivo desde hoy en vez de una fila de botones muertos: se puede
+						ver qué ofrece cada módulo y cuáles tiene esta estación.
 					-->
 					{#if chosen}
 						<div
@@ -121,8 +120,7 @@
 									<div class="flex w-full flex-wrap items-center gap-2">
 										<CardTitle>{chosen.name}</CardTitle>
 										<div class="grow"></div>
-										<Label>Llega en</Label>
-										<HudValue class="text-[0.8rem]">{chosen.phase}</HudValue>
+										<Label>{chosen.available ? 'Instalado' : 'No instalado'}</Label>
 									</div>
 									<BodyText>{chosen.summary}</BodyText>
 								</div>

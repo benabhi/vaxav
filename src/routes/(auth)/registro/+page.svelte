@@ -28,7 +28,7 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import { professionIcon, skillsSummary } from '$lib/format';
 	import { FACTION_LIST, GOVERNED_SYSTEMS } from '$lib/game/factions';
-	import { PROFESSION_LIST } from '$lib/game/professions';
+	import { PLAYABLE_PROFESSIONS } from '$lib/game/professions';
 	import { LOGIN_ROUTE } from '$lib/routes';
 	import type { PageData } from './$types';
 
@@ -57,7 +57,13 @@
 	// Se busca en la lista en vez de indexar el catálogo: acá el código puede
 	// estar vacío —todavía no se eligió— y una búsqueda lo resuelve sin hacerle
 	// pasar por el tipo un estado que es legítimo.
-	let chosenProfession = $derived(PROFESSION_LIST.find((item) => item.code === profession));
+	let chosenProfession = $derived(PLAYABLE_PROFESSIONS.find((item) => item.code === profession));
+
+	/**
+	 * Cuántas columnas usa la grilla de oficios. Con uno solo no hay grilla: la
+	 * tarjeta ocupa el panel entero en vez de quedar flotando en un tercio.
+	 */
+	const OFICIOS_EN_GRILLA = PLAYABLE_PROFESSIONS.length > 1 ? 'sm:grid-cols-2 lg:grid-cols-3' : '';
 	let chosenFaction = $derived(FACTION_LIST.find((item) => item.code === faction));
 	let professionDetail = $derived(profession ? skillsSummary(profession) : '');
 
@@ -151,10 +157,15 @@
 				{#if step === PROFESSION_STEP}
 					<AuthPanel
 						title="El oficio"
-						subtitle="Es a lo que te dedicabas antes de comprarte la nave, y define con qué habilidades arrancás. Las seis reparten la misma experiencia inicial: ninguna empieza mejor que otra, empiezan distinto. Tampoco te encierra —podés terminar haciendo otra cosa—, sólo que vas a tardar más que quien empezó ahí."
+						subtitle="Es a lo que te dedicabas antes de comprarte la nave, y define con qué habilidades arrancás. No te encierra —podés terminar haciendo otra cosa—, sólo que vas a tardar más que quien empezó ahí."
 					>
-						<div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-							{#each PROFESSION_LIST as item (item.code)}
+						<!--
+							La grilla se achica con la lista: una sola tarjeta metida en una
+							grilla de tres queda flotando en un tercio del panel, como si
+							faltaran las otras dos.
+						-->
+						<div class="grid w-full grid-cols-1 gap-3 {OFICIOS_EN_GRILLA}">
+							{#each PLAYABLE_PROFESSIONS as item (item.code)}
 								<ChoiceCard
 									name={item.name}
 									description={item.description}

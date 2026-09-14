@@ -73,8 +73,6 @@ export interface BaldosaModulo {
 	readonly name: string;
 	readonly icon: IconName;
 	readonly summary: string;
-	/** Fase del roadmap en que el módulo empieza a funcionar de verdad. */
-	readonly phase: string;
 	/** Si la estación lo tiene instalado. Los que no, se dibujan apagados. */
 	readonly available: boolean;
 }

@@ -35,6 +35,7 @@
 		tenths,
 		thousands
 	} from '$lib/format';
+	import { roundHalfEven } from '$lib/game/math';
 	import { DAMAGE_TYPES } from '$lib/game/damage';
 	import { buildReadout, maxedSkills } from '$lib/game/fitting';
 	import { SLOT_KINDS, getHull } from '$lib/game/hulls';
@@ -102,7 +103,7 @@
 				).map((disponible) => ({
 					code: disponible.module.code,
 					name: disponible.module.name,
-					rating: `${disponible.module.size}${disponible.module.rating}`,
+					tier: `${disponible.module.size}${disponible.module.tier}`,
 					summary: moduleSummary(disponible.module),
 					icon: moduleIcon(disponible.module),
 					mounted: disponible.module.code === ship.fitted[selected],
@@ -136,7 +137,7 @@
 			? readout.drainPerHour
 				? 100
 				: 0
-			: Math.min(100, Math.round((readout.drainPerHour * 100) / readout.rechargePerHour))
+			: Math.min(100, roundHalfEven((readout.drainPerHour * 100) / readout.rechargePerHour))
 	);
 
 	/** Cuánto aguanta contra cada tipo, y por dónde se la van a romper. */
@@ -145,7 +146,7 @@
 		return DAMAGE_TYPES.map((tipo) => ({
 			label: damageTypeShort(tipo),
 			value: thousands(readout.effectiveHp[tipo]),
-			percent: Math.round((readout.effectiveHp[tipo] * 100) / techo),
+			percent: roundHalfEven((readout.effectiveHp[tipo] * 100) / techo),
 			weak: tipo === readout.weakSpot
 		}));
 	});
@@ -156,7 +157,7 @@
 		return DAMAGE_TYPES.map((tipo) => ({
 			label: damageTypeShort(tipo),
 			value: tenths(readout.dps[tipo]),
-			percent: Math.round((readout.dps[tipo] * 100) / techo),
+			percent: roundHalfEven((readout.dps[tipo] * 100) / techo),
 			weak: false
 		}));
 	});
@@ -414,7 +415,7 @@
 												? 'text-on-accent'
 												: 'text-data'}"
 										>
-											{option.rating}
+											{option.tier}
 										</span>
 									</div>
 									<span

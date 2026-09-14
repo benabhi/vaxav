@@ -39,69 +39,55 @@ export type StationServiceKind = (typeof STATION_SERVICES)[number];
  * La ficha de un módulo de estación.
  *
  * Un servicio no es sólo un rótulo: la pantalla de ubicación lo muestra como una
- * baldosa con su nombre, qué se hace ahí y en qué fase deja de ser un cartel. El
- * nombre vive acá y no en la capa de presentación por la misma razón que el de
- * una facción o una profesión: es contenido del juego.
+ * baldosa con su nombre y qué se hace ahí. El nombre vive acá y no en la capa de
+ * presentación por la misma razón que el de una facción o una profesión: es
+ * contenido del juego.
  */
 export interface ServiceSpec {
 	readonly name: string;
 	readonly summary: string;
-	/**
-	 * Fase del roadmap en que el módulo empieza a funcionar de verdad. Se dice en
-	 * pantalla: es más honesto que un botón que no hace nada.
-	 */
-	readonly phase: string;
 }
 
 /**
  * Los ocho módulos que puede tener una estación, con su ficha completa.
  *
- * En F15 son los que los jugadores instalan en las suyas, así que conviene que
- * desde hoy cada uno sepa decir qué es y qué ofrece. El orden es el que dibuja
- * el mosaico.
+ * El día que los jugadores instalen los suyos, conviene que cada uno ya sepa
+ * decir qué es y qué ofrece. El orden es el que dibuja el mosaico.
  */
 export const SERVICES: Readonly<Record<StationServiceKind, ServiceSpec>> = {
 	shipyard: {
 		name: 'Astillero',
-		summary: 'Comprar naves y dejarlas en hangar.',
-		phase: 'F6'
+		summary: 'Comprar naves y dejarlas en hangar.'
 	},
 	outfitting: {
 		name: 'Equipamiento',
-		summary: 'Montar y desmontar los módulos de la nave.',
-		phase: 'F6'
+		summary: 'Montar y desmontar los módulos de la nave.'
 	},
 	storage: {
 		name: 'Bodega',
-		summary: 'Dejar carga guardada en tierra firme.',
-		phase: 'F8'
+		summary: 'Dejar carga guardada en tierra firme.'
 	},
 	market: {
 		name: 'Mercado',
-		summary: 'Órdenes de compra y venta de la estación.',
-		phase: 'F10'
+		summary: 'Órdenes de compra y venta de la estación.'
 	},
 	refinery: {
 		name: 'Refinería',
-		summary: 'Convertir el mineral en material aprovechable.',
-		phase: 'F11'
+		summary: 'Convertir el mineral en material aprovechable.'
 	},
 	workshop: {
 		name: 'Taller',
-		summary: 'Fabricar módulos y componentes.',
-		phase: 'F11'
+		summary: 'Fabricar módulos y componentes.'
 	},
 	// Los agentes ya están en la base y se ven en la estación; lo que falta son
-	// las misiones, que en el roadmap todavía no tienen fase asignada.
+	// las misiones.
 	contacts: {
 		name: 'Contactos',
-		summary: 'Los agentes que reparten trabajo en la estación.',
-		phase: 'Sin fecha'
+		summary: 'Los agentes que reparten trabajo en la estación.'
 	},
 	missions: {
 		name: 'Tablón',
-		summary: 'Trabajos abiertos a cualquiera que pase.',
-		phase: 'Sin fecha'
+		summary: 'Trabajos abiertos a cualquiera que pase.'
 	}
 };
 

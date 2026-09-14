@@ -8,10 +8,10 @@ lugar de imperios manejás **un piloto espacial y su nave** en un sector abierto
 Construido con [SvelteKit](https://svelte.dev/docs/kit) y TypeScript de punta a
 punta, sobre SQLite.
 
-> Estado: **F2**. Se puede crear un piloto, entrar, ver su ficha y sus
-> habilidades, recorrer el sistema, viajar entre cuerpos y armar la nave. Lo
-> demás está anunciado y sin construir, y cada pantalla dice en qué fase llega.
-> La hoja de ruta está en [`docs/DESIGN.md`](docs/DESIGN.md).
+> Se puede crear un piloto, entrar, ver su ficha y su árbol de habilidades,
+> recorrer el sistema, viajar entre cuerpos, invertir la experiencia ganada y
+> armar la nave. El menú muestra sólo lo que funciona y crece a medida que se
+> construye. La hoja de ruta está en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Cómo levantarlo
 

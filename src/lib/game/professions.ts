@@ -31,6 +31,18 @@ export interface Profession {
 	readonly name: string;
 	readonly description: string;
 	readonly grants: readonly SkillGrant[];
+	/**
+	 * Si se puede elegir en el alta.
+	 *
+	 * Una profesión se ofrece cuando hay algo que hacer con ella. Hoy sólo el
+	 * minero tiene actividades propias —extraer, refinar, vender—, así que es la
+	 * única jugable; elegir explorador sería elegir un nombre.
+	 *
+	 * Las otras **se quedan en el catálogo** aunque no se ofrezcan: siguen
+	 * verificando el presupuesto de experiencia, y los pilotos que ya las tengan
+	 * tienen que poder seguir jugando.
+	 */
+	readonly playable: boolean;
 }
 
 const CATALOG = [
@@ -45,7 +57,8 @@ const CATALOG = [
 			{ skill: 'stowage', level: 2 },
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'mechanics', level: 1 }
-		]
+		],
+		playable: true
 	},
 	{
 		code: 'explorer',
@@ -55,7 +68,8 @@ const CATALOG = [
 			{ skill: 'navigation', level: 2 },
 			{ skill: 'shuttle_handling', level: 2 },
 			{ skill: 'scanning', level: 1 }
-		]
+		],
+		playable: false
 	},
 	{
 		code: 'hauler',
@@ -66,7 +80,8 @@ const CATALOG = [
 			{ skill: 'navigation', level: 2 },
 			{ skill: 'haggling', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
-		]
+		],
+		playable: false
 	},
 	{
 		code: 'trader',
@@ -79,7 +94,8 @@ const CATALOG = [
 			{ skill: 'stowage', level: 1 },
 			{ skill: 'mechanics', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
-		]
+		],
+		playable: false
 	},
 	{
 		code: 'escort',
@@ -90,7 +106,8 @@ const CATALOG = [
 			{ skill: 'mechanics', level: 2 },
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
-		]
+		],
+		playable: false
 	},
 	{
 		code: 'technician',
@@ -103,15 +120,31 @@ const CATALOG = [
 			{ skill: 'stowage', level: 1 },
 			{ skill: 'navigation', level: 1 },
 			{ skill: 'shuttle_handling', level: 1 }
-		]
+		],
+		playable: false
 	}
 ] as const satisfies readonly Profession[];
 
 /** El código de cualquier profesión del catálogo. */
 export type ProfessionCode = (typeof CATALOG)[number]['code'];
 
-/** El catálogo en orden de declaración, que es el que dibuja la pantalla de alta. */
+/** El catálogo entero, en orden de declaración. */
 export const PROFESSION_LIST: readonly Profession[] = CATALOG;
+
+/**
+ * Las que se pueden elegir en el alta.
+ *
+ * Es una lista aparte y no un filtro en la pantalla: quién se puede elegir es
+ * contenido del juego, y la pantalla sólo dibuja lo que le den.
+ */
+export const PLAYABLE_PROFESSIONS: readonly Profession[] = CATALOG.filter(
+	(profession) => profession.playable
+);
+
+/** Si esa profesión se puede elegir al crear un piloto. */
+export function isPlayable(code: string): boolean {
+	return getProfession(code).playable;
+}
 
 /** El catálogo indexado por código. */
 export const PROFESSIONS = indexByCode(CATALOG);

@@ -94,23 +94,25 @@ Una estación no es un punto en el mapa: es un conjunto de **módulos**, y no to
 tienen los mismos. Que a una le falte el astillero cambia la ruta de un piloto
 tanto como una distancia.
 
-Se llaman módulos y no servicios a propósito: **en F15 son lo que un jugador
+Se llaman módulos y no servicios a propósito: **son lo que un jugador
 instala en su propia estación**, y conviene que el nombre lo diga desde ahora.
 
-| Módulo           | Para qué                                        | Llega en  |
-| ---------------- | ----------------------------------------------- | --------- |
-| **Astillero**    | Comprar naves y dejarlas en hangar              | F6        |
-| **Equipamiento** | Montar y desmontar los módulos de la nave       | F6        |
-| **Bodega**       | Dejar carga guardada en tierra firme            | F8        |
-| **Mercado**      | Órdenes de compra y venta de la estación        | F10       |
-| **Refinería**    | Convertir el mineral en material aprovechable   | F11       |
-| **Taller**       | Fabricar módulos y componentes                  | F11       |
-| **Contactos**    | Los agentes que reparten trabajo en la estación | sin fecha |
-| **Tablón**       | Trabajos abiertos a cualquiera que pase         | sin fecha |
+| Módulo           | Para qué                                        | Estado      |
+| ---------------- | ----------------------------------------------- | ----------- |
+| **Equipamiento** | Montar y desmontar los módulos de la nave       | **Andando** |
+| **Bodega**       | Dejar carga guardada en tierra firme            | Etapa 1     |
+| **Mercado**      | Comprar y vender en la estación                 | Etapa 3     |
+| **Laboratorio**  | Inyectar habilidades, y más adelante clonar     | Etapa 4     |
+| **Refinería**    | Convertir el mineral en material aprovechable   | Etapa 5     |
+| **Taller**       | Fabricar módulos y componentes                  | Etapa 7     |
+| **Astillero**    | Comprar naves y dejarlas en hangar              | Después     |
+| **Contactos**    | Los agentes que reparten trabajo en la estación | Después     |
+| **Tablón**       | Trabajos abiertos a cualquiera que pase         | Después     |
 
-Cada uno tiene su **ficha** en el plano —nombre, qué se hace ahí y en qué fase
-empieza a funcionar—, y la pantalla la muestra tal cual: es más honesto que un
-botón que no hace nada.
+Cada uno tiene su **ficha** en el plano —nombre y qué se hace ahí—, y la pantalla
+la muestra tal cual. En el mosaico se ve cuáles tiene instalados la estación y
+cuáles no: eso solo ya dice qué clase de estación es. **No se anuncia en qué fase
+llega cada uno**; se descubre a medida que se construye.
 
 ### El laboratorio, que todavía no existe
 
@@ -155,7 +157,7 @@ muestra igual: cuando existan sistemas a medio levantar, la lista va a estar
 leyéndose con esta misma etiqueta y nadie va a tener que aprender una nueva.
 
 Que **cada piloto lleve su propio registro** de qué descubrió es otra cosa y otra
-tabla, y llega con la cartografía en F13.
+tabla, y llega con la cartografía.
 
 ## Gobierno y seguridad
 

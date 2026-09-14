@@ -3,7 +3,7 @@
 > **Implementado**: el catálogo de cascos y módulos, la calculadora, la pantalla
 > de equipamiento y el **hangar** —cada piloto tiene su nave guardada y viaja con
 > ella—. Falta poder tener **más de una**, comprarlas, y todo lo que depende del
-> **combate** (F14).
+> **combate**, que todavía no existe.
 >
 > Ver también: [habilidades](SKILLS.md) · [acciones](ACTIONS.md) ·
 > [universo](UNIVERSE.md) · [interfaz](INTERFACE.md)
@@ -115,25 +115,53 @@ Cuatro tipos, tomados de Elite Dangerous porque separan bien las decisiones:
 | **Internos esenciales** | Lo que la nave necesita para volar. **Se mejoran, no se quitan** | Planta, propulsores, motor de salto, distribuidor, sensores, soporte vital, tanque |
 | **Internos opcionales** | Lo que define a qué se dedica la nave                            | Bodega, generador de escudo, refinería                                             |
 
-### Clase y calificación
+### Clase y escalón
 
-Cada ranura tiene una **clase**, de 1 a 8, que es su tamaño: en una de clase 4
-entra un módulo de clase 4 o menor, nunca uno mayor.
+Dos ejes, y cada uno contesta una pregunta distinta.
 
-Cada módulo tiene además una **calificación**, de A a E, que no es "mejor a peor"
-sino un compromiso distinto:
+La **clase**, de 1 a 8, es el tamaño: en una ranura de clase 4 entra un módulo de
+clase 4 o menor, nunca uno mayor. Es lo único que decide si **entra**.
 
-|       | Carácter                                               |
-| ----- | ------------------------------------------------------ |
-| **A** | El más capaz, el más caro y el que más energía consume |
-| **B** | El más resistente y el más pesado                      |
-| **C** | El equilibrado                                         |
-| **D** | El más liviano: menos capacidad, más alcance de salto  |
-| **E** | El más barato y el más modesto                         |
+El **escalón** es la letra, de **E a A**, y es la **puerta de habilidad**. Un
+módulo A rinde más que su E, cuesta más y pide habilidades entrenadas; también
+aprieta más la potencia y el cómputo, así que en una nave chica o con el cómputo
+al límite el E puede ser la elección correcta.
 
-Un módulo se nombra por las dos cosas: **3A**, **5D**, **1E**. Que la D sea la
-liviana y la A la potente es lo que hace que **no haya una configuración óptima,
-sino una para cada oficio**.
+El piso y el techo son fijos: se llenan los escalones del medio sin mover nunca
+los extremos ni renombrar lo que ya existe. Hoy sólo se usan los dos puntas, E y
+A.
+
+Un módulo se nombra por las dos cosas, clase y escalón: **2E**, **3A**.
+
+> **Antes la letra era una "calificación"** que mezclaba dos cosas: el escalón
+> tecnológico y el compromiso de diseño. Y el catálogo no la sostenía —de las cinco
+> letras sólo dos se usaban como escalera, y en la mitad de los módulos la letra no
+> significaba nada: existía un `armor_plate` D sin nada con qué compararlo, y
+> `cargo_rack` iba 1D, 2C, 3C sin ninguna lógica—. Ahora la letra es sólo el
+> escalón, el compromiso va en el adjetivo, y todos los módulos la usan igual.
+
+### El compromiso va en el nombre
+
+Dentro de un mismo escalón y una misma clase puede haber varias versiones, y lo
+que las distingue es **qué recurso ahorra cada una**. Se nombran con un
+vocabulario cerrado que se repite en todas las familias, así que se entiende sin
+abrir la ficha y escala a cientos de módulos sin inventar cientos de nombres:
+
+| Adjetivo        | Qué sacrifica y qué gana                              |
+| --------------- | ----------------------------------------------------- |
+| **Compacto**    | Rinde algo menos, pide mucho menos cómputo y potencia |
+| **Sobrio**      | Rinde menos, consume mucho menos acumulador           |
+| **Persistente** | Ciclo más largo, drenaje mucho menor                  |
+| **Amplio**      | Más capacidad, ciclo más lento                        |
+| **Focalizado**  | Más alcance, menos potencia bruta                     |
+
+Es lo que hace que **no haya una configuración óptima, sino una para cada
+oficio**: un módulo que parece peor por sus números es la elección correcta en la
+nave donde el que parece mejor directamente no entra.
+
+El catálogo de hoy todavía no tiene versiones alternativas —una sola por familia,
+escalón y clase—, así que ningún módulo lleva adjetivo. Se suman cuando haya con
+qué compararlos.
 
 ## Los tres tipos de daño
 
@@ -162,7 +190,7 @@ dónde me van a romper".
 
 **No es un atajo que haya que rehacer.** Las resistencias por casco y por módulo
 —módulos de resistencia, perfiles por nave— son un modificador _encima_ de esta
-tabla, y llegan con el combate en **F14**. Una nave sin ellos se comporta
+tabla, y llegan **con el combate**. Una nave sin ellos se comporta
 exactamente como hoy, así que no hay migración pendiente.
 
 ### La regla de balance del híbrido
@@ -248,7 +276,7 @@ disponible, la pantalla nombra el lugar —«Nada para esta ranura en Planta
 Escarcha»—, porque «acá no hay nada» es una queja y con el nombre es una
 instrucción para ir a otro lado.
 
-La bodega arranca vacía: qué lleva un piloto es parte del hangar, que es F6.
+La bodega arranca vacía: qué lleva un piloto llega con los ítems y el hangar.
 
 ## Cómo está construido
 
@@ -295,25 +323,30 @@ la unidad más chica, y la coma aparece recién al escribirlo en pantalla.
 ## Qué consume cada número: la auditoría
 
 Un módulo se gana su lugar si algo lee lo que produce. Esta tabla dice qué lee
-cada cosa y cuándo, para que se vea de un vistazo qué es contenido vivo y qué
-está esperando su fase:
+cada cosa, para que se vea de un vistazo qué es contenido vivo y qué todavía no
+lo es:
 
-| Lo que produce un módulo        | Quién lo lee                            | Cuándo |
-| ------------------------------- | --------------------------------------- | ------ |
-| Masa, empuje, potencia de salto | Viajar: duración y autonomía            | **ya** |
-| Bodega                          | Cuántos viajes hacen falta              | **ya** |
-| Potencia, cómputo               | El propio equipamiento: si entra o no   | **ya** |
-| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | **ya** |
-| Rendimiento de extracción       | Minar                                   | F8     |
-| Escudo, blindaje, daño por tipo | Combate                                 | F14    |
-| Alcance de sensores             | Explorar y cartografiar                 | F13    |
-| Firma                           | Qué tan fácil te encuentran             | F14    |
+| Lo que produce un módulo        | Quién lo lee                            | Estado  |
+| ------------------------------- | --------------------------------------- | ------- |
+| Masa y empuje                   | Viajar: la duración real                | **ya**  |
+| Potencia y cómputo              | El propio equipamiento: si entra o no   | **ya**  |
+| Bodega                          | Cuánto te traés de un cinturón          | Etapa 2 |
+| Rendimiento de extracción       | Minar                                   | Etapa 2 |
+| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | Etapa 2 |
+| Potencia de salto y combustible | Qué puertas podés usar, y cuántas veces | Etapa 6 |
+| Escudo, blindaje, daño por tipo | Combate                                 | Combate |
+| Alcance de sensores             | Explorar y prospectar                   | Después |
+| Firma                           | Qué tan fácil te encuentran             | Combate |
 
-**Lo que hoy no lo lee nadie se dice acá:** el alcance de sensores y la firma
-cambian números en la hoja de rendimiento, pero **ninguna acción los consume
-todavía**. Están porque el fitting sin ellos sería un rompecabezas de una sola
-dimensión, y porque su fase ya tiene nombre. El día que una de esas filas quede
-sin fase, el módulo sobra.
+**Lo que hoy no lee nadie se dice acá.** De los 25 números que devuelve la
+calculadora, sólo la velocidad y el permiso de volar cambian el resultado de una
+acción; el resto todavía se dibuja nada más. Eso es una deuda, no una
+característica, y esta tabla es la lista de lo que hay que pagar. **El día que una
+fila se quede sin nadie que la lea, el número sobra.**
+
+Mientras tanto, un número que nada consume **no se le muestra al jugador**: la
+ficha enseña lo que algo usa. Un panel de aguante que ninguna mecánica puede
+gastar es una promesa escrita con cifras.
 
 ## Reglas de diseño
 

@@ -16,13 +16,17 @@
 
 import type { IconName } from '$lib/icons';
 
-/** Una pantalla dentro de un módulo. */
+/**
+ * Una pantalla dentro de un módulo.
+ *
+ * Sólo se declara lo que **existe**. El árbol no anuncia pantallas futuras: una
+ * entrada del menú que lleva a un cartel es una puerta cerrada con el nombre
+ * puesto, y prometer es peor que no ofrecer. El Neocom crece cuando hay algo
+ * detrás.
+ */
 export interface Tab {
 	readonly route: string;
 	readonly label: string;
-	/** Qué va a mostrar y en qué fase llega. Vacío cuando ya está construida. */
-	readonly pending?: string;
-	readonly phase?: string;
 }
 
 /** Una entrada del Neocom, con sus pantallas. */
@@ -60,30 +64,7 @@ export const MODULES: readonly Module[] = [
 		tabs: [
 			{
 				route: '/nave',
-				label: 'Ficha',
-				pending:
-					'Los atributos de tu nave: casco, combustible, energía ' +
-					'disponible y los bonos que le dan tus habilidades. Todavía ' +
-					'no tenés nave; la primera, una lanzadera Pioner, llega ' +
-					'con el hangar.',
-				phase: 'F6'
-			},
-			{
-				route: '/nave/equipamiento',
-				label: 'Equipamiento',
-				pending:
-					'Las ranuras de la nave —anclajes, utilitarios e internos— ' +
-					'con su clase, y los módulos montados en cada una. Acá se ' +
-					'decide a qué se dedica la nave.',
-				phase: 'F6'
-			},
-			{
-				route: '/nave/bodega',
-				label: 'Bodega',
-				pending:
-					'Qué llevás y cuánto espacio queda. La bodega es chica a ' +
-					'propósito: obliga a elegir qué vale la pena cargar.',
-				phase: 'F6'
+				label: 'Ficha'
 			}
 		]
 	},
@@ -99,129 +80,6 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/navegacion/sistema',
 				label: 'Sistema'
-			},
-			{
-				route: '/navegacion/galaxia',
-				label: 'Galaxia',
-				pending:
-					'El mapa de los sistemas conocidos y las rutas entre ellos. ' +
-					'Hoy Ánfora es el único que existe, así que sería un mapa ' +
-					'de un punto.',
-				phase: 'F13'
-			}
-		]
-	},
-	{
-		code: 'market',
-		label: 'Mercado',
-		icon: 'storefront',
-		tabs: [
-			{
-				route: '/mercado',
-				label: 'Comprar',
-				pending:
-					'Lo que se ofrece en la estación y a qué precio. Los ' +
-					'precios los van a mover los propios pilotos, no una tabla ' +
-					'fija.',
-				phase: 'F10'
-			},
-			{
-				route: '/mercado/vender',
-				label: 'Vender',
-				pending:
-					'Poner a la venta lo que traés en la bodega, al precio que ' +
-					'creas que alguien va a pagar.',
-				phase: 'F10'
-			},
-			{
-				route: '/mercado/ordenes',
-				label: 'Mis órdenes',
-				pending: 'Tus órdenes abiertas, cuáles se cumplieron y cuáles están ' + 'por vencer.',
-				phase: 'F10'
-			}
-		]
-	},
-	{
-		code: 'wallet',
-		label: 'Billetera',
-		icon: 'wallet',
-		tabs: [
-			{
-				route: '/billetera',
-				label: 'Billetera',
-				pending:
-					'El saldo en créditos y el detalle de cada movimiento: qué ' +
-					'cobraste, qué pagaste y por qué. Cada asiento queda ' +
-					'registrado, que es lo que permite auditar la economía ' +
-					'cuando algo no cierra.',
-				phase: 'F4'
-			}
-		]
-	},
-	{
-		code: 'assets',
-		label: 'Propiedades',
-		icon: 'buildings',
-		tabs: [
-			{
-				route: '/propiedades',
-				label: 'Bodegas',
-				pending:
-					'Lo que tengas guardado en cada estación. Mover cosas entre ' +
-					'bodegas también va a costar tiempo.',
-				phase: 'F15'
-			},
-			{
-				route: '/propiedades/naves',
-				label: 'Naves',
-				pending:
-					'Las naves que no estás usando y dónde quedaron. Una nave ' +
-					'guardada en la otra punta del sector no te sirve de mucho.',
-				phase: 'F15'
-			}
-		]
-	},
-	{
-		code: 'mail',
-		label: 'Mensajes',
-		icon: 'envelope-simple',
-		tabs: [
-			{
-				route: '/mensajes',
-				label: 'Recibidos',
-				pending:
-					'Avisos del sector, contratos ofrecidos y mensajes de otros ' +
-					'comandantes. Lo que el chat no puede sostener: lo que hay ' +
-					'que poder leer tres días después.',
-				phase: 'F9'
-			},
-			{
-				route: '/mensajes/enviados',
-				label: 'Enviados',
-				pending: 'Lo que mandaste, por si hace falta releerlo.',
-				phase: 'F9'
-			}
-		]
-	},
-	{
-		code: 'corporation',
-		label: 'Corporación',
-		icon: 'users-three',
-		tabs: [
-			{
-				route: '/corporacion',
-				label: 'Resumen',
-				pending:
-					'Tu corporación: qué es, quién la dirige y con quién está ' +
-					'enfrentada. Sin corporaciones, Vaxav es un juego de a uno ' +
-					'en un mundo compartido.',
-				phase: 'F12'
-			},
-			{
-				route: '/corporacion/miembros',
-				label: 'Miembros',
-				pending: 'Quiénes la forman, qué puede hacer cada uno y quién ' + 'responde por qué.',
-				phase: 'F12'
 			}
 		]
 	}
