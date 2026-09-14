@@ -350,9 +350,27 @@ export interface Informe {
 	 * los nuevos: hoy una acción no le paga a una habilidad.
 	 */
 	readonly xp: readonly GananciaXp[];
+	/**
+	 * Lo que la acción produjo, si produjo algo.
+	 *
+	 * La experiencia dice lo que el piloto aprendió; esto dice lo que se trajo, y
+	 * son dos cosas distintas. Un informe de extracción sin el botín cuenta la
+	 * mitad de lo que pasó.
+	 */
+	readonly loot: GananciaCarga | null;
 	/** Todo lo que dejó la acción, sumado. */
 	readonly xpTotal: number;
 	readonly unread: boolean;
+}
+
+/** Lo que una acción trajo a la bodega. */
+export interface GananciaCarga {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly units: number;
+	readonly volume: string;
+	readonly value: string;
 }
 
 /** Una página de la bitácora, con lo que hace falta para dibujar el paginador. */

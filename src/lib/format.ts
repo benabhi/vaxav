@@ -404,9 +404,25 @@ export function actionLabel(kind: string): string {
 	return ACTIONS[kind as ActionKind]?.label ?? 'Trabajando';
 }
 
-/** El ícono de una acción en curso. */
+/** El ícono de una acción, en curso o ya terminada. */
 export function actionIcon(kind: string): IconName {
 	return ACTIONS[kind as ActionKind]?.icon ?? 'clock';
+}
+
+/**
+ * Cómo se nombra una acción **ya terminada**: «Viaje», «Extracción».
+ *
+ * Es el mismo hecho que la etiqueta de arriba pero en otro tiempo verbal:
+ * mientras corre se dice qué estás haciendo, y en la bitácora qué pasó.
+ */
+const ACTION_NOUNS: Record<ActionKind, string> = {
+	travel: 'Viaje',
+	mine: 'Extracción'
+};
+
+/** El nombre de una acción terminada, o algo genérico si es nueva. */
+export function actionNoun(kind: string): string {
+	return ACTION_NOUNS[kind as ActionKind] ?? 'Acción';
 }
 
 /** Un entero grande con separador de miles, como el resto del HUD. */

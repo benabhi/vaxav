@@ -135,3 +135,56 @@ describe('la bitácora de un viaje de verdad', () => {
 		expect(informe.unread).toBe(true);
 	});
 });
+
+describe('el informe de una extracción', () => {
+	it('cuenta lo que trajo, y no sólo lo que aprendió', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const anillos = getBody(db, 'anillos_anfora_iii')!;
+
+		recordEntry(db, piloto.id, {
+			kind: 'mine',
+			durationSeconds: 2220,
+			originBodyId: anillos.id,
+			destinationBodyId: null,
+			deposit: { family: 'extraction', familyName: 'Extracción', xp: 370, before: 0, after: 370 },
+			result: { mined: { ore: 'ferrous_silicate', units: 220, cycles: 37 } }
+		});
+
+		const informe = buildBitacora(db, piloto.id).entries[0];
+
+		// La experiencia dice lo que el piloto aprendió; el botín, lo que se trajo.
+		// Un informe de extracción sin la carga cuenta la mitad de lo que pasó.
+		expect(informe.kindLabel).toBe('Extracción');
+		expect(informe.loot).not.toBeNull();
+		expect(informe.loot!.name).toBe('Silicato ferroso');
+		expect(informe.loot!.units).toBe(220);
+	});
+
+	it('una acción que no se mueve dice el lugar, no la salida', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const anillos = getBody(db, 'anillos_anfora_iii')!;
+
+		recordEntry(db, piloto.id, {
+			kind: 'mine',
+			durationSeconds: 60,
+			originBodyId: anillos.id,
+			destinationBodyId: null,
+			deposit: { family: 'extraction', familyName: 'Extracción', xp: 10, before: 0, after: 10 }
+		});
+
+		const informe = buildBitacora(db, piloto.id).entries[0];
+
+		expect(informe.details).toContainEqual({ label: 'Lugar', value: 'Anillos de Ánfora III' });
+	});
+
+	it('un viaje no trae carga', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const informe = informeDe(db, piloto.id, deposito(16));
+
+		expect(informe.loot).toBeNull();
+	});
+});
