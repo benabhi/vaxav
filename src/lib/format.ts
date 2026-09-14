@@ -11,9 +11,9 @@ import type { ActionKind } from '$lib/game/actions';
 import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
 import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
-import type { Item, ItemKind } from '$lib/game/items';
+import { getItem, type Item, type ItemKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
-import { startingLevels, type ProfessionCode } from '$lib/game/professions';
+import { startingKit, startingLevels, type ProfessionCode } from '$lib/game/professions';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { getSkill, type SkillFamily } from '$lib/game/skills';
 import {
@@ -44,6 +44,25 @@ export function roman(level: number): string {
 export function skillsSummary(profession: string): string {
 	return Object.entries(startingLevels(profession))
 		.map(([skill, level]) => `${getSkill(skill).name} ${roman(level)}`)
+		.join(' · ');
+}
+
+/**
+ * Con qué equipo sale a volar un oficio, en una línea.
+ *
+ * Va en la pantalla de alta junto a las habilidades: elegir un oficio es elegir
+ * **con qué arrancás**, y hasta ahora sólo se veía la mitad —lo que sabés— y no
+ * la otra —con qué trabajás—. Un minero sin láser es un minero que no puede
+ * minar, y eso tiene que poder leerse antes de elegir.
+ */
+export function kitSummary(profession: string): string {
+	return startingKit(profession)
+		.map((entrada) => {
+			const nombre = getItem(entrada.item).name;
+			const donde = entrada.fitted ? 'montado' : 'en bodega';
+			const cuantos = entrada.quantity > 1 ? ` ×${entrada.quantity}` : '';
+			return `${nombre}${cuantos} (${donde})`;
+		})
 		.join(' · ');
 }
 
