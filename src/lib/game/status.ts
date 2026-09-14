@@ -27,20 +27,29 @@ export const PILOT_STATUSES = [
 	'docked',
 	/** Quieto en un cuerpo que no es estación: un planeta, una luna, un cinturón. */
 	'in_space',
-	/** Con una orden en curso. No se puede empezar otra hasta que termine. */
-	'in_transit'
+	/** Yendo a algún lado. No se está en ninguna parte hasta llegar. */
+	'in_transit',
+	/**
+	 * Ocupado **sin moverse**: minando en un cinturón, refinando en una estación.
+	 *
+	 * Es distinto de ir en camino aunque las dos cosas impidan dar otra orden. Sin
+	 * esta distinción, minar diría que vas viajando y la pantalla de ubicación
+	 * dejaría de describir el cinturón donde estás trabajando.
+	 */
+	'working'
 ] as const;
 
 export type PilotStatus = (typeof PILOT_STATUSES)[number];
 
 /**
- * La situación del piloto a partir de dónde está y si tiene una orden.
+ * La situación del piloto a partir de dónde está y qué está haciendo.
  *
- * **Estar ocupado gana sobre dónde estás**: mientras se viaja no importa de qué
- * estación se salió, porque ya no se está ahí.
+ * **Viajar gana sobre dónde estás**: mientras se viaja no importa de qué estación
+ * se salió, porque ya no se está ahí. Trabajar no: el que mina sigue estando en
+ * el cinturón, y la pantalla tiene que poder describirlo.
  */
-export function statusFor(atStation: boolean, busy: boolean): PilotStatus {
-	if (busy) return 'in_transit';
+export function statusFor(atStation: boolean, busy: boolean, moving = true): PilotStatus {
+	if (busy) return moving ? 'in_transit' : 'working';
 	return atStation ? 'docked' : 'in_space';
 }
 
@@ -51,7 +60,7 @@ export function statusFor(atStation: boolean, busy: boolean): PilotStatus {
  * qué hacer sea una decisión y no una lista de compras.
  */
 export function canGiveOrders(status: PilotStatus): boolean {
-	return status !== 'in_transit';
+	return status !== 'in_transit' && status !== 'working';
 }
 
 /**
@@ -82,6 +91,7 @@ export function refitBlockedReason(
 ): string {
 	if (canRefit(status, services)) return '';
 	if (status === 'in_transit') return 'No se puede tocar la nave en pleno viaje.';
+	if (status === 'working') return 'No se puede tocar la nave con un trabajo en curso.';
 	if (status === 'in_space') {
 		return `Hay que estar atracado en una estación, y ${place || 'acá'} no lo es.`;
 	}
@@ -92,4 +102,9 @@ export function refitBlockedReason(
 export function orderBlockedReason(status: PilotStatus): string {
 	if (canGiveOrders(status)) return '';
 	return 'Ya hay una orden en curso.';
+}
+
+/** Si está ocupado, sea yendo a algún lado o trabajando donde está. */
+export function isBusy(status: PilotStatus): boolean {
+	return status === 'in_transit' || status === 'working';
 }

@@ -86,19 +86,21 @@ export function situation(db: Db, row: Pilot): Situation {
 	// La consulta va suelta y no por el módulo de acciones a propósito: el motor
 	// de acciones necesita preguntar por la situación antes de aceptar una orden,
 	// así que si este módulo dependiera de aquél habría un ciclo.
-	const busy =
-		db.select().from(pilotAction).where(eq(pilotAction.pilotId, row.id)).get() !== undefined;
+	const orden = db.select().from(pilotAction).where(eq(pilotAction.pilotId, row.id)).get();
+	const busy = orden !== undefined;
+	// Una orden con destino mueve; una sin destino ocurre donde estás parado.
+	const moving = orden?.destinationBodyId !== null && orden?.destinationBodyId !== undefined;
 
 	const place = row.locationId
 		? db.select().from(body).where(eq(body.id, row.locationId)).get()
 		: undefined;
-	if (!place) return describe(statusFor(false, busy), '', []);
+	if (!place) return describe(statusFor(false, busy, moving), '', []);
 
-	if (place.kind !== 'station') return describe(statusFor(false, busy), place.name, []);
+	if (place.kind !== 'station') return describe(statusFor(false, busy, moving), place.name, []);
 
 	const detail = bodyDetail(db, place.code);
 	return describe(
-		statusFor(true, busy),
+		statusFor(true, busy, moving),
 		place.name,
 		detail?.services ?? [],
 		detail?.station?.id ?? null

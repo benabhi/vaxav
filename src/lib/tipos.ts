@@ -122,6 +122,31 @@ export interface Ubicacion {
 	readonly moduleCount: string;
 	readonly agents: readonly FilaAgente[];
 	readonly agentCount: string;
+	/**
+	 * Qué se puede extraer acá, si es un cinturón.
+	 *
+	 * Va en Ubicación y no en el árbol del sistema porque **minar es algo que se
+	 * hace donde estás parado**: el árbol dice adónde ir, la ubicación dice qué
+	 * hacer una vez que llegaste.
+	 */
+	readonly ores: readonly VetaMineral[];
+}
+
+/** Un mineral de este cinturón, con lo que la orden prometería. */
+export interface VetaMineral {
+	readonly code: string;
+	readonly name: string;
+	readonly description: string;
+	/** Unidades que quedan, y cuánto es eso de su tope. */
+	readonly remaining: string;
+	readonly share: number;
+	/** Lo que una orden traería, ya calculado con tu nave y tu bodega. */
+	readonly units: number;
+	readonly volume: string;
+	readonly value: string;
+	readonly duration: string;
+	/** Por qué no se puede, o vacío si se puede. */
+	readonly blocked: string;
 }
 
 /**

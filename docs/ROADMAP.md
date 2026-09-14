@@ -95,6 +95,12 @@ En orden de valor, no de dificultad: mercado entre pilotos, corporaciones,
 exploración y prospección, drones, combate, y estaciones de jugador. Cada uno
 espera a que el circuito de abajo aguante su peso.
 
+De ésos, el más cercano es **el escáner**: hoy un cinturón revela todo lo que
+tiene apenas llegás, y escanear es lo que convertiría eso en una actividad con
+decisiones propias. Le daría además trabajo a Escaneo, a Prospección y al alcance
+de sensores, que son tres cosas que hoy no mueven ningún número. Ver
+[universo](systems/UNIVERSE.md).
+
 ## Lo que se decide en el camino
 
 | Pregunta                                          | Se necesita en |
