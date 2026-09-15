@@ -57,12 +57,19 @@
 		class="w-full"
 	>
 		<div class="flex w-full flex-col gap-3">
+			<!--
+				Lo no leído se marca **con color, no con brillo**. Encender el relleno de
+				la fila entera convertía un aviso en una baliza: la lista se leía como
+				si lo nuevo fuera urgente, cuando lo único que hace falta es poder
+				encontrarlo de un vistazo. La señal es la línea cian del borde y el halo
+				que entra desde ella; el fondo queda igual que el de una entrada leída.
+			-->
 			{#each bitacora.entries as informe (informe.id)}
 				<div
-					class="w-full border border-l-[3px] p-[0.9rem]
+					class="w-full border border-l-[3px] bg-surface p-[0.9rem]
 						{informe.unread
-						? 'aviso-panel border-border-soft border-l-data bg-surface-strong'
-						: 'border-border-soft border-l-border-soft bg-surface'}"
+						? 'aviso-panel border-border-soft border-l-data'
+						: 'border-border-soft border-l-border-soft'}"
 				>
 					<ActionReport report={informe} />
 				</div>
