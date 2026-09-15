@@ -574,6 +574,15 @@ export interface MovimientoBilletera {
 /** La billetera del piloto: el saldo y el libro que lo explica. */
 export interface Billetera {
 	readonly balance: string;
+	/**
+	 * Lo que entró y lo que salió desde siempre, los dos en positivo.
+	 *
+	 * El saldo dice dónde estás; estos dos dicen **cómo llegaste**. Un piloto con
+	 * cien mil créditos que movió un millón y otro que movió ciento diez mil no
+	 * están en la misma situación aunque el saldo sea el mismo.
+	 */
+	readonly incoming: string;
+	readonly outgoing: string;
 	readonly entries: readonly MovimientoBilletera[];
 	readonly total: number;
 }

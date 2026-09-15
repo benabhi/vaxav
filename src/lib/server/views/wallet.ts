@@ -12,7 +12,7 @@
 import { inArray } from 'drizzle-orm';
 import { body, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
-import { balance, entryCount, history } from '../services/wallet';
+import { balance, entryCount, history, walletTotals } from '../services/wallet';
 import { thousands } from '$lib/format';
 import type { IconName } from '$lib/icons';
 import type { Billetera, MovimientoBilletera } from '$lib/tipos';
@@ -81,8 +81,12 @@ export function buildWalletView(db: Db, row: Pilot, limit = 20): Billetera {
 		};
 	});
 
+	const totales = walletTotals(db, row.id);
+
 	return {
 		balance: `${thousands(balance(db, row.id))} CR`,
+		incoming: `${thousands(totales.incoming)} CR`,
+		outgoing: `${thousands(totales.outgoing)} CR`,
 		entries,
 		total: entryCount(db, row.id)
 	};

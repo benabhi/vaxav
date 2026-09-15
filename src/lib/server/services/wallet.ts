@@ -140,6 +140,30 @@ export function entryCount(db: Db, pilotId: number): number {
 }
 
 /**
+ * Cuánto entró y cuánto salió en total, en positivo los dos.
+ *
+ * Se suma en la base y no en memoria a propósito: el libro crece para siempre, y
+ * traerse seis años de asientos para sumarlos acá sería el clásico error que no
+ * se nota con veinte movimientos y tumba la pantalla con veinte mil.
+ *
+ * Son los dos números que convierten un listado en un balance. El saldo dice
+ * dónde estás; ingresos contra egresos dice **cómo llegaste**, que es lo que uno
+ * quiere saber cuando abre la billetera después de un viaje largo.
+ */
+export function walletTotals(db: Db, pilotId: number): { incoming: number; outgoing: number } {
+	const fila = db
+		.select({
+			incoming: sql<number>`coalesce(sum(case when ${creditEntry.amount} > 0 then ${creditEntry.amount} else 0 end), 0)`,
+			outgoing: sql<number>`coalesce(-sum(case when ${creditEntry.amount} < 0 then ${creditEntry.amount} else 0 end), 0)`
+		})
+		.from(creditEntry)
+		.where(eq(creditEntry.pilotId, pilotId))
+		.get();
+
+	return { incoming: fila?.incoming ?? 0, outgoing: fila?.outgoing ?? 0 };
+}
+
+/**
  * Si el saldo cacheado coincide con lo que dice el libro.
  *
  * Devuelve `null` cuando cierra. Es la contrapartida de haber cacheado el saldo:

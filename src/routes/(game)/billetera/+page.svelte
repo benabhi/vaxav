@@ -1,14 +1,22 @@
 <!--
-	Pantalla Billetera: el saldo y el libro que lo explica.
+	Pantalla Billetera: el saldo, el balance y el libro que los explica.
 
 	El saldo solo no dice nada. Lo que hace auditable a una economía es poder
 	seguir cada movimiento hasta el hecho que lo causó, y por eso cada asiento
 	muestra **el saldo con el que quedó**: leyendo esa columna de arriba a abajo se
 	reconstruye la historia sin tener que sumar.
 
-	Es la misma idea que la bitácora, aplicada a la plata. Y va a importar cada vez
-	más: cuando los precios los muevan los jugadores, esta pantalla es donde se ve
-	si un viaje valió la pena.
+	Va **en tabla y no en tarjetas apiladas** porque un libro contable es una
+	tabla: lo que uno hace acá es recorrer una columna —los egresos, los saldos— y
+	con cada renglón dibujado como una ficha suelta esa lectura vertical no existe.
+	Ingresos y egresos van en **columnas distintas**: el ojo encuentra en qué se fue
+	la plata sin leer signos.
+
+	En pantalla angosta la tabla se desplaza dentro de su contenedor y las columnas
+	accesorias —detalle y lugar— se esconden, que es la misma regla que usa el
+	mercado. Es la misma idea que la bitácora, aplicada a la plata: cuando los
+	precios los muevan los jugadores, esta pantalla es donde se ve si un viaje
+	valió la pena.
 -->
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
@@ -25,13 +33,19 @@
 
 	let billetera = $derived(data.billetera);
 
-	/** La fecha de un asiento, en la hora del jugador y no en la del servidor. */
+	/**
+	 * La fecha de un asiento, en la hora del jugador y no en la del servidor.
+	 *
+	 * En 24 horas y no en «a. m./p. m.»: el juego lleva reloj UTC de 24 en la barra
+	 * de estado, y la forma larga se comía la columna de al lado.
+	 */
 	function fecha(at: number): string {
 		return new Date(at).toLocaleString('es-AR', {
 			day: '2-digit',
 			month: '2-digit',
 			hour: '2-digit',
-			minute: '2-digit'
+			minute: '2-digit',
+			hour12: false
 		});
 	}
 </script>
@@ -41,6 +55,32 @@
 <div class="flex flex-col items-start gap-1">
 	<Eyebrow>Billetera</Eyebrow>
 	<DisplayTitle>{billetera.balance}</DisplayTitle>
+</div>
+
+<!--
+	El balance de arriba: dónde estás y cómo llegaste. Dos pilotos con el mismo
+	saldo no están en la misma situación si uno movió diez veces más que el otro.
+-->
+<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
+	<div class="flex flex-col items-start gap-1">
+		<Label>Ingresos</Label>
+		<span class="flex items-center gap-2">
+			<Icon name="caret-up" weight="fill" size="0.7rem" class="text-data" />
+			<span class="font-mono text-3 text-data">{billetera.incoming}</span>
+		</span>
+	</div>
+	<div class="flex flex-col items-start gap-1">
+		<Label>Egresos</Label>
+		<span class="flex items-center gap-2">
+			<Icon name="caret-down" weight="fill" size="0.7rem" class="text-accent-bright" />
+			<span class="font-mono text-3 text-accent-bright">{billetera.outgoing}</span>
+		</span>
+	</div>
+	<div class="grow"></div>
+	<div class="flex flex-col items-start gap-1">
+		<Label>Asientos</Label>
+		<span class="font-mono text-3 text-text-body">{billetera.total}</span>
+	</div>
 </div>
 
 {#if billetera.entries.length === 0}
@@ -56,58 +96,95 @@
 {:else}
 	<TitledPanel
 		title="Movimientos"
-		detail={billetera.total === 1 ? '1 asiento' : `${billetera.total} asientos`}
+		detail={billetera.entries.length < billetera.total
+			? `los últimos ${billetera.entries.length} de ${billetera.total}`
+			: billetera.total === 1
+				? '1 asiento'
+				: `${billetera.total} asientos`}
 		class="w-full"
 	>
-		<div class="flex w-full flex-col">
-			{#each billetera.entries as asiento (asiento.id)}
-				<div
-					class="flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border-soft
-						px-[0.6rem] py-[0.7rem] last:border-b-0"
-				>
-					<Icon
-						name={asiento.icon}
-						weight="duotone"
-						size="0.95rem"
-						class={asiento.incoming ? 'text-data' : 'text-accent'}
-					/>
+		<div class="w-full overflow-x-auto">
+			<table
+				class="w-full min-w-[38rem] table-fixed border-collapse text-left
+					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+			>
+				<!--
+					Los anchos van declarados: las tres columnas de cifras tienen que caer
+					siempre en el mismo lugar para que se las pueda recorrer de un vistazo,
+					y con anchos automáticos se corren según qué diga el renglón más largo.
+				-->
+				<colgroup>
+					<col class="w-[7.5rem]" />
+					<col class="w-[11rem]" />
+					<col class="hidden md:table-column" />
+					<col class="hidden lg:table-column lg:w-[9rem]" />
+					<col class="w-[7rem]" />
+					<col class="w-[7rem]" />
+					<col class="w-[7.5rem]" />
+				</colgroup>
+				<thead class="sticky top-0 z-10 bg-well">
+					<tr class="border-b border-border-soft">
+						{#each [{ label: 'Fecha', class: '' }, { label: 'Concepto', class: '' }, { label: 'Detalle', class: 'hidden md:table-cell' }, { label: 'Lugar', class: 'hidden lg:table-cell' }, { label: 'Ingreso', class: 'text-right' }, { label: 'Egreso', class: 'text-right' }, { label: 'Saldo', class: 'text-right' }] as columna (columna.label)}
+							<th
+								class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
+									{columna.class}"
+							>
+								{columna.label}
+							</th>
+						{/each}
+					</tr>
+				</thead>
+				<tbody>
+					{#each billetera.entries as asiento (asiento.id)}
+						<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
+							<td
+								class="py-[0.45rem] pr-3 font-mono text-[0.72rem] whitespace-nowrap text-text-muted"
+							>
+								{fecha(asiento.at)}
+							</td>
+							<td class="py-[0.45rem] pr-3">
+								<div class="flex min-w-0 items-center gap-2">
+									<Icon
+										name={asiento.icon}
+										weight="duotone"
+										size="0.9rem"
+										class="shrink-0 {asiento.incoming ? 'text-data' : 'text-accent'}"
+									/>
+									<span
+										class="truncate font-display text-[0.76rem] font-bold tracking-display
+											text-text-strong uppercase"
+									>
+										{asiento.kindLabel}
+									</span>
+								</div>
+							</td>
+							<td class="hidden py-[0.45rem] pr-3 text-1 text-text-body md:table-cell">
+								<span class="line-clamp-2">{asiento.memo}</span>
+							</td>
+							<td
+								class="hidden py-[0.45rem] pr-3 text-2 whitespace-nowrap text-text-muted lg:table-cell"
+							>
+								{asiento.place || '—'}
+							</td>
 
-					<span class="flex min-w-[9rem] flex-[1_1_12rem] flex-col items-start gap-[0.15rem]">
-						<span
-							class="font-display text-[0.8rem] font-bold tracking-display text-text-strong uppercase"
-						>
-							{asiento.kindLabel}
-						</span>
-						<span class="font-mono text-[0.62rem] text-text-muted">
-							{fecha(asiento.at)}{asiento.place ? ` · ${asiento.place}` : ''}
-						</span>
-					</span>
-
-					{#if asiento.memo}
-						<span class="min-w-0 flex-[2_1_10rem] text-1 text-text-body">{asiento.memo}</span>
-					{/if}
-
-					<div class="grow"></div>
-
-					<!--
-						El importe y el saldo van juntos. El signo va escrito y no sólo
-						pintado: si entró o salió plata también tiene que leerse sin color.
-					-->
-					<span class="flex shrink-0 flex-col items-end gap-[0.15rem]">
-						<span
-							class="font-mono text-[0.88rem] {asiento.incoming
-								? 'text-data'
-								: 'text-accent-bright'}"
-						>
-							{asiento.amount}
-						</span>
-						<span class="flex items-baseline gap-2">
-							<Label>Saldo</Label>
-							<span class="font-mono text-[0.68rem] text-text-muted">{asiento.balanceAfter}</span>
-						</span>
-					</span>
-				</div>
-			{/each}
+							<!--
+								Ingreso y egreso en columnas separadas, y sólo una llena por
+								renglón: con un único importe con signo hay que leer el signo de
+								cada fila para contestar "¿en qué se me fue la plata?".
+							-->
+							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.8rem] text-data">
+								{asiento.incoming ? asiento.amount : ''}
+							</td>
+							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.8rem] text-accent-bright">
+								{asiento.incoming ? '' : asiento.amount}
+							</td>
+							<td class="py-[0.45rem] text-right font-mono text-[0.8rem] text-text-body">
+								{asiento.balanceAfter}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	</TitledPanel>
 {/if}
