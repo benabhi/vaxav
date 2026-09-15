@@ -101,11 +101,25 @@ número, **Escaneo** y **Prospección**, y **Ciencias** pasó a tener por fin un
 fuente de experiencia: escanear es la única acción que la paga, y por eso pesa por
 encima de uno. Ver [el universo](systems/UNIVERSE.md).
 
-### 4 · Requisitos de habilidad e inyecciones
+### 4 · Requisitos de habilidad e inyecciones · **a medias**
 
-Los módulos y los cascos piden habilidades, y las habilidades se desbloquean
-inyectándolas en el laboratorio de una estación. Va después de vender porque un
-inyector cuesta plata.
+- ~~Los módulos y los cascos declaran qué habilidades piden.~~
+- ~~Se hacen cumplir al volar y al equipar, en dos lugares y sólo dos.~~
+- Las habilidades se desbloquean inyectándolas en el laboratorio de una estación.
+- La pantalla de habilidades muestra qué módulos y qué cascos abre cada una.
+
+El escalón dejó de ser una etiqueta: el E no pide nada —es el que vuela una nave
+de astillero— y el A pide la habilidad de su sistema. Con eso, entrenar dejó de
+ser un número que sube y pasó a ser una llave.
+
+De ahí salió una regla que condiciona todo lo que venga: **sólo se gatea con
+habilidades que se puedan entrenar**. La experiencia se deposita por rama, así que
+pedir una de una rama sin fuente sería cerrar la puerta con la llave adentro.
+Ingeniería consigue la suya con el taller de la etapa 7, y Combate con el combate.
+Ver [naves](systems/SHIPS.md).
+
+Lo que falta —la inyección y el laboratorio— va después de vender porque un
+inyector cuesta plata: al revés sería una reja sin llave.
 
 ### 5 · Refinar
 

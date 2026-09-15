@@ -133,6 +133,37 @@ A.
 
 Un módulo se nombra por las dos cosas, clase y escalón: **2E**, **3A**.
 
+**Qué pide cada escalón**, en una regla sola:
+
+| Escalón         | Requisito                     |
+| --------------- | ----------------------------- |
+| **E**           | Nada, en ninguna clase        |
+| **A** clase 1-2 | Su habilidad al **nivel II**  |
+| **A** clase 3   | Su habilidad al **nivel III** |
+
+El E no pide nada **nunca**, y eso no es generosidad: es el escalón con el que
+sale una nave del astillero, así que un requisito ahí dejaría a un piloto nuevo
+con una nave que no despega. La escalera empieza en el A.
+
+Cuál es "su habilidad" sale del sistema: los propulsores piden **Navegación**, el
+motor de salto **Astrogación**, los sensores **Escaneo** y el láser de extracción
+**Minería**.
+
+> **Sólo se gatea con habilidades que se puedan entrenar.** La experiencia se
+> deposita por rama, así que una rama sin ninguna acción que la pague es una rama
+> que nadie puede subir, y pedirla sería cerrar la puerta con la llave adentro. Hoy
+> tienen fuente Pilotaje, Extracción, Ciencias y Comercio; Ingeniería la consigue
+> con el taller y Combate con el combate. Por eso la planta y el distribuidor A
+> **todavía no piden Gestión de energía**, aunque sea su habilidad natural. Un test
+> lo vigila, y la lista vive en `game/actions.ts`.
+
+**Dónde se hacen cumplir: en dos lugares y sólo dos.** La hoja de rendimiento
+empuja lo que falta a la lista de problemas —y como volar es no tener ninguno y
+todas las acciones lo consultan, los requisitos deciden de una vez si se puede
+viajar, minar o escanear—, y la lista de una ranura no ofrece lo que el piloto no
+sabe usar. El módulo sigue siendo suyo y se puede vender; lo que no se puede es
+montarlo.
+
 > **Antes la letra era una "calificación"** que mezclaba dos cosas: el escalón
 > tecnológico y el compromiso de diseño. Y el catálogo no la sostenía —de las cinco
 > letras sólo dos se usaban como escalera, y en la mitad de los módulos la letra no
@@ -203,6 +234,31 @@ siempre la respuesta correcta. La regla que lo evita:
 Eso convierte al **alcance de sensores** en su contrapeso —saber contra qué vas
 es lo que habilita traer el arma especializada— y le da trabajo a un atributo que
 si no quedaría de adorno.
+
+### Los cascos también piden
+
+Un casco declara **una lista** de requisitos y no uno solo: la nave de guerra que
+exige puntería y blindaje no es una rareza, es lo normal en cuanto el catálogo
+crece.
+
+| Casco    | Pide                    |
+| -------- | ----------------------- |
+| Pioner   | **Nada**                |
+| Mula     | Ingeniería de bodega II |
+| Percal   | Minería II              |
+| Vencejo  | Escaneo II              |
+| Alabarda | Puntería II             |
+
+**La Pioner no pide nada por la misma razón que el escalón E**: es el casco que el
+astillero le entrega a cualquiera que se dé de alta. Manejo de lanzaderas, que era
+su requisito, pasó a ser su **bono de rol** —donde antes estaba Navegación, que ya
+empuja la velocidad de toda nave desde el bono general y se estaba contando dos
+veces—.
+
+Los otros cuatro piden habilidades de ramas que todavía no tienen fuente, y eso
+está bien hoy por una razón temporal: **no hay astillero**, así que el único casco
+que alguien puede tener es el de partida. El día que se puedan comprar, o su rama
+tiene fuente o el requisito cambia; un test lo recuerda.
 
 ## Los cinco cascos
 

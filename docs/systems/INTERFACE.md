@@ -40,14 +40,15 @@ Todo el árbol vive en `src/lib/navigation.ts`, que es de donde salen el Neocom,
 barras de pestañas y el registro de rutas: una pantalla nueva se agrega en un solo
 lugar y aparece en los tres.
 
-| Módulo      | Pestañas                             |
-| ----------- | ------------------------------------ |
-| Piloto      | Información · Habilidades · Bitácora |
-| Nave        | Ficha · Bodega                       |
-| Navegación  | Ubicación · Sistema                  |
-| Mercado     | Mercado                              |
-| Propiedades | Propiedades                          |
-| Billetera   | Billetera                            |
+| Módulo      | Pestañas                                       |
+| ----------- | ---------------------------------------------- |
+| Piloto      | Información · Habilidades · Bitácora           |
+| Nave        | Ficha · Bodega                                 |
+| Navegación  | Ubicación · Sistema                            |
+| Mercado     | Mercado · Órdenes de venta · Órdenes de compra |
+| Propiedades | Propiedades                                    |
+| Billetera   | Billetera                                      |
+| Opciones    | Cuenta                                         |
 
 Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
 pantallas: la galaxia llega con el segundo sistema.
@@ -281,6 +282,105 @@ incómodo, la lista es lo que termina usándose.
 En teléfono el anillo no entra y la pantalla cae a una columna, con la lista
 debajo. Vive en `src/lib/components/` y
 `src/lib/components/`.
+
+## Piezas que se repiten
+
+Cosas que nacieron en una pantalla y terminaron siendo del juego entero. Van acá
+porque la próxima pantalla que las necesite tiene que encontrarlas, no
+reinventarlas.
+
+### La credencial, y el retrato del piloto
+
+La pantalla de Información es **una credencial**, y es la figura de esa pantalla
+igual que el anillo lo es de Nave. Lo que la hace reconocible antes de leer una
+palabra son cuatro cosas: una banda de cabecera con el número de serie, una foto
+de proporción de carnet pegada al borde que ocupa el alto entero de la fila,
+escuadras de visor en sus esquinas, y el escudo de la facción como marca de agua
+detrás de las lecturas —detrás de **las lecturas** y no de la tarjeta entera,
+porque al fondo se le metía debajo al hexágono, y una figura que informa por su
+forma no puede tener otra encima—.
+
+El hexágono de ramas va **adentro**, al otro lado de los datos. Una credencial
+dice quién sos, y en un juego de progresión eso no es el nombre: es la silueta de
+aquello a lo que le dedicaste el tiempo. La tarjeta contesta las dos preguntas de
+un vistazo, y un botón la abre en grande junto a las cifras exactas de cada rama.
+
+**El retrato:**
+
+| Qué           | Cómo                                 |
+| ------------- | ------------------------------------ |
+| Tamaño        | 480×640, proporción de carnet        |
+| Formato       | WebP, siempre                        |
+| Peso máximo   | 512 kB                               |
+| Dónde vive    | `data/retratos/<id del piloto>.webp` |
+| Cómo se sirve | `/retratos/<id>?v=<marca de tiempo>` |
+
+Tres decisiones que lo ordenan:
+
+1. **El recorte y la compresión pasan en el navegador.** Lo que llega al servidor
+   ya tiene la forma y el peso definitivos, así que no hace falta una librería de
+   imágenes del lado del servidor —que acá sería una dependencia nativa por una
+   sola pantalla— y nadie espera a que se suban ocho megas para que le digan que
+   no. El servidor **igual valida** tipo, peso y firma del archivo, porque el
+   navegador es del jugador y un pedido se puede armar a mano.
+2. **Se guarda ya recortado**, no entero. Si cada pantalla lo recortara al
+   dibujarlo, sería una cara en la credencial y otra en una lista.
+3. **Vive en `data/` y no en `static/`.** `static/` es contenido del proyecto:
+   entra al repositorio y se rehace en cada despliegue. Esto es estado de la
+   partida, como la base, y por eso va al lado. El precio es que SvelteKit no lo
+   sirve solo; son unas pocas líneas de ruta y a cambio queda claro qué es
+   contenido y qué es partida. Los retratos de los **agentes** son contenido y
+   siguen en `static/portraits/`.
+
+El nombre del archivo es el id y nada más: la carpeta ya es el espacio de
+nombres. Que esté atado a la cuenta es lo que hace que subir uno nuevo reemplace
+al anterior sin dejar basura, y que dar de baja una cuenta sea borrar un archivo.
+
+Se cambia **desde la propia foto y en ningún otro lado**: ahí el resultado está a
+la vista al tamaño exacto en que va a quedar. Una chapita de cámara siempre
+visible dice que se puede tocar —un disparador que sólo aparece al pasar el mouse
+es un disparador que nadie descubre—, el velo con Cambiar y Quitar aparece al
+señalar o con el foco del teclado, y mientras sube se queda encendido con un aro
+girando: una subida sin señal parece una que no pasó, y el jugador vuelve a
+apretar.
+
+### La ayuda que dice qué habilidad mueve un número
+
+Un juego de progresión que muestra "alcance: 1 región" sin decir qué lo sube
+esconde justamente lo que hay que decidir. Al lado de cada número que depende de
+una habilidad va un signo de pregunta que la nombra, dice **de qué rama es** —la
+experiencia se deposita por rama, así que saber que Contabilidad es de Comercio es
+saber que hay que comerciar para subirla— y qué gobierna.
+
+El texto sale del catálogo de habilidades y no de un texto escrito a mano, así que
+ponerla en una pantalla nueva no cuesta escribir nada. Va en un `Popover` y no en
+un `HoverCard`: en un teléfono no hay mouse.
+
+### Las tablas
+
+Un libro contable, un catálogo y un libro de órdenes son tablas, y lo que uno hace
+con ellos es **recorrer una columna**. De ahí tres reglas:
+
+- **Los anchos van declarados** (`table-fixed` y un `colgroup`), no medidos por el
+  navegador. Con anchos automáticos las cifras se corren según qué diga el renglón
+  más largo, y dos tablas apiladas que son la misma partida en dos dejan de estar
+  en registro.
+- **Lo que tiene dos lados va en dos columnas**, no en una con signo. En la
+  billetera, ingreso y egreso separados contestan "¿en qué se me fue la plata?"
+  sin leer el signo de cada fila.
+- **En pantalla angosta la tabla se desplaza dentro de su contenedor** y las
+  columnas accesorias se esconden. La página nunca se desplaza en horizontal.
+
+### La zona de peligro
+
+Lo que no se puede deshacer va **al fondo de su pantalla, enmarcado en rojo y con
+su propia cabecera**. Se llega bajando a propósito, no de paso.
+
+Dice **qué se pierde antes de pedir nada**, y la confirmación son dos cosas que
+frenan cosas distintas: escribir un dato a mano frena al dedo apurado, y la
+contraseña frena a quien se sentó en una sesión ajena. El botón usa la variante
+`danger`, que arranca en contorno y se llena al señalarla: un botón rojo sólido en
+una pantalla naranja se lleva el ojo antes que el aviso que hay que leer.
 
 ## Cómo encaja con lo que ya existe
 

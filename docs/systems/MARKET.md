@@ -230,6 +230,32 @@ enorme. Los días sin operaciones no se rellenan: la curva une los que hubo.
 
 ## La pantalla
 
+El módulo tiene **tres pestañas**: el mercado, y las órdenes propias de cada lado.
+Se llaman "Órdenes de venta" y "Órdenes de compra" y no "Mis ventas": lo segundo
+se lee como las ventas que hiciste, y lo que hay ahí es lo que tenés **publicado**
+esperando que alguien lo tome. Van partidas por lado porque vender y comprar son
+dos oficios: en una lista mezclada hay que leer la etiqueta de cada renglón para
+saber de cuál se trata, y con cincuenta órdenes eso deja de ser una lista.
+
+### El árbol baja hasta el ítem
+
+Como el de EVE. Una rama que sólo llega a la categoría obliga a elegir "Utilidad"
+y después buscar el escáner en una tabla de doce; con el ítem en el árbol, ir a
+ver a cuánto está es un camino y no una búsqueda.
+
+**Elegir una rama y elegir un ítem hacen cosas distintas**, y ésa es la
+distinción que ordena la pantalla:
+
+- Una **rama** filtra el catálogo: una fila por ítem, con el mejor precio de cada
+  lado y dónde está.
+- Un **ítem** muestra su libro: una fila por **orden**, con precio, cantidad, dónde
+  está y quién está del otro lado.
+
+Y **mirar no es operar**. El árbol elige qué mirar; la ventana se abre apretando
+una orden concreta, y opera contra **esa** orden y no contra la mejor —quien
+eligió la tercera no quiere la primera—. Desde el catálogo sí toma la mejor, que
+es lo que esa fila prometía.
+
 La forma es la del mercado de EVE Online, con la voz de Elite, y se ordena en
 tres piezas que contestan tres preguntas distintas:
 
