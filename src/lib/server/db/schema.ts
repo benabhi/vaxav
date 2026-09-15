@@ -886,6 +886,42 @@ export const marketOrder = sqliteTable(
 	]
 );
 
+/**
+ * Una operación cerrada del mercado. **El precio de algo es su historia.**
+ *
+ * Es una tabla aparte de los dos libros mayores a propósito: aquéllos contestan
+ * "qué le pasó a mi billetera" y "de dónde salió esta unidad", y ésta contesta
+ * una pregunta de mercado y no de contabilidad —"¿a cuánto se estuvo vendiendo el
+ * iridio en esta región?"—. Meterla en `credit_entry` obligaría a filtrar por
+ * tipo de asiento y a sacar el precio de una división, y la consulta que dibuja
+ * un gráfico recorrería asientos de sueldos y de combustible para nada.
+ *
+ * Se escribe **también cuando la contraparte es la estación**: si sólo contara lo
+ * de los jugadores, un mercado recién abierto no tendría ni un punto que dibujar
+ * justo cuando más falta hace saber cuánto vale lo que uno trae.
+ */
+export const marketTrade = sqliteTable(
+	'market_trade',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		itemCode: text('item_code').notNull(),
+		stationId: integer('station_id')
+			.notNull()
+			.references(() => station.id),
+		/** Créditos por unidad, que es lo que se grafica. */
+		price: integer('price').notNull(),
+		quantity: integer('quantity').notNull(),
+		/** Si del otro lado estaba la estación y no otro piloto. */
+		fromStation: integer('from_station', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		// Así se lee siempre: la historia de un ítem, del más nuevo al más viejo.
+		index('market_trade_item_idx').on(table.itemCode, table.createdAt),
+		index('market_trade_station_idx').on(table.stationId)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -911,3 +947,4 @@ export type CreditEntry = typeof creditEntry.$inferSelect;
 export type ItemEntry = typeof itemEntry.$inferSelect;
 export type BeltDeposit = typeof beltDeposit.$inferSelect;
 export type MarketOrder = typeof marketOrder.$inferSelect;
+export type MarketTrade = typeof marketTrade.$inferSelect;

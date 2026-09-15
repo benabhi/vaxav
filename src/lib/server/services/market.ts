@@ -25,6 +25,7 @@ import type { Db } from '../db/types';
 import { moveItem, quantityOf, shipContainer, stationContainer } from './containers';
 import { activeShip, pilotSkillLevels } from './ships';
 import { situation } from './status';
+import { recordTrade } from './trades';
 import { bodyDetail } from './universe';
 import { credit, debit } from './wallet';
 import { getItem, type ContainerKind, type ItemKind } from '$lib/game/items';
@@ -186,6 +187,13 @@ export function sellToStation(
 		}
 
 		moveItem(tx, containerId, itemCode, -quantity, 'sold');
+		recordTrade(tx, {
+			itemCode,
+			stationId: desk.stationId,
+			price: cotizacion.bid,
+			quantity,
+			fromStation: true
+		});
 		const entry = credit(tx, row.id, total, {
 			kind: item.kind === 'ore' ? 'ore_sale' : 'module_sale',
 			bodyId: desk.bodyId,
@@ -231,6 +239,13 @@ export function buyFromStation(db: Db, row: Pilot, itemCode: string, quantity: n
 		});
 
 		moveItem(tx, stationContainer(tx, row.id, desk.stationId).id, itemCode, quantity, 'bought');
+		recordTrade(tx, {
+			itemCode,
+			stationId: desk.stationId,
+			price: cotizacion.ask,
+			quantity,
+			fromStation: true
+		});
 
 		return {
 			itemCode,

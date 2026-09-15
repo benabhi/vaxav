@@ -33,6 +33,7 @@ import {
 import type { Db } from '../db/types';
 import { moveItem, quantityOf, shipContainer, stationContainer } from './containers';
 import { activeShip, pilotSkillLevels } from './ships';
+import { recordTrade } from './trades';
 import { balance, credit, debit } from './wallet';
 import { getItem, type ContainerKind } from '$lib/game/items';
 import {
@@ -400,6 +401,12 @@ export function buyFromOrder(db: Db, row: Pilot, orderId: number, quantity: numb
 			'bought'
 		);
 		consume(tx, orden, quantity, 0);
+		recordTrade(tx, {
+			itemCode: orden.itemCode,
+			stationId: orden.stationId,
+			price: orden.price,
+			quantity
+		});
 
 		return {
 			orderId: orden.id,
@@ -480,6 +487,12 @@ export function sellToOrder(
 		// La plata del comprador ya estaba reservada: se libera contra esta venta en
 		// vez de pedírsela otra vez.
 		consume(tx, orden, quantity, total);
+		recordTrade(tx, {
+			itemCode: orden.itemCode,
+			stationId: orden.stationId,
+			price: orden.price,
+			quantity
+		});
 
 		return {
 			orderId: orden.id,
