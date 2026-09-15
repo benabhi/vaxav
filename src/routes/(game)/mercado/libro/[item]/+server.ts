@@ -9,19 +9,13 @@
 import { error, json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { buildBookView } from '$lib/server/views/book';
-import { bookRows } from '$lib/game/market';
 import { isItem } from '$lib/game/items';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ locals, params, url }) => {
+export const GET: RequestHandler = async ({ locals, params }) => {
 	if (!locals.pilot) error(401, 'Sin sesión');
 	// Un código inventado llega hasta acá sólo si alguien arma el pedido a mano.
 	if (!isItem(params.item)) error(404, 'Ese ítem no existe');
 
-	// Cuántas filas por lado. El número lo elige la pantalla, pero la lista de
-	// números válidos la decide el servidor: si no, un pedido a mano se traería el
-	// libro entero y acotarlo no serviría de nada.
-	return json(
-		buildBookView(db, locals.pilot, params.item, bookRows(Number(url.searchParams.get('por'))))
-	);
+	return json(buildBookView(db, locals.pilot, params.item));
 };
