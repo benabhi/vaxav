@@ -252,8 +252,11 @@ Mezclar las dos ventanas obligaba a leer un formulario entero para hacer la
 operación más simple del mercado.
 
 El catálogo entero viaja con la pantalla; **el libro de cada ítem se pide al
-abrirlo**. Traer las órdenes de los cincuenta y un renglones para dibujar una
-lista sería pedir miles de filas de las que se miran dos.
+abrirlo**, y de cada lado viajan **sólo las primeras cincuenta**. Traer las
+órdenes de los cincuenta y un renglones para dibujar una lista sería pedir miles
+de filas de las que se miran dos, y un ítem popular puede juntar miles él solo:
+nadie opera contra la número ochocientos. La pantalla dice cuántas quedaron
+afuera, que es lo que informa si el mercado está profundo.
 
 ### La figura: el historial
 

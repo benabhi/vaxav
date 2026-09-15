@@ -9,6 +9,12 @@
  * las mismas columnas: cuánto hay, a cuánto, dónde y a qué distancia. La orden de
  * la estación entra como una fila más, marcada: es la única que no se agota y la
  * única que se negocia, porque del otro lado no hay otro piloto.
+ *
+ * **Cada lado viaja acotado.** Un ítem popular puede juntar miles de órdenes y
+ * nadie opera contra la número ochocientos: se toma siempre el mejor precio, o
+ * uno de los primeros. Mandar el libro entero sería pagar mil filas para mirar
+ * dos. Se manda la cabeza de cada lado y se dice cuántas quedaron afuera, que es
+ * lo que hace falta para saber si el mercado está profundo.
  */
 
 import { and, eq, inArray } from 'drizzle-orm';
@@ -24,6 +30,16 @@ import { marketStations } from './market';
 import { getItem } from '$lib/game/items';
 import { thousands } from '$lib/format';
 import type { LibroMercado, OrdenMercado } from '$lib/tipos';
+
+/**
+ * Cuántas órdenes de cada lado viajan a la pantalla.
+ *
+ * No es un número de rendimiento sino de uso: se opera contra la mejor, o contra
+ * una de las primeras. Quien necesite ver la número cincuenta ya está mirando un
+ * mercado que hay que paginar de verdad, y ese día esto pasa a ser el tamaño de
+ * página.
+ */
+export const BOOK_PAGE = 50;
 
 /** Una orden de jugador, lista para dibujar. */
 function playerRow(
@@ -149,12 +165,14 @@ export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercad
 
 	// Vendedores del más barato al más caro, compradores del que más paga al que
 	// menos: en los dos casos, lo mejor para quien mira arriba de todo.
-	const sellers = [...estacionRow('sell'), ...deJugadores('sell')].sort(
+	const todosSellers = [...estacionRow('sell'), ...deJugadores('sell')].sort(
 		(a, b) => a.price - b.price || a.distance - b.distance
 	);
-	const buyers = [...estacionRow('buy'), ...deJugadores('buy')].sort(
+	const todosBuyers = [...estacionRow('buy'), ...deJugadores('buy')].sort(
 		(a, b) => b.price - a.price || a.distance - b.distance
 	);
+	const sellers = todosSellers.slice(0, BOOK_PAGE);
+	const buyers = todosBuyers.slice(0, BOOK_PAGE);
 
 	const nave = activeShip(db, row.id);
 	const inShip = nave ? quantityOf(db, shipContainer(db, nave.id).id, itemCode) : 0;
@@ -167,6 +185,8 @@ export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercad
 		name: item.name,
 		sellers,
 		buyers,
+		sellersTotal: todosSellers.length,
+		buyersTotal: todosBuyers.length,
 		history: priceHistory(db, itemCode),
 		inShip,
 		inStation

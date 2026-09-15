@@ -783,8 +783,17 @@ export interface DiaMercado {
 export interface LibroMercado {
 	readonly itemCode: string;
 	readonly name: string;
+	/**
+	 * La cabeza de cada lado, no el libro entero.
+	 *
+	 * Un ítem popular puede juntar miles de órdenes y nadie opera contra la
+	 * número ochocientos. El total va aparte para poder decir cuántas quedaron
+	 * afuera, que es lo que dice si el mercado está profundo.
+	 */
 	readonly sellers: readonly OrdenMercado[];
 	readonly buyers: readonly OrdenMercado[];
+	readonly sellersTotal: number;
+	readonly buyersTotal: number;
 	readonly history: readonly DiaMercado[];
 	readonly inShip: number;
 	readonly inStation: number;
