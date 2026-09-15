@@ -145,27 +145,60 @@
 
 {#if variant === 'overlay'}
 	<!--
-		Sobre el hueco del retrato: aparece al señalarlo y **también con el foco**,
-		porque en un teléfono no hay mouse y una acción que sólo existe para el
-		cursor es una acción que la mitad de la gente no encuentra.
+		Sobre el hueco del retrato.
+
+		Lleva **dos capas y por dos razones distintas**. La chapita de la esquina está
+		siempre visible: sin ella la foto parecía una imagen y nada más, y nadie
+		descubre que se puede tocar algo que no se anuncia. El velo con el texto
+		aparece al señalar o con el foco del teclado, que es cuando ya se sabe que
+		hay algo ahí y sólo falta decir qué.
+
+		Mientras sube, el velo se queda encendido con el aro girando: una subida sin
+		señal parece una que no pasó, y el jugador vuelve a apretar.
 	-->
 	<button
 		type="button"
 		onclick={() => input?.click()}
 		disabled={working}
 		aria-label={hasPortrait ? 'Cambiar el retrato' : 'Subir un retrato'}
-		class="absolute inset-0 z-[2] flex cursor-pointer flex-col items-center justify-center gap-1
-			bg-well/80 opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100
-			focus-visible:outline-none disabled:cursor-wait"
+		class="group absolute inset-0 z-[2] cursor-pointer focus-visible:outline-none
+			disabled:cursor-wait"
 	>
-		<Icon name={working ? 'clock' : 'identification-card'} weight="duotone" size="1.5rem" />
-		<span class="font-display text-1 tracking-label text-accent-bright uppercase">
-			{working ? 'Subiendo' : hasPortrait ? 'Cambiar' : 'Subir'}
+		<span
+			class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-well/85
+				transition-opacity {working
+				? 'opacity-100'
+				: 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'}"
+		>
+			<Icon
+				name={working ? 'circle-notch' : 'camera'}
+				weight="duotone"
+				size="1.5rem"
+				class={working ? 'animate-spin text-data' : 'text-accent'}
+			/>
+			<span class="font-display text-1 tracking-label text-accent-bright uppercase">
+				{working ? 'Subiendo' : hasPortrait ? 'Cambiar' : 'Subir'}
+			</span>
+		</span>
+
+		<!--
+			La chapita: el único adorno que está siempre. Se apaga mientras el velo
+			está arriba para no quedar pegada encima del texto.
+		-->
+		<span
+			class="absolute right-[0.3rem] bottom-[0.3rem] flex items-center border border-border-soft
+				bg-well/85 p-[0.2rem] transition-opacity group-hover:opacity-0
+				{working ? 'opacity-0' : 'opacity-100'}"
+		>
+			<Icon name="camera" weight="fill" size="0.7rem" class="text-accent-bright" />
 		</span>
 	</button>
 {:else}
 	<div class="flex flex-wrap items-center gap-3">
 		<HudButton {size} variant="primary" onclick={() => input?.click()} disabled={working}>
+			{#if working}
+				<Icon name="circle-notch" weight="bold" size="0.8rem" class="animate-spin" />
+			{/if}
 			{working ? 'Subiendo…' : hasPortrait ? 'Cambiar retrato' : 'Subir retrato'}
 		</HudButton>
 		{#if hasPortrait}

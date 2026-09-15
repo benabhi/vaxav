@@ -82,15 +82,25 @@
 		</div>
 	{/each}
 
-	<div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 border-t border-border-soft pt-2">
-		<span class="font-display text-[0.68rem] tracking-label text-accent-dim uppercase">
-			Total invertido
+	<!--
+		Cada cifra va **pegada a su etiqueta**. Antes las cuatro piezas eran hermanas
+		de la misma fila, así que al no entrar se cortaba por donde tocara: "Sin
+		invertir" quedaba arriba y su número solo en el renglón de abajo, leyéndose
+		como si fuera del otro rótulo. Agrupadas, lo que baja es el par entero.
+	-->
+	<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-1 border-t border-border-soft pt-2">
+		<span class="flex shrink-0 items-baseline gap-2 whitespace-nowrap">
+			<span class="font-display text-[0.68rem] tracking-label text-accent-dim uppercase">
+				Total invertido
+			</span>
+			<span class="font-mono text-[0.82rem] text-accent-bright">{thousands(total)} XP</span>
 		</span>
-		<span class="font-mono text-[0.82rem] text-accent-bright">{thousands(total)} XP</span>
 		<div class="grow"></div>
-		<span class="font-display text-[0.68rem] tracking-label text-accent-dim uppercase">
-			Sin invertir
+		<span class="flex shrink-0 items-baseline gap-2 whitespace-nowrap">
+			<span class="font-display text-[0.68rem] tracking-label text-accent-dim uppercase">
+				Sin invertir
+			</span>
+			<span class="font-mono text-[0.82rem] text-data">{thousands(guardado)} XP</span>
 		</span>
-		<span class="font-mono text-[0.82rem] text-data">{thousands(guardado)} XP</span>
 	</div>
 </div>

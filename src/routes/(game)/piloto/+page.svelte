@@ -4,8 +4,7 @@
 	Es la pantalla de identidad, y su figura es **la credencial**, como Nave tiene
 	el anillo y Sistema el árbol. La tarjeta contesta las dos preguntas que definen
 	a un piloto —quién sos y en qué te convertiste— con la foto de un lado y el
-	hexágono de ramas del otro; lo de abajo son las notas al pie: las cifras
-	exactas de cada rama y lo último que pasó.
+	hexágono de ramas del otro; abajo, lo último que pasó.
 
 	**Está armada para ir creciendo.** A medida que el juego sume corporaciones,
 	rango, hangar o reputación, cada cosa entra como una celda más de la credencial
@@ -13,7 +12,6 @@
 -->
 <script lang="ts">
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
-	import FamilyXpPanel from '$lib/components/game/FamilyXpPanel.svelte';
 	import ActionReport from '$lib/components/game/ActionReport.svelte';
 	import PilotCredential from '$lib/components/game/PilotCredential.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -36,40 +34,33 @@
 <PilotCredential pilot={data.pilot} serial={data.serial} />
 
 <!--
-	Las notas al pie de la credencial. A la izquierda las cifras exactas de cada
-	rama —el hexágono dice bien *qué forma* tiene el piloto y mal *cuánto*, y esta
-	lista al revés: las dos leen las mismas dos métricas—, a la derecha lo último
-	que pasó. En teléfono se apilan.
--->
-<div class="flex w-full flex-col items-start gap-4 lg:flex-row">
-	<div class="w-full min-w-0 flex-[3_1_0]">
-		<TitledPanel title="Experiencia por rama" detail="Invertida y en pozo" class="w-full">
-			<FamilyXpPanel families={data.pilot.families} />
-		</TitledPanel>
-	</div>
+	Lo último que pasó. Va en el resumen porque es la pregunta con la que uno entra
+	en un juego donde las cosas ocurren mientras no estás; el archivo entero está a
+	una pestaña de distancia.
 
-	<!--
-		Lo último que pasó. Va en el resumen porque es la pregunta con la que uno
-		entra en un juego donde las cosas ocurren mientras no estás; el archivo
-		entero está a una pestaña de distancia.
-	-->
-	<div class="flex w-full min-w-0 flex-[2_1_0] flex-col gap-4">
-		<TitledPanel
-			title="Último informe"
-			detail={data.logTotal > 0 ? `de ${data.logTotal}` : ''}
-			class="w-full"
-		>
-			{#if data.lastReport}
-				<div class="flex w-full flex-col items-start gap-3">
-					<ActionReport report={data.lastReport} />
-					<HudLink href={LOG_TAB} variant="outline" size="1">Ver la bitácora</HudLink>
-				</div>
-			{:else}
-				<BodyText>
-					Todavía no resolviste ninguna acción. Dale una orden a tu nave y acá va a quedar el
-					informe.
-				</BodyText>
-			{/if}
-		</TitledPanel>
-	</div>
-</div>
+	**Las cifras por rama no están acá**, y es a propósito. Estaban, y eran la
+	tercera copia de los mismos dos números: la pestaña Habilidades abre con los
+	pozos —son su presupuesto, lo primero que se mira ahí— y la credencial los
+	muestra al lado del hexágono al ampliarlo. Repetirlas en el resumen hacía que
+	Información dijera lo mismo que la pestaña de al lado, y un resumen que repite
+	la pantalla siguiente deja a las dos sin razón de ser.
+
+	Eso no rompe la regla de que una figura va siempre con su lista: la lista
+	sigue pegada al hexágono, en su vista ampliada, que es donde se la necesita.
+-->
+<TitledPanel
+	title="Último informe"
+	detail={data.logTotal > 0 ? `de ${data.logTotal}` : ''}
+	class="w-full"
+>
+	{#if data.lastReport}
+		<div class="flex w-full flex-col items-start gap-3">
+			<ActionReport report={data.lastReport} />
+			<HudLink href={LOG_TAB} variant="outline" size="1">Ver la bitácora</HudLink>
+		</div>
+	{:else}
+		<BodyText>
+			Todavía no resolviste ninguna acción. Dale una orden a tu nave y acá va a quedar el informe.
+		</BodyText>
+	{/if}
+</TitledPanel>
