@@ -134,8 +134,8 @@
 					points={potencial}
 					fill="rgb(93 214 255 / 0.08)"
 					stroke="var(--color-data)"
-					stroke-width="0.8"
-					stroke-dasharray="2.2 1.6"
+					stroke-width="0.55"
+					stroke-dasharray="2 1.5"
 					stroke-linejoin="round"
 				/>
 			{/if}
@@ -145,18 +145,25 @@
 				points={forma}
 				fill="rgb(255 122 26 / 0.16)"
 				stroke="var(--color-accent)"
-				stroke-width="1"
+				stroke-width="0.7"
 				stroke-linejoin="round"
-				style="filter: drop-shadow(0 0 8px rgb(255 122 26 / 0.45))"
+				style="filter: drop-shadow(0 0 5px rgb(255 122 26 / 0.35))"
 			/>
 
-			<!-- Un nodo por vértice: marca dónde llega cada rama. -->
+			<!--
+				Un nodo por vértice: marca dónde llega cada rama.
+
+				Los trazos y los nodos son **finos a propósito**: la figura se dibuja
+				sobre la grilla del hexágono, y engrosándolos tapan justamente lo que les
+				da escala. Un instrumento de cabina se lee por dónde cae la línea, no por
+				lo gruesa que es.
+			-->
 			{#each families as rama, i (rama.family)}
 				{@const p = punto(i, families.length, Math.max(PISO, rama.share / 100))}
 				<circle
 					cx={p.x.toFixed(2)}
 					cy={p.y.toFixed(2)}
-					r="1.4"
+					r="0.9"
 					fill={rama.xp > 0 ? 'var(--color-accent-bright)' : 'var(--color-text-muted)'}
 				/>
 			{/each}
@@ -168,10 +175,10 @@
 					<circle
 						cx={p.x.toFixed(2)}
 						cy={p.y.toFixed(2)}
-						r="1.5"
+						r="1"
 						fill="var(--color-surface)"
 						stroke="var(--color-data)"
-						stroke-width="0.7"
+						stroke-width="0.5"
 					/>
 				{/if}
 			{/each}
