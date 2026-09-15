@@ -40,27 +40,40 @@ Todo el árbol vive en `src/lib/navigation.ts`, que es de donde salen el Neocom,
 barras de pestañas y el registro de rutas: una pantalla nueva se agrega en un solo
 lugar y aparece en los tres.
 
-| Módulo     | Pestañas                             |
-| ---------- | ------------------------------------ |
-| Piloto     | Información · Habilidades · Bitácora |
-| Nave       | Ficha · Bodega                       |
-| Navegación | Ubicación · Sistema                  |
-| Billetera  | Billetera                            |
+| Módulo      | Pestañas                             |
+| ----------- | ------------------------------------ |
+| Piloto      | Información · Habilidades · Bitácora |
+| Nave        | Ficha · Bodega                       |
+| Navegación  | Ubicación · Sistema                  |
+| Mercado     | Mercado                              |
+| Propiedades | Propiedades                          |
+| Billetera   | Billetera                            |
 
 Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
 pantallas: la galaxia llega con el segundo sistema.
 
-### Las salas de una estación
+### Qué va al Neocom y qué es una sala
 
-Los módulos de una estación —mercado, taller, laboratorio— **no son entradas del
-Neocom**: son salas del lugar donde el piloto está parado. Se entra desde la
-baldosa del módulo en Ubicación y se vuelve ahí.
+La pregunta se contesta con una sola distinción: **¿depende de dónde está el
+piloto?**
 
-Sus rutas cuelgan de la pestaña que las contiene —`/navegacion/mercado`— y **la
-pestaña de arriba se queda encendida**: el piloto sigue estando en Navegación, en
-la ubicación donde atracó, y tiene la vuelta a un clic. Es la regla general de
-que una pantalla colgada de una pestaña enciende esa pestaña, y es lo que permite
-que el juego crezca en profundidad sin agregar un tercer nivel de menú.
+- **Lo que se mira desde cualquier parte va al Neocom.** El
+  [mercado](MARKET.md) es regional: parado en un cinturón con la bodega llena,
+  saber a cuánto se paga el iridio es lo que decide adónde ir. Propiedades es
+  igual —qué tenés y dónde, en toda la galaxia—. Esconderlas detrás de una
+  estación no agregaría dificultad: agregaría viajes a ciegas.
+- **Lo que sólo se puede hacer en un lugar es una sala.** El taller y el
+  laboratorio, cuando existan, se entran desde la baldosa del módulo en Ubicación
+  y se vuelve ahí: no hay nada que mirar de un taller donde uno no está.
+
+Que el mercado esté en el Neocom **no lo vuelve global**: mirar es libre, operar
+exige estar atracado en una estación con módulo de Mercado, y cuando no se puede
+la pantalla lo dice en vez de esconder los botones.
+
+Para las salas, el árbol ya tiene puesta la regla que van a necesitar: **una
+pantalla colgada de una pestaña enciende esa pestaña**, de modo que el piloto
+sigue viéndose en Navegación, en la ubicación donde atracó, con la vuelta a un
+clic. Es lo que permite crecer en profundidad sin un tercer nivel de menú.
 
 **Las distancias se miden desde el piloto.** En la lista de cuerpos de un
 sistema, cuán lejos está algo _del cuerpo que orbita_ no sirve para decidir nada:
