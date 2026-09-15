@@ -630,6 +630,14 @@ export interface DuracionOrden {
 /** El mercado de la región, visto desde donde está el piloto. */
 export interface Mercado {
 	readonly regionName: string;
+	/**
+	 * Dónde está parado el piloto: `Cuerpo · Sistema · Región`.
+	 *
+	 * No es una miga de navegación —no se puede subir por ella— sino **contexto**:
+	 * lo que esta pantalla muestra es la región entera, y dónde está uno es otra
+	 * cosa que hay que poder leer sin dudar.
+	 */
+	readonly location: string;
 	/** Cuántas regiones alcanza a ver, contando la propia. */
 	readonly regionsInRange: number;
 	readonly stationCount: number;

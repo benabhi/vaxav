@@ -91,6 +91,61 @@
 	});
 
 	/**
+	 * Por qué columna se ordena el catálogo, y hacia dónde.
+	 *
+	 * Es **una sola** para las dos tablas: son la misma lista mirada de dos lados,
+	 * y ordenarlas por separado obligaría a acordarse de cómo quedó cada una.
+	 */
+	let sortBy = $state<'name' | 'tier' | 'price' | 'orders' | 'held'>('name');
+	let sortDir = $state<'asc' | 'desc'>('asc');
+
+	/**
+	 * Cambia el orden. Clickear la columna que ya ordena da vuelta el sentido, que
+	 * es lo que todo el mundo espera de una tabla.
+	 */
+	function ordenarPor(columna: typeof sortBy) {
+		if (sortBy === columna) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		else {
+			sortBy = columna;
+			sortDir = 'asc';
+		}
+	}
+
+	/** El indicador de la cabecera: sólo lo lleva la columna que manda. */
+	function flecha(columna: typeof sortBy): string {
+		if (sortBy !== columna) return '';
+		return sortDir === 'asc' ? '▲' : '▼';
+	}
+
+	/**
+	 * Ordena una tabla del catálogo.
+	 *
+	 * El precio se lee **del lado que la tabla muestra**: en la de venta, lo que
+	 * cobran; en la de compra, lo que pagan. Ordenar las dos por el mismo número
+	 * dejaría una al revés de lo que dice su encabezado.
+	 */
+	function ordenar(filas: readonly FilaMercado[], lado: 'sell' | 'buy'): FilaMercado[] {
+		const signo = sortDir === 'asc' ? 1 : -1;
+		const precio = (item: FilaMercado) => (lado === 'sell' ? item.bestAsk : item.bestBid) ?? 0;
+		const ordenes = (item: FilaMercado) => (lado === 'sell' ? item.sellOrders : item.buyOrders);
+
+		return [...filas].sort((a, b) => {
+			switch (sortBy) {
+				case 'tier':
+					return signo * (a.size - b.size || a.tier.localeCompare(b.tier));
+				case 'price':
+					return signo * (precio(a) - precio(b));
+				case 'orders':
+					return signo * (ordenes(a) - ordenes(b));
+				case 'held':
+					return signo * (a.held - b.held);
+				default:
+					return signo * a.name.localeCompare(b.name);
+			}
+		});
+	}
+
+	/**
 	 * La lista partida en los dos lados del mostrador.
 	 *
 	 * Un ítem puede estar en las dos —lo normal— y eso no es repetirlo: son dos
@@ -225,33 +280,33 @@
 					class="w-full border-collapse text-left [&_:is(th,td):first-child]:pl-2
 						[&_:is(th,td):last-child]:pr-2"
 				>
+					<!--
+					Las cabeceras ordenan. Un catálogo de cientos de renglones sin poder
+					ordenarlo por precio es una lista que hay que leer entera para
+					contestar "¿qué es lo más barato?".
+				-->
 					<thead class="sticky top-0 z-10 bg-well">
 						<tr class="border-b border-border-soft">
-							<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-								Ítem
-							</th>
-							<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-								Clase
-							</th>
-							<th
-								class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-							>
-								{lado === 'sell' ? 'Te cobran' : 'Te pagan'}
-							</th>
-							<th
-								class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-							>
-								Órdenes
-							</th>
-							<th
-								class="py-2 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-							>
-								Tuyo
-							</th>
+							{#each [{ code: 'name' as const, label: 'Ítem', right: false }, { code: 'tier' as const, label: 'Clase', right: false }, { code: 'price' as const, label: lado === 'sell' ? 'Te cobran' : 'Te pagan', right: true }, { code: 'orders' as const, label: 'Órdenes', right: true }, { code: 'held' as const, label: 'Tuyo', right: true }] as columna (columna.code)}
+								<th class="py-1 {columna.code === 'held' ? '' : 'pr-3'}">
+									<button
+										type="button"
+										onclick={() => ordenarPor(columna.code)}
+										aria-label="Ordenar por {columna.label}"
+										class="flex w-full cursor-pointer items-center gap-1 py-1 font-display text-1
+										tracking-label uppercase transition-colors hover:text-accent-bright
+										{columna.right ? 'justify-end' : ''}
+										{sortBy === columna.code ? 'text-accent-bright' : 'text-accent-dim'}"
+									>
+										{columna.label}
+										<span class="font-mono text-[0.55rem]">{flecha(columna.code)}</span>
+									</button>
+								</th>
+							{/each}
 						</tr>
 					</thead>
 					<tbody>
-						{#each filas as item (item.itemCode)}
+						{#each ordenar(filas, lado) as item (item.itemCode)}
 							<tr
 								onclick={() => abrir(item, lado)}
 								class="cursor-pointer border-b border-border-soft/40 transition-colors hover:bg-surface-hover"
@@ -365,14 +420,22 @@
 	-->
 	<div class="flex w-full items-center gap-3 border-l-[3px] border-l-border bg-surface px-4 py-3">
 		<Icon name="warning" weight="duotone" size="1rem" class="shrink-0 text-accent" />
-		<p class="text-2 text-text-body">{market.whyNot}</p>
+		<div class="flex min-w-0 flex-col gap-1">
+			{#if market.location}
+				<p class="font-mono text-2 text-text-body">{market.location}</p>
+			{/if}
+			<p class="text-1 text-text-muted">{market.whyNot}</p>
+		</div>
 	</div>
 {:else}
 	<div class="flex w-full items-center gap-3 border-l-[3px] border-l-accent bg-surface px-4 py-3">
 		<Icon name="storefront" weight="duotone" size="1rem" class="shrink-0 text-accent" />
-		<p class="text-2 text-text-body">
-			Operando desde <span class="text-accent-bright">{market.dockedAt}</span>
-		</p>
+		<!--
+			Dónde está parado el piloto, de lo chico a lo grande. Es la respuesta a
+			"¿dónde estoy?", que en esta pantalla no es obvia: el título es la región
+			que se está mirando, y uno puede estar en cualquier estación de ella.
+		-->
+		<p class="font-mono text-2 text-text-body">{market.location}</p>
 		<div class="grow"></div>
 		<!--
 			La otra cosa que se puede hacer en un mercado: en vez de tomar un precio,

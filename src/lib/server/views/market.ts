@@ -285,17 +285,19 @@ function buildGroups(items: readonly FilaMercado[]): GrupoMercado[] {
  * mismo mientras haya una sola región, y dejan de serlo apenas haya dos. Un
  * mercado que dice la región equivocada es peor que uno que no la dice.
  */
-function regionName(db: Db, row: Pilot): string {
-	if (!row.locationId) return '';
+function placeOf(db: Db, row: Pilot): { body: string; system: string; region: string } {
+	const vacio = { body: '', system: '', region: '' };
+	if (!row.locationId) return vacio;
+
 	const fila = db
-		.select({ name: region.name })
+		.select({ body: body.name, system: system.name, region: region.name })
 		.from(body)
 		.innerJoin(system, eq(system.id, body.systemId))
 		.innerJoin(constellation, eq(constellation.id, system.constellationId))
 		.innerJoin(region, eq(region.id, constellation.regionId))
 		.where(eq(body.id, row.locationId))
 		.get();
-	return fila?.name ?? '';
+	return fila ?? vacio;
 }
 
 /** Lo que entra todavía en la bodega de la nave, en décimas. */
@@ -361,6 +363,7 @@ function dockedReason(desk: MarketDesk | null, inTransit: boolean): string {
  */
 export function buildMarketView(db: Db, row: Pilot): Mercado {
 	const context = tradingContext(db, row);
+	const lugar = placeOf(db, row);
 	const desk = deskFor(db, row);
 	const ahora = situation(db, row);
 	const estaciones = marketStations(db);
@@ -386,7 +389,12 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 	].sort((a, b) => a.size - b.size || a.name.localeCompare(b.name) || a.tier.localeCompare(b.tier));
 
 	return {
-		regionName: regionName(db, row) || (estaciones[0]?.regionName ?? ''),
+		regionName: lugar.region || (estaciones[0]?.regionName ?? ''),
+		// Dónde está parado el piloto, de lo chico a lo grande. No es una miga de
+		// navegación —no se puede subir por ella, y el juego tiene dos niveles y
+		// nunca un tercero— sino **contexto**: lo que la pantalla muestra es la
+		// región, y dónde está uno es otra cosa que hay que poder leer sin dudar.
+		location: [lugar.body, lugar.system, lugar.region].filter(Boolean).join(' · '),
 		regionsInRange: context.regionsInRange,
 		stationCount: estaciones.length,
 		// Dónde está parado, que es lo único que decide dónde puede publicar y de
