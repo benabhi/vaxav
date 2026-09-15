@@ -96,9 +96,10 @@ describe('el recorte que cubre el hueco', () => {
 });
 
 describe('el nombre del archivo', () => {
-	it('ata el retrato a la cuenta', () => {
-		// Es lo que hace que subir uno nuevo reemplace al anterior sin dejar basura.
-		expect(portraitFileName(7)).toBe('piloto-7.webp');
+	it('es el id del piloto, y nada más', () => {
+		// La carpeta ya dice que son retratos; el nombre sólo tiene que ser la clave.
+		// Y es lo que hace que subir uno nuevo reemplace al anterior sin dejar basura.
+		expect(portraitFileName(7)).toBe('7.webp');
 	});
 
 	it('dos pilotos nunca comparten archivo', () => {

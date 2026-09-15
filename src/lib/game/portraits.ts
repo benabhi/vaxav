@@ -64,16 +64,22 @@ export const PORTRAIT_TYPE = 'image/webp';
 export const PORTRAIT_ACCEPT = 'image/jpeg,image/png,image/webp,image/avif';
 
 /**
- * Cómo se llama el archivo de un piloto.
+ * Cómo se llama el archivo de un piloto: **su id, y nada más**.
  *
- * **El nombre lo ata a la cuenta**, que es lo que hace que subir uno nuevo
- * reemplace al anterior sin dejar basura y que borrar un piloto sea borrar un
- * archivo. Sin extensión variable: el formato es siempre el mismo, así que el
- * nombre es predecible y no hay que preguntarle al disco cuál de las cuatro
- * variantes existe.
+ * El nombre es la clave que lo ata a la cuenta, y eso es lo que hace que subir
+ * uno nuevo reemplace al anterior sin dejar basura y que borrar un piloto sea
+ * borrar un archivo.
+ *
+ * Sin prefijo a propósito: **la carpeta ya es el espacio de nombres**. Un
+ * `retratos/piloto-5.webp` dice dos veces lo mismo, y el día que haya logos de
+ * corporación no van a ir mezclados acá adentro sino en su propia carpeta.
+ *
+ * Y sin extensión variable: como todo se recodifica al subirlo, el formato es
+ * siempre el mismo, así que el nombre es predecible y no hay que preguntarle al
+ * disco cuál de cuatro variantes existe.
  */
 export function portraitFileName(pilotId: number): string {
-	return `piloto-${pilotId}.webp`;
+	return `${pilotId}.webp`;
 }
 
 /** Un rectángulo dentro de la imagen original. */

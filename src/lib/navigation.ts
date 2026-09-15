@@ -143,17 +143,13 @@ export const OPTIONS_MODULE: Module = {
 	code: 'options',
 	label: 'Opciones',
 	icon: 'gear-six',
+	// Una sola pestaña porque **todo lo que hay hoy es de la cuenta**: la foto, la
+	// contraseña y la baja. Partirlo en tres sería inventar categorías donde hay
+	// una. Las otras llegan cuando haya opciones que no sean de la cuenta —la
+	// interfaz, los avisos— y entonces cada pestaña va a nombrar algo distinto.
 	tabs: [
 		{
 			route: '/opciones',
-			label: 'Perfil'
-		},
-		{
-			route: '/opciones/seguridad',
-			label: 'Seguridad'
-		},
-		{
-			route: '/opciones/cuenta',
 			label: 'Cuenta'
 		}
 	]

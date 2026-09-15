@@ -13,14 +13,14 @@
 	entero y lo recortara cada pantalla, sería una cara en la credencial y otra en
 	la lista.
 
-	Es un componente y no el cuerpo de una pantalla porque lo usan dos: la
-	credencial del piloto y Opciones. Una sola pieza es lo que evita que un día
-	sólo una de las dos comprima antes de subir.
+	Se dibuja **sobre el hueco del retrato y en ningún otro lado**: cambiar la foto
+	se hace donde se la ve, porque ahí el resultado está a la vista al tamaño exacto
+	en que va a quedar. Una segunda puerta en Opciones no agregaba nada y era otro
+	lugar donde mantener lo mismo.
 -->
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import Icon from '../Icon.svelte';
-	import HudButton from '../buttons/HudButton.svelte';
 	import {
 		PORTRAIT_ACCEPT,
 		PORTRAIT_HEIGHT,
@@ -33,12 +33,9 @@
 	interface Props {
 		/** Si ya tiene uno, para poder ofrecer sacarlo. */
 		hasPortrait: boolean;
-		/** Cómo se dibuja el disparador: un botón, o el hueco entero del retrato. */
-		variant?: 'button' | 'overlay';
-		size?: '1' | '2' | '3';
 	}
 
-	let { hasPortrait, variant = 'button', size = '1' }: Props = $props();
+	let { hasPortrait }: Props = $props();
 
 	let input = $state<HTMLInputElement>();
 	let working = $state(false);
@@ -143,8 +140,7 @@
 	aria-label="Elegir un retrato"
 />
 
-{#if variant === 'overlay'}
-	<!--
+<!--
 		Sobre el hueco del retrato.
 
 		Lleva **dos capas y por dos razones distintas**. La chapita de la esquina está
@@ -160,75 +156,61 @@
 		Mientras trabaja, el velo se queda encendido con el aro girando: una subida
 		sin señal parece una que no pasó, y el jugador vuelve a apretar.
 	-->
-	<div class="group absolute inset-0 z-[2]">
-		<div
-			class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-well/85
+<div class="group absolute inset-0 z-[2]">
+	<div
+		class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-well/85
 				transition-opacity {working
-				? 'opacity-100'
-				: 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100'}"
-		>
-			{#if working}
-				<Icon name="circle-notch" weight="duotone" size="1.5rem" class="animate-spin text-data" />
-				<span class="font-display text-1 tracking-label text-accent-bright uppercase">
-					Un momento
-				</span>
-			{:else}
-				<button
-					type="button"
-					onclick={() => input?.click()}
-					class="flex cursor-pointer flex-col items-center gap-[0.15rem] px-2 py-1
+			? 'opacity-100'
+			: 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100'}"
+	>
+		{#if working}
+			<Icon name="circle-notch" weight="duotone" size="1.5rem" class="animate-spin text-data" />
+			<span class="font-display text-1 tracking-label text-accent-bright uppercase">
+				Un momento
+			</span>
+		{:else}
+			<button
+				type="button"
+				onclick={() => input?.click()}
+				class="flex cursor-pointer flex-col items-center gap-[0.15rem] px-2 py-1
 						transition-colors hover:text-accent-bright focus-visible:text-accent-bright
 						focus-visible:outline-none"
-					aria-label={hasPortrait ? 'Cambiar el retrato' : 'Subir un retrato'}
-				>
-					<Icon name="camera" weight="duotone" size="1.35rem" class="text-accent" />
-					<span class="font-display text-1 tracking-label text-accent-bright uppercase">
-						{hasPortrait ? 'Cambiar' : 'Subir'}
-					</span>
-				</button>
+				aria-label={hasPortrait ? 'Cambiar el retrato' : 'Subir un retrato'}
+			>
+				<Icon name="camera" weight="duotone" size="1.35rem" class="text-accent" />
+				<span class="font-display text-1 tracking-label text-accent-bright uppercase">
+					{hasPortrait ? 'Cambiar' : 'Subir'}
+				</span>
+			</button>
 
-				{#if hasPortrait}
-					<button
-						type="button"
-						onclick={quitar}
-						class="flex cursor-pointer items-center gap-1 border border-border-soft px-2
+			{#if hasPortrait}
+				<button
+					type="button"
+					onclick={quitar}
+					class="flex cursor-pointer items-center gap-1 border border-border-soft px-2
 							py-[0.1rem] transition-colors hover:border-danger hover:text-danger
 							focus-visible:border-danger focus-visible:outline-none"
-						aria-label="Quitar el retrato"
-					>
-						<Icon name="x" weight="bold" size="0.6rem" />
-						<span class="font-display text-[0.62rem] tracking-label uppercase">Quitar</span>
-					</button>
-				{/if}
+					aria-label="Quitar el retrato"
+				>
+					<Icon name="x" weight="bold" size="0.6rem" />
+					<span class="font-display text-[0.62rem] tracking-label uppercase">Quitar</span>
+				</button>
 			{/if}
-		</div>
+		{/if}
+	</div>
 
-		<!--
+	<!--
 			La chapita: el único adorno que está siempre. Se apaga mientras el velo
 			está arriba para no quedar pegada encima de las acciones.
 		-->
-		<span
-			class="pointer-events-none absolute right-[0.3rem] bottom-[0.3rem] flex items-center border
+	<span
+		class="pointer-events-none absolute right-[0.3rem] bottom-[0.3rem] flex items-center border
 				border-border-soft bg-well/85 p-[0.2rem] transition-opacity group-hover:opacity-0
 				{working ? 'opacity-0' : 'opacity-100'}"
-		>
-			<Icon name="camera" weight="fill" size="0.7rem" class="text-accent-bright" />
-		</span>
-	</div>
-{:else}
-	<div class="flex flex-wrap items-center gap-3">
-		<HudButton {size} variant="primary" onclick={() => input?.click()} disabled={working}>
-			{#if working}
-				<Icon name="circle-notch" weight="bold" size="0.8rem" class="animate-spin" />
-			{/if}
-			{working ? 'Subiendo…' : hasPortrait ? 'Cambiar retrato' : 'Subir retrato'}
-		</HudButton>
-		{#if hasPortrait}
-			<HudButton {size} variant="ghost" onclick={quitar} disabled={working}>Quitar</HudButton>
-		{/if}
-	</div>
-{/if}
-
+	>
+		<Icon name="camera" weight="fill" size="0.7rem" class="text-accent-bright" />
+	</span>
+</div>
 {#if problem}
 	<p class="mt-2 w-full text-1 text-danger">{problem}</p>
 {/if}

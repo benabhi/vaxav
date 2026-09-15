@@ -154,7 +154,7 @@
 					</div>
 				{/if}
 
-				<PortraitPicker hasPortrait={pilot.portrait !== ''} variant="overlay" />
+				<PortraitPicker hasPortrait={pilot.portrait !== ''} />
 			</div>
 
 			<!-- Las escuadras del visor, fuera del recorte para que se vean enteras. -->
