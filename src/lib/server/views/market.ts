@@ -57,7 +57,14 @@ import {
 	thousands
 } from '$lib/format';
 import type { OrderKind } from '$lib/game/market';
-import type { FilaMercado, GrupoMercado, Horquilla, Mercado, OrdenPropia } from '$lib/tipos';
+import type {
+	FilaMercado,
+	GrupoMercado,
+	Horquilla,
+	LugarOrden,
+	Mercado,
+	OrdenPropia
+} from '$lib/tipos';
 
 /** Las tres ramas de primer nivel del árbol. */
 export const GROUP_HELD = 'held';
@@ -78,16 +85,8 @@ export interface MarketStation {
 	readonly stationId: number;
 	readonly bodyId: number;
 	readonly name: string;
-	/**
-	 * El nombre completo, con el camino adentro: `Ánfora III · Muelle de los
-	 * Anillos`.
-	 *
-	 * Es la idea que EVE resuelve bien: el nombre de una estación **dice dónde
-	 * está**. "Muelle de los Anillos" a secas obliga a recordar de memoria en qué
-	 * cuerpo orbita; con el cuerpo adelante, un libro de órdenes se lee como un
-	 * mapa y se puede decidir sin abrir otra pantalla.
-	 */
-	readonly designation: string;
+	/** El cuerpo que orbita: el planeta, la luna o el cinturón donde está amarrada. */
+	readonly parentName: string;
 	readonly systemName: string;
 	readonly regionName: string;
 }
@@ -130,10 +129,7 @@ export function marketStations(db: Db): readonly MarketStation[] {
 			stationId: fila.stationId,
 			bodyId: fila.bodyId,
 			name: fila.name,
-			// El sistema no entra mientras haya uno solo: repetir "Ánfora" en cada
-			// renglón de una tabla que ya dice la región es ruido. Entra el día que
-			// haya dos, y ahí el nombre pasa a ser el camino completo.
-			designation: [fila.parentName, fila.name].filter(Boolean).join(' · '),
+			parentName: fila.parentName ?? '',
 			systemName: fila.systemName,
 			regionName: fila.regionName
 		}));
@@ -271,6 +267,25 @@ function jumpsLabel(stationId: number | null, dockedAt: number | null): string {
 	return '0';
 }
 
+/**
+ * Dónde está una estación, desarmado.
+ *
+ * Va en pedazos y no como una cadena armada porque la tabla muestra **sólo el
+ * nombre** —una designación entera en cada renglón empuja las cifras fuera de la
+ * pantalla— y el camino completo aparece al señalarlo. Armarlo acá obligaría a
+ * partirlo de nuevo del otro lado.
+ */
+function placeOfStation(station: MarketStation | undefined, jumps: string): LugarOrden | null {
+	if (!station) return null;
+	return {
+		station: station.name,
+		orbits: station.parentName,
+		system: station.systemName,
+		region: station.regionName,
+		jumps
+	};
+}
+
 /** Un renglón de la lista: lo mínimo para decidir si vale abrirlo. */
 function line(
 	item: Item,
@@ -319,12 +334,16 @@ function line(
 		basePrice: item.basePrice,
 		bestAsk,
 		bestAskLabel: bestAsk === null ? '' : thousands(bestAsk),
-		bestAskWhere: dondeAsk === null ? '' : (stations.get(dondeAsk)?.designation ?? ''),
-		bestAskJumps: jumpsLabel(dondeAsk, desk?.stationId ?? null),
+		bestAskPlace: placeOfStation(
+			stations.get(dondeAsk ?? -1),
+			jumpsLabel(dondeAsk, desk?.stationId ?? null)
+		),
 		bestBid,
 		bestBidLabel: bestBid === null ? '' : thousands(bestBid),
-		bestBidWhere: dondeBid === null ? '' : (stations.get(dondeBid)?.designation ?? ''),
-		bestBidJumps: jumpsLabel(dondeBid, desk?.stationId ?? null),
+		bestBidPlace: placeOfStation(
+			stations.get(dondeBid ?? -1),
+			jumpsLabel(dondeBid, desk?.stationId ?? null)
+		),
 		sellOrders: summary?.sellOrders ?? 0,
 		buyOrders: summary?.buyOrders ?? 0,
 		held
@@ -423,7 +442,7 @@ function buildOwnOrders(
 			initialQuantity: orden.initialQuantity,
 			price: thousands(orden.price),
 			value: thousands(orden.price * orden.quantity),
-			stationName: porId.get(orden.stationId)?.designation ?? '',
+			stationName: porId.get(orden.stationId)?.name ?? '',
 			// Mientras se acuerda no está en el libro, y decirlo es lo que evita que
 			// el piloto la busque ahí y crea que se perdió.
 			pending: orden.opensAt.getTime() > ahora,

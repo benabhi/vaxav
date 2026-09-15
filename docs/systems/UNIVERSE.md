@@ -50,20 +50,23 @@ y `Ánfora IV` está más lejos que `Ánfora II` sin tener que consultar nada.
 
 **Las estaciones son la excepción y llevan nombre propio.** Son obra de alguien
 —una corporación las construyó y las bautizó— y un número las volvería
-intercambiables, que es justo lo contrario de lo que son. Lo que sí hacen es
-**designarse con el cuerpo que orbitan adelante**:
+intercambiables, que es justo lo contrario de lo que son.
+
+Eso deja un hueco: «Hábitat Talo» no dice dónde está. Se llena **al señalar el
+nombre**, con el camino completo:
 
 ```
-Ánfora III · Muelle de los Anillos
-Ánfora III-a · Planta Escarcha
-Cinturón Exterior · Hábitat Talo
+HÁBITAT TALO
+  Orbita    Cinturón Exterior
+  Sistema   Ánfora
+  Región    Deriva Exterior
+  Saltos    Acá
 ```
 
-Es la forma en que aparecen en las listas donde importa saber a dónde hay que
-viajar —el libro de órdenes del [mercado](MARKET.md), sobre todo—. El sistema no
-entra mientras haya uno solo: repetir `Ánfora` en cada renglón de una pantalla que
-ya dice la región es ruido. Entra el día que haya dos, y ahí la designación pasa a
-ser el camino completo.
+Va en un aviso y no escrito en la fila a propósito: una designación entera en cada
+renglón de una tabla —cuerpo, sistema, región— empuja las cifras fuera de la
+pantalla, y el noventa y nueve por ciento del tiempo no hace falta. Cuando hace
+falta es una pregunta puntual sobre un renglón, y ahí aparece.
 
 ## Tipos de cuerpo
 

@@ -22,8 +22,10 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
+	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import PriceChart from '$lib/components/game/PriceChart.svelte';
+	import HoverCard from '$lib/components/ui/HoverCard.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
@@ -32,7 +34,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
 	import { tenths, thousands } from '$lib/format';
-	import type { FilaMercado, LibroMercado } from '$lib/tipos';
+	import type { FilaMercado, LibroMercado, LugarOrden } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -128,11 +130,12 @@
 		const signo = sortDir === 'asc' ? 1 : -1;
 		const precio = (item: FilaMercado) => (lado === 'sell' ? item.bestAsk : item.bestBid) ?? 0;
 		const ordenes = (item: FilaMercado) => (lado === 'sell' ? item.sellOrders : item.buyOrders);
-		const donde = (item: FilaMercado) => (lado === 'sell' ? item.bestAskWhere : item.bestBidWhere);
+		const donde = (item: FilaMercado) =>
+			(lado === 'sell' ? item.bestAskPlace : item.bestBidPlace)?.station ?? '';
 		// "Acá" antes que cualquier número: lo que está debajo de los pies no cuesta
 		// un viaje, y ordenar por saltos es justamente buscar lo más cerca.
 		const saltos = (item: FilaMercado) => {
-			const etiqueta = lado === 'sell' ? item.bestAskJumps : item.bestBidJumps;
+			const etiqueta = (lado === 'sell' ? item.bestAskPlace : item.bestBidPlace)?.jumps ?? '';
 			if (etiqueta === 'Acá') return -1;
 			return Number(etiqueta) || 0;
 		};
@@ -274,6 +277,41 @@
 
 <svelte:head><title>Mercado · Vaxav</title></svelte:head>
 <!--
+	El nombre de una estación, con su camino al señalarlo.
+
+	En la tabla va **sólo el nombre**: una designación entera en cada renglón
+	—cuerpo, sistema, región— empuja las cifras fuera de la pantalla, y el 99 % del
+	tiempo no hace falta. Cuando hace falta es una pregunta puntual sobre un
+	renglón, y para eso está el aviso.
+-->
+{#snippet dondeEsta(lugar: LugarOrden | null)}
+	{#if !lugar}
+		<span class="text-text-muted">—</span>
+	{:else}
+		<HoverCard>
+			{#snippet trigger()}
+				<span class="cursor-help border-b border-dotted border-border-soft">
+					{lugar.station}
+				</span>
+			{/snippet}
+			<FloatingPanel class="flex min-w-[13rem] flex-col gap-1 px-[0.8rem] py-[0.6rem]">
+				<p class="font-display text-2 tracking-display text-accent-bright uppercase">
+					{lugar.station}
+				</p>
+				{#each [{ label: 'Orbita', value: lugar.orbits }, { label: 'Sistema', value: lugar.system }, { label: 'Región', value: lugar.region }, { label: 'Saltos', value: lugar.jumps }] as fila (fila.label)}
+					{#if fila.value}
+						<div class="flex w-full items-baseline gap-3">
+							<span class="w-[4.5rem] shrink-0"><Label>{fila.label}</Label></span>
+							<span class="min-w-0 font-mono text-[0.78rem] text-text-body">{fila.value}</span>
+						</div>
+					{/if}
+				{/each}
+			</FloatingPanel>
+		</HoverCard>
+	{/if}
+{/snippet}
+
+<!--
 	Una tabla del catálogo. Es la misma para los dos lados y cambia sólo qué precio
 	muestra: tener dos copias sería garantizar que algún día se emprolije una y la
 	otra no.
@@ -344,10 +382,10 @@
 									decidir: lo barato a cuatro saltos es barato más un viaje.
 								-->
 								<td class="py-[0.4rem] pr-3 text-2 text-text-body">
-									{(lado === 'sell' ? item.bestAskWhere : item.bestBidWhere) || '—'}
+									{@render dondeEsta(lado === 'sell' ? item.bestAskPlace : item.bestBidPlace)}
 								</td>
 								<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.72rem] text-text-muted">
-									{(lado === 'sell' ? item.bestAskJumps : item.bestBidJumps) || '—'}
+									{(lado === 'sell' ? item.bestAskPlace : item.bestBidPlace)?.jumps || '—'}
 								</td>
 								<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.7rem] text-text-muted">
 									{(lado === 'sell' ? item.sellOrders : item.buyOrders) || '—'}

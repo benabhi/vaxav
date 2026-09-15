@@ -231,7 +231,9 @@ tres piezas que contestan tres preguntas distintas:
    renglón dice **dónde** está ese precio y **a cuántos saltos**, porque el mercado
    se mira desde cualquier parte y un precio sin lugar no alcanza para decidir: lo
    barato a cuatro saltos es barato más un viaje. Cuando el mostrador es el que uno
-   tiene debajo de los pies, la columna dice "Acá" en vez de un número. Las
+   tiene debajo de los pies, la columna dice "Acá" en vez de un número, y señalar
+   el nombre de la estación muestra el camino entero —qué orbita, en qué sistema,
+   en qué región—, que es la [nomenclatura del universo](UNIVERSE.md). Las
    cabeceras ordenan, y clickear la que ya ordena da vuelta el sentido. Con
    los dos precios en la misma fila hay que leer columna por columna para saber de
    qué lado del mostrador está cada cosa; separados, "¿qué puedo comprar acá?" se

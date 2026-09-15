@@ -28,7 +28,13 @@ import type { LibroMercado, OrdenMercado } from '$lib/tipos';
 /** Una orden de jugador, lista para dibujar. */
 function playerRow(
 	order: typeof marketOrder.$inferSelect,
-	place: { designation: string; systemName: string; bodyId: number },
+	place: {
+		name: string;
+		parentName: string;
+		systemName: string;
+		regionName: string;
+		bodyId: number;
+	},
 	distance: number,
 	mine: boolean
 ): OrdenMercado {
@@ -41,7 +47,14 @@ function playerRow(
 		price: order.price,
 		priceLabel: thousands(order.price),
 		stationId: order.stationId,
-		stationName: place.designation,
+		stationName: place.name,
+		place: {
+			station: place.name,
+			orbits: place.parentName,
+			system: place.systemName,
+			region: place.regionName,
+			jumps: distance === 0 ? 'Acá' : '0'
+		},
 		systemName: place.systemName,
 		distance,
 		distanceLabel: distance === 0 ? 'Acá' : `${thousands(distance)} ud`,
@@ -120,6 +133,13 @@ export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercad
 				stationId: desk.stationId,
 				stationName: desk.stationName,
 				systemName: '',
+				place: {
+					station: desk.stationName,
+					orbits: porId.get(desk.stationId)?.parentName ?? '',
+					system: porId.get(desk.stationId)?.systemName ?? '',
+					region: porId.get(desk.stationId)?.regionName ?? '',
+					jumps: 'Acá'
+				},
 				distance: 0,
 				distanceLabel: 'Acá',
 				rangeLabel: kind === 'buy' ? 'Estación' : ''

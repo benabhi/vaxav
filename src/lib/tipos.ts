@@ -560,6 +560,23 @@ export interface GrupoMercado {
 }
 
 /**
+ * Dónde está una estación, desarmado para poder mostrarlo entero al señalarlo.
+ *
+ * En la tabla va **sólo el nombre**: una designación completa en cada renglón
+ * empuja las cifras fuera de la pantalla. El camino —qué orbita, en qué sistema,
+ * en qué región— aparece en el aviso, que es donde hace falta y no molesta.
+ */
+export interface LugarOrden {
+	readonly station: string;
+	/** El planeta, la luna o el cinturón donde está amarrada. */
+	readonly orbits: string;
+	readonly system: string;
+	readonly region: string;
+	/** Cuántos saltos, o "Acá" si es el mostrador donde uno está parado. */
+	readonly jumps: string;
+}
+
+/**
  * Un renglón del catálogo del mercado.
  *
  * Lleva **lo mínimo para decidir si vale abrirlo**: el mejor precio de cada lado
@@ -592,18 +609,14 @@ export interface FilaMercado {
 	 *
 	 * El mercado se mira desde cualquier parte, así que un precio sin lugar no
 	 * alcanza para decidir nada: lo barato a cuatro saltos es barato más un viaje.
-	 * Los saltos van aparte de la ubicación porque el día que haya puertas es el
-	 * número que va a mandar, y hoy dice "Acá" cuando es el mostrador de uno.
 	 */
 	readonly bestAsk: number | null;
 	readonly bestAskLabel: string;
-	readonly bestAskWhere: string;
-	readonly bestAskJumps: string;
+	readonly bestAskPlace: LugarOrden | null;
 	/** Lo más que alguien paga, y dónde. */
 	readonly bestBid: number | null;
 	readonly bestBidLabel: string;
-	readonly bestBidWhere: string;
-	readonly bestBidJumps: string;
+	readonly bestBidPlace: LugarOrden | null;
 	readonly sellOrders: number;
 	readonly buyOrders: number;
 	/** Cuánto tiene el piloto, sumando todas sus bodegas de la galaxia. */
@@ -750,6 +763,8 @@ export interface OrdenMercado {
 	/** Cuán lejos está de donde está el piloto. Cero es "acá mismo". */
 	readonly distance: number;
 	readonly distanceLabel: string;
+	/** Dónde está, desarmado, para el aviso que lo muestra entero. */
+	readonly place: LugarOrden;
 	/** Hasta dónde alcanza, sólo en las de compra. */
 	readonly rangeLabel: string;
 }
