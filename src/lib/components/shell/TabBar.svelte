@@ -8,9 +8,13 @@
 	En pantallas angostas la fila **se desliza** en vez de partirse en dos
 	renglones: así la pantalla se ve igual en el teléfono y en el monitor. El
 	desplazamiento y los degradados de los bordes están en app.css.
+
+	El aspecto vive en `pestanas.ts` y lo comparte con `TabStrip`, que hace lo mismo
+	sin navegar a ningún lado.
 -->
 <script lang="ts">
 	import type { Tab } from '$lib/navigation';
+	import { tabClasses } from './pestanas';
 
 	interface Props {
 		tabs: readonly Tab[];
@@ -34,11 +38,7 @@
 			<a
 				href={tab.route}
 				title={avisa ? `${tab.label} · hay algo sin leer` : undefined}
-				class="flex h-[2.25rem] shrink-0 items-center border-b-[2px] border-b-transparent px-4 font-display text-[0.78rem] font-semibold tracking-label whitespace-nowrap uppercase no-underline transition-[background-color,color]
-					{active
-					? 'bg-accent text-on-accent shadow-glow'
-					: 'bg-transparent text-accent-dim hover:bg-surface-hover hover:text-accent-bright'}
-					{avisa ? 'aviso-abajo' : ''}"
+				class={tabClasses(active, avisa)}
 			>
 				{tab.label}
 			</a>

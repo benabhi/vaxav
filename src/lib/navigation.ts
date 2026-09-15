@@ -95,6 +95,14 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/mercado',
 				label: 'Mercado'
+			},
+			{
+				route: '/mercado/ventas',
+				label: 'Mis ventas'
+			},
+			{
+				route: '/mercado/compras',
+				label: 'Mis compras'
 			}
 		]
 	},

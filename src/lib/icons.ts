@@ -66,6 +66,7 @@ export const ICON_NAMES = [
 	'mountains',
 	'package',
 	'planet',
+	'question',
 	'rocket-launch',
 	'rocket',
 	'scales',

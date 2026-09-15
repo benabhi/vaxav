@@ -203,7 +203,7 @@
 						formAction="?/viajar"
 						title="Viajar a {body.name}"
 						icon="rocket-launch"
-						confirmLabel="Zarpar"
+						confirmLabel="Viajar"
 						disabled={!canTravel}
 						readings={[
 							{ label: 'Distancia', value: body.distance },
