@@ -16,6 +16,15 @@
  * > su parte. Es la misma regla que el piso de tiempo de una extracción: el
  * > progreso mejora el número, no borra la mecánica.
  *
+ * Desde que hay **órdenes de jugadores**, la estación dejó de ser la única
+ * contraparte: es una orden más del libro, con la diferencia de que no se agota y
+ * de que su precio es el único que se negocia —Regateo es literalmente eso, y no
+ * tiene con quién regatear si del otro lado hay otro piloto—.
+ *
+ * Las órdenes de la estación **no se guardan**: se calculan. Guardarlas serían
+ * doscientas filas que hay que resembrar cada vez que cambie una fórmula, y
+ * además su precio depende de quién pregunta.
+ *
  * Reglas puras: acá no hay base de datos ni piloto. Corresponde a
  * docs/systems/MARKET.md.
  */
@@ -188,4 +197,136 @@ export function askPrice(basePrice: number, spreadPercent: number): number {
 /** Lo que la estación paga por una unidad, para mostrar en la lista. */
 export function bidPrice(basePrice: number, spreadPercent: number): number {
 	return bidTotal(basePrice, 1, spreadPercent);
+}
+
+/* ------------------------------------------------------------------------- *
+ * Las órdenes
+ * ------------------------------------------------------------------------- */
+
+/** De qué lado del libro está una orden. */
+export const ORDER_KINDS = ['buy', 'sell'] as const;
+export type OrderKind = (typeof ORDER_KINDS)[number];
+
+/**
+ * Hasta dónde ve un piloto, en regiones, contando la propia.
+ *
+ * Es el techo de diseño: **cinco regiones y no más**. Que el mercado no sea
+ * global es lo que hace que la galaxia tenga geografía económica —que el hierro
+ * valga distinto de un lado y del otro, y que eso sea una oportunidad para quien
+ * pueda moverlo—. Un mercado que se ve entero desde cualquier parte convierte a
+ * todas las estaciones en la misma estación.
+ */
+export const MAX_REGIONS_IN_RANGE = 5;
+
+/**
+ * Qué habilidad de Comercio mueve cada número.
+ *
+ * Cada una tiene **un trabajo y se nota cuál**: lo que se negocia de palabra es
+ * Regateo, lo que se arregla con papeles es Contabilidad, y hasta dónde llega tu
+ * vista del mercado es Análisis. Contactos queda para los contratos.
+ */
+export const MARKET_RANGE_SKILL = 'market_analysis';
+export const BROKER_SKILL = 'haggling';
+export const TAX_SKILL = 'accounting';
+
+/**
+ * Cuántas regiones alcanza la vista de un piloto.
+ *
+ * Sin entrenar se ve **la propia**, y cada nivel suma una hasta el tope. Nunca
+ * cero: un piloto que no ve ni el mercado donde está parado no podría vender lo
+ * que acaba de minar, y eso no es progresión, es una pared.
+ */
+export function regionsInRange(level: number): number {
+	return Math.min(MAX_REGIONS_IN_RANGE, 1 + Math.max(0, level));
+}
+
+/** Cuántas órdenes abiertas se pueden llevar a la vez, sin habilidad y por nivel. */
+export const BASE_OPEN_ORDERS = 2;
+export const ORDERS_PER_LEVEL = 2;
+
+/**
+ * El tope de órdenes abiertas, según **Contabilidad**.
+ *
+ * Es lo que separa a quien vende lo que le sobra de quien vive de comerciar: con
+ * dos órdenes se liquida una bodega, con doce se sostiene un negocio en varias
+ * estaciones a la vez. Llevar más libros a la vez es exactamente de lo que se
+ * trata la habilidad.
+ */
+export function openOrderLimit(level: number): number {
+	return BASE_OPEN_ORDERS + Math.max(0, level) * ORDERS_PER_LEVEL;
+}
+
+/**
+ * Hasta dónde puede alcanzar una **orden de compra**, en regiones.
+ *
+ * Cero es "sólo en esta estación": quien quiera venderte tiene que venir hasta
+ * acá. Uno es la región entera. Las de venta no tienen alcance —la mercadería
+ * está en una estación y ahí se retira—, que es lo que hace que comprar lejos
+ * siga costando un viaje.
+ */
+export function maxOrderRange(level: number): number {
+	return regionsInRange(level) - 1;
+}
+
+/* ------------------------------------------------------------------------- *
+ * Lo que se lleva la casa
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Los dos cobros del comercio, en **milésimos** del valor.
+ *
+ * En milésimos y no en porcentaje para que las habilidades puedan moverlos de a
+ * poco sin decimales: "medio punto por nivel" no se escribe en enteros, y un
+ * flotante en una cuenta de balance es una moneda que aparece o desaparece al
+ * sumar.
+ *
+ * Son dos y no uno porque castigan cosas distintas, y ésa es la gracia:
+ *
+ * - **La comisión** se paga al *publicar* y **no se devuelve al cancelar**. Es lo
+ *   que hace que llenar el libro de órdenes para tantear el mercado tenga costo.
+ * - **El impuesto** se paga al *vender*, sobre lo cobrado. Es el sumidero de
+ *   créditos de la economía: sin algo que saque plata del mundo, la plata sólo
+ *   entra y todo termina valiendo nada.
+ *
+ * Los dos bajan con habilidad **hasta un piso**, nunca a cero. La casa siempre se
+ * lleva lo suyo, igual que la horquilla y que el tiempo de una extracción: el
+ * progreso mejora el número, no borra la mecánica.
+ */
+export const BROKER_FEE_PERMILLE = 30;
+export const BROKER_FEE_RELIEF_PER_LEVEL = 4;
+export const MIN_BROKER_FEE_PERMILLE = 10;
+
+export const SALES_TAX_PERMILLE = 50;
+export const SALES_TAX_RELIEF_PER_LEVEL = 6;
+export const MIN_SALES_TAX_PERMILLE = 20;
+
+/**
+ * La comisión del corredor, según **Regateo**.
+ *
+ * Es la misma habilidad que angosta la horquilla de la estación, y es coherente:
+ * las dos son lo que conseguís discutiendo en el mostrador. Contabilidad se
+ * ocupa de lo que se arregla con papeles.
+ */
+export function brokerFeePermille(hagglingLevel: number): number {
+	const bruto = BROKER_FEE_PERMILLE - Math.max(0, hagglingLevel) * BROKER_FEE_RELIEF_PER_LEVEL;
+	return Math.max(MIN_BROKER_FEE_PERMILLE, bruto);
+}
+
+/** El impuesto sobre lo vendido, según **Contabilidad**. */
+export function salesTaxPermille(accountingLevel: number): number {
+	const bruto = SALES_TAX_PERMILLE - Math.max(0, accountingLevel) * SALES_TAX_RELIEF_PER_LEVEL;
+	return Math.max(MIN_SALES_TAX_PERMILLE, bruto);
+}
+
+/**
+ * Lo que se lleva la casa de un monto, en enteros.
+ *
+ * Mínimo un crédito sobre cualquier monto que no sea cero: un cobro de cero no
+ * es un cobro, y dejaría un resquicio por donde operar gratis partiendo todo en
+ * lotes diminutos.
+ */
+export function cut(amount: number, permille: number): number {
+	if (amount < 0) throw new RangeError('El monto no puede ser negativo');
+	if (amount === 0) return 0;
+	return Math.max(1, roundHalfEven((amount * permille) / 1000));
 }

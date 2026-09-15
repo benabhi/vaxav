@@ -11,7 +11,16 @@ import { MAX_SKILL_LEVEL } from './fitting';
 import { getItem } from './items';
 import {
 	BASE_SPREAD_PERCENT,
+	MAX_REGIONS_IN_RANGE,
+	MIN_BROKER_FEE_PERMILLE,
+	MIN_SALES_TAX_PERMILLE,
 	MIN_SPREAD_PERCENT,
+	brokerFeePermille,
+	cut,
+	maxOrderRange,
+	openOrderLimit,
+	regionsInRange,
+	salesTaxPermille,
 	askPrice,
 	askTotal,
 	bidPrice,
@@ -159,5 +168,78 @@ describe('qué comercia una estación', () => {
 
 		expect(puesto.buysOre).toBe(false);
 		expect(puesto.tradesModules).toBe(false);
+	});
+});
+
+describe('hasta dónde llega el mercado', () => {
+	it('sin entrenar se ve la región propia, nunca menos', () => {
+		// Cero regiones sería un piloto que no puede vender lo que acaba de minar:
+		// eso no es progresión, es una pared.
+		expect(regionsInRange(0)).toBe(1);
+	});
+
+	it('cada nivel suma una región', () => {
+		expect(regionsInRange(1)).toBe(2);
+		expect(regionsInRange(3)).toBe(4);
+	});
+
+	it('nunca pasa del tope de diseño', () => {
+		// Que el mercado no sea global es lo que le da geografía económica a la
+		// galaxia. Un tope que se pueda saltear no es un tope.
+		expect(regionsInRange(99)).toBe(MAX_REGIONS_IN_RANGE);
+	});
+
+	it('una orden de compra alcanza una región menos que la vista', () => {
+		// Sin entrenar, la orden vale sólo en la estación donde se puso.
+		expect(maxOrderRange(0)).toBe(0);
+		expect(maxOrderRange(2)).toBe(2);
+	});
+});
+
+describe('cuántas órdenes se pueden llevar', () => {
+	it('arranca en dos y sube con Contabilidad', () => {
+		expect(openOrderLimit(0)).toBe(2);
+		expect(openOrderLimit(5)).toBe(12);
+	});
+
+	it('un nivel negativo no resta órdenes', () => {
+		expect(openOrderLimit(-3)).toBe(2);
+	});
+});
+
+describe('lo que se lleva la casa', () => {
+	it('la comisión baja con Regateo hasta un piso', () => {
+		expect(brokerFeePermille(0)).toBeGreaterThan(brokerFeePermille(3));
+		expect(brokerFeePermille(99)).toBe(MIN_BROKER_FEE_PERMILLE);
+	});
+
+	it('el impuesto baja con Contabilidad hasta un piso', () => {
+		expect(salesTaxPermille(0)).toBeGreaterThan(salesTaxPermille(3));
+		expect(salesTaxPermille(99)).toBe(MIN_SALES_TAX_PERMILLE);
+	});
+
+	it('ninguno de los dos llega nunca a cero', () => {
+		// Si llegaran, comerciar dejaría de costar y la plata sólo entraría al
+		// mundo sin salir nunca.
+		expect(brokerFeePermille(99)).toBeGreaterThan(0);
+		expect(salesTaxPermille(99)).toBeGreaterThan(0);
+	});
+
+	it('cobra al menos un crédito sobre cualquier monto', () => {
+		// Sin mínimo, partir una operación en lotes de a uno saldría gratis.
+		expect(cut(1, 10)).toBe(1);
+		expect(cut(0, 30)).toBe(0);
+	});
+
+	it('cobra en enteros', () => {
+		for (const monto of [7, 133, 2191, 74880]) {
+			for (const permille of [10, 20, 30, 50]) {
+				expect(Number.isInteger(cut(monto, permille))).toBe(true);
+			}
+		}
+	});
+
+	it('una comisión del 3 % sobre 10.000 son 300', () => {
+		expect(cut(10_000, brokerFeePermille(0))).toBe(300);
 	});
 });
