@@ -13,6 +13,7 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../src/lib/server/db/schema';
+import { ensureDevPilot } from '../src/lib/server/services/pilots';
 import { ensureEveryPilotHasAShip } from '../src/lib/server/services/ships';
 import { seedUniverse } from '../src/lib/server/services/universe';
 
@@ -24,6 +25,10 @@ sqlite.pragma('foreign_keys = ON');
 const db = drizzle(sqlite, { schema });
 
 const conteo: Record<string, number> = { ...seedUniverse(db) };
+
+// Y el piloto con el que se mira todo esto. Va acá y no en una migración porque
+// es contenido, no esquema, y porque tiene que sobrevivir a borrar la base.
+conteo['piloto de prueba'] = (await ensureDevPilot(db)) ? 1 : 0;
 
 // Los pilotos creados antes de que existiera el hangar se quedaron sin nave.
 // Arreglarlos desde una migración sería escribir datos desde donde sólo va el

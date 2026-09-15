@@ -16,6 +16,7 @@ import { getModule } from '$lib/game/modules';
 import { getProfession, startingKit, startingXp } from '$lib/game/professions';
 import { hashPassword, needsRehash, verifyPassword } from './passwords';
 import { moveItem, shipContainer } from './containers';
+import { credit } from './wallet';
 import { createStarterShip, saveFit, shipFit, shipHull } from './ships';
 import { UniverseError, requireStation } from './universe';
 
@@ -321,4 +322,45 @@ export function countByFaction(db: Db): Record<string, number> {
 export function skillXp(db: Db, pilotId: number): Record<string, number> {
 	const rows = db.select().from(pilotSkill).where(eq(pilotSkill.pilotId, pilotId)).all();
 	return Object.fromEntries(rows.map((row) => [row.skill, row.xp]));
+}
+
+/**
+ * El piloto de prueba, que la semilla deja siempre disponible.
+ *
+ * No es contenido del juego: es la herramienta con la que se mira el juego.
+ * Entrar a revisar una pantalla no puede costar pasar por el alta de cuatro pasos
+ * cada vez que se borra la base, y hacerlo a mano en la consola es la clase de
+ * paso no escrito que termina siendo folclore.
+ *
+ * **Es idempotente**, como el resto de la siembra: si ya existe no lo toca, así
+ * que volver a sembrar no le devuelve los créditos ni le borra lo que juntó
+ * probando.
+ *
+ * Arranca con un colchón de créditos a propósito. Sale de un asiento del libro
+ * mayor como cualquier otro movimiento —nadie escribe el saldo a mano, ni
+ * siquiera acá— y está para poder mirar el mercado del lado del que compra sin
+ * tener que minar primero.
+ */
+export const DEV_PILOT_CALLSIGN = 'Prueba';
+export const DEV_PILOT_EMAIL = 'prueba@vaxav.test';
+export const DEV_PILOT_PASSWORD = 'vaxav-desarrollo';
+const DEV_PILOT_CREDITS = 250_000;
+
+export async function ensureDevPilot(db: Db): Promise<boolean> {
+	if (callsignTaken(db, DEV_PILOT_CALLSIGN) || emailTaken(db, DEV_PILOT_EMAIL)) return false;
+
+	const creado = await createPilot(
+		db,
+		DEV_PILOT_CALLSIGN,
+		DEV_PILOT_EMAIL,
+		DEV_PILOT_PASSWORD,
+		'miner',
+		'dominion'
+	);
+	credit(db, creado.id, DEV_PILOT_CREDITS, {
+		kind: 'adjustment',
+		memo: 'Fondo de prueba'
+	});
+
+	return true;
 }
