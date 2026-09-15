@@ -222,7 +222,7 @@
 							bind:value={search}
 							placeholder="Buscar"
 							aria-label="Buscar en el mercado"
-							class="h-9 w-full border border-border-soft bg-field pr-3 pl-8 font-body text-2
+							class="h-[2.15rem] w-full border border-border-soft bg-field pr-3 pl-8 font-body text-2
 								text-text-strong transition-[border-color,box-shadow] placeholder:text-text-muted
 								hover:border-border focus:border-accent focus:shadow-glow focus:outline-none"
 						/>
@@ -413,7 +413,7 @@
 								min="1"
 								bind:value={units}
 								aria-label="Unidades"
-								class="h-9 w-24 border border-border-soft bg-field px-3 text-right font-mono text-2
+								class="h-[2.15rem] w-24 border border-border-soft bg-field px-3 text-right font-mono text-2
 									text-text-strong hover:border-border focus:border-accent focus:shadow-glow
 									focus:outline-none"
 							/>
