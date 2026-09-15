@@ -130,6 +130,9 @@ export const actions: Actions = {
 				from: hold(form.get('desde'))
 			});
 			return {
+				// La ventana del ítem se cierra sola: la mercadería acaba de irse a
+				// garantía, así que todo lo que muestra quedó viejo en el acto.
+				published: true,
 				done: lado === 'sell' ? 'Acordando la venta' : 'Acordando la compra',
 				note: 'La orden entra al libro cuando se cierre el trato.'
 			};

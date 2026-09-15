@@ -77,12 +77,15 @@ energía**.
 - ~~El mercado en el Neocom, con alcance por regiones.~~
 - ~~Propiedades: qué tenés y dónde, en toda la galaxia.~~
 - ~~El historial de precios de cada ítem.~~
+- ~~Acordar una orden es una acción: lleva tiempo y paga Comercio.~~
+- ~~Las órdenes vencen, y cuánto duran lo decide Contactos.~~
 
 Acá el bucle se cerró por primera vez: viajás, minás, volvés, cobrás y comprás.
 El mercado es **la única puerta para conseguir módulos**, y con él las cuatro
 habilidades de Comercio dejaron de ser adornos: **Regateo** mueve la horquilla y
-la comisión, **Contabilidad** el impuesto y cuántas órdenes podés llevar, y
-**Análisis de mercado** hasta dónde ves. Ver [el mercado](systems/MARKET.md).
+la comisión, **Contabilidad** el impuesto y cuántas órdenes podés llevar,
+**Análisis de mercado** hasta dónde ves y **Contactos** cuánto dura lo que
+publicás. Ver [el mercado](systems/MARKET.md).
 
 ### 4 · Requisitos de habilidad e inyecciones
 

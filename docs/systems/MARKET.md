@@ -46,6 +46,34 @@ progresión, es una pared—.
 | I                   | 2               | 1 región                         |
 | IV o más            | 5               | 4 regiones                       |
 
+## Publicar es una acción
+
+Poner una orden **no es un botón: es una acción con su tiempo**, como viajar o
+minar. Se están cerrando condiciones con alguien, lleva **un minuto** y ocupa el
+único turno que el piloto tiene.
+
+Eso resuelve un agujero del árbol de habilidades: **Comercio no tenía de dónde
+sacar experiencia**. Un piloto que quisiera dedicarse a comerciar estaba obligado
+a ir a picar piedra para poder negociar mejor, que es exactamente al revés de lo
+que la rama promete.
+
+**Lo que impide granjearla** es que la experiencia sale del **valor del trato** y
+tiene tope: publicar cien órdenes de un crédito paga lo mismo que publicar una, y
+para llegar al techo hay que comprometer una fortuna y pagar la comisión que le
+corresponde. A ese precio, comprar experiencia con créditos sale carísimo. Y como
+las acciones son una por vez, el minuto que se va en un trámite es un minuto que
+no se está minando.
+
+**Comprar y vender contra una orden que ya existe no es una acción**: ahí no se
+negocia nada, se toma el precio de otro.
+
+La orden se escribe **al encargar**, con su garantía ya tomada, y **abre sola
+cuando el reloj pasa su fecha**. Si se creara al resolver, la plata o la
+mercadería quedarían libres mientras se negocia y se podrían comprometer dos
+veces. Cancelar, en cambio, es **instantáneo**: retirarse de un trato no es una
+negociación, es decir que no, y cancelar mientras se acuerda cancela también la
+acción.
+
 ## Las órdenes
 
 Una orden es **una promesa respaldada**:
@@ -66,6 +94,28 @@ comprar lejos sería una forma elegante de perder la compra.
 Se publica **donde uno está parado**. Poner un puesto a distancia es una mecánica
 aparte —y más cara— que todavía no existe.
 
+### Ninguna es eterna
+
+Sin vencimiento, el libro se llena de precios viejos de pilotos que dejaron de
+jugar, y un mercado que muestra ofertas que nadie va a honrar es peor que uno
+vacío. La escalera es la de EVE y el tope lo da **Contactos**:
+
+| Contactos    | Hasta     |
+| ------------ | --------- |
+| Sin entrenar | 1 día     |
+| I            | 3 días    |
+| II           | 1 semana  |
+| III          | 2 semanas |
+| IV           | 1 mes     |
+| V            | 3 meses   |
+
+Un piloto nuevo publica por un día, que alcanza de sobra para liquidar una
+bodega. **Al vencer, la garantía vuelve entera**: caducar no es perder.
+
+El barrido es perezoso, como todo acá: no hay ningún reloj corriendo del lado del
+servidor. Una orden vencida es invisible para todos desde el instante en que
+vence —el libro filtra por fecha—, y la garantía vuelve cuando su dueño aparece.
+
 ## Lo que se lleva la casa
 
 Dos cobros, y son dos porque castigan cosas distintas. Los dos bajan con
@@ -75,6 +125,11 @@ habilidad **hasta un piso** y nunca a cero.
 | ------------------------- | ----------- | ----- | ----- | ------------ |
 | **Comisión del corredor** | Al publicar | 3,0 % | 1,0 % | Regateo      |
 | **Impuesto de venta**     | Al vender   | 5,0 % | 2,0 % | Contabilidad |
+
+Las cuatro habilidades de Comercio quedan con un trabajo cada una: **Regateo**
+mueve la horquilla de la estación y la comisión, **Contabilidad** el impuesto y
+cuántas órdenes se pueden llevar, **Análisis de mercado** hasta dónde se ve, y
+**Contactos** cuánto puede durar una orden.
 
 La comisión **no se devuelve al cancelar**: es lo que hace que llenar el libro de
 órdenes para tantear el mercado tenga costo. El impuesto es el **sumidero de
@@ -185,7 +240,6 @@ este módulo es si un precio es bueno, no cuánto se queda el mostrador.
 
 ## Lo que viene
 
-- **Órdenes que vencen.** Hoy una orden vive hasta que se cumple o se cancela.
 - **Publicar a distancia**, con su costo y su habilidad.
 - **Saltos de verdad en la columna de distancia**, cuando haya más de un sistema.
 - **Contratos**, que es lo que le falta a Contactos para dejar de ser decorativa.

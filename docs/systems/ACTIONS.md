@@ -2,13 +2,20 @@
 
 > **Implementado en parte.** El motor de acciones existe: se encola una orden por
 > vez, se resuelve de forma perezosa e idempotente y deja su informe en la
-> bitácora. La única acción real es **viajar**. Los números están para discutirse.
+> bitácora. Hay tres acciones: **viajar**, **minar** y **acordar una orden** del
+> mercado. Los números están para discutirse.
 
 > **La experiencia ya no se reparte entre habilidades**: una acción deposita en el
 > pozo de su familia. Ver [habilidades](SKILLS.md).
 >
 > Ver también: [habilidades](SKILLS.md) · [naves](SHIPS.md) ·
-> [universo](UNIVERSE.md) · [interfaz](INTERFACE.md)
+> [universo](UNIVERSE.md) · [mercado](MARKET.md) · [interfaz](INTERFACE.md)
+
+**Toda acción ocupa el único turno del piloto**, y ésa es la regla que sostiene el
+balance de todo lo demás: cualquier forma de ganar experiencia compite con las
+otras por el mismo recurso, que es el tiempo real. Por eso acordar una orden del
+mercado paga Comercio sin abrir una granja: el minuto que se va en un trámite es
+un minuto que no se está minando.
 
 Todo lo que hace un piloto en Vaxav es una **acción**: viajar, minar, refinar,
 reparar, comerciar, escanear. Las acciones son la única forma de cambiar el

@@ -191,7 +191,7 @@ const CATALOG = [
 		name: 'Contactos',
 		family: 'trade',
 		difficulty: 4,
-		governs: 'Acceso a contratos y precios reservados',
+		governs: 'Cuánto tiempo puede quedar publicada una orden',
 		requirements: [
 			{ skill: 'haggling', level: 4 },
 			{ skill: 'accounting', level: 3 }

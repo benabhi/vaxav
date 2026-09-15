@@ -132,6 +132,21 @@
 	}
 
 	/**
+	 * Cerrada una publicación, la ventana del ítem se cierra sola.
+	 *
+	 * Lo que mostraba quedó viejo en el acto: la mercadería se fue a garantía y
+	 * los libros cambiaron. Dejarla abierta con las cifras de antes es peor que
+	 * cerrarla.
+	 */
+	let lastForm = $state<unknown>(null);
+	$effect(() => {
+		if (form !== lastForm) {
+			lastForm = form;
+			if (form && 'published' in form && form.published) open = false;
+		}
+	});
+
+	/**
 	 * Cuánto falta para una fecha, escrito corto.
 	 *
 	 * Lo calcula el navegador y no el servidor por la misma razón que la cuenta
