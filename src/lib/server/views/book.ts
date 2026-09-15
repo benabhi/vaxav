@@ -28,18 +28,9 @@ import { priceHistory } from '../services/trades';
 import { aliveNow } from '../services/orders';
 import { marketStations } from './market';
 import { getItem } from '$lib/game/items';
+import { DEFAULT_BOOK_ROWS } from '$lib/game/market';
 import { thousands } from '$lib/format';
 import type { LibroMercado, OrdenMercado } from '$lib/tipos';
-
-/**
- * Cuántas órdenes de cada lado viajan a la pantalla.
- *
- * No es un número de rendimiento sino de uso: se opera contra la mejor, o contra
- * una de las primeras. Quien necesite ver la número cincuenta ya está mirando un
- * mercado que hay que paginar de verdad, y ese día esto pasa a ser el tamaño de
- * página.
- */
-export const BOOK_PAGE = 50;
 
 /** Una orden de jugador, lista para dibujar. */
 function playerRow(
@@ -90,7 +81,12 @@ function playerRow(
  * Todo en una pasada porque la ventana los muestra juntos: comprar sin ver a
  * cuánto se está pagando del otro lado es la mitad de la información.
  */
-export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercado {
+export function buildBookView(
+	db: Db,
+	row: Pilot,
+	itemCode: string,
+	rows: number = DEFAULT_BOOK_ROWS
+): LibroMercado {
 	const item = getItem(itemCode);
 	const desk = deskFor(db, row);
 	const estaciones = marketStations(db);
@@ -171,8 +167,8 @@ export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercad
 	const todosBuyers = [...estacionRow('buy'), ...deJugadores('buy')].sort(
 		(a, b) => b.price - a.price || a.distance - b.distance
 	);
-	const sellers = todosSellers.slice(0, BOOK_PAGE);
-	const buyers = todosBuyers.slice(0, BOOK_PAGE);
+	const sellers = todosSellers.slice(0, rows);
+	const buyers = todosBuyers.slice(0, rows);
 
 	const nave = activeShip(db, row.id);
 	const inShip = nave ? quantityOf(db, shipContainer(db, nave.id).id, itemCode) : 0;

@@ -438,3 +438,28 @@ export function maxOrderDays(level: number): number {
 export function allowsDuration(level: number, days: number): boolean {
 	return durationsFor(level).some((opcion) => opcion.days === days);
 }
+
+/**
+ * Cuántas órdenes de un libro se piden de una vez.
+ *
+ * **No es paginar.** Un libro se consume desde arriba: se opera contra el mejor
+ * precio, y nadie navega hasta la orden 340 buscando algo peor. Lo que hace falta
+ * es decidir cuánto ver de una vez, no recorrerlo entero; cuántas hay en total se
+ * dice aparte, que es lo que informa si el mercado está profundo.
+ *
+ * Vive con las reglas y no con la vista porque **la eligen los dos lados**: la
+ * pantalla arma el pedido y el servidor decide si el número es aceptable. Sin una
+ * lista cerrada, un pedido con `por=999999` traería el libro entero y acotarlo no
+ * serviría de nada.
+ *
+ * Que sea elegible y no fijo es lo de cualquier tabla larga: veinte alcanza para
+ * operar contra la mejor orden, y cien es para mirar de verdad la profundidad de
+ * un mercado.
+ */
+export const BOOK_ROWS = [20, 50, 100] as const;
+export const DEFAULT_BOOK_ROWS = 20;
+
+/** Cuántas filas pidió la pantalla, o las de siempre si vino cualquier cosa. */
+export function bookRows(asked: number): number {
+	return BOOK_ROWS.includes(asked as (typeof BOOK_ROWS)[number]) ? asked : DEFAULT_BOOK_ROWS;
+}
