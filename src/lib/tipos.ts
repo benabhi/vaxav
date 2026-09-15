@@ -587,12 +587,23 @@ export interface FilaMercado {
 	readonly summary: string;
 	/** El precio de referencia, para poder rehacer la cuenta del lote. */
 	readonly basePrice: number;
-	/** Lo más barato que alguien vende, contando a la estación. Nulo si nadie. */
+	/**
+	 * Lo más barato que alguien vende, contando a la estación, **y dónde está**.
+	 *
+	 * El mercado se mira desde cualquier parte, así que un precio sin lugar no
+	 * alcanza para decidir nada: lo barato a cuatro saltos es barato más un viaje.
+	 * Los saltos van aparte de la ubicación porque el día que haya puertas es el
+	 * número que va a mandar, y hoy dice "Acá" cuando es el mostrador de uno.
+	 */
 	readonly bestAsk: number | null;
 	readonly bestAskLabel: string;
-	/** Lo más que alguien paga. */
+	readonly bestAskWhere: string;
+	readonly bestAskJumps: string;
+	/** Lo más que alguien paga, y dónde. */
 	readonly bestBid: number | null;
 	readonly bestBidLabel: string;
+	readonly bestBidWhere: string;
+	readonly bestBidJumps: string;
 	readonly sellOrders: number;
 	readonly buyOrders: number;
 	/** Cuánto tiene el piloto, sumando todas sus bodegas de la galaxia. */

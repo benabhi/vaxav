@@ -96,7 +96,7 @@
 	 * Es **una sola** para las dos tablas: son la misma lista mirada de dos lados,
 	 * y ordenarlas por separado obligaría a acordarse de cómo quedó cada una.
 	 */
-	let sortBy = $state<'name' | 'tier' | 'price' | 'orders' | 'held'>('name');
+	let sortBy = $state<'name' | 'tier' | 'price' | 'where' | 'jumps' | 'orders' | 'held'>('name');
 	let sortDir = $state<'asc' | 'desc'>('asc');
 
 	/**
@@ -128,6 +128,14 @@
 		const signo = sortDir === 'asc' ? 1 : -1;
 		const precio = (item: FilaMercado) => (lado === 'sell' ? item.bestAsk : item.bestBid) ?? 0;
 		const ordenes = (item: FilaMercado) => (lado === 'sell' ? item.sellOrders : item.buyOrders);
+		const donde = (item: FilaMercado) => (lado === 'sell' ? item.bestAskWhere : item.bestBidWhere);
+		// "Acá" antes que cualquier número: lo que está debajo de los pies no cuesta
+		// un viaje, y ordenar por saltos es justamente buscar lo más cerca.
+		const saltos = (item: FilaMercado) => {
+			const etiqueta = lado === 'sell' ? item.bestAskJumps : item.bestBidJumps;
+			if (etiqueta === 'Acá') return -1;
+			return Number(etiqueta) || 0;
+		};
 
 		return [...filas].sort((a, b) => {
 			switch (sortBy) {
@@ -135,6 +143,10 @@
 					return signo * (a.size - b.size || a.tier.localeCompare(b.tier));
 				case 'price':
 					return signo * (precio(a) - precio(b));
+				case 'where':
+					return signo * donde(a).localeCompare(donde(b));
+				case 'jumps':
+					return signo * (saltos(a) - saltos(b));
 				case 'orders':
 					return signo * (ordenes(a) - ordenes(b));
 				case 'held':
@@ -287,7 +299,7 @@
 				-->
 					<thead class="sticky top-0 z-10 bg-well">
 						<tr class="border-b border-border-soft">
-							{#each [{ code: 'name' as const, label: 'Ítem', right: false }, { code: 'tier' as const, label: 'Clase', right: false }, { code: 'price' as const, label: lado === 'sell' ? 'Te cobran' : 'Te pagan', right: true }, { code: 'orders' as const, label: 'Órdenes', right: true }, { code: 'held' as const, label: 'Tuyo', right: true }] as columna (columna.code)}
+							{#each [{ code: 'name' as const, label: 'Ítem', right: false }, { code: 'tier' as const, label: 'Clase', right: false }, { code: 'price' as const, label: lado === 'sell' ? 'Te cobran' : 'Te pagan', right: true }, { code: 'where' as const, label: 'Dónde', right: false }, { code: 'jumps' as const, label: 'Saltos', right: true }, { code: 'orders' as const, label: 'Órdenes', right: true }, { code: 'held' as const, label: 'Tuyo', right: true }] as columna (columna.code)}
 								<th class="py-1 {columna.code === 'held' ? '' : 'pr-3'}">
 									<button
 										type="button"
@@ -326,6 +338,17 @@
 								>
 									{lado === 'sell' ? item.bestAskLabel : item.bestBidLabel}
 								</td>
+								<!--
+									Dónde está el mejor precio, y a cuántos saltos. El mercado se mira
+									desde cualquier parte, así que un precio sin lugar no alcanza para
+									decidir: lo barato a cuatro saltos es barato más un viaje.
+								-->
+								<td class="py-[0.4rem] pr-3 text-2 text-text-body">
+									{(lado === 'sell' ? item.bestAskWhere : item.bestBidWhere) || '—'}
+								</td>
+								<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.72rem] text-text-muted">
+									{(lado === 'sell' ? item.bestAskJumps : item.bestBidJumps) || '—'}
+								</td>
 								<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.7rem] text-text-muted">
 									{(lado === 'sell' ? item.sellOrders : item.buyOrders) || '—'}
 								</td>
@@ -335,7 +358,7 @@
 							</tr>
 						{:else}
 							<tr>
-								<td colspan="5" class="py-4 text-center text-1 text-text-muted">
+								<td colspan="7" class="py-4 text-center text-1 text-text-muted">
 									{search.trim()
 										? 'Nada con ese nombre de este lado.'
 										: lado === 'sell'
@@ -442,9 +465,12 @@
 			poner el propio. Vive acá y no dentro de la ventana de operar porque no es
 			una operación sobre la orden de otro.
 		-->
-		<HudButton size="2" onclick={() => (publishOpen = true)} disabled={!chosen}>
-			Poner una orden
-		</HudButton>
+		<!--
+			Siempre habilitado: la ventana sabe pedir el ítem cuando todavía no hay
+			ninguno elegido. Un botón apagado sin decir por qué es una puerta cerrada
+			sin cartel.
+		-->
+		<HudButton size="2" onclick={() => (publishOpen = true)}>Poner una orden</HudButton>
 	</div>
 {/if}
 

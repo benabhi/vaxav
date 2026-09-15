@@ -55,6 +55,7 @@ import {
 	slotKindLabel,
 	thousands
 } from '$lib/format';
+import type { OrderKind } from '$lib/game/market';
 import type { FilaMercado, GrupoMercado, Horquilla, Mercado, OrdenPropia } from '$lib/tipos';
 
 /** Las tres ramas de primer nivel del árbol. */
@@ -109,54 +110,76 @@ export function marketStations(db: Db): readonly MarketStation[] {
 		.all();
 }
 
-/** El mejor precio de cada lado y cuántas órdenes hay, por ítem. */
+/** El mejor precio de cada lado, **dónde está** y cuántas órdenes hay. */
 interface BookSummary {
 	bestAsk: number | null;
+	bestAskStation: number | null;
 	bestBid: number | null;
+	bestBidStation: number | null;
 	sellOrders: number;
 	buyOrders: number;
+}
+
+/** Un resumen vacío, para el ítem que todavía no tiene libro. */
+function emptySummary(): BookSummary {
+	return {
+		bestAsk: null,
+		bestAskStation: null,
+		bestBid: null,
+		bestBidStation: null,
+		sellOrders: 0,
+		buyOrders: 0
+	};
 }
 
 /**
  * Resume el libro de todos los ítems de una vez.
  *
- * Una sola consulta agrupada y no una por renglón: con cincuenta y un ítems ya
+ * Dos consultas agrupadas y no una por renglón: con cincuenta y un ítems ya
  * serían cincuenta y una consultas para dibujar una lista, y con seiscientos
  * módulos la pantalla dejaría de abrir.
+ *
+ * Son **dos y no una** porque cada lado busca un extremo distinto —el más barato
+ * del que vende, el que más paga del que compra— y hace falta saber de qué fila
+ * salió cada uno para poder decir dónde está. SQLite devuelve las columnas sueltas
+ * de la fila que ganó el `min`/`max` cuando es el único agregado de ese tipo, que
+ * es exactamente lo que se necesita acá.
  */
 function summarize(db: Db, stationIds: readonly number[]): Map<string, BookSummary> {
 	const resumen = new Map<string, BookSummary>();
 	if (stationIds.length === 0) return resumen;
 
-	const filas = db
-		.select({
-			itemCode: marketOrder.itemCode,
-			kind: marketOrder.kind,
-			cheapest: sql<number>`min(${marketOrder.price})`,
-			dearest: sql<number>`max(${marketOrder.price})`,
-			orders: sql<number>`count(*)`
-		})
-		.from(marketOrder)
-		.where(and(inArray(marketOrder.stationId, [...stationIds]), aliveNow()))
-		.groupBy(marketOrder.itemCode, marketOrder.kind)
-		.all();
+	const lado = (kind: OrderKind, extremo: 'min' | 'max') =>
+		db
+			.select({
+				itemCode: marketOrder.itemCode,
+				price:
+					extremo === 'min'
+						? sql<number>`min(${marketOrder.price})`
+						: sql<number>`max(${marketOrder.price})`,
+				stationId: marketOrder.stationId,
+				orders: sql<number>`count(*)`
+			})
+			.from(marketOrder)
+			.where(
+				and(inArray(marketOrder.stationId, [...stationIds]), eq(marketOrder.kind, kind), aliveNow())
+			)
+			.groupBy(marketOrder.itemCode)
+			.all();
 
-	for (const fila of filas) {
-		const actual = resumen.get(fila.itemCode) ?? {
-			bestAsk: null,
-			bestBid: null,
-			sellOrders: 0,
-			buyOrders: 0
-		};
-		if (fila.kind === 'sell') {
-			// Del lado de quien vende, el mejor precio es el más barato.
-			actual.bestAsk = fila.cheapest;
-			actual.sellOrders = fila.orders;
-		} else {
-			// Del lado de quien compra, el que más paga.
-			actual.bestBid = fila.dearest;
-			actual.buyOrders = fila.orders;
-		}
+	for (const fila of lado('sell', 'min')) {
+		const actual = resumen.get(fila.itemCode) ?? emptySummary();
+		actual.bestAsk = fila.price;
+		actual.bestAskStation = fila.stationId;
+		actual.sellOrders = fila.orders;
+		resumen.set(fila.itemCode, actual);
+	}
+
+	for (const fila of lado('buy', 'max')) {
+		const actual = resumen.get(fila.itemCode) ?? emptySummary();
+		actual.bestBid = fila.price;
+		actual.bestBidStation = fila.stationId;
+		actual.buyOrders = fila.orders;
 		resumen.set(fila.itemCode, actual);
 	}
 
@@ -204,19 +227,52 @@ function best(prices: readonly (number | null | undefined)[], pick: 'min' | 'max
 	return pick === 'min' ? Math.min(...hay) : Math.max(...hay);
 }
 
+/**
+ * Cuántos saltos hay hasta una estación, escrito para leer.
+ *
+ * Hoy la galaxia tiene **un solo sistema**, así que nunca hay saltos: lo único
+ * que distingue una estación de otra es si es la que uno tiene debajo de los
+ * pies. La columna existe igual, reservada, porque el día que haya puertas el
+ * número entra acá y ninguna otra cosa se entera —que es justamente por qué
+ * conviene que exista antes de hacer falta—.
+ */
+function jumpsLabel(stationId: number | null, dockedAt: number | null): string {
+	if (stationId === null) return '';
+	if (stationId === dockedAt) return 'Acá';
+	return '0';
+}
+
 /** Un renglón de la lista: lo mínimo para decidir si vale abrirlo. */
 function line(
 	item: Item,
 	module: ShipModule | null,
 	summary: BookSummary | undefined,
 	desk: MarketDesk | null,
-	held: number
+	held: number,
+	stations: Map<number, MarketStation>
 ): FilaMercado {
 	// El precio de la estación entra como una orden más del libro. Es la única que
 	// no se agota, y la única que se negocia: del otro lado no hay otro piloto.
 	const estacion = desk?.services.trades ? quote(desk, item.code) : null;
-	const bestAsk = best([summary?.bestAsk, item.kind === 'module' ? estacion?.ask : null], 'min');
-	const bestBid = best([summary?.bestBid, estacion?.bid], 'max');
+	const askEstacion = item.kind === 'module' ? (estacion?.ask ?? null) : null;
+	const bidEstacion = estacion?.bid ?? null;
+	const bestAsk = best([summary?.bestAsk, askEstacion], 'min');
+	const bestBid = best([summary?.bestBid, bidEstacion], 'max');
+
+	// Dónde está el que gana. Si el mejor precio lo pone la estación donde uno
+	// está parado, es acá; si no, la estación de la orden que ganó.
+	const dondeAsk =
+		bestAsk === null
+			? null
+			: askEstacion !== null && bestAsk === askEstacion
+				? (desk?.stationId ?? null)
+				: (summary?.bestAskStation ?? null);
+	const dondeBid =
+		bestBid === null
+			? null
+			: bidEstacion !== null && bestBid === bidEstacion
+				? (desk?.stationId ?? null)
+				: (summary?.bestBidStation ?? null);
 
 	return {
 		itemCode: item.code,
@@ -234,8 +290,12 @@ function line(
 		basePrice: item.basePrice,
 		bestAsk,
 		bestAskLabel: bestAsk === null ? '' : thousands(bestAsk),
+		bestAskWhere: dondeAsk === null ? '' : (stations.get(dondeAsk)?.name ?? ''),
+		bestAskJumps: jumpsLabel(dondeAsk, desk?.stationId ?? null),
 		bestBid,
 		bestBidLabel: bestBid === null ? '' : thousands(bestBid),
+		bestBidWhere: dondeBid === null ? '' : (stations.get(dondeBid)?.name ?? ''),
+		bestBidJumps: jumpsLabel(dondeBid, desk?.stationId ?? null),
 		sellOrders: summary?.sellOrders ?? 0,
 		buyOrders: summary?.buyOrders ?? 0,
 		held
@@ -372,10 +432,11 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 		estaciones.map((estacion) => estacion.stationId)
 	);
 	const tengo = holdings(db, row);
+	const porId = new Map(estaciones.map((estacion) => [estacion.stationId, estacion]));
 
 	const items = [
 		...ORE_LIST.map((ore) =>
-			line(getItem(ore.code), null, resumen.get(ore.code), desk, tengo.get(ore.code) ?? 0)
+			line(getItem(ore.code), null, resumen.get(ore.code), desk, tengo.get(ore.code) ?? 0, porId)
 		),
 		...MODULES.filter((module) => module.code !== '').map((module) =>
 			line(
@@ -383,7 +444,8 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 				module,
 				resumen.get(module.code),
 				desk,
-				tengo.get(module.code) ?? 0
+				tengo.get(module.code) ?? 0,
+				porId
 			)
 		)
 	].sort((a, b) => a.size - b.size || a.name.localeCompare(b.name) || a.tier.localeCompare(b.tier));

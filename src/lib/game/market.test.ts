@@ -11,6 +11,7 @@ import { MAX_SKILL_LEVEL } from './fitting';
 import { getItem } from './items';
 import {
 	BASE_SPREAD_PERCENT,
+	MAX_OPEN_ORDERS,
 	MAX_REGIONS_IN_RANGE,
 	MIN_BROKER_FEE_PERMILLE,
 	MIN_SALES_TAX_PERMILLE,
@@ -193,11 +194,19 @@ describe('hasta dónde llega el mercado', () => {
 });
 
 describe('cuántas órdenes se pueden llevar', () => {
-	it('arranca en una de cada lado y sube con Contabilidad', () => {
+	it('arranca en una de cada lado y sube de a una por nivel', () => {
 		// El tope es por lado: tener una venta publicada no puede impedir poner una
 		// compra, que es justo el par que hace falta para entender el oficio.
 		expect(openOrderLimit(0)).toBe(1);
-		expect(openOrderLimit(5)).toBe(6);
+		expect(openOrderLimit(1)).toBe(2);
+		expect(openOrderLimit(3)).toBe(4);
+	});
+
+	it('llega a cinco y ahí se planta', () => {
+		// Es el techo de **esta** habilidad, no el del juego: subirlo más adelante
+		// es cosa de una habilidad más profunda de Comercio.
+		expect(openOrderLimit(4)).toBe(MAX_OPEN_ORDERS);
+		expect(openOrderLimit(9)).toBe(MAX_OPEN_ORDERS);
 	});
 
 	it('lo gobierna una sola habilidad, no una por lado', () => {

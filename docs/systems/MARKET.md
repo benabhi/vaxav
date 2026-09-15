@@ -138,7 +138,10 @@ y todo termina valiendo nada.
 
 **Cuántas órdenes se pueden llevar abiertas** también sale de Contabilidad —una
 sola habilidad para los dos lados, no una por cada uno— y el cupo es **por lado**:
-sin entrenar, una de compra y una de venta; al tope, seis de cada una.
+sin entrenar, una de compra y una de venta; una más por nivel, hasta cinco de cada
+una. Ese cinco es el techo **de esta habilidad** y no del juego: subirlo más
+adelante es cosa de una habilidad más profunda de Comercio, no de mover el
+número.
 
 Que sea por lado y no un total compartido es a propósito: con un cupo único,
 tener una venta publicada impediría poner una compra, y ofrecer algo y pedir algo
@@ -224,7 +227,12 @@ tres piezas que contestan tres preguntas distintas:
 1. **El árbol de categorías**, a la izquierda, para examinar sin saber cómo se
    llama lo que se busca.
 2. **El catálogo, en dos tablas**: arriba las **órdenes de venta** —lo que se
-   puede comprar— y abajo las **órdenes de compra** —lo que se puede vender—. Con
+   puede comprar— y abajo las **órdenes de compra** —lo que se puede vender—. Cada
+   renglón dice **dónde** está ese precio y **a cuántos saltos**, porque el mercado
+   se mira desde cualquier parte y un precio sin lugar no alcanza para decidir: lo
+   barato a cuatro saltos es barato más un viaje. Cuando el mostrador es el que uno
+   tiene debajo de los pies, la columna dice "Acá" en vez de un número. Las
+   cabeceras ordenan, y clickear la que ya ordena da vuelta el sentido. Con
    los dos precios en la misma fila hay que leer columna por columna para saber de
    qué lado del mostrador está cada cosa; separados, "¿qué puedo comprar acá?" se
    contesta mirando una tabla. Un ítem aparece en las dos si tiene órdenes de los

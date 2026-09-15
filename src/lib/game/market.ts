@@ -250,15 +250,25 @@ export const BASE_OPEN_ORDERS = 1;
 export const ORDERS_PER_LEVEL = 1;
 
 /**
+ * El techo de órdenes por lado con esta habilidad.
+ *
+ * Cinco, que se alcanza entrenando Contabilidad hasta el cuarto nivel. **Es un
+ * techo de esta habilidad y no del juego**: subirlo más adelante es cosa de una
+ * habilidad más profunda de Comercio, no de mover este número. Contabilidad
+ * sigue sirviendo en el nivel cinco, que es donde el impuesto llega a su piso.
+ */
+export const MAX_OPEN_ORDERS = 5;
+
+/**
  * El tope de órdenes abiertas **de un lado**, según **Contabilidad**.
  *
  * Es lo que separa a quien vende lo que le sobra de quien vive de comerciar: con
- * una de cada lado se liquida una bodega, con seis de cada lado se sostiene un
+ * una de cada lado se liquida una bodega, con cinco de cada lado se sostiene un
  * negocio en varias estaciones a la vez. Llevar más libros a la vez es
  * exactamente de lo que se trata la habilidad.
  */
 export function openOrderLimit(level: number): number {
-	return BASE_OPEN_ORDERS + Math.max(0, level) * ORDERS_PER_LEVEL;
+	return Math.min(MAX_OPEN_ORDERS, BASE_OPEN_ORDERS + Math.max(0, level) * ORDERS_PER_LEVEL);
 }
 
 /**
