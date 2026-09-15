@@ -176,8 +176,9 @@ describe('lo que el piloto puede hacer', () => {
 
 		const vista = buildMarketView(db, piloto);
 
-		expect(vista.orderLimit).toBe(2);
-		expect(vista.openOrders).toBe(0);
+		expect(vista.orderLimit).toBe(1);
+		expect(vista.openBuys).toBe(0);
+		expect(vista.openSells).toBe(0);
 		expect(vista.regionsInRange).toBe(1);
 		expect(vista.brokerPermille).toBe(30);
 		expect(vista.taxPermille).toBe(50);

@@ -65,7 +65,9 @@ export class OrderError extends Error {}
  * una consulta por fila para dibujar una lista.
  */
 export interface TradingContext {
-	readonly openOrders: number;
+	/** Cuántas tiene abiertas de cada lado, y cuántas puede tener. */
+	readonly openBuys: number;
+	readonly openSells: number;
 	readonly orderLimit: number;
 	/** Cuántas regiones ve, contando la propia. */
 	readonly regionsInRange: number;
@@ -109,12 +111,21 @@ export interface Fill {
 	readonly balance: number;
 }
 
-/** Cuántas órdenes tiene abiertas un piloto. */
-export function openOrderCount(db: Db, pilotId: number): number {
+/**
+ * Cuántas órdenes tiene abiertas un piloto, de un lado o de los dos.
+ *
+ * Cuentan también las que todavía se están acordando: la garantía ya está tomada,
+ * así que el cupo ya está ocupado.
+ */
+export function openOrderCount(db: Db, pilotId: number, kind?: OrderKind): number {
 	const fila = db
 		.select({ total: sql<number>`count(*)` })
 		.from(marketOrder)
-		.where(eq(marketOrder.pilotId, pilotId))
+		.where(
+			kind
+				? and(eq(marketOrder.pilotId, pilotId), eq(marketOrder.kind, kind))
+				: eq(marketOrder.pilotId, pilotId)
+		)
 		.get();
 	return fila?.total ?? 0;
 }
@@ -126,7 +137,8 @@ export function tradingContext(db: Db, row: Pilot): TradingContext {
 	const accounting = levels[TAX_SKILL] ?? 0;
 
 	return {
-		openOrders: openOrderCount(db, row.id),
+		openBuys: openOrderCount(db, row.id, 'buy'),
+		openSells: openOrderCount(db, row.id, 'sell'),
 		orderLimit: openOrderLimit(accounting),
 		regionsInRange: regionsInRange(analysis),
 		maxRange: maxOrderRange(analysis),
@@ -225,12 +237,19 @@ function requirePrice(price: number): void {
 	if (price <= 0) throw new OrderError('El precio tiene que ser de al menos un crédito');
 }
 
-/** Que le quede lugar en el libro. */
-function requireRoom(context: TradingContext): void {
-	if (context.openOrders >= context.orderLimit) {
+/**
+ * Que le quede lugar en el libro, **de ese lado**.
+ *
+ * El cupo es por lado: tener una venta publicada no puede impedir poner una
+ * compra, que es justamente el par que hace falta para entender el oficio.
+ */
+function requireRoom(context: TradingContext, kind: OrderKind): void {
+	const puestas = kind === 'buy' ? context.openBuys : context.openSells;
+	if (puestas >= context.orderLimit) {
+		const lado = kind === 'buy' ? 'compra' : 'venta';
 		throw new OrderError(
-			`Ya tenés ${context.openOrders} órdenes abiertas y podés llevar ${context.orderLimit}. ` +
-				'Cancelá una o subí Contabilidad.'
+			`Ya tenés ${puestas} ${puestas === 1 ? `orden de ${lado}` : `órdenes de ${lado}`} y podés ` +
+				`llevar ${context.orderLimit} de cada lado. Cancelá una o subí Contabilidad.`
 		);
 	}
 }
@@ -271,7 +290,7 @@ export function placeSellOrder(
 	requirePrice(spec.price);
 
 	const context = tradingContext(db, row);
-	requireRoom(context);
+	requireRoom(context, 'sell');
 
 	const fee = cut(spec.price * spec.quantity, context.brokerPermille);
 	const vida = window(context, spec.days, spec.delaySeconds);
@@ -335,7 +354,7 @@ export function placeBuyOrder(
 	requirePrice(spec.price);
 
 	const context = tradingContext(db, row);
-	requireRoom(context);
+	requireRoom(context, 'buy');
 
 	const alcance = Math.max(0, Math.trunc(spec.rangeRegions ?? 0));
 	if (alcance > context.maxRange) {

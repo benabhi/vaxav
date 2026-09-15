@@ -329,8 +329,14 @@
 		<p class="font-mono text-2 text-data">{market.balance} CR</p>
 	</div>
 	<div class="flex flex-col items-start gap-1">
+		<!--
+			El cupo es **por lado**: tener una venta publicada no impide poner una
+			compra, así que decir un solo número mentiría sobre lo que queda libre.
+		-->
 		<Label>Órdenes</Label>
-		<p class="font-mono text-2 text-text-body">{market.openOrders} / {market.orderLimit}</p>
+		<p class="font-mono text-2 text-text-body">
+			{market.openSells} / {market.orderLimit} vendo · {market.openBuys} / {market.orderLimit} compro
+		</p>
 	</div>
 	<div class="flex flex-col items-start gap-1">
 		<Label>Comisión · impuesto</Label>
@@ -510,11 +516,7 @@
 	abriendo uno por uno no es contestarla.
 -->
 {#if market.orders.length > 0}
-	<TitledPanel
-		title="Mis órdenes"
-		detail="{market.orders.length} de {market.orderLimit}"
-		class="w-full"
-	>
+	<TitledPanel title="Mis órdenes" detail="{market.orders.length} abiertas" class="w-full">
 		<div class="w-full overflow-x-auto">
 			<table
 				class="w-full min-w-[34rem] border-collapse text-left

@@ -136,9 +136,14 @@ La comisión **no se devuelve al cancelar**: es lo que hace que llenar el libro 
 créditos** de la economía: sin algo que saque plata del mundo, la plata sólo entra
 y todo termina valiendo nada.
 
-**Cuántas órdenes se pueden llevar abiertas** también sale de Contabilidad: dos
-sin entrenar y doce al tope. Es lo que separa a quien liquida una bodega de quien
-sostiene un negocio en varias estaciones.
+**Cuántas órdenes se pueden llevar abiertas** también sale de Contabilidad —una
+sola habilidad para los dos lados, no una por cada uno— y el cupo es **por lado**:
+sin entrenar, una de compra y una de venta; al tope, seis de cada una.
+
+Que sea por lado y no un total compartido es a propósito: con un cupo único,
+tener una venta publicada impediría poner una compra, y ofrecer algo y pedir algo
+a la vez es justamente el par que hace entender el oficio. Lo que hay que ganarse
+es el volumen, no la primera lección.
 
 ## La estación es una orden más
 

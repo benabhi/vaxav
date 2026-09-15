@@ -193,13 +193,20 @@ describe('hasta dónde llega el mercado', () => {
 });
 
 describe('cuántas órdenes se pueden llevar', () => {
-	it('arranca en dos y sube con Contabilidad', () => {
-		expect(openOrderLimit(0)).toBe(2);
-		expect(openOrderLimit(5)).toBe(12);
+	it('arranca en una de cada lado y sube con Contabilidad', () => {
+		// El tope es por lado: tener una venta publicada no puede impedir poner una
+		// compra, que es justo el par que hace falta para entender el oficio.
+		expect(openOrderLimit(0)).toBe(1);
+		expect(openOrderLimit(5)).toBe(6);
+	});
+
+	it('lo gobierna una sola habilidad, no una por lado', () => {
+		// Contabilidad da el mismo número para comprar y para vender.
+		expect(openOrderLimit(3)).toBe(4);
 	});
 
 	it('un nivel negativo no resta órdenes', () => {
-		expect(openOrderLimit(-3)).toBe(2);
+		expect(openOrderLimit(-3)).toBe(1);
 	});
 });
 

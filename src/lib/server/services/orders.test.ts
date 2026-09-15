@@ -229,11 +229,37 @@ describe('publicar una orden de compra', () => {
 			});
 
 		poner();
-		poner();
 
-		// Sin Contabilidad son dos, y la tercera tiene que rebotar.
-		expect(tradingContext(db, comprador.row).orderLimit).toBe(2);
+		// Sin Contabilidad es una de cada lado, y la segunda de compra rebota.
+		expect(tradingContext(db, comprador.row).orderLimit).toBe(1);
 		expect(poner).toThrow(OrderError);
+	});
+
+	it('el cupo es por lado: una venta no ocupa el lugar de una compra', async () => {
+		const db = seededDb();
+		const piloto1 = await piloto(db, 'Mercader', PUERTO, {
+			creditos: 100_000,
+			carga: [['ferrous_silicate', 100]]
+		});
+		const stationId = estacion(db, piloto1.row);
+
+		placeSellOrder(db, piloto1.row, {
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 14,
+			stationId
+		});
+
+		// Ofrecer algo y pedir algo es el par que hace entender el oficio.
+		expect(() =>
+			placeBuyOrder(db, piloto1.row, {
+				itemCode: 'carbon_chondrite',
+				quantity: 10,
+				price: 11,
+				stationId
+			})
+		).not.toThrow();
+		expect(openOrderCount(db, piloto1.row.id)).toBe(2);
 	});
 });
 

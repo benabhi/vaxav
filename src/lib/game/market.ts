@@ -236,17 +236,26 @@ export function regionsInRange(level: number): number {
 	return Math.min(MAX_REGIONS_IN_RANGE, 1 + Math.max(0, level));
 }
 
-/** Cuántas órdenes abiertas se pueden llevar a la vez, sin habilidad y por nivel. */
-export const BASE_OPEN_ORDERS = 2;
-export const ORDERS_PER_LEVEL = 2;
+/**
+ * Cuántas órdenes abiertas se pueden llevar **de cada lado**, sin habilidad y por
+ * nivel.
+ *
+ * El tope es por lado y no sobre el total a propósito: con un solo cupo
+ * compartido, tener una venta publicada impediría poner una compra, y un
+ * comerciante que empieza necesita justamente eso —ofrecer algo y pedir algo— para
+ * que el oficio se entienda. Con uno de cada lado, la primera lección del mercado
+ * cabe entera; el volumen es lo que hay que ganarse.
+ */
+export const BASE_OPEN_ORDERS = 1;
+export const ORDERS_PER_LEVEL = 1;
 
 /**
- * El tope de órdenes abiertas, según **Contabilidad**.
+ * El tope de órdenes abiertas **de un lado**, según **Contabilidad**.
  *
  * Es lo que separa a quien vende lo que le sobra de quien vive de comerciar: con
- * dos órdenes se liquida una bodega, con doce se sostiene un negocio en varias
- * estaciones a la vez. Llevar más libros a la vez es exactamente de lo que se
- * trata la habilidad.
+ * una de cada lado se liquida una bodega, con seis de cada lado se sostiene un
+ * negocio en varias estaciones a la vez. Llevar más libros a la vez es
+ * exactamente de lo que se trata la habilidad.
  */
 export function openOrderLimit(level: number): number {
 	return BASE_OPEN_ORDERS + Math.max(0, level) * ORDERS_PER_LEVEL;

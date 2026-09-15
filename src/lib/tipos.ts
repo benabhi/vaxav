@@ -641,7 +641,9 @@ export interface Mercado {
 	/** Por qué no puede operar, escrito para el jugador. */
 	readonly whyNot: string;
 	readonly balance: string;
-	readonly openOrders: number;
+	/** Cuántas órdenes tiene abiertas de cada lado, y el tope por lado. */
+	readonly openBuys: number;
+	readonly openSells: number;
 	readonly orderLimit: number;
 	/** Hasta dónde puede llegar una orden de compra suya, en regiones. */
 	readonly maxRange: number;
