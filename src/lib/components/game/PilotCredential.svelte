@@ -23,6 +23,8 @@
 -->
 <script lang="ts">
 	import Icon from '../Icon.svelte';
+	import FamilyXpPanel from './FamilyXpPanel.svelte';
+	import Modal from '../ui/Modal.svelte';
 	import Label from '../typography/Label.svelte';
 	import PortraitPicker from './PortraitPicker.svelte';
 	import SkillHexagon from './SkillHexagon.svelte';
@@ -39,6 +41,16 @@
 	let { pilot, serial }: Props = $props();
 
 	let crest = $derived(factionCrest(pilot.factionCode));
+
+	/**
+	 * Si está abierta la vista grande del hexágono.
+	 *
+	 * En la credencial la figura entra chica —es una celda del carnet— y ahí dice
+	 * bien la forma pero mal las cifras. La ventana muestra las dos cosas juntas y
+	 * en grande, que es el panorama completo: la silueta y, al lado, cuánto hay en
+	 * cada rama. Es estado de pantalla, así que vive en el navegador.
+	 */
+	let ampliado = $state(false);
 
 	/** Desde cuándo vuela. La fecha corta alcanza: el día exacto no decide nada. */
 	let desde = $derived(
@@ -260,10 +272,43 @@
 			class="flex shrink-0 flex-col items-center gap-1 border-t border-border-soft pt-3 md:w-[13rem]
 				md:border-t-0 md:border-l md:pt-0 md:pl-5 lg:w-[15rem]"
 		>
-			<Label>Habilidades</Label>
+			<div class="flex w-full items-center justify-center gap-2">
+				<Label>Habilidades</Label>
+				<!--
+					Ampliar. Acá la figura entra chica y dice bien la forma pero mal las
+					cifras; la ventana pone las dos cosas juntas y en grande.
+				-->
+				<button
+					type="button"
+					onclick={() => (ampliado = true)}
+					aria-label="Ver el hexágono en grande"
+					class="cursor-pointer text-text-muted transition-colors hover:text-accent-bright"
+				>
+					<Icon name="arrows-out" weight="bold" size="0.75rem" />
+				</button>
+			</div>
 			<div class="w-full max-w-[15rem]">
 				<SkillHexagon families={pilot.families} />
 			</div>
 		</div>
 	</div>
 </div>
+
+<!--
+	El panorama completo: la figura grande y sus cifras al lado.
+
+	Las dos leen los mismos dos números de cada rama —lo invertido y lo que espera
+	en el pozo—, y por eso no se pisan: el hexágono contesta "¿qué forma tiene este
+	piloto?" y la lista "¿cuánto exactamente?". Juntas y en grande es la vista que
+	uno quiere cuando está decidiendo en qué gastar el próximo pozo.
+-->
+<Modal bind:open={ampliado} title="Habilidades" detail={pilot.callsign} icon="atom" size="lg">
+	<div class="flex w-full flex-col items-start gap-5 lg:flex-row">
+		<div class="w-full min-w-0 flex-[1_1_0]">
+			<SkillHexagon families={pilot.families} />
+		</div>
+		<div class="w-full min-w-0 flex-[1_1_0]">
+			<FamilyXpPanel families={pilot.families} />
+		</div>
+	</div>
+</Modal>

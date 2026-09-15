@@ -26,6 +26,7 @@ export type IconWeight = (typeof ICON_WEIGHTS)[number];
 export const ICON_NAMES = [
 	'address-book',
 	'anchor',
+	'arrows-out',
 	'arrows-out-cardinal',
 	'atom',
 	'battery-charging',
