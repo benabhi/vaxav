@@ -8,9 +8,9 @@
  * **La estación ya no surte módulos.** Antes, estar atracado en un lugar con
  * Equipamiento hacía aparecer el catálogo entero y gratis, lo que convertía la
  * ranura en una lista de compras sin precio. Comprar es del **mercado**, que es
- * donde van a estar los filtros y la búsqueda el día que haya cientos de
- * módulos; equipar es mover lo que ya es tuyo de la bodega a una ranura y al
- * revés. Son dos verbos distintos y ahora viven en dos pantallas distintas.
+ * donde viven la búsqueda y el árbol de categorías; equipar es mover lo que ya es
+ * tuyo de la bodega a una ranura y al revés. Son dos verbos distintos y viven en
+ * dos pantallas distintas.
  *
  * Lo que la estación sigue decidiendo es **si podés tocar la nave**: hace falta
  * el módulo de Equipamiento para desarmarla, y eso lo resuelve `status`.

@@ -26,10 +26,12 @@ tocaba con las demás. De los 25 atributos que calcula una nave, **dos** movían
 mecánica; de las 23 habilidades, **trece** no alteraban ningún número; la bodega
 era una cifra sin contenido y los créditos no los escribía nadie.
 
-De eso ya se pagó una parte: la bodega tiene contenido, el rendimiento de
-extracción decide cuánto traés, y cuatro habilidades dejaron de ser decorativas.
-Lo que falta es el otro extremo del circuito —vender, comprar, aprender— y ahí es
-donde la plata empieza a existir.
+De eso ya se pagó buena parte: la bodega tiene contenido, el rendimiento de
+extracción decide cuánto traés, los créditos existen y ocho habilidades dejaron de
+ser decorativas. El circuito de un minero cierra de punta a punta —viajar, minar,
+volver, vender, comprar, montar— y hay un mercado entre jugadores donde los
+precios los deciden ellos. Lo que falta es lo que lo hace crecer: aprender
+habilidades nuevas, refinar lo que se saca, salir del sistema y fabricar.
 
 Cerrar el primer circuito completo es lo que convierte eso en un juego: elegir
 minero, viajar al cinturón, minar, volver a una estación, vender, comprar algo
@@ -67,15 +69,23 @@ Se volvieron mecánicos la bodega, el rendimiento de extracción y la estabilida
 del acumulador, y con ellos **Minería, Ingeniería de bodega, Estiba y Gestión de
 energía**.
 
-### 3 · El mercado de la estación
+### 3 · El mercado regional · **hecho**
 
-Comprar y vender a precio fijo, con su asiento en el libro. Acá el bucle se cierra
-por primera vez: viajás, minás, volvés, cobrás.
+- ~~Comprar y vender contra la estación, con su asiento en los dos libros.~~
+- ~~Órdenes de compra y de venta entre pilotos, con garantía.~~
+- ~~Comisión al publicar e impuesto al vender, los dos con piso.~~
+- ~~El mercado en el Neocom, con alcance por regiones.~~
+- ~~Propiedades: qué tenés y dónde, en toda la galaxia.~~
+- ~~El historial de precios de cada ítem.~~
+- ~~Acordar una orden es una acción: lleva tiempo y paga Comercio.~~
+- ~~Las órdenes vencen, y cuánto duran lo decide Contactos.~~
 
-**Es la única puerta para conseguir módulos.** El equipamiento ya no los surte, así
-que hasta que esta etapa exista sólo se monta lo que se trae puesto de fábrica. Es
-también donde van la búsqueda y los filtros: el día que haya cientos de módulos, el
-problema no es comprarlos sino encontrarlos.
+Acá el bucle se cerró por primera vez: viajás, minás, volvés, cobrás y comprás.
+El mercado es **la única puerta para conseguir módulos**, y con él las cuatro
+habilidades de Comercio dejaron de ser adornos: **Regateo** mueve la horquilla y
+la comisión, **Contabilidad** el impuesto y cuántas órdenes podés llevar,
+**Análisis de mercado** hasta dónde ves y **Contactos** cuánto dura lo que
+publicás. Ver [el mercado](systems/MARKET.md).
 
 ### 4 · Requisitos de habilidad e inyecciones
 

@@ -525,3 +525,267 @@ export interface Billetera {
 	readonly entries: readonly MovimientoBilletera[];
 	readonly total: number;
 }
+
+/**
+ * La horquilla de una estación, desarmada para poder explicarla.
+ *
+ * Viaja en pedazos y no como un solo porcentaje porque la figura de la pantalla
+ * del mercado es exactamente esto: cuánto se queda la estación y qué lo está
+ * angostando. Un 13 % suelto no enseña nada; "20 de base, −3 por casa comercial,
+ * −4 por Regateo" enseña el juego mientras se lo juega.
+ */
+export interface Horquilla {
+	readonly percent: number;
+	readonly base: number;
+	readonly corporationEdge: number;
+	readonly haggling: number;
+	/** Si el piso fue lo que terminó decidiendo el número. */
+	readonly atFloor: boolean;
+}
+
+/**
+ * Una rama del árbol del mercado.
+ *
+ * Es el examinador de categorías: dos niveles, con los módulos abriéndose por
+ * ranura. El día que haya seiscientos módulos, es lo que hace que encontrar uno
+ * siga siendo posible sin saber cómo se llama.
+ */
+export interface GrupoMercado {
+	readonly code: string;
+	readonly label: string;
+	readonly icon: IconName;
+	/** La rama de la que cuelga, o vacío si es de primer nivel. */
+	readonly parent: string;
+	readonly count: number;
+}
+
+/**
+ * Dónde está una estación, desarmado para poder mostrarlo entero al señalarlo.
+ *
+ * En la tabla va **sólo el nombre**: una designación completa en cada renglón
+ * empuja las cifras fuera de la pantalla. El camino —qué orbita, en qué sistema,
+ * en qué región— aparece en el aviso, que es donde hace falta y no molesta.
+ */
+export interface LugarOrden {
+	readonly station: string;
+	/** El planeta, la luna o el cinturón donde está amarrada. */
+	readonly orbits: string;
+	readonly system: string;
+	readonly region: string;
+	/** Cuántos saltos, o "Acá" si es el mostrador donde uno está parado. */
+	readonly jumps: string;
+}
+
+/**
+ * Un renglón del catálogo del mercado.
+ *
+ * Lleva **lo mínimo para decidir si vale abrirlo**: el mejor precio de cada lado
+ * y cuántas órdenes hay detrás. El libro entero se pide al abrir el ítem, porque
+ * traerlo de los cincuenta y un renglones sería pedir miles de filas de las que
+ * se miran dos.
+ *
+ * Y lleva todo resuelto —grupo, clase, escalón— para poder buscar y filtrar en el
+ * navegador: una lista que va al servidor por cada tecla es insoportable en
+ * cuanto la lista crece.
+ */
+export interface FilaMercado {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly kindLabel: string;
+	/** La rama del árbol donde cuelga. */
+	readonly group: string;
+	readonly groupLabel: string;
+	/** Clase y escalón juntos, como los escribe el equipamiento: "2E". */
+	readonly tier: string;
+	readonly size: number;
+	readonly tierLetter: string;
+	readonly volume: string;
+	readonly summary: string;
+	/** El precio de referencia, para poder rehacer la cuenta del lote. */
+	readonly basePrice: number;
+	/**
+	 * Lo más barato que alguien vende, contando a la estación, **y dónde está**.
+	 *
+	 * El mercado se mira desde cualquier parte, así que un precio sin lugar no
+	 * alcanza para decidir nada: lo barato a cuatro saltos es barato más un viaje.
+	 */
+	readonly bestAsk: number | null;
+	readonly bestAskLabel: string;
+	readonly bestAskPlace: LugarOrden | null;
+	/** Lo más que alguien paga, y dónde. */
+	readonly bestBid: number | null;
+	readonly bestBidLabel: string;
+	readonly bestBidPlace: LugarOrden | null;
+	readonly sellOrders: number;
+	readonly buyOrders: number;
+	/** Cuánto tiene el piloto, sumando todas sus bodegas de la galaxia. */
+	readonly held: number;
+}
+
+/**
+ * Una orden propia, tal como se lista en la mesa del piloto.
+ *
+ * Incluye las que **todavía se están acordando**: no están en el libro y hay que
+ * decirlo, o el piloto las busca ahí y cree que se perdieron.
+ */
+export interface OrdenPropia {
+	readonly id: number;
+	readonly kind: string;
+	readonly kindLabel: string;
+	readonly itemCode: string;
+	readonly name: string;
+	readonly quantity: number;
+	readonly initialQuantity: number;
+	readonly price: string;
+	readonly value: string;
+	readonly stationName: string;
+	readonly pending: boolean;
+	readonly opensAt: number;
+	readonly expiresAt: number;
+}
+
+/** Cuánto puede durar una orden, de las que este piloto puede elegir. */
+export interface DuracionOrden {
+	readonly days: number;
+	readonly label: string;
+}
+
+/** El mercado de la región, visto desde donde está el piloto. */
+export interface Mercado {
+	readonly regionName: string;
+	/**
+	 * Dónde está parado el piloto: `Cuerpo · Sistema · Región`.
+	 *
+	 * No es una miga de navegación —no se puede subir por ella— sino **contexto**:
+	 * lo que esta pantalla muestra es la región entera, y dónde está uno es otra
+	 * cosa que hay que poder leer sin dudar.
+	 */
+	readonly location: string;
+	/** Cuántas regiones alcanza a ver, contando la propia. */
+	readonly regionsInRange: number;
+	readonly stationCount: number;
+	/** Dónde está atracado, o vacío si no lo está. */
+	readonly dockedAt: string;
+	/** La estación donde puede operar, o nula si no puede. */
+	readonly dockedStationId: number | null;
+	readonly canTradeHere: boolean;
+	/** Por qué no puede operar, escrito para el jugador. */
+	readonly whyNot: string;
+	readonly balance: string;
+	/** Cuántas órdenes tiene abiertas de cada lado, y el tope por lado. */
+	readonly openBuys: number;
+	readonly openSells: number;
+	readonly orderLimit: number;
+	/** Hasta dónde puede llegar una orden de compra suya, en regiones. */
+	readonly maxRange: number;
+	/** Lo que le cobran por publicar y por vender, en milésimos. */
+	readonly brokerPermille: number;
+	readonly taxPermille: number;
+	readonly oreSpread: Horquilla;
+	readonly moduleSpread: Horquilla;
+	readonly groups: readonly GrupoMercado[];
+	readonly items: readonly FilaMercado[];
+	/** Las duraciones que puede elegir al publicar. El tope lo da Contactos. */
+	readonly durations: readonly DuracionOrden[];
+	/** Sus órdenes abiertas y las que todavía se están acordando. */
+	readonly orders: readonly OrdenPropia[];
+	readonly cargoFree: string;
+}
+
+/** Un montón de algo, en algún lugar de la galaxia. */
+export interface FilaPropiedad {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly kindLabel: string;
+	readonly quantity: number;
+	readonly volume: string;
+	readonly value: string;
+	/** Si está publicado en una orden de venta: sigue siendo tuyo, pero atado. */
+	readonly listed: boolean;
+}
+
+/**
+ * Un lugar donde el piloto tiene cosas.
+ *
+ * Lleva **su valor**: es lo que convierte "tengo cosas en el Muelle" en "tengo
+ * catorce mil créditos parados en el Muelle", que es una frase que hace actuar.
+ */
+export interface LugarPropiedad {
+	readonly key: string;
+	readonly kind: string;
+	readonly name: string;
+	/** El sistema y la región, o "Con vos" si es la bodega de la nave. */
+	readonly where: string;
+	/** A dónde viajar para tocarlo. Nulo en la nave, que ya viaja con uno. */
+	readonly bodyId: number | null;
+	readonly lines: readonly FilaPropiedad[];
+	readonly used: string;
+	/** El tope, sólo donde hay uno. */
+	readonly capacity: string;
+	readonly percent: number;
+	readonly value: string;
+	readonly valueRaw: number;
+	/** Si el piloto está parado justo ahí. */
+	readonly here: boolean;
+	readonly listedCount: number;
+}
+
+/** Todo lo del piloto, lugar por lugar. */
+export interface Propiedades {
+	readonly places: readonly LugarPropiedad[];
+	readonly totalValue: string;
+	readonly placeCount: number;
+}
+
+/**
+ * Una orden del libro, lista para dibujar.
+ *
+ * Es la misma forma para las dos tablas y para los dos orígenes: una orden de
+ * jugador y la de la estación se dibujan igual, y lo único que las distingue es
+ * que la de la estación **no se agota** y que no tiene id con el que operar.
+ */
+export interface OrdenMercado {
+	/** Nulo en la de la estación: no es una fila de la base. */
+	readonly id: number | null;
+	readonly npc: boolean;
+	/** Si es del propio piloto, para poder cancelarla y no comprarse a sí mismo. */
+	readonly mine: boolean;
+	/** Nulo cuando no tiene tope. */
+	readonly quantity: number | null;
+	readonly quantityLabel: string;
+	readonly price: number;
+	readonly priceLabel: string;
+	readonly stationId: number;
+	readonly stationName: string;
+	readonly systemName: string;
+	/** Cuán lejos está de donde está el piloto. Cero es "acá mismo". */
+	readonly distance: number;
+	readonly distanceLabel: string;
+	/** Dónde está, desarmado, para el aviso que lo muestra entero. */
+	readonly place: LugarOrden;
+	/** Hasta dónde alcanza, sólo en las de compra. */
+	readonly rangeLabel: string;
+}
+
+/** Un día de mercado, que es la unidad en que se mira una tendencia. */
+export interface DiaMercado {
+	readonly at: number;
+	readonly low: number;
+	readonly high: number;
+	readonly average: number;
+	readonly volume: number;
+	readonly trades: number;
+}
+
+/** Los dos libros de un ítem, con su historial y lo que el piloto tiene a mano. */
+export interface LibroMercado {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly sellers: readonly OrdenMercado[];
+	readonly buyers: readonly OrdenMercado[];
+	readonly history: readonly DiaMercado[];
+	readonly inShip: number;
+	readonly inStation: number;
+}

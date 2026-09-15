@@ -230,12 +230,12 @@ Seis familias. El multiplicador está entre paréntesis.
 
 ### Comercio
 
-| Habilidad           | Dif. | Requiere                      | Gobierna                                |
-| ------------------- | :--: | ----------------------------- | --------------------------------------- |
-| Regateo             |  x1  | —                             | Margen en compras y ventas              |
-| Contabilidad        |  x2  | Regateo II                    | Comisiones e impuestos de estación      |
-| Análisis de mercado |  x3  | Regateo III                   | Ver historial y tendencias de precios   |
-| Contactos           |  x4  | Regateo IV · Contabilidad III | Acceso a contratos y precios reservados |
+| Habilidad           | Dif. | Requiere                      | Gobierna                               |
+| ------------------- | :--: | ----------------------------- | -------------------------------------- |
+| Regateo             |  x1  | —                             | Margen con la estación y comisión      |
+| Contabilidad        |  x2  | Regateo II                    | Impuesto de venta y tope de órdenes    |
+| Análisis de mercado |  x3  | Regateo III                   | Regiones del mercado que ves           |
+| Contactos           |  x4  | Regateo IV · Contabilidad III | Cuánto puede durar una orden publicada |
 
 ### Combate
 

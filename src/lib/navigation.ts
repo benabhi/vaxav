@@ -88,6 +88,28 @@ export const MODULES: readonly Module[] = [
 		]
 	},
 	{
+		code: 'market',
+		label: 'Mercado',
+		icon: 'storefront',
+		tabs: [
+			{
+				route: '/mercado',
+				label: 'Mercado'
+			}
+		]
+	},
+	{
+		code: 'assets',
+		label: 'Propiedades',
+		icon: 'warehouse',
+		tabs: [
+			{
+				route: '/propiedades',
+				label: 'Propiedades'
+			}
+		]
+	},
+	{
 		code: 'wallet',
 		label: 'Billetera',
 		icon: 'wallet',
@@ -167,7 +189,21 @@ export function moduleForRoute(path: string): Module | null {
 	return null;
 }
 
-/** La pestaña exacta de una ruta, o `null`. */
+/**
+ * La pestaña de una ruta, o `null`.
+ *
+ * Una pantalla que **cuelga** de una pestaña enciende esa pestaña: el mercado se
+ * abre desde la ubicación y sigue siendo parte de ella, así que la barra tiene
+ * que seguir diciendo dónde está el piloto y ofrecer la vuelta con un click.
+ * Gana la coincidencia más larga, para que `/piloto/bitacora` no termine
+ * encendiendo `/piloto`.
+ */
 export function tabForRoute(path: string): Tab | null {
-	return TABS.find((tab) => tab.route === path) ?? null;
+	const exacta = TABS.find((tab) => tab.route === path);
+	if (exacta) return exacta;
+
+	const colgadas = TABS.filter((tab) => path.startsWith(`${tab.route}/`)).sort(
+		(a, b) => b.route.length - a.route.length
+	);
+	return colgadas[0] ?? null;
 }

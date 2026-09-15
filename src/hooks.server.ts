@@ -15,6 +15,11 @@
  * Resolver acá arregla las dos cosas de una: pasa antes que todo `load`, así que
  * todas las pantallas de ese pedido ven lo mismo, y no hay un orden que recordar.
  *
+ * Y acá se barren las **órdenes del mercado que vencieron**, por la misma razón:
+ * no hay ningún reloj corriendo del lado del servidor, así que la garantía de una
+ * orden caduca vuelve cuando su dueño aparece. Para los demás ya era invisible
+ * desde el momento en que venció, porque el libro filtra por fecha.
+ *
  * **Esto no protege nada por sí solo**: sólo averigua. Quién puede entrar a qué
  * lo decide el `+layout.server.ts` de cada grupo de rutas.
  */
@@ -25,6 +30,7 @@ import { SESSION_COOKIE } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { pilot as pilotTable } from '$lib/server/db/schema';
 import { resolveIfDue } from '$lib/server/services/actions';
+import { sweepExpired } from '$lib/server/services/orders';
 import { pilotForToken } from '$lib/server/services/sessions';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -36,6 +42,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.resolved = null;
 
 	if (found) {
+		// Primero lo vencido y después lo resuelto: una orden que caducó puede
+		// devolver mercadería a la bodega, y la acción que se resuelve en seguida
+		// tiene que ver la bodega ya con eso adentro.
+		sweepExpired(db, found.id);
+
 		// No hay ningún proceso de fondo: lo que resuelve una acción es que
 		// alguien la mire, y mirar es hacer un pedido.
 		const report = resolveIfDue(db, found);

@@ -458,6 +458,16 @@ export const pilotAction = sqliteTable(
 		destinationBodyId: integer('destination_body_id').references(() => body.id),
 
 		/**
+		 * La orden que se está acordando, si la acción es publicar.
+		 *
+		 * La orden se escribe al **encargar** —con su garantía tomada y su fecha de
+		 * apertura— y la acción sólo apunta a ella. Guardar acá precio, cantidad y
+		 * alcance sería tener los mismos datos en dos lugares, y el día que no
+		 * coincidan gana el que alguien recuerde leer.
+		 */
+		orderId: integer('order_id').references(() => marketOrder.id),
+
+		/**
 		 * Sobre qué trabaja la acción, si trabaja sobre algo.
 		 *
 		 * Minar necesita saber **qué mineral**; refinar y fabricar van a necesitar
@@ -828,6 +838,138 @@ export const itemEntry = sqliteTable(
 	]
 );
 
+/**
+ * Una orden del mercado: alguien que quiere comprar o vender algo, a un precio.
+ *
+ * **Sólo las de los jugadores viven acá.** Las de la estación no se guardan: se
+ * calculan a partir del precio de referencia y del rubro de la corporación. Si se
+ * guardaran serían doscientas filas que habría que resembrar cada vez que se
+ * mueva una fórmula, y además su precio no es el mismo para todos —Regateo lo
+ * cambia— así que no hay un número que escribir.
+ *
+ * `quantity` es lo que **queda**, y cuando llega a cero la fila se borra: una
+ * orden agotada no es una orden, y un libro lleno de ceros ensucia toda consulta
+ * que lo recorra. Lo que pasó queda en los dos libros mayores, que es donde se
+ * mira la historia.
+ *
+ * **La garantía es el corazón de esto.** Una orden de compra reserva los créditos
+ * en el momento de publicarse y una de venta reserva la mercadería; sin eso, una
+ * orden es una promesa que puede no valer nada cuando alguien la acepte. La
+ * columna `escrow` guarda lo reservado en créditos para poder devolverlo exacto
+ * al cancelar, sin recalcular un precio que puede haber cambiado.
+ */
+export const marketOrder = sqliteTable(
+	'market_order',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		/** `buy` o `sell`, mirado desde quien la publicó. */
+		kind: text('kind').notNull(),
+		itemCode: text('item_code').notNull(),
+		/** Dónde está la orden: acá se entrega y acá se retira. */
+		stationId: integer('station_id')
+			.notNull()
+			.references(() => station.id),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		/** Créditos por unidad. */
+		price: integer('price').notNull(),
+		/** Lo que queda por comerciar. */
+		quantity: integer('quantity').notNull(),
+		/** Con cuánto salió, para poder contar cuánto lleva cumplido. */
+		initialQuantity: integer('initial_quantity').notNull(),
+		/**
+		 * Cuántas regiones alcanza, contando la propia. Cero es "sólo en esta
+		 * estación". Sólo lo usan las de compra: la mercadería de una venta está en
+		 * un lugar concreto y de ahí se retira.
+		 */
+		rangeRegions: integer('range_regions').notNull().default(0),
+		/** Créditos reservados. Cero en las de venta, que reservan mercadería. */
+		escrow: integer('escrow').notNull().default(0),
+		/**
+		 * Cuándo entra al libro.
+		 *
+		 * Publicar es una acción que lleva tiempo —se está acordando el trato— y la
+		 * orden recién se ve cuando ese tiempo pasó. Es **una fecha y no un
+		 * interruptor** por la misma razón que todo lo demás en este juego: así la
+		 * orden abre sola con el reloj y no puede quedar desincronizada de la acción
+		 * que la trajo, ni siquiera si el piloto no vuelve a entrar nunca.
+		 *
+		 * El valor por defecto es **cero y no `unixepoch()`** porque SQLite no acepta
+		 * agregar una columna con un default que no sea constante, y porque un
+		 * `Date` de JavaScript ahí sale escrito como texto. Cero es la época: una
+		 * orden sin fecha explícita queda abierta desde siempre, que es lo correcto
+		 * para las que ya existían.
+		 */
+		opensAt: integer('opens_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`0`),
+		/**
+		 * Cuándo se cae del libro.
+		 *
+		 * **Ninguna orden es eterna.** Sin vencimiento, el libro se llena de precios
+		 * viejos de pilotos que dejaron de jugar, y un mercado que muestra ofertas
+		 * que nadie va a honrar es peor que uno vacío. Cuánto se puede estirar sale
+		 * de Contactos: un comerciante con agenda deja tratos parados más tiempo.
+		 *
+		 * Al vencer, la garantía vuelve entera —la mercadería a la bodega de la
+		 * estación, los créditos a la billetera—: caducar no es perder.
+		 *
+		 * El valor por defecto existe sólo para poder agregar la columna a una tabla
+		 * que ya tiene filas. **Nadie debería apoyarse en él** —toda orden fija su
+		 * vencimiento al publicarse, y hay un test que lo exige—; que sea la época
+		 * es a propósito, porque una orden sin vencimiento explícito conviene que se
+		 * caiga sola y no que viva para siempre.
+		 */
+		expiresAt: integer('expires_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`0`),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		// El libro se lee siempre igual: qué hay de este ítem, ordenado por precio.
+		index('market_order_book_idx').on(table.itemCode, table.kind, table.price),
+		index('market_order_station_idx').on(table.stationId),
+		index('market_order_pilot_idx').on(table.pilotId)
+	]
+);
+
+/**
+ * Una operación cerrada del mercado. **El precio de algo es su historia.**
+ *
+ * Es una tabla aparte de los dos libros mayores a propósito: aquéllos contestan
+ * "qué le pasó a mi billetera" y "de dónde salió esta unidad", y ésta contesta
+ * una pregunta de mercado y no de contabilidad —"¿a cuánto se estuvo vendiendo el
+ * iridio en esta región?"—. Meterla en `credit_entry` obligaría a filtrar por
+ * tipo de asiento y a sacar el precio de una división, y la consulta que dibuja
+ * un gráfico recorrería asientos de sueldos y de combustible para nada.
+ *
+ * Se escribe **también cuando la contraparte es la estación**: si sólo contara lo
+ * de los jugadores, un mercado recién abierto no tendría ni un punto que dibujar
+ * justo cuando más falta hace saber cuánto vale lo que uno trae.
+ */
+export const marketTrade = sqliteTable(
+	'market_trade',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		itemCode: text('item_code').notNull(),
+		stationId: integer('station_id')
+			.notNull()
+			.references(() => station.id),
+		/** Créditos por unidad, que es lo que se grafica. */
+		price: integer('price').notNull(),
+		quantity: integer('quantity').notNull(),
+		/** Si del otro lado estaba la estación y no otro piloto. */
+		fromStation: integer('from_station', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		// Así se lee siempre: la historia de un ítem, del más nuevo al más viejo.
+		index('market_trade_item_idx').on(table.itemCode, table.createdAt),
+		index('market_trade_station_idx').on(table.stationId)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -852,3 +994,5 @@ export type ItemStack = typeof itemStack.$inferSelect;
 export type CreditEntry = typeof creditEntry.$inferSelect;
 export type ItemEntry = typeof itemEntry.$inferSelect;
 export type BeltDeposit = typeof beltDeposit.$inferSelect;
+export type MarketOrder = typeof marketOrder.$inferSelect;
+export type MarketTrade = typeof marketTrade.$inferSelect;

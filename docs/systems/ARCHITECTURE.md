@@ -64,9 +64,15 @@ el conector.
 
 ### 7. Lo que no puede ser perezoso, va en trabajos periódicos
 
-La resolución perezosa cubre lo que le pasa a **un** piloto. No cubre lo que le
-pasa al mundo: cinturones que se recuperan, producción de estaciones, órdenes de
-mercado que vencen, entregas programadas.
+La resolución perezosa cubre lo que le pasa a **un** piloto, y llega más lejos de
+lo que parece: un cinturón se recupera al consultarlo y una orden de mercado
+vence sola porque el libro filtra por fecha, sin que nadie mire un reloj. Lo que
+devuelve la garantía de una orden caduca espera a que su dueño aparezca, que es
+exactamente el patrón de arriba.
+
+Lo que **no** cubre es lo que tiene que pasar sin que nadie lo mire: producción de
+estaciones, entregas programadas, cualquier cosa cuyo efecto no se pueda calcular
+a partir del tiempo transcurrido.
 
 Eso necesita un proceso aparte del que atiende la web, con trabajos idempotentes
 y que puedan correr tarde sin romper nada. Se diseña desde el principio pensando

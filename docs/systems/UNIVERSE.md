@@ -30,6 +30,44 @@ en una estación, en órbita de un planeta, dentro de un cinturón. Moverse entr
 cuerpos del mismo sistema es una acción de viaje corta; entre sistemas, un salto,
 que es más caro y pide Astrogación.
 
+## Cómo se llaman las cosas
+
+La nomenclatura es la de EVE, y no es un detalle de ambientación: **el nombre de
+un cuerpo dice dónde está**. Con nombres propios sueltos hay que aprenderse el
+mapa de memoria; con esta convención, leer un nombre es leer una dirección.
+
+| Qué      | Cómo se llama                             | Ejemplo                 |
+| -------- | ----------------------------------------- | ----------------------- |
+| Estrella | El nombre del sistema                     | `Ánfora`                |
+| Planeta  | Sistema + **número romano**, hacia afuera | `Ánfora III`            |
+| Luna     | Planeta + **letra minúscula**             | `Ánfora III-a`          |
+| Cinturón | Nombre propio, o `Anillos de <planeta>`   | `Anillos de Ánfora III` |
+| Estación | **Nombre propio**                         | `Muelle de los Anillos` |
+
+Los planetas se numeran **desde la estrella hacia afuera**, y las lunas en el
+mismo orden dentro de su planeta. Así el número no es un rótulo: es la posición,
+y `Ánfora IV` está más lejos que `Ánfora II` sin tener que consultar nada.
+
+**Las estaciones son la excepción y llevan nombre propio.** Son obra de alguien
+—una corporación las construyó y las bautizó— y un número las volvería
+intercambiables, que es justo lo contrario de lo que son.
+
+Eso deja un hueco: «Hábitat Talo» no dice dónde está. Se llena **al señalar el
+nombre**, con el camino completo:
+
+```
+HÁBITAT TALO
+  Orbita    Cinturón Exterior
+  Sistema   Ánfora
+  Región    Deriva Exterior
+  Saltos    Acá
+```
+
+Va en un aviso y no escrito en la fila a propósito: una designación entera en cada
+renglón de una tabla —cuerpo, sistema, región— empuja las cifras fuera de la
+pantalla, y el noventa y nueve por ciento del tiempo no hace falta. Cuando hace
+falta es una pregunta puntual sobre un renglón, y ahí aparece.
+
 ## Tipos de cuerpo
 
 | Tipo                   | Qué lo caracteriza                         | Para qué sirve                                       |
