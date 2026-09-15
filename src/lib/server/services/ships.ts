@@ -11,6 +11,8 @@
  * matemática que pueda desfasarse.
  */
 
+import { unmetFrom } from '$lib/game/skills';
+import { requirementsLabel } from '$lib/format';
 import { and, eq } from 'drizzle-orm';
 import { fittedModule, pilot, pilotSkill, ship, type Pilot, type Ship } from '../db/schema';
 import type { Db } from '../db/types';
@@ -251,6 +253,20 @@ export function refit(
 		// achica el lugar sin sacar nada de adentro, así que la carga que ya
 		// llevabas podría dejar de entrar.
 		const skills = pilotSkillLevels(tx, row.id);
+
+		// **Los requisitos también se validan acá.** La pantalla ya no ofrece lo que
+		// el piloto no sabe usar, pero el servicio no confía en la pantalla: un
+		// pedido armado a mano no puede dejar una nave con un módulo que la clava en
+		// tierra. Es la regla de fallar en el borde, y el mensaje dice qué falta.
+		for (const code of added) {
+			const faltan = unmetFrom(getModule(code).requirements, skills);
+			if (faltan.length > 0) {
+				throw new ShipError(
+					`No sabés usar ${getModule(code).name}: te falta ${requirementsLabel(faltan)}.`
+				);
+			}
+		}
+
 		const despues = buildReadout(hull, fitFromCodes(hull, codes), skills);
 		if (usedVolume(tx, bodega.id) > capacityTenths(despues.cargo)) {
 			throw new ShipError('Con eso desmontado no te entra la carga que llevás.');

@@ -96,19 +96,29 @@
 	 *
 	 * La estación no *vende* nada acá: comprar es del mercado, que es donde viven
 	 * la búsqueda y el árbol de categorías.
+	 *
+	 * **Y sólo lo que el piloto sabe usar.** Un módulo cuyo requisito no cumple no
+	 * aparece en la lista: montarlo dejaría la nave en tierra, y ofrecer algo que
+	 * rompe la nave no es ofrecer, es tender una trampa. El módulo sigue siendo
+	 * suyo —está en la bodega y se ve en Propiedades—, pero la ranura no lo toma
+	 * hasta que entrene.
 	 */
 	let options = $derived.by(() => {
 		if (!slotSpec) return [];
 
 		const puesto = ship.fitted[selected] ?? '';
 		const desde = (codes: readonly string[], origin: 'ship' | 'station') =>
-			availableForSlot(slotSpec.kind, slotSpec.size, slotSpec.core, codes.map(getModule)).map(
-				(module) => ({
-					module,
-					origin,
-					units: codes.filter((code) => code === module.code).length
-				})
-			);
+			availableForSlot(
+				slotSpec.kind,
+				slotSpec.size,
+				slotSpec.core,
+				codes.map(getModule),
+				ship.pilotLevels
+			).map((module) => ({
+				module,
+				origin,
+				units: codes.filter((code) => code === module.code).length
+			}));
 
 		const guardados = [
 			...desde(ship.cargoModules, 'ship'),

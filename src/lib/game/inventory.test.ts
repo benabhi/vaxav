@@ -14,6 +14,8 @@ const LASER = getModule('mining_laser_e1');
 const CANON = getModule('mass_cannon_e1');
 const BODEGA_GRANDE = getModule('cargo_rack_e3');
 const PLANTA = getModule('plant_e2');
+/** Escalón A: pide Minería II para montarse. */
+const LASER_A = getModule('mining_laser_a1');
 
 describe('qué se le puede montar a una ranura', () => {
 	it('sin nada en la bodega, no hay nada que montar', () => {
@@ -53,5 +55,33 @@ describe('qué se le puede montar a una ranura', () => {
 			'plant_e2'
 		]);
 		expect(availableForSlot('core', 2, 'thrusters', [PLANTA])).toEqual([]);
+	});
+});
+
+describe('y lo que sabe usar', () => {
+	it('sin la habilidad, el módulo avanzado no se ofrece', () => {
+		// Montarlo dejaría la nave en tierra: ofrecer algo que la rompe no es
+		// ofrecer, es tender una trampa.
+		const disponibles = availableForSlot('hardpoint', 1, null, [LASER, LASER_A]);
+
+		expect(disponibles.map((module) => module.code)).toEqual(['mining_laser_e1']);
+	});
+
+	it('con la habilidad, aparece', () => {
+		const disponibles = availableForSlot('hardpoint', 1, null, [LASER, LASER_A], { mining: 2 });
+
+		expect(disponibles.map((module) => module.code)).toContain('mining_laser_a1');
+	});
+
+	it('el nivel justo por debajo todavía no alcanza', () => {
+		const disponibles = availableForSlot('hardpoint', 1, null, [LASER_A], { mining: 1 });
+
+		expect(disponibles).toEqual([]);
+	});
+
+	it('el escalón de entrada no pide nada, nunca', () => {
+		// Es el que vuela una nave de astillero: si pidiera algo, un piloto nuevo
+		// no podría montar lo que ya trae puesto.
+		expect(availableForSlot('hardpoint', 1, null, [LASER])).toHaveLength(1);
 	});
 });

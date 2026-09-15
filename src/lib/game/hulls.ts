@@ -16,6 +16,7 @@
  * Corresponde a docs/systems/SHIPS.md.
  */
 
+import type { Requirement } from './skills';
 import { lookup } from './catalog';
 
 /**
@@ -101,11 +102,18 @@ export interface SlotSpec {
 	readonly core: CoreSystem | null;
 }
 
-/** Qué hay que saber para poder volarla. */
-export interface HullRequirement {
-	readonly skill: string;
-	readonly level: number;
-}
+/**
+ * Qué hay que saber para poder volarla.
+ *
+ * Es una **lista** y no un requisito suelto porque un casco puede pedir dos
+ * cosas: la nave de guerra que exige puntería y blindaje no es una rareza, es lo
+ * normal en cuanto el catálogo crece. Empezar con uno solo y descubrirlo después
+ * obliga a migrar cinco literales y todo lo que los lee.
+ *
+ * **La Pioner no pide nada, y ésa es la regla que la sostiene**: es el casco que
+ * el astillero le entrega a cualquiera que se dé de alta, así que pedirle una
+ * habilidad sería empezar la partida con una nave que no despega.
+ */
 
 /** Un casco del catálogo. */
 export interface Hull {
@@ -142,7 +150,7 @@ export interface Hull {
 
 	readonly slots: readonly SlotSpec[];
 	readonly bonus: RoleBonus;
-	readonly requirement: HullRequirement;
+	readonly requirements: readonly Requirement[];
 }
 
 /** Una ranura que no es de un interno esencial. */
@@ -187,8 +195,14 @@ export const HULLS: readonly Hull[] = [
 			slot('optional', 2),
 			slot('optional', 1)
 		],
-		bonus: { target: 'speed', skill: 'navigation', percentPerLevel: 2 },
-		requirement: { skill: 'shuttle_handling', level: 1 }
+		// El bono de rol pasó de Navegación a Manejo de lanzaderas. Navegación ya
+		// empuja la velocidad de toda nave desde el bono general, y sumarla otra vez
+		// acá era contar dos veces lo mismo — lo que ACTIONS.md prohíbe por escrito—.
+		// Con el cambio, la Pioner queda como las otras cuatro: su bono de rol es la
+		// habilidad de su especialidad, y Manejo de lanzaderas pasa a gobernar algo
+		// de verdad en vez de ser el requisito de un casco que no puede pedir nada.
+		bonus: { target: 'speed', skill: 'shuttle_handling', percentPerLevel: 2 },
+		requirements: []
 	},
 	{
 		code: 'mula',
@@ -217,7 +231,7 @@ export const HULLS: readonly Hull[] = [
 			slot('optional', 1)
 		],
 		bonus: { target: 'cargo', skill: 'cargo_engineering', percentPerLevel: 5 },
-		requirement: { skill: 'cargo_engineering', level: 2 }
+		requirements: [{ skill: 'cargo_engineering', level: 2 }]
 	},
 	{
 		code: 'percal',
@@ -246,7 +260,7 @@ export const HULLS: readonly Hull[] = [
 			slot('optional', 2)
 		],
 		bonus: { target: 'mining_yield', skill: 'mining', percentPerLevel: 5 },
-		requirement: { skill: 'mining', level: 2 }
+		requirements: [{ skill: 'mining', level: 2 }]
 	},
 	{
 		code: 'vencejo',
@@ -274,7 +288,7 @@ export const HULLS: readonly Hull[] = [
 			slot('optional', 1)
 		],
 		bonus: { target: 'sensor_range', skill: 'scanning', percentPerLevel: 8 },
-		requirement: { skill: 'scanning', level: 2 }
+		requirements: [{ skill: 'scanning', level: 2 }]
 	},
 	{
 		code: 'alabarda',
@@ -304,7 +318,7 @@ export const HULLS: readonly Hull[] = [
 			slot('optional', 2)
 		],
 		bonus: { target: 'damage', skill: 'gunnery', percentPerLevel: 5 },
-		requirement: { skill: 'gunnery', level: 2 }
+		requirements: [{ skill: 'gunnery', level: 2 }]
 	}
 ];
 

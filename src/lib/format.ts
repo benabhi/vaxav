@@ -15,7 +15,7 @@ import { getItem, type Item, type ItemKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
 import { startingKit, startingLevels, type ProfessionCode } from '$lib/game/professions';
 import { MAX_LEVEL } from '$lib/game/progression';
-import { getSkill, type SkillFamily } from '$lib/game/skills';
+import { getSkill, type Requirement, type SkillFamily } from '$lib/game/skills';
 import {
 	SERVICES,
 	type BodyKind,
@@ -553,4 +553,20 @@ export function remainingLabel(seconds: number): string {
 		return `${Math.floor(total / 60)} m ${String(total % 60).padStart(2, '0')} s`;
 	}
 	return `${total} s`;
+}
+
+/**
+ * Cómo se lee un requisito: «Minería III».
+ *
+ * Vive acá y no en las reglas porque el nombre de la habilidad y el romano son
+ * presentación: la regla sabe que falta `mining` nivel 3, y traducir eso a algo
+ * que se pueda leer es otro oficio.
+ */
+export function requirementLabel(requirement: Requirement): string {
+	return `${getSkill(requirement.skill).name} ${roman(requirement.level)}`;
+}
+
+/** Varios requisitos, en una sola línea: «Minería III · Ajuste de módulos II». */
+export function requirementsLabel(requirements: readonly Requirement[]): string {
+	return requirements.map(requirementLabel).join(' · ');
 }
