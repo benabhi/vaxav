@@ -560,12 +560,16 @@ export interface GrupoMercado {
 }
 
 /**
- * Un renglón del catálogo del mercado, **con los dos lados del mostrador**.
+ * Un renglón del catálogo del mercado.
  *
- * Comprar y vender son dos caras del mismo ítem, así que van juntas: es lo que
- * permite mostrar el ítem elegido con sus dos libros de órdenes sin volver a
- * pedir nada. Y lleva todo resuelto —grupo, clase, escalón, precio, cuánto
- * tengo— para poder buscar y filtrar en el navegador.
+ * Lleva **lo mínimo para decidir si vale abrirlo**: el mejor precio de cada lado
+ * y cuántas órdenes hay detrás. El libro entero se pide al abrir el ítem, porque
+ * traerlo de los cincuenta y un renglones sería pedir miles de filas de las que
+ * se miran dos.
+ *
+ * Y lleva todo resuelto —grupo, clase, escalón— para poder buscar y filtrar en el
+ * navegador: una lista que va al servidor por cada tecla es insoportable en
+ * cuanto la lista crece.
  */
 export interface FilaMercado {
 	readonly itemCode: string;
@@ -579,52 +583,92 @@ export interface FilaMercado {
 	readonly tier: string;
 	readonly size: number;
 	readonly tierLetter: string;
-	/** Lo que ocupa una unidad, ya escrito en metros cúbicos. */
 	readonly volume: string;
 	readonly summary: string;
-	/** Si la estación pone este ítem a la venta, y si lo compra. */
-	readonly sells: boolean;
-	readonly buys: boolean;
-	/**
-	 * El precio de referencia del ítem.
-	 *
-	 * Viaja para que la pantalla pueda rehacer **la cuenta del lote** con las
-	 * mismas funciones puras que usa el servidor: el precio unitario es de
-	 * vitrina y multiplicarlo da un número que no es el que se va a cobrar.
-	 */
+	/** El precio de referencia, para poder rehacer la cuenta del lote. */
 	readonly basePrice: number;
-	/** Lo que cobra por una unidad. */
-	readonly ask: number;
-	readonly askLabel: string;
-	/** Lo que paga por una unidad. */
-	readonly bid: number;
-	readonly bidLabel: string;
-	/** Cuánto tiene el piloto, y en cuál de las dos bodegas. */
-	readonly inShip: number;
-	readonly inStation: number;
+	/** Lo más barato que alguien vende, contando a la estación. Nulo si nadie. */
+	readonly bestAsk: number | null;
+	readonly bestAskLabel: string;
+	/** Lo más que alguien paga. */
+	readonly bestBid: number | null;
+	readonly bestBidLabel: string;
+	readonly sellOrders: number;
+	readonly buyOrders: number;
+	/** Cuánto tiene el piloto, sumando todas sus bodegas de la galaxia. */
 	readonly held: number;
-	/** Lo que pagarían por todo lo que tiene encima, calculado sobre el lote. */
-	readonly holdingValue: number;
-	readonly holdingValueLabel: string;
 }
 
-/** El mostrador de la estación donde está parado el piloto. */
+/** El mercado de la región, visto desde donde está el piloto. */
 export interface Mercado {
-	readonly open: boolean;
-	/** Por qué no se puede comerciar acá, si no se puede. */
-	readonly closedReason: string;
-	readonly stationName: string;
-	readonly corporationName: string;
-	readonly corporationKind: string;
-	readonly buysOre: boolean;
-	readonly tradesModules: boolean;
+	readonly regionName: string;
+	/** Cuántas regiones alcanza a ver, contando la propia. */
+	readonly regionsInRange: number;
+	readonly stationCount: number;
+	/** Dónde está atracado, o vacío si no lo está. */
+	readonly dockedAt: string;
+	/** La estación donde puede operar, o nula si no puede. */
+	readonly dockedStationId: number | null;
+	readonly canTradeHere: boolean;
+	/** Por qué no puede operar, escrito para el jugador. */
+	readonly whyNot: string;
 	readonly balance: string;
+	readonly openOrders: number;
+	readonly orderLimit: number;
+	/** Hasta dónde puede llegar una orden de compra suya, en regiones. */
+	readonly maxRange: number;
+	/** Lo que le cobran por publicar y por vender, en milésimos. */
+	readonly brokerPermille: number;
+	readonly taxPermille: number;
 	readonly oreSpread: Horquilla;
 	readonly moduleSpread: Horquilla;
 	readonly groups: readonly GrupoMercado[];
 	readonly items: readonly FilaMercado[];
-	/** Lo que dejaría vender todo lo que el mostrador acepta. */
-	readonly heldTotal: string;
-	/** Lo que entra todavía en la bodega de la nave. */
 	readonly cargoFree: string;
+}
+
+/** Un montón de algo, en algún lugar de la galaxia. */
+export interface FilaPropiedad {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly kindLabel: string;
+	readonly quantity: number;
+	readonly volume: string;
+	readonly value: string;
+	/** Si está publicado en una orden de venta: sigue siendo tuyo, pero atado. */
+	readonly listed: boolean;
+}
+
+/**
+ * Un lugar donde el piloto tiene cosas.
+ *
+ * Lleva **su valor**: es lo que convierte "tengo cosas en el Muelle" en "tengo
+ * catorce mil créditos parados en el Muelle", que es una frase que hace actuar.
+ */
+export interface LugarPropiedad {
+	readonly key: string;
+	readonly kind: string;
+	readonly name: string;
+	/** El sistema y la región, o "Con vos" si es la bodega de la nave. */
+	readonly where: string;
+	/** A dónde viajar para tocarlo. Nulo en la nave, que ya viaja con uno. */
+	readonly bodyId: number | null;
+	readonly lines: readonly FilaPropiedad[];
+	readonly used: string;
+	/** El tope, sólo donde hay uno. */
+	readonly capacity: string;
+	readonly percent: number;
+	readonly value: string;
+	readonly valueRaw: number;
+	/** Si el piloto está parado justo ahí. */
+	readonly here: boolean;
+	readonly listedCount: number;
+}
+
+/** Todo lo del piloto, lugar por lugar. */
+export interface Propiedades {
+	readonly places: readonly LugarPropiedad[];
+	readonly totalValue: string;
+	readonly placeCount: number;
 }

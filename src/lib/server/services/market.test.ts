@@ -52,19 +52,16 @@ describe('dónde hay mostrador', () => {
 		const desk = deskFor(db, piloto)!;
 
 		expect(desk.stationName).toBe('Puerto Ánfora');
-		expect(desk.services.buysOre).toBe(true);
-		expect(desk.services.tradesModules).toBe(true);
+		expect(desk.services.trades).toBe(true);
 	});
 
-	it('una refinería sin mercado igual compra mineral', async () => {
+	it('una refinería sin mostrador no comercia', async () => {
 		const db = seededDb();
 		const { piloto } = await conMineral(db, ESCARCHA);
 
-		const desk = deskFor(db, piloto)!;
-
-		// Lo necesita para trabajar. Es lo que hace que la parada valga algo.
-		expect(desk.services.buysOre).toBe(true);
-		expect(desk.services.tradesModules).toBe(false);
+		// Comerciar pide el módulo Mercado, sin excepciones: sin mostrador no hay
+		// con quién tratar.
+		expect(deskFor(db, piloto)!.services.trades).toBe(false);
 	});
 
 	it('en un cinturón no hay con quién comerciar', async () => {
@@ -203,7 +200,7 @@ describe('comprar módulos', () => {
 		expect(() => buyFromStation(db, piloto, 'ferrous_silicate', 1)).toThrow(MarketError);
 	});
 
-	it('una refinería sin mercado no vende módulos', async () => {
+	it('una refinería sin mostrador no vende módulos', async () => {
 		const db = seededDb();
 		const { piloto } = await conMineral(db, ESCARCHA, 0);
 		credit(db, piloto.id, 100_000, { kind: 'adjustment', memo: 'prueba' });

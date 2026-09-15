@@ -86,28 +86,24 @@ export const CORPORATION_EDGE: Readonly<
 	security: { ore: 0, module: 0 }
 };
 
-/** Qué compra y qué vende una estación, según los módulos que tenga. */
+/** Qué se puede hacer en el mostrador de una estación. */
 export interface MarketServices {
-	/** Cualquiera que procese mineral lo compra, tenga mostrador o no. */
-	readonly buysOre: boolean;
-	/** Vender y comprar módulos necesita mostrador. */
-	readonly tradesModules: boolean;
+	/** Si hay mostrador: comprar, vender y publicar órdenes. */
+	readonly trades: boolean;
 }
 
 /**
- * Qué se puede comerciar en una estación, derivado de sus módulos.
+ * Si en una estación se puede comerciar, derivado de sus módulos.
  *
- * **La regla es la misma que usa el equipamiento**: lo que una estación ofrece
- * sale de lo que tiene instalado, no de una lista aparte que haya que mantener
- * sincronizada. Una refinería sin mercado igual compra mineral —lo necesita para
- * trabajar—, y eso le da sentido a una parada que de otro modo sería decorativa.
+ * **Hace falta el módulo Mercado, sin excepciones.** Una estación que no lo tiene
+ * no aparece en el libro de órdenes, no compra ni vende nada y nadie puede
+ * publicar ahí: sin mostrador no hay con quién tratar. Es la misma regla que usa
+ * el equipamiento —lo que una estación ofrece sale de lo que tiene instalado— y
+ * es lo que hace que instalar un mercado sea una decisión con consecuencias el
+ * día que los módulos de estación los pongan los jugadores.
  */
 export function marketServices(services: readonly StationServiceKind[]): MarketServices {
-	const instalados = new Set(services);
-	return {
-		buysOre: instalados.has('market') || instalados.has('refinery'),
-		tradesModules: instalados.has('market')
-	};
+	return { trades: new Set(services).has('market') };
 }
 
 /** De dónde sale la horquilla de una operación concreta. */

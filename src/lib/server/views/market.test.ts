@@ -1,20 +1,24 @@
 /**
  * La vista del mercado.
  *
- * Lo que se prueba acá son las tres formas que puede tomar la pantalla —mostrador
- * abierto, estación sin mostrador, y ninguna estación— y que el árbol de
- * categorías cuente lo que hay debajo de cada rama. Un contador que miente es de
- * las cosas que nadie revisa hasta que ya está mal desde hace meses.
+ * Lo que se prueba acá es la distinción que ordena toda la pantalla: **el
+ * catálogo se ve siempre, operar exige un mostrador**. Un piloto parado en un
+ * cinturón tiene que poder mirar precios —es para eso que existe el mercado
+ * regional— y tiene que ver escrito por qué no puede apretar nada.
+ *
+ * Y que el resumen del libro diga la verdad: el mejor precio de cada lado es el
+ * más barato del que vende y el más caro del que compra, y confundirlos haría que
+ * la lista entera recomendara lo contrario de lo que conviene.
  */
 
-import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { station, stationService } from '../db/schema';
 import { crearPiloto, moverPiloto, seededDb } from '../db/testing';
 import { moveItem, shipContainer } from '../services/containers';
+import { deskFor } from '../services/market';
+import { placeBuyOrder, placeSellOrder } from '../services/orders';
 import { activeShip } from '../services/ships';
-import { getBody } from '../services/universe';
-import { buildMarketView } from './market';
+import { credit } from '../services/wallet';
+import { buildMarketView, marketStations } from './market';
 import type { Db } from '../db/types';
 
 /** Un piloto parado donde se diga, con lo que se diga en la bodega. */
@@ -25,62 +29,51 @@ async function parado(db: Db, donde: string, carga: readonly [string, number][] 
 	return piloto;
 }
 
-describe('el mostrador cerrado', () => {
-	it('en un cinturón dice que hay que atracar', async () => {
-		const db = seededDb();
-		const piloto = await parado(db, 'anillos_anfora_iii');
-
-		const vista = buildMarketView(db, piloto);
-
-		expect(vista.open).toBe(false);
-		expect(vista.closedReason).toContain('atracado');
-		expect(vista.items).toEqual([]);
-	});
-
-	it('en una estación sin mercado ni refinería lo dice con su nombre', async () => {
-		const db = seededDb();
-		const piloto = await parado(db, 'planta_escarcha');
-		// Hoy no hay ninguna estación así en Ánfora, y por eso se la fabrica: es el
-		// camino que va a tomar la primera que alguien siembre sin mostrador, y sin
-		// esto se descubriría jugando.
-		const cerrada = getBody(db, 'planta_escarcha')!;
-		const suya = db.select().from(station).where(eq(station.bodyId, cerrada.id)).get()!;
-		db.delete(stationService).where(eq(stationService.stationId, suya.id)).run();
-
-		const vista = buildMarketView(db, piloto);
-
-		expect(vista.open).toBe(false);
-		expect(vista.closedReason).toContain('Planta Escarcha');
-		expect(vista.stationName).toBe('Planta Escarcha');
-	});
-});
-
-describe('el mostrador abierto', () => {
-	it('trae el catálogo entero y quién lo opera', async () => {
+describe('dónde se puede operar', () => {
+	it('atracado en una estación con mercado, sí', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 
 		const vista = buildMarketView(db, piloto);
 
-		expect(vista.open).toBe(true);
-		expect(vista.stationName).toBe('Puerto Ánfora');
-		expect(vista.corporationName).toBe('Casa Verlan');
-		// Los cuatro minerales más los cuarenta y siete módulos.
-		expect(vista.items).toHaveLength(51);
+		expect(vista.canTradeHere).toBe(true);
+		expect(vista.dockedAt).toBe('Puerto Ánfora');
+		expect(vista.whyNot).toBe('');
 	});
 
-	it('la refinería sin mercado no lista módulos que no vende', async () => {
+	it('en una estación sin módulo de Mercado, no, y lo dice con su nombre', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'planta_escarcha');
 
 		const vista = buildMarketView(db, piloto);
 
-		// Los cuatro minerales, y de módulos sólo lo que el piloto trae puesto.
-		expect(vista.items.filter((item) => item.group === 'ore')).toHaveLength(4);
-		expect(vista.groups.map((rama) => rama.code)).not.toContain('module');
+		expect(vista.canTradeHere).toBe(false);
+		expect(vista.whyNot).toContain('Planta Escarcha');
 	});
 
-	it('cada rama cuenta lo que tiene debajo', async () => {
+	it('en un cinturón el catálogo se ve igual, pero no se opera', async () => {
+		const db = seededDb();
+		const piloto = await parado(db, 'anillos_anfora_iii');
+
+		const vista = buildMarketView(db, piloto);
+
+		// Mirar precios desde cualquier parte es justamente para lo que existe un
+		// mercado regional: decidir adónde ir con lo que uno trae.
+		expect(vista.items.length).toBeGreaterThan(0);
+		expect(vista.canTradeHere).toBe(false);
+		expect(vista.whyNot).toContain('atracado');
+	});
+});
+
+describe('el catálogo', () => {
+	it('trae los cuatro minerales y los cuarenta y siete módulos', async () => {
+		const db = seededDb();
+		const piloto = await parado(db, 'puerto_anfora');
+
+		expect(buildMarketView(db, piloto).items).toHaveLength(51);
+	});
+
+	it('cada rama del árbol cuenta lo que tiene debajo', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 
@@ -89,40 +82,65 @@ describe('el mostrador abierto', () => {
 
 		expect(rama('ore').count).toBe(4);
 		expect(rama('module').count).toBe(47);
-		// Las cuatro ranuras tienen que sumar exactamente los módulos.
 		const ranuras = ['hardpoint', 'utility', 'core', 'optional'].map((code) => rama(code).count);
 		expect(ranuras.reduce((total, cuantos) => total + cuantos, 0)).toBe(47);
 	});
 
-	it('la rama de la bodega cuenta lo que el piloto trae', async () => {
+	it('cuenta lo que el piloto tiene en toda la galaxia, no sólo acá', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora', [['ferrous_silicate', 40]]);
 
-		const vista = buildMarketView(db, piloto);
-
-		// El mineral recién cargado y el láser de repuesto del kit minero.
-		expect(vista.groups.find((rama) => rama.code === 'held')!.count).toBe(2);
-		const silicato = vista.items.find((item) => item.itemCode === 'ferrous_silicate')!;
-		expect(silicato.inShip).toBe(40);
+		const silicato = buildMarketView(db, piloto).items.find(
+			(item) => item.itemCode === 'ferrous_silicate'
+		)!;
 		expect(silicato.held).toBe(40);
 	});
 
-	it('dice de cada ítem si la estación lo vende y si lo compra', async () => {
+	it('sólo entran al libro las estaciones con mostrador', () => {
 		const db = seededDb();
-		const piloto = await parado(db, 'puerto_anfora');
 
-		const vista = buildMarketView(db, piloto);
-		const silicato = vista.items.find((item) => item.itemCode === 'ferrous_silicate')!;
-		const laser = vista.items.find((item) => item.itemCode === 'mining_laser_e1')!;
+		const conMercado = marketStations(db).map((estacion) => estacion.name);
 
-		// El mineral se compra pero no se revende; el módulo va en las dos.
-		expect(silicato.buys).toBe(true);
-		expect(silicato.sells).toBe(false);
-		expect(laser.buys).toBe(true);
-		expect(laser.sells).toBe(true);
+		// La Planta Escarcha refina pero no comercia.
+		expect(conMercado).not.toContain('Planta Escarcha');
+		expect(conMercado).toContain('Puerto Ánfora');
+	});
+});
+
+describe('el mejor precio de cada lado', () => {
+	it('del lado que vende es el más barato, y del que compra el que más paga', async () => {
+		const db = seededDb();
+		const vendedor = moverPiloto(db, await crearPiloto(db, 'Vendedora'), 'puerto_anfora');
+		credit(db, vendedor.id, 100_000, { kind: 'adjustment', memo: 'prueba' });
+		const bodega = shipContainer(db, activeShip(db, vendedor.id)!.id);
+		moveItem(db, bodega.id, 'ferrous_silicate', 200, 'mined');
+		const stationId = deskFor(db, vendedor)!.stationId;
+
+		placeSellOrder(db, vendedor, {
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 9,
+			stationId
+		});
+		placeBuyOrder(db, vendedor, {
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 30,
+			stationId
+		});
+
+		const silicato = buildMarketView(db, vendedor).items.find(
+			(item) => item.itemCode === 'ferrous_silicate'
+		)!;
+
+		// Confundirlos haría que la lista recomendara lo contrario de lo que conviene.
+		expect(silicato.bestAsk).toBe(9);
+		expect(silicato.bestBid).toBe(30);
+		expect(silicato.sellOrders).toBe(1);
+		expect(silicato.buyOrders).toBe(1);
 	});
 
-	it('manda el precio de referencia para que la pantalla rehaga el lote', async () => {
+	it('la estación entra al libro como una orden más', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 
@@ -130,20 +148,38 @@ describe('el mostrador abierto', () => {
 			(item) => item.itemCode === 'ferrous_silicate'
 		)!;
 
-		// Sin esto, la pantalla sólo podría multiplicar el precio de vitrina, que
-		// da un número distinto del que se cobra.
-		expect(silicato.basePrice).toBe(12);
+		// Sin ninguna orden de jugador, el único que compra es el mostrador.
+		expect(silicato.buyOrders).toBe(0);
+		expect(silicato.bestBid).toBe(10);
+		// Y mineral no vende nadie: lo compra para procesarlo.
+		expect(silicato.bestAsk).toBeNull();
 	});
 
-	it('la horquilla viaja desarmada, para poder explicarla', async () => {
+	it('parado lejos de un mostrador no hay precio de estación', async () => {
+		const db = seededDb();
+		const piloto = await parado(db, 'anillos_anfora_iii');
+
+		const silicato = buildMarketView(db, piloto).items.find(
+			(item) => item.itemCode === 'ferrous_silicate'
+		)!;
+
+		// La horquilla es lo que uno negocia en un mostrador concreto: sin estar en
+		// ninguno, no hay una cifra que mostrar.
+		expect(silicato.bestBid).toBeNull();
+	});
+});
+
+describe('lo que el piloto puede hacer', () => {
+	it('viaja con sus topes y sus costos, para poder explicarlos', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 
 		const vista = buildMarketView(db, piloto);
 
-		// Casa Verlan es comercial: 20 de base menos 3 por el rubro.
-		expect(vista.oreSpread.base).toBe(20);
-		expect(vista.oreSpread.corporationEdge).toBe(3);
-		expect(vista.oreSpread.percent).toBe(17);
+		expect(vista.orderLimit).toBe(2);
+		expect(vista.openOrders).toBe(0);
+		expect(vista.regionsInRange).toBe(1);
+		expect(vista.brokerPermille).toBe(30);
+		expect(vista.taxPermille).toBe(50);
 	});
 });

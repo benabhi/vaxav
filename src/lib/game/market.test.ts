@@ -147,27 +147,18 @@ describe('el lote', () => {
 });
 
 describe('qué comercia una estación', () => {
-	it('deriva de los módulos que tiene instalados', () => {
-		const puerto = marketServices(['market', 'refinery', 'outfitting']);
-
-		expect(puerto.buysOre).toBe(true);
-		expect(puerto.tradesModules).toBe(true);
+	it('con el módulo Mercado se comercia', () => {
+		expect(marketServices(['market', 'refinery', 'outfitting']).trades).toBe(true);
 	});
 
-	it('una refinería compra mineral aunque no tenga mostrador', () => {
-		// Lo necesita para trabajar, y eso le da sentido a una parada que de otro
-		// modo sería decorativa.
-		const planta = marketServices(['refinery', 'storage']);
-
-		expect(planta.buysOre).toBe(true);
-		expect(planta.tradesModules).toBe(false);
+	it('una refinería sin mostrador no alcanza', () => {
+		// Sin módulo de Mercado no hay con quién tratar: la estación no aparece en
+		// ningún libro y nadie puede publicar ahí.
+		expect(marketServices(['refinery', 'storage']).trades).toBe(false);
 	});
 
-	it('sin mercado ni refinería no se comercia nada', () => {
-		const puesto = marketServices(['storage', 'contacts']);
-
-		expect(puesto.buysOre).toBe(false);
-		expect(puesto.tradesModules).toBe(false);
+	it('sin mercado no se comercia nada', () => {
+		expect(marketServices(['storage', 'contacts']).trades).toBe(false);
 	});
 });
 

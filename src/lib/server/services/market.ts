@@ -134,10 +134,11 @@ function requireDesk(db: Db, row: Pilot): MarketDesk {
 	return desk;
 }
 
-/** Si en este mostrador se puede vender esa clase de cosa. */
-function requireSells(desk: MarketDesk, kind: ItemKind): void {
-	const puede = kind === 'ore' ? desk.services.buysOre : desk.services.tradesModules;
-	if (!puede) throw new MarketError(`${desk.stationName} no compra eso`);
+/** Si en este mostrador hay con quién tratar. */
+function requireDesk2(desk: MarketDesk): void {
+	if (!desk.services.trades) {
+		throw new MarketError(`${desk.stationName} no tiene mercado: acá no se comercia.`);
+	}
 }
 
 /** Una cantidad que se pueda comerciar. */
@@ -171,7 +172,7 @@ export function sellToStation(
 ): Receipt {
 	const desk = requireDesk(db, row);
 	const item = getItem(itemCode);
-	requireSells(desk, item.kind);
+	requireDesk2(desk);
 	requireQuantity(quantity);
 
 	// El precio se recalcula acá y no se acepta el que mandó la pantalla: entre
@@ -222,7 +223,7 @@ export function buyFromStation(db: Db, row: Pilot, itemCode: string, quantity: n
 	const desk = requireDesk(db, row);
 	const item = getItem(itemCode);
 	if (item.kind !== 'module') throw new MarketError(`${desk.stationName} no vende eso`);
-	if (!desk.services.tradesModules) throw new MarketError(`${desk.stationName} no tiene mercado`);
+	requireDesk2(desk);
 	requireQuantity(quantity);
 
 	const cotizacion = quote(desk, itemCode);
