@@ -33,7 +33,20 @@ export const CREDIT_MOVES = [
 	'module_sale',
 	'injector_purchase',
 	'refuel',
-	'adjustment'
+	'adjustment',
+	// --- El mercado entre jugadores ---
+	/** Lo que reserva una orden de compra al publicarse. */
+	'order_escrow',
+	/** Lo reservado que vuelve porque la orden se canceló. */
+	'order_refund',
+	/** Lo que cobra el corredor por publicar. No se devuelve. */
+	'broker_fee',
+	/** Lo que se lleva la estación de una venta cumplida. */
+	'sales_tax',
+	/** Lo cobrado por una orden propia que se cumplió. */
+	'order_sale',
+	/** Lo pagado por comprarle a la orden de otro. */
+	'order_purchase'
 ] as const;
 export type CreditMove = (typeof CREDIT_MOVES)[number];
 

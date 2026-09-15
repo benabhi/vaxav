@@ -33,7 +33,11 @@ export const ITEM_MOVES = [
 	/** Salió de la bodega para montarse en una ranura. */
 	'fitted',
 	/** Se bajó de una ranura y volvió a la bodega. */
-	'unfitted'
+	'unfitted',
+	/** Salió de la bodega a quedar en garantía de una orden de venta. */
+	'listed',
+	/** Volvió de una orden de venta que se canceló. */
+	'unlisted'
 ] as const;
 export type ItemMove = (typeof ITEM_MOVES)[number];
 
