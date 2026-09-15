@@ -2,8 +2,8 @@
 
 > **Implementado en parte.** El motor de acciones existe: se encola una orden por
 > vez, se resuelve de forma perezosa e idempotente y deja su informe en la
-> bitácora. Hay tres acciones: **viajar**, **minar** y **acordar una orden** del
-> mercado. Los números están para discutirse.
+> bitácora. Hay cuatro acciones: **viajar**, **escanear**, **minar** y **acordar
+> una orden** del mercado. Los números están para discutirse.
 
 > **La experiencia ya no se reparte entre habilidades**: una acción deposita en el
 > pozo de su familia. Ver [habilidades](SKILLS.md).
@@ -108,6 +108,26 @@ El caso que define el bucle. Un piloto está en Puerto Ánfora y quiere minar.
    cada secundaria.
 6. **Decide**: seguir minando, volver a vender, o gastar el viaje en otra cosa.
    La bodega llena obliga a elegir, que es de lo que se trata.
+
+## Qué paga cada acción
+
+Una acción deposita en el pozo de **una sola rama**, y de ahí sale una regla que
+condiciona el diseño: **una rama sin ninguna acción que la pague es una rama
+inalcanzable**. Por eso escanear paga **Ciencias** y no Extracción, aunque quien
+más escanee sea un minero: es lo único que la paga, y sin eso la rama no tendría
+forma de crecer.
+
+| Acción            | Rama       | Peso           | Dónde                       |
+| ----------------- | ---------- | -------------- | --------------------------- |
+| Viajar            | Pilotaje   | 1,0            | Entre cuerpos de un sistema |
+| Escanear una roca | Ciencias   | 1,5            | En un cinturón              |
+| Minar una roca    | Extracción | 1,0            | En un cinturón              |
+| Acordar una orden | Comercio   | según el valor | Atracado con mostrador      |
+
+Escanear pesa por encima de uno porque es corta y exigente —se lee una roca en
+minuto y medio— y porque es la única fuente de su rama: si rindiera poco, Ciencias
+seguiría siendo inalcanzable en la práctica aunque técnicamente tuviera una
+fuente.
 
 ## Reglas
 

@@ -8,6 +8,7 @@
  * volver a aplicar sin borrar nada.
  */
 
+import { seedAsteroids } from './asteroids';
 import { eq, inArray } from 'drizzle-orm';
 import {
 	agent,
@@ -242,6 +243,11 @@ function syncDeposits(db: Db, bodyId: number, deposits: readonly DepositBlueprin
 	for (const fila of sobran) {
 		db.delete(beltDeposit).where(eq(beltDeposit.id, fila.id)).run();
 	}
+
+	// Un cinturón virgen no tiene de dónde reponer —su marca es de recién— y
+	// quedaría pelado hasta que pasara el tiempo. Esto le da su primera tanda de
+	// rocas, y no toca las de un cinturón que ya las tiene: sembrar no rellena.
+	seedAsteroids(db, bodyId);
 }
 
 function seedBody(

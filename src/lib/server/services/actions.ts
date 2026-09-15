@@ -32,6 +32,7 @@ import {
 	TRAVEL_FAMILY,
 	TRAVEL_KIND,
 	PUBLISH_KIND,
+	SURVEY_KIND,
 	TRADE_FAMILY,
 	travelDurationSeconds,
 	type ActionKind
@@ -40,12 +41,15 @@ import { getOre, type ContainerKind } from '$lib/game/items';
 import { floorDiv } from '$lib/game/math';
 import { MINING_FAMILY, cycleSeconds, yieldPerCycleTenths } from '$lib/game/mining';
 import { PUBLISH_SECONDS, dealFactorTenths } from '$lib/game/market';
+import { SURVEY_DIFFICULTY, SURVEY_FAMILY } from '$lib/game/prospecting';
 import { actionXpPool } from '$lib/game/progression';
 import type { SkillFamily } from '$lib/game/skills';
 import { skillFamilyLabel } from '$lib/format';
 import { cargoHold, fitsUnits, moveItem, shipContainer } from './containers';
-import { isBelt, miningPlan, takeFromBelt } from './mining';
+import { getAsteroid, takeFromAsteroid } from './asteroids';
+import { isBelt, miningPlan } from './mining';
 import { placeBuyOrder, placeSellOrder } from './orders';
+import { hasFreshSurvey, recordSurvey, surveyPlan } from './prospecting';
 import { deposit } from './pools';
 import { recordEntry, type PoolDeposit } from './log';
 import { activeShip, shipReadout } from './ships';
@@ -111,6 +115,8 @@ export interface ActionResult {
 		readonly units: number;
 		readonly price: number;
 	};
+	/** La lectura que quedó del cinturón, con qué tan fina salió. */
+	readonly survey?: { readonly depth: number };
 }
 
 /** Cómo se resuelve una clase de acción, una vez que la fila ya es nuestra. */
@@ -146,7 +152,10 @@ const resolveMine: Resolver = (tx, row, claimed) => {
 	const vacio = { family: MINING_FAMILY, xp: 0, movesTo: null };
 	if (!readout || !nave) return vacio;
 
-	const ore = getOre(claimed.targetCode ?? '');
+	const roca = claimed.asteroidId === null ? null : getAsteroid(tx, claimed.asteroidId);
+	if (!roca) return vacio;
+
+	const ore = getOre(roca.oreCode);
 	const bodega = shipContainer(tx, nave.id);
 	const hold = cargoHold(tx, bodega.id, readout.cargo);
 
@@ -160,7 +169,7 @@ const resolveMine: Resolver = (tx, row, claimed) => {
 	);
 
 	const posible = Math.min(cycles * porCiclo, fitsUnits(hold.freeTenths, ore.code));
-	const units = takeFromBelt(tx, claimed.originBodyId, ore.code, posible);
+	const units = takeFromAsteroid(tx, roca.id, posible);
 	if (units > 0) moveItem(tx, bodega.id, ore.code, units, 'mined');
 
 	return {
@@ -211,10 +220,34 @@ const resolvePublish: Resolver = (tx, _row, claimed) => {
 	};
 };
 
+/**
+ * Escanear: el piloto no se mueve, queda una lectura del cinturón y la
+ * experiencia va a Ciencias.
+ *
+ * **La profundidad se recalcula al resolver**, no se guarda al encargar: entre
+ * que se dio la orden y terminó, el piloto pudo subir Escaneo, y lo que queda
+ * escrito tiene que ser lo que se vio de verdad.
+ */
+const resolveSurvey: Resolver = (tx, row, claimed) => {
+	const vacio = { family: SURVEY_FAMILY, xp: 0, movesTo: null };
+	if (claimed.asteroidId === null) return vacio;
+
+	const plan = surveyPlan(tx, row);
+	recordSurvey(tx, row.id, claimed.asteroidId, plan.depth);
+
+	return {
+		family: SURVEY_FAMILY,
+		xp: actionXpPool(claimed.durationSeconds / 60, SURVEY_DIFFICULTY),
+		movesTo: null,
+		result: { survey: { depth: plan.depth } }
+	};
+};
+
 const RESOLVERS: Readonly<Record<ActionKind, Resolver>> = {
 	travel: resolveTravel,
 	mine: resolveMine,
-	publish: resolvePublish
+	publish: resolvePublish,
+	survey: resolveSurvey
 };
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
@@ -274,7 +307,7 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
  * cinturón. Así la orden tarda exactamente lo que la pantalla prometió, que es la
  * misma regla que ya cumple viajar.
  */
-export function startMining(db: Db, row: Pilot, oreCode: string): PilotAction {
+export function startMining(db: Db, row: Pilot, asteroidId: number): PilotAction {
 	const now = situation(db, row);
 	if (!now.canOrder) throw new ActionError(now.orderBlocked);
 	if (!isBelt(db, row.locationId)) throw new ActionError('Acá no hay nada que extraer.');
@@ -283,7 +316,18 @@ export function startMining(db: Db, row: Pilot, oreCode: string): PilotAction {
 	if (readout === null) throw new ActionError('Necesitás una nave para extraer.');
 	if (!readout.flyable) throw new ActionError('Tu nave no está en condiciones de trabajar.');
 
-	const plan = miningPlan(db, row, oreCode);
+	const roca = getAsteroid(db, asteroidId);
+	if (!roca || roca.bodyId !== row.locationId) {
+		throw new ActionError('Esa roca no está acá.');
+	}
+	// **Hay que haberla leído.** Sin lectura vigente no se sabe de qué es ni cuánto
+	// tiene, y encenderle el láser a una piedra desconocida es apostar. Es lo que
+	// le da trabajo al escáner.
+	if (!hasFreshSurvey(db, row.id, asteroidId)) {
+		throw new ActionError('Escaneá la roca antes de picarla: no sabés qué tiene.');
+	}
+
+	const plan = miningPlan(db, row, asteroidId);
 	if (plan.blocked) throw new ActionError(plan.blocked);
 
 	return db
@@ -295,7 +339,8 @@ export function startMining(db: Db, row: Pilot, oreCode: string): PilotAction {
 			originBodyId: row.locationId,
 			// Minar no se mueve de lugar: por eso el destino queda nulo.
 			destinationBodyId: null,
-			targetCode: plan.ore
+			targetCode: plan.ore,
+			asteroidId
 		})
 		.returning()
 		.get();
@@ -434,4 +479,40 @@ export function startPublish(
 			.returning()
 			.get();
 	});
+}
+
+/**
+ * Encarga leer el cinturón donde está el piloto.
+ *
+ * Es corta y no mueve nada, pero ocupa el turno igual que cualquier otra: mirar
+ * también lleva tiempo, y que compita con extraer es lo que hace que explorar sea
+ * una decisión y no un botón gratis.
+ */
+export function startSurvey(db: Db, row: Pilot, asteroidId: number): PilotAction {
+	const now = situation(db, row);
+	if (!now.canOrder) throw new ActionError(now.orderBlocked);
+	if (!isBelt(db, row.locationId)) throw new ActionError('Acá no hay nada que escanear.');
+
+	const roca = getAsteroid(db, asteroidId);
+	if (!roca || roca.bodyId !== row.locationId) {
+		throw new ActionError('Esa roca no está acá.');
+	}
+
+	const plan = surveyPlan(db, row);
+	if (plan.blocked) throw new ActionError(plan.blocked);
+
+	return db
+		.insert(pilotAction)
+		.values({
+			pilotId: row.id,
+			kind: SURVEY_KIND,
+			durationSeconds: plan.durationSeconds,
+			originBodyId: row.locationId,
+			// Escanear ocurre donde estás parado: por eso el destino queda nulo.
+			destinationBodyId: null,
+			targetCode: null,
+			asteroidId
+		})
+		.returning()
+		.get();
 }

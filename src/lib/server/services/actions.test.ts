@@ -2,7 +2,7 @@
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { body, pilot, pilotAction, pilotSkill } from '../db/schema';
+import { body, pilot, pilotAction } from '../db/schema';
 import { crearPiloto, desguazar, seededDb } from '../db/testing';
 import { travelDurationSeconds } from '$lib/game/actions';
 import { coreSlotIndex } from '$lib/game/hulls';
@@ -123,7 +123,7 @@ describe('resolver la orden', () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
 		const destino = getBody(db, 'anfora_i')!;
-		const xpPrevio = skillXp(db, piloto.id).navigation ?? 0;
+		const xpPrevio = skillXp(db, piloto.id);
 		const orden = startTravel(db, piloto, destino);
 
 		// Simula que ya pasó el tiempo: nadie espera 28 segundos en un test.
@@ -146,15 +146,11 @@ describe('resolver la orden', () => {
 		expect(despues.locationId).toBe(destino.id);
 		expect(currentAction(db, piloto.id)).toBeNull();
 
-		// Y la habilidad **no** se movió sola: resolver un viaje ya no entrena
-		// Navegación, la deja pagada en el pozo para que el piloto elija.
-		const fila = db
-			.select()
-			.from(pilotSkill)
-			.where(eq(pilotSkill.pilotId, piloto.id))
-			.all()
-			.find((row) => row.skill === 'navigation')!;
-		expect(fila.xp).toBe(xpPrevio);
+		// Y **ninguna habilidad se movió sola**: resolver un viaje ya no entrena
+		// Navegación, la deja pagada en el pozo para que el piloto elija. Se miran
+		// todas y no una: cuáles trae cada profesión es contenido, y este test no
+		// tiene por qué romperse cuando ese contenido cambie.
+		expect(skillXp(db, piloto.id)).toEqual(xpPrevio);
 	});
 
 	it('una clase de acción desconocida no mueve al piloto ni le paga', async () => {

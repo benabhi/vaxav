@@ -12,8 +12,11 @@ import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
 import { beltDeposits, miningPlan } from '../services/mining';
+import { asteroidsAt } from '../services/asteroids';
+import { surveyPlan, surveysOf } from '../services/prospecting';
 import { activeShip, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
+import { depthLabel, surveyAge } from '$lib/game/prospecting';
 import {
 	bodyDetail,
 	bodyDistance,
@@ -36,6 +39,7 @@ import {
 	explorationIcon,
 	explorationLabel,
 	governmentLabel,
+	itemIcon,
 	missionKindIcon,
 	missionKindLabel,
 	remainingLabel,
@@ -49,9 +53,10 @@ import type {
 	BaldosaModulo,
 	FilaAgente,
 	FilaCuerpo,
+	CampoRocas,
+	Roca,
 	Sistema,
-	Ubicacion,
-	VetaMineral
+	Ubicacion
 } from '$lib/tipos';
 
 /**
@@ -137,7 +142,8 @@ function transit(): Ubicacion {
 		moduleCount: '',
 		agents: [],
 		agentCount: '',
-		ores: []
+		field: SIN_CAMPO,
+		asteroids: []
 	};
 }
 
@@ -177,6 +183,12 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 	// hay ninguno de los dos, y armarlos sería mandarle al navegador ocho
 	// baldosas apagadas que la pantalla no va a dibujar.
 	const isStation = detail.station !== null;
+	// Las rocas son del cinturón: en cualquier otro cuerpo no hay ninguna, y
+	// armarlas sería consultar la base para mandar una lista vacía.
+	const cinturon =
+		detail.body.kind === 'belt'
+			? buildBelt(db, row, ahora.orderBlocked)
+			: { field: SIN_CAMPO, asteroids: [] };
 	const agents = isStation ? buildAgentRows(detail.agents) : [];
 	const abiertos = agents.filter((agent) => agent.open).length;
 
@@ -198,9 +210,20 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		moduleCount: isStation ? `${detail.services.length} de ${Object.keys(SERVICES).length}` : '',
 		agents,
 		agentCount: isStation ? `${abiertos} de ${agents.length}` : '',
-		ores: buildOres(db, row, ahora.orderBlocked)
+		field: cinturon.field,
+		asteroids: cinturon.asteroids
 	};
 }
+
+/** Un campo apagado: acá no hay rocas ni nada que escanear. */
+const SIN_CAMPO: CampoRocas = {
+	scannable: false,
+	count: '',
+	depthLabel: '',
+	duration: '',
+	regen: '',
+	blocked: ''
+};
 
 /**
  * Aplana el árbol en filas, calculando las guías de cada una.
@@ -294,38 +317,98 @@ function uncharted(): Sistema {
 }
 
 /**
- * Qué se puede extraer donde está el piloto, con lo que la orden prometería.
+ * Las rocas del cinturón, cada una con lo que el piloto sabe de ella.
  *
- * Cada veta trae ya resuelto **cuánto traería y cuánto tardaría con esta nave y
- * esta bodega**, y no sólo cuánto queda en la roca. Es la diferencia entre un
- * dato y una decisión: "quedan 48.000 unidades" no dice nada; "traés 225 y tardás
- * 38 minutos" dice si vale la pena.
+ * Una roca sin lectura vigente sale **sin identificar**: se ve el bulto pero no
+ * de qué es ni cuánto tiene. Eso es lo que le da trabajo al escáner, y lo que
+ * convierte llegar a un cinturón desconocido en algo que hacer en vez de una
+ * lista que ya venía escrita.
+ *
+ * Cada roca identificada trae ya resuelto **cuánto traería y cuánto tardaría con
+ * esta nave y esta bodega**, y no sólo cuánto queda en la piedra: "quedan 4.800
+ * unidades" no dice nada; "traés 225 y tardás 38 minutos" dice si vale la pena.
  */
-function buildOres(db: Db, row: Pilot, orderBlocked: string): readonly VetaMineral[] {
-	return beltDeposits(db, row.locationId).map((deposito) => {
-		const ore = getOre(deposito.oreCode);
-		const plan = miningPlan(db, row, deposito.oreCode);
+function buildBelt(
+	db: Db,
+	row: Pilot,
+	orderBlocked: string
+): { field: CampoRocas; asteroids: readonly Roca[] } {
+	const plan = surveyPlan(db, row);
+	const rocas = asteroidsAt(db, row.locationId);
+	const lecturas = surveysOf(
+		db,
+		row.id,
+		rocas.map((roca) => roca.id)
+	);
 
-		return {
-			code: ore.code,
-			name: ore.name,
-			description: ore.description,
-			remaining: thousands(deposito.remaining),
-			// Contra su propio tope: es lo que dice si el cinturón está trabajado.
-			share:
-				deposito.capacity > 0
-					? Math.min(100, roundHalfEven((deposito.remaining * 100) / deposito.capacity))
-					: 0,
-			units: plan.units,
-			volume: cubicMeters(plan.units * ore.volumeTenths),
-			value: thousands(baseValueOf(ore.code, plan.units)),
+	const asteroids = rocas
+		.map((roca) => {
+			const lectura = lecturas.get(roca.id) ?? null;
+			const edad = lectura ? surveyAge(lectura.takenAt.getTime()) : null;
+			const identificada = edad !== null && !edad.stale;
+			const ore = getOre(roca.oreCode);
+			// Qué tan fina fue la lectura decide qué se ve. Una superficial dice de qué
+			// es la roca, no cuánto tiene.
+			const conCantidad = identificada && (lectura?.depth ?? 0) >= 1;
+			const orden = identificada ? miningPlan(db, row, roca.id) : null;
+
+			return {
+				id: roca.id,
+				identified: identificada,
+				// Sin lectura vigente no se dice de qué es: ése es el punto del escáner.
+				name: identificada ? ore.name : 'Roca sin identificar',
+				icon: identificada ? itemIcon(ore) : ('circles-three' as const),
+				description: identificada
+					? ore.description
+					: 'Un bulto en el radar. Habría que apuntarle el escáner.',
+				remaining: conCantidad ? thousands(roca.units) : '',
+				// Contra lo que traía al aparecer: es lo que dice cuán picada está.
+				share:
+					conCantidad && roca.initialUnits > 0
+						? Math.min(100, roundHalfEven((roca.units * 100) / roca.initialUnits))
+						: 0,
+				units: orden?.units ?? 0,
+				volume: orden ? cubicMeters(orden.units * ore.volumeTenths) : '',
+				value: orden ? thousands(baseValueOf(ore.code, orden.units)) : '',
+				duration: orden ? remainingLabel(orden.durationSeconds) : '',
+				// Una lectura vieja no se esconde: se muestra con su antigüedad, y el
+				// piloto decide si le alcanza para volver a mirarla.
+				age: edad === null ? '' : edad.hours < 1 ? 'recién' : `hace ${edad.hours} h`,
+				stale: edad !== null && edad.stale,
+				// El motivo de más arriba gana: con una orden en curso da igual que la
+				// bodega esté vacía, y "ya hay una orden" es lo que el jugador necesita
+				// leer para saber qué hacer.
+				blocked: identificada
+					? orderBlocked || orden?.blocked || ''
+					: 'Escaneala antes de picarla: no sabés qué tiene.',
+				scanBlocked: orderBlocked || plan.blocked
+			};
+		})
+		// Lo identificado primero y lo más grande arriba: es el orden en que uno
+		// elige a cuál apuntarle el láser.
+		.sort((a, b) => Number(b.identified) - Number(a.identified) || b.units - a.units);
+
+	const identificadas = asteroids.filter((roca) => roca.identified).length;
+	// El ritmo de reposición es del cinturón, no de una piedra: se aprende mirando
+	// cualquiera de sus rocas con una lectura completa, y se dice una sola vez.
+	const completa = [...lecturas.values()].some(
+		(fila) => fila.depth >= 2 && !surveyAge(fila.takenAt.getTime()).stale
+	);
+	const ritmo = completa
+		? beltDeposits(db, row.locationId).reduce((suma, plano) => suma + plano.regenPerHour, 0)
+		: 0;
+
+	return {
+		field: {
+			scannable: true,
+			count: `${identificadas} de ${rocas.length} identificadas`,
+			depthLabel: depthLabel(plan.depth),
 			duration: remainingLabel(plan.durationSeconds),
-			// El motivo de más arriba gana: con una orden en curso da igual que la
-			// bodega esté vacía, y "ya hay una orden" es lo que el jugador necesita
-			// leer para saber qué hacer.
+			regen: ritmo > 0 ? `${thousands(ritmo)} u/h` : '',
 			blocked: orderBlocked || plan.blocked
-		};
-	});
+		},
+		asteroids
+	};
 }
 
 /**

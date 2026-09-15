@@ -64,6 +64,20 @@
       "when": 1789472722767,
       "tag": "0008_charming_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789477614510,
+      "tag": "0009_cuddly_kat_farrell",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789477726984,
+      "tag": "0010_bouncy_cammi",
+      "breakpoints": true
     }
   ]
 }

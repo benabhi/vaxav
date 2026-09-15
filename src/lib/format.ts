@@ -416,7 +416,8 @@ const ITEM_KINDS: Record<ItemKind, string> = {
 const ACTIONS: Record<ActionKind, { label: string; icon: IconName }> = {
 	travel: { label: 'Viajando', icon: 'rocket-launch' },
 	mine: { label: 'Extrayendo', icon: 'diamond' },
-	publish: { label: 'Acordando', icon: 'handshake' }
+	publish: { label: 'Acordando', icon: 'handshake' },
+	survey: { label: 'Escaneando', icon: 'binoculars' }
 };
 
 /** El nombre de una acción en curso, o algo genérico si es nueva. */
@@ -438,7 +439,8 @@ export function actionIcon(kind: string): IconName {
 const ACTION_NOUNS: Record<ActionKind, string> = {
 	travel: 'Viaje',
 	mine: 'Extracción',
-	publish: 'Acuerdo'
+	publish: 'Acuerdo',
+	survey: 'Escaneo'
 };
 
 /** El nombre de una acción terminada, o algo genérico si es nueva. */

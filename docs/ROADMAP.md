@@ -87,6 +87,20 @@ la comisión, **Contabilidad** el impuesto y cuántas órdenes podés llevar,
 **Análisis de mercado** hasta dónde ves y **Contactos** cuánto dura lo que
 publicás. Ver [el mercado](systems/MARKET.md).
 
+### 3b · El escáner y las rocas · **hecho**
+
+- ~~Un cinturón deja de ser un tanque de mineral y pasa a ser un campo de rocas.~~
+- ~~Cada roca trae lo suyo, se agota y desaparece; el campo repone solo.~~
+- ~~Escanear **una roca** es una acción, con su módulo como requisito duro.~~
+- ~~La lectura es por piloto, tiene profundidad según habilidad y vence al día.~~
+- ~~Sin lectura vigente no se puede minar: la piedra es un bulto en el radar.~~
+
+Ir al cinturón dejó de ser un botón que siempre devuelve lo mismo. Se volvieron
+mecánicos el **alcance de sensores** y dos habilidades que no movían ningún
+número, **Escaneo** y **Prospección**, y **Ciencias** pasó a tener por fin una
+fuente de experiencia: escanear es la única acción que la paga, y por eso pesa por
+encima de uno. Ver [el universo](systems/UNIVERSE.md).
+
 ### 4 · Requisitos de habilidad e inyecciones
 
 Los módulos y los cascos piden habilidades, y las habilidades se desbloquean
@@ -111,15 +125,14 @@ lo que sólo sale del Cinturón Exterior.
 
 ## Después
 
-En orden de valor, no de dificultad: mercado entre pilotos, corporaciones,
-exploración y prospección, drones, combate, y estaciones de jugador. Cada uno
-espera a que el circuito de abajo aguante su peso.
+En orden de valor, no de dificultad: corporaciones, exploración de sistemas
+nuevos, drones, combate, y estaciones de jugador. Cada uno espera a que el
+circuito de abajo aguante su peso.
 
-De ésos, el más cercano es **el escáner**: hoy un cinturón revela todo lo que
-tiene apenas llegás, y escanear es lo que convertiría eso en una actividad con
-decisiones propias. Le daría además trabajo a Escaneo, a Prospección y al alcance
-de sensores, que son tres cosas que hoy no mueven ningún número. Ver
-[universo](systems/UNIVERSE.md).
+De ésos, el más cercano es **explorar**, y el mecanismo ya está construido: leer
+una piedra desconocida es lo mismo que leer un sistema al que nadie fue. Lo que
+falta no es el instrumento sino el lugar adonde llevarlo, y eso llega con la
+puerta estelar de la etapa 6. Ver [universo](systems/UNIVERSE.md).
 
 ## Lo que se decide en el camino
 
