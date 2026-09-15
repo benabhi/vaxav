@@ -132,8 +132,14 @@
 
 <svelte:head><title>Mercado · Vaxav</title></svelte:head>
 
+<!--
+	El título es **la región cuyas órdenes se están mirando**, no el lugar donde
+	está el piloto. Decía "Mercado de Deriva Exterior" estando parado en el Hábitat
+	Talo, y se leía como si el mercado fuera de otro lado: lo que se ve es el libro
+	de toda la región, y desde dónde se opera lo dice la línea de abajo.
+-->
 <div class="flex w-full flex-col items-start gap-1">
-	<Eyebrow>Mercado de</Eyebrow>
+	<Eyebrow>Órdenes de la región</Eyebrow>
 	<DisplayTitle>{market.regionName || 'Sin región'}</DisplayTitle>
 </div>
 
@@ -400,7 +406,7 @@
 									detrás de un punto se lee como un identificador.
 								-->
 								<HudButton
-									size="1"
+									size="2"
 									variant={fromHold === origen.code ? 'primary' : 'outline'}
 									onclick={() => (fromHold = origen.code)}
 								>
@@ -409,7 +415,7 @@
 							{/each}
 						</div>
 						{#if atHand > 0}
-							<HudButton size="1" variant="ghost" onclick={() => (units = atHand)}>Todo</HudButton>
+							<HudButton size="2" variant="ghost" onclick={() => (units = atHand)}>Todo</HudButton>
 						{/if}
 					</div>
 				{/if}
@@ -680,7 +686,7 @@
 								<input type="hidden" name="precio" value={price} />
 								<input type="hidden" name="desde" value={fromHold} />
 								<input type="hidden" name="estacion" value={market.dockedStationId} />
-								<HudButton type="submit" size="1" disabled={atHand < 1}>Vender: publicar</HudButton>
+								<HudButton type="submit" size="2" disabled={atHand < 1}>Vender: publicar</HudButton>
 							</form>
 
 							<form
@@ -697,7 +703,7 @@
 								<input type="hidden" name="precio" value={price} />
 								<input type="hidden" name="alcance" value={range} />
 								<input type="hidden" name="estacion" value={market.dockedStationId} />
-								<HudButton type="submit" size="1">Comprar: publicar</HudButton>
+								<HudButton type="submit" size="2">Comprar: publicar</HudButton>
 							</form>
 
 							{#if market.maxRange > 0}

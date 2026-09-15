@@ -277,6 +277,26 @@ function buildGroups(items: readonly FilaMercado[]): GrupoMercado[] {
 	];
 }
 
+/**
+ * La región donde está el piloto, que es la que manda en lo que ve.
+ *
+ * Sale de **dónde está parado** y no de la primera estación con mercado: son lo
+ * mismo mientras haya una sola región, y dejan de serlo apenas haya dos. Un
+ * mercado que dice la región equivocada es peor que uno que no la dice.
+ */
+function regionName(db: Db, row: Pilot): string {
+	if (!row.locationId) return '';
+	const fila = db
+		.select({ name: region.name })
+		.from(body)
+		.innerJoin(system, eq(system.id, body.systemId))
+		.innerJoin(constellation, eq(constellation.id, system.constellationId))
+		.innerJoin(region, eq(region.id, constellation.regionId))
+		.where(eq(body.id, row.locationId))
+		.get();
+	return fila?.name ?? '';
+}
+
 /** Lo que entra todavía en la bodega de la nave, en décimas. */
 function freeCargo(db: Db, row: Pilot): number {
 	const nave = activeShip(db, row.id);
@@ -328,7 +348,7 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 	].sort((a, b) => a.size - b.size || a.name.localeCompare(b.name) || a.tier.localeCompare(b.tier));
 
 	return {
-		regionName: estaciones[0]?.regionName ?? '',
+		regionName: regionName(db, row) || (estaciones[0]?.regionName ?? ''),
 		regionsInRange: context.regionsInRange,
 		stationCount: estaciones.length,
 		// Dónde está parado, que es lo único que decide dónde puede publicar y de
