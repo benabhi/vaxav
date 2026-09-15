@@ -113,6 +113,11 @@
 		}
 	}
 
+	/** Cuántos ítems, con el plural que corresponde. «1 ítems» se lee mal. */
+	function cuenta(total: number): string {
+		return total === 1 ? '1 ítem' : `${total} ítems`;
+	}
+
 	/** El indicador de la cabecera: sólo lo lleva la columna que manda. */
 	function flecha(columna: typeof sortBy): string {
 		if (sortBy !== columna) return '';
@@ -164,14 +169,13 @@
 	 * La lista partida en los dos lados del mostrador.
 	 *
 	 * Un ítem puede estar en las dos —lo normal— y eso no es repetirlo: son dos
-	 * ofertas distintas. Lo que no tiene órdenes de ningún lado va aparte, porque
-	 * sigue existiendo en el catálogo aunque nadie lo esté comerciando.
+	 * ofertas distintas. Lo que no tiene órdenes de ningún lado **no aparece**: el
+	 * catálogo entero está en el árbol de ramas, y repetirlo acá como una lista de
+	 * cincuenta nombres apagados enterraba las pocas filas que sí se pueden
+	 * comerciar, que es para lo que se abre esta pantalla.
 	 */
 	let enVenta = $derived(listed.filter((item) => item.bestAsk !== null));
 	let enCompra = $derived(listed.filter((item) => item.bestBid !== null));
-	let sinOrdenes = $derived(
-		listed.filter((item) => item.bestAsk === null && item.bestBid === null)
-	);
 
 	/** La horquilla que le toca a lo que está abierto. */
 	let spread = $derived(chosen && chosen.group !== 'ore' ? market.moduleSpread : market.oreSpread);
@@ -321,15 +325,30 @@
 		<div class="flex w-full flex-wrap items-baseline gap-2">
 			<Label>{titulo}</Label>
 			<div class="grow"></div>
-			<span class="font-mono text-[0.68rem] text-text-muted">{filas.length} ítems</span>
+			<span class="font-mono text-[0.68rem] text-text-muted">{cuenta(filas.length)}</span>
 		</div>
 
 		<div class="w-full overflow-x-auto">
-			<div class="max-h-[20rem] min-w-[28rem] overflow-y-auto">
+			<div class="max-h-[20rem] min-w-[42rem] overflow-y-auto">
 				<table
-					class="w-full border-collapse text-left [&_:is(th,td):first-child]:pl-2
+					class="w-full table-fixed border-collapse text-left [&_:is(th,td):first-child]:pl-2
 						[&_:is(th,td):last-child]:pr-2"
 				>
+					<!--
+						Los anchos van declarados y no medidos por el navegador: las dos
+						tablas son la misma partida en dos, y con anchos automáticos cada
+						una elegía los suyos y las columnas no coincidían de una a otra.
+						La de ítem no lleva ancho a propósito: se queda con lo que sobre.
+					-->
+					<colgroup>
+						<col />
+						<col class="w-[4.5rem]" />
+						<col class="w-[7rem]" />
+						<col class="w-[10rem]" />
+						<col class="w-[5rem]" />
+						<col class="w-[6rem]" />
+						<col class="w-[4.5rem]" />
+					</colgroup>
 					<!--
 					Las cabeceras ordenan. Un catálogo de cientos de renglones sin poder
 					ordenarlo por precio es una lista que hay que leer entera para
@@ -348,8 +367,13 @@
 										{columna.right ? 'justify-end' : ''}
 										{sortBy === columna.code ? 'text-accent-bright' : 'text-accent-dim'}"
 									>
-										{columna.label}
-										<span class="font-mono text-[0.55rem]">{flecha(columna.code)}</span>
+										{#if columna.right}
+											<span class="font-mono text-[0.55rem]">{flecha(columna.code)}</span>
+										{/if}
+										<span class="truncate">{columna.label}</span>
+										{#if !columna.right}
+											<span class="font-mono text-[0.55rem]">{flecha(columna.code)}</span>
+										{/if}
 									</button>
 								</th>
 							{/each}
@@ -362,9 +386,14 @@
 								class="cursor-pointer border-b border-border-soft/40 transition-colors hover:bg-surface-hover"
 							>
 								<td class="py-[0.4rem] pr-3">
-									<div class="flex items-center gap-2">
-										<Icon name={item.icon} weight="duotone" size="0.9rem" class="text-accent" />
-										<span class="text-2 text-text-strong">{item.name}</span>
+									<div class="flex min-w-0 items-center gap-2">
+										<Icon
+											name={item.icon}
+											weight="duotone"
+											size="0.9rem"
+											class="shrink-0 text-accent"
+										/>
+										<span class="truncate text-2 text-text-strong">{item.name}</span>
 									</div>
 								</td>
 								<td class="py-[0.4rem] pr-3 font-mono text-[0.72rem] text-text-muted">
@@ -596,40 +625,12 @@
 			title={search.trim()
 				? 'Resultados'
 				: (roots.find((r) => r.code === group)?.label ?? 'Catálogo')}
-			detail="{listed.length} ítems"
+			detail={cuenta(enVenta.length + enCompra.length)}
 			class="w-full"
 		>
 			<div class="flex w-full flex-col gap-5">
 				{@render catalogo('Órdenes de venta', enVenta, 'sell')}
 				{@render catalogo('Órdenes de compra', enCompra, 'buy')}
-
-				{#if sinOrdenes.length > 0}
-					<!--
-						Lo que existe en el catálogo pero nadie está comerciando. Tiene que
-						poder verse igual: es la mitad de la información al decidir qué
-						fabricar o adónde ir a buscar algo.
-					-->
-					<div class="flex w-full flex-col gap-2">
-						<div class="flex w-full flex-wrap items-baseline gap-2">
-							<Label>Sin órdenes</Label>
-							<div class="grow"></div>
-							<span class="font-mono text-[0.68rem] text-text-muted">
-								{sinOrdenes.length} ítems
-							</span>
-						</div>
-						<div class="flex w-full flex-wrap gap-x-4 gap-y-1">
-							{#each sinOrdenes as item (item.itemCode)}
-								<button
-									type="button"
-									onclick={() => abrir(item, 'sell')}
-									class="cursor-pointer text-1 text-text-muted transition-colors hover:text-accent-bright"
-								>
-									{item.name}{item.tier ? ` ${item.tier}` : ''}
-								</button>
-							{/each}
-						</div>
-					</div>
-				{/if}
 			</div>
 		</TitledPanel>
 	</div>

@@ -29,6 +29,7 @@ import {
 	body,
 	constellation,
 	container,
+	corporation,
 	marketOrder,
 	region,
 	station,
@@ -38,15 +39,15 @@ import {
 } from '../db/schema';
 import type { Db } from '../db/types';
 import { cargoHold, shipContainer, stacks } from '../services/containers';
-import { deskFor, quote, spreadOf, type MarketDesk } from '../services/market';
+import { deskFor, spreadOf, type MarketDesk } from '../services/market';
 import { aliveNow, ordersOf, tradingContext } from '../services/orders';
-import { activeShip, shipReadout } from '../services/ships';
+import { activeShip, pilotSkillLevels, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
 import { balance } from '../services/wallet';
 import { MODULES, type ShipModule } from '$lib/game/modules';
 import { ORE_LIST, getItem, type Item } from '$lib/game/items';
 import { SLOT_KINDS, type SlotKind } from '$lib/game/hulls';
-import { durationsFor } from '$lib/game/market';
+import { HAGGLING_SKILL, askPrice, bidPrice, durationsFor, spreadFor } from '$lib/game/market';
 import {
 	cubicMeters,
 	itemIcon,
@@ -57,6 +58,7 @@ import {
 	thousands
 } from '$lib/format';
 import type { OrderKind } from '$lib/game/market';
+import type { CorporationKind } from '$lib/game/universe';
 import type {
 	FilaMercado,
 	GrupoMercado,
@@ -89,6 +91,8 @@ export interface MarketStation {
 	readonly parentName: string;
 	readonly systemName: string;
 	readonly regionName: string;
+	/** A qué se dedica quien atiende: es lo que le da su ventaja a la horquilla. */
+	readonly corporationKind: CorporationKind | null;
 }
 
 /**
@@ -114,10 +118,12 @@ export function marketStations(db: Db): readonly MarketStation[] {
 			name: body.name,
 			parentName: orbita.name,
 			systemName: system.name,
-			regionName: region.name
+			regionName: region.name,
+			corporationKind: corporation.kind
 		})
 		.from(stationService)
 		.innerJoin(station, eq(station.id, stationService.stationId))
+		.innerJoin(corporation, eq(corporation.id, station.corporationId))
 		.innerJoin(body, eq(body.id, station.bodyId))
 		.leftJoin(orbita, eq(orbita.id, body.parentId))
 		.innerJoin(system, eq(system.id, body.systemId))
@@ -131,7 +137,8 @@ export function marketStations(db: Db): readonly MarketStation[] {
 			name: fila.name,
 			parentName: fila.parentName ?? '',
 			systemName: fila.systemName,
-			regionName: fila.regionName
+			regionName: fila.regionName,
+			corporationKind: fila.corporationKind
 		}));
 }
 
@@ -286,36 +293,93 @@ function placeOfStation(station: MarketStation | undefined, jumps: string): Luga
 	};
 }
 
+/**
+ * La banda que ponen las estaciones para un ítem.
+ *
+ * **Se mira en todas las que el piloto alcanza**, y no sólo en la que está
+ * amarrado. El mercado se lee desde cualquier parte —ésa es la decisión que lo
+ * hace un mercado y no un mostrador—, así que esconder el precio de la estación
+ * mientras uno está parado en un cinturón diría que no hay nada que comprar ni
+ * quién compre, justo cuando hay que decidir adónde volver.
+ *
+ * Que la estación tenga el módulo Mercado sigue siendo el requisito: `stations`
+ * sólo trae las que lo tienen. Lo que ya no hace falta es estar parado ahí.
+ *
+ * La estación **vende módulos y compra de todo**: es lo que cierra el ciclo del
+ * minero —sale con lo puesto, trae mineral, lo vende y se compra el láser mejor—
+ * sin depender de que otro piloto haya publicado algo.
+ */
+function stationBand(
+	item: Item,
+	hagglingLevel: number,
+	stations: Map<number, MarketStation>
+): {
+	ask: number | null;
+	askStation: number | null;
+	bid: number | null;
+	bidStation: number | null;
+} {
+	let ask: number | null = null;
+	let askStation: number | null = null;
+	let bid: number | null = null;
+	let bidStation: number | null = null;
+
+	for (const estacion of stations.values()) {
+		const spread = spreadFor({
+			itemKind: item.kind,
+			corporation: estacion.corporationKind,
+			hagglingLevel
+		});
+
+		// Sólo los módulos se compran en la estación: el mineral se lo vendés vos a
+		// ella, no al revés.
+		if (item.kind === 'module') {
+			const precio = askPrice(item.basePrice, spread.percent);
+			if (ask === null || precio < ask) {
+				ask = precio;
+				askStation = estacion.stationId;
+			}
+		}
+
+		const pagan = bidPrice(item.basePrice, spread.percent);
+		if (bid === null || pagan > bid) {
+			bid = pagan;
+			bidStation = estacion.stationId;
+		}
+	}
+
+	return { ask, askStation, bid, bidStation };
+}
+
 /** Un renglón de la lista: lo mínimo para decidir si vale abrirlo. */
 function line(
 	item: Item,
 	module: ShipModule | null,
 	summary: BookSummary | undefined,
 	desk: MarketDesk | null,
+	hagglingLevel: number,
 	held: number,
 	stations: Map<number, MarketStation>
 ): FilaMercado {
 	// El precio de la estación entra como una orden más del libro. Es la única que
 	// no se agota, y la única que se negocia: del otro lado no hay otro piloto.
-	const estacion = desk?.services.trades ? quote(desk, item.code) : null;
-	const askEstacion = item.kind === 'module' ? (estacion?.ask ?? null) : null;
-	const bidEstacion = estacion?.bid ?? null;
-	const bestAsk = best([summary?.bestAsk, askEstacion], 'min');
-	const bestBid = best([summary?.bestBid, bidEstacion], 'max');
+	const banda = stationBand(item, hagglingLevel, stations);
+	const bestAsk = best([summary?.bestAsk, banda.ask], 'min');
+	const bestBid = best([summary?.bestBid, banda.bid], 'max');
 
-	// Dónde está el que gana. Si el mejor precio lo pone la estación donde uno
-	// está parado, es acá; si no, la estación de la orden que ganó.
+	// Dónde está el que gana: la estación que puso esa banda, o la de la orden que
+	// la superó.
 	const dondeAsk =
 		bestAsk === null
 			? null
-			: askEstacion !== null && bestAsk === askEstacion
-				? (desk?.stationId ?? null)
+			: banda.ask !== null && bestAsk === banda.ask
+				? banda.askStation
 				: (summary?.bestAskStation ?? null);
 	const dondeBid =
 		bestBid === null
 			? null
-			: bidEstacion !== null && bestBid === bidEstacion
-				? (desk?.stationId ?? null)
+			: banda.bid !== null && bestBid === banda.bid
+				? banda.bidStation
 				: (summary?.bestBidStation ?? null);
 
 	return {
@@ -481,10 +545,21 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 	);
 	const tengo = holdings(db, row);
 	const porId = new Map(estaciones.map((estacion) => [estacion.stationId, estacion]));
+	// El nivel de Regateo se busca una vez y no una por renglón: es del piloto, no
+	// del ítem, y con cincuenta ítems serían cincuenta consultas iguales.
+	const regateo = pilotSkillLevels(db, row.id)[HAGGLING_SKILL] ?? 0;
 
 	const items = [
 		...ORE_LIST.map((ore) =>
-			line(getItem(ore.code), null, resumen.get(ore.code), desk, tengo.get(ore.code) ?? 0, porId)
+			line(
+				getItem(ore.code),
+				null,
+				resumen.get(ore.code),
+				desk,
+				regateo,
+				tengo.get(ore.code) ?? 0,
+				porId
+			)
 		),
 		...MODULES.filter((module) => module.code !== '').map((module) =>
 			line(
@@ -492,6 +567,7 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 				module,
 				resumen.get(module.code),
 				desk,
+				regateo,
 				tengo.get(module.code) ?? 0,
 				porId
 			)
