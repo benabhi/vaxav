@@ -8,6 +8,7 @@
 	En pantallas angostas la fila **se desliza** en vez de partirse en dos
 	renglones: así la pantalla se ve igual en el teléfono y en el monitor. El
 	desplazamiento y los degradados de los bordes están en app.css.
+
 -->
 <script lang="ts">
 	import type { Tab } from '$lib/navigation';

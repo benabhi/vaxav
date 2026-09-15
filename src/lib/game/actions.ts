@@ -8,6 +8,8 @@
  * Corresponde a docs/systems/ACTIONS.md y docs/systems/UNIVERSE.md.
  */
 
+import { MINING_FAMILY } from './mining';
+import { SURVEY_FAMILY } from './prospecting';
 import type { SkillFamily } from './skills';
 
 import { roundHalfEven } from './math';
@@ -63,6 +65,33 @@ export const SURVEY_KIND: ActionKind = 'survey';
 export const TRAVEL_FAMILY: SkillFamily = 'piloting';
 /** Acordar una compra o una venta paga Comercio, que es de lo que se trata. */
 export const TRADE_FAMILY: SkillFamily = 'trade';
+
+/**
+ * Las ramas que hoy tienen de dónde entrenarse.
+ *
+ * **La experiencia se deposita por rama**, así que una rama sin ninguna acción
+ * que la pague es una rama que nadie puede subir nunca. De ahí sale una regla que
+ * condiciona todo el diseño de requisitos: **nada se gatea con una habilidad de
+ * una rama que no esté en esta lista**, o el requisito sería una puerta cerrada
+ * con la llave adentro.
+ *
+ * Las dos que faltan tienen fecha, no olvido:
+ *
+ * - **Ingeniería** es la rama del taller. Fabricar módulos es lo que la paga, y
+ *   eso llega con la etapa 7. Hasta entonces, la planta y el distribuidor del
+ *   escalón A no piden Gestión de energía aunque sea su habilidad natural.
+ * - **Combate** llega con el combate. Hoy no hay ningún módulo avanzado de
+ *   combate en el catálogo, así que todavía no necesita gatear nada.
+ *
+ * Se arma con las constantes de cada acción y no con una lista suelta: así
+ * agregar una acción que pague una rama nueva la habilita acá sola.
+ */
+export const TRAINABLE_FAMILIES: readonly SkillFamily[] = [
+	TRAVEL_FAMILY,
+	TRADE_FAMILY,
+	MINING_FAMILY,
+	SURVEY_FAMILY
+];
 
 /**
  * Duración de un viaje entre dos cuerpos del mismo sistema, en segundos.

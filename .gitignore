@@ -26,3 +26,6 @@ test-results
 # SQLite: la base vive en data/ y no se versiona
 *.db
 data/*.db*
+
+# Retratos de pilotos: los sube el jugador, no van al repositorio
+data/retratos/

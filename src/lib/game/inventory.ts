@@ -21,6 +21,7 @@
 
 import type { CoreSystem, SlotKind } from './hulls';
 import type { ShipModule } from './modules';
+import { unmetFrom } from './skills';
 
 /**
  * Qué de la bodega entra en esta ranura.
@@ -35,18 +36,25 @@ import type { ShipModule } from './modules';
  *
  * Con la bodega vacía la lista sale vacía. Eso **no es un error**: es lo que
  * significa no tener repuestos.
+ *
+ * **Y sólo lo que sabe usar.** Un módulo cuyo requisito no cumple no se ofrece:
+ * montarlo dejaría la nave en tierra, y una lista que permite elegir algo que
+ * rompe la nave no es una lista, es una trampa. El módulo no desaparece —sigue en
+ * la bodega, se ve en Propiedades y se puede vender— pero la ranura no lo toma.
  */
 export function availableForSlot(
 	kind: SlotKind,
 	size: number,
 	core: CoreSystem | null,
-	cargo: Iterable<ShipModule> = []
+	cargo: Iterable<ShipModule> = [],
+	skills: Readonly<Record<string, number>> = {}
 ): readonly ShipModule[] {
 	const vistos = new Set<string>();
 	const disponibles: ShipModule[] = [];
 
 	for (const module of cargo) {
 		if (module.kind !== kind || module.size > size || module.core !== core) continue;
+		if (unmetFrom(module.requirements, skills).length > 0) continue;
 		if (vistos.has(module.code)) continue;
 		vistos.add(module.code);
 		disponibles.push(module);

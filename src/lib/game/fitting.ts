@@ -25,6 +25,7 @@ import { DAMAGE_TYPES, type DamageType, totalEffectiveHp, weakestAgainst } from 
 import { HULLS, type BonusTarget, type CoreSystem, type Hull, type SlotSpec } from './hulls';
 import { floorDiv, roundHalfEven } from './math';
 import { EMPTY, type ShipModule, getModule, modulesForSlot } from './modules';
+import { getSkill, unmetFrom, type Requirement } from './skills';
 
 /**
  * Qué habilidad mejora cada cosa, y cuánto por nivel.
@@ -146,6 +147,20 @@ export interface Readout {
 function isEmpty(module: ShipModule): boolean {
 	return module.code === '';
 }
+
+/**
+ * Cómo se nombra un requisito dentro de un problema: «Navegación II».
+ *
+ * Se arma acá con el catálogo y el romano en vez de tirar del módulo de formato,
+ * porque las reglas no pueden depender de la presentación: `format.ts` importa de
+ * `game/`, y al revés sería un círculo.
+ */
+function label(requirement: Requirement): string {
+	return `${getSkill(requirement.skill).name} ${ROMAN[requirement.level] ?? requirement.level}`;
+}
+
+/** Los cinco niveles, en romanos. Son cinco: una tabla es más clara que un algoritmo. */
+const ROMAN: readonly string[] = ['', 'I', 'II', 'III', 'IV', 'V'];
 
 /**
  * Cuánto mejora esa magnitud, en porcentaje, sumando habilidad y casco.
@@ -345,12 +360,33 @@ export function buildReadout(
 	const problems: string[] = [];
 	if (power.over) problems.push(`La planta no alcanza: faltan ${-power.free} MW`);
 	if (computing.over) problems.push(`Falta cómputo: ${-computing.free} u`);
+
+	// **Los requisitos se hacen cumplir acá, y acá es un solo lugar.** Volar exige
+	// que no haya problemas, y todas las acciones ya consultan eso antes de
+	// empezar: con esta docena de líneas, saber pilotar el casco y saber usar cada
+	// módulo pasan a decidir si se puede viajar, minar o escanear, sin tocar una
+	// línea de ninguna de las tres.
+	//
+	// El mensaje dice **qué falta**, no "no podés": un piloto que lee "te falta
+	// Navegación II" sabe adónde ir; uno que lee "no cumplís los requisitos" sólo
+	// sabe que algo está mal.
+	for (const missing of unmetFrom(hull.requirements, skills)) {
+		problems.push(`No sabés volar un ${hull.name}: te falta ${label(missing)}`);
+	}
+
 	hull.slots.forEach((slot: SlotSpec, index: number) => {
 		const module = modules[index];
 		if (isEmpty(module) && slot.kind === 'core') {
 			problems.push(`Falta un interno esencial: ${slot.core}`);
-		} else if (!isEmpty(module) && module.size > slot.size) {
+			return;
+		}
+		if (isEmpty(module)) return;
+
+		if (module.size > slot.size) {
 			problems.push(`${module.name} es de clase ${module.size} y la ranura es de ${slot.size}`);
+		}
+		for (const missing of unmetFrom(module.requirements, skills)) {
+			problems.push(`No sabés usar ${module.name}: te falta ${label(missing)}`);
 		}
 	});
 

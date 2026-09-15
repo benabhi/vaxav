@@ -30,11 +30,12 @@
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
+	import SkillHint from '$lib/components/game/SkillHint.svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
 	import { tenths, thousands } from '$lib/format';
-	import type { FilaMercado, LibroMercado, LugarOrden } from '$lib/tipos';
+	import type { FilaMercado, LibroMercado, LugarOrden, OrdenMercado } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -48,6 +49,18 @@
 	let chosen = $state<FilaMercado | null>(null);
 	let book = $state<LibroMercado | null>(null);
 	let loading = $state(false);
+
+	/**
+	 * El ítem que el árbol tiene elegido, y su libro.
+	 *
+	 * Va **aparte del de la ventana** a propósito: son dos gestos distintos. Elegir
+	 * un ítem en el árbol es *mirar* —qué órdenes hay, a cuánto, dónde—, y abrir la
+	 * ventana es *operar*. Compartir un estado obligaría a que mirar cerrara o
+	 * abriera la ventana, que es justo lo que no tiene que pasar.
+	 */
+	let viewing = $state<FilaMercado | null>(null);
+	let viewingBook = $state<LibroMercado | null>(null);
+	let viewingLoading = $state(false);
 	/** Cuántas unidades mueve el próximo pedido. */
 	let units = $state(1);
 	/**
@@ -71,6 +84,22 @@
 	let roots = $derived(market.groups.filter((rama) => rama.parent === ''));
 	function children(code: string) {
 		return market.groups.filter((rama) => rama.parent === code);
+	}
+
+	/**
+	 * Los ítems que cuelgan de una rama, para el último nivel del árbol.
+	 *
+	 * Se arma acá y no en el servidor porque el catálogo entero ya viajó: pedirlo
+	 * otra vez partido en ramas sería mandar lo mismo dos veces.
+	 */
+	function itemsOf(code: string): readonly FilaMercado[] {
+		const dentro =
+			code === 'held'
+				? market.items.filter((item) => item.held > 0)
+				: code === 'module'
+					? market.items.filter((item) => item.group !== 'ore')
+					: market.items.filter((item) => item.group === code);
+		return [...dentro].sort((a, b) => a.name.localeCompare(b.name) || a.tier.localeCompare(b.tier));
 	}
 
 	/**
@@ -186,12 +215,17 @@
 	 * Traer las órdenes de los cincuenta y un renglones para dibujar la lista sería
 	 * pedir miles de filas de las que se miran dos.
 	 */
-	async function abrir(item: FilaMercado, lado: 'sell' | 'buy' = 'sell') {
+	async function abrir(
+		item: FilaMercado,
+		lado: 'sell' | 'buy' = 'sell',
+		elegida: OrdenMercado | null = null
+	) {
 		chosen = item;
 		side = lado;
+		picked = elegida;
 		book = null;
 		units = 1;
-		price = (lado === 'sell' ? item.bestAsk : item.bestBid) ?? item.basePrice;
+		price = elegida?.price ?? (lado === 'sell' ? item.bestAsk : item.bestBid) ?? item.basePrice;
 		range = 0;
 		days = market.durations[0]?.days ?? 1;
 		showHistory = false;
@@ -206,6 +240,24 @@
 		}
 	}
 
+	/**
+	 * Pone un ítem al frente: carga su libro y lo muestra en el panel.
+	 *
+	 * **No abre la ventana.** El árbol es para elegir qué mirar; comprar o vender
+	 * se decide después, apretando una orden concreta de las que aparecen.
+	 */
+	async function ver(item: FilaMercado) {
+		viewing = item;
+		viewingBook = null;
+		viewingLoading = true;
+		try {
+			const respuesta = await fetch(`/mercado/libro/${item.itemCode}`);
+			viewingBook = respuesta.ok ? await respuesta.json() : null;
+		} finally {
+			viewingLoading = false;
+		}
+	}
+
 	/** Vuelve a pedir el libro después de operar: la pantalla ya cambió. */
 	async function refrescar() {
 		if (!chosen) return;
@@ -216,6 +268,7 @@
 		} finally {
 			loading = false;
 		}
+		if (viewing) await ver(viewing);
 		await invalidateAll();
 	}
 
@@ -234,26 +287,23 @@
 		}
 	});
 
-	/**
-	 * Cuánto falta para una fecha, escrito corto.
-	 *
-	 * Lo calcula el navegador y no el servidor por la misma razón que la cuenta
-	 * regresiva de la barra de estado: es la hora del jugador, y un "en 3 días"
-	 * rendido en el servidor queda viejo apenas se dibuja.
-	 */
-	function cuando(at: number): string {
-		const segundos = Math.max(0, Math.round((at - Date.now()) / 1000));
-		if (segundos < 3600) return `en ${Math.max(1, Math.floor(segundos / 60))} min`;
-		const horas = Math.floor(segundos / 3600);
-		if (horas < 48) return `en ${horas} h`;
-		return `en ${Math.floor(horas / 24)} d`;
-	}
-
 	/** Lo que tiene el piloto a mano de lo que está abierto. */
 	let atHand = $derived(book ? (fromHold === 'ship' ? book.inShip : book.inStation) : 0);
 
-	/** La orden contra la que se opera: la mejor del lado por el que se entró. */
-	let orden = $derived(book ? (side === 'sell' ? book.sellers[0] : book.buyers[0]) : null);
+	/**
+	 * La orden concreta que se eligió del libro, si se entró apretando una.
+	 *
+	 * Desde el catálogo no hay ninguna elegida —se entra por el ítem, no por una
+	 * orden— y ahí se opera contra la mejor, que es lo que el catálogo prometía.
+	 * Desde el libro del ítem sí: apretar la tercera fila y que te venda la primera
+	 * sería mentirle al que eligió.
+	 */
+	let picked = $state<OrdenMercado | null>(null);
+
+	/** La orden contra la que se opera: la elegida, o la mejor de ese lado. */
+	let orden = $derived(
+		picked ?? (book ? (side === 'sell' ? book.sellers[0] : book.buyers[0]) : null)
+	);
 
 	/**
 	 * Cuántas unidades se pueden mover de verdad.
@@ -329,7 +379,7 @@
 		</div>
 
 		<div class="w-full overflow-x-auto">
-			<div class="max-h-[20rem] min-w-[42rem] overflow-y-auto">
+			<div class="max-h-[20rem] min-w-[45rem] overflow-y-auto">
 				<table
 					class="w-full table-fixed border-collapse text-left [&_:is(th,td):first-child]:pl-2
 						[&_:is(th,td):last-child]:pr-2"
@@ -342,12 +392,12 @@
 					-->
 					<colgroup>
 						<col />
+						<col class="w-[4rem]" />
+						<col class="w-[6.5rem]" />
+						<col class="w-[9rem]" />
 						<col class="w-[4.5rem]" />
-						<col class="w-[7rem]" />
-						<col class="w-[10rem]" />
-						<col class="w-[5rem]" />
-						<col class="w-[6rem]" />
-						<col class="w-[4.5rem]" />
+						<col class="w-[5.5rem]" />
+						<col class="w-[4rem]" />
 					</colgroup>
 					<!--
 					Las cabeceras ordenan. Un catálogo de cientos de renglones sin poder
@@ -462,7 +512,14 @@
 -->
 <div class="flex w-full flex-wrap items-start gap-x-5 gap-y-3">
 	<div class="flex flex-col items-start gap-1">
-		<Label>Alcance</Label>
+		<div class="flex items-center gap-[0.35rem]">
+			<Label>Alcance</Label>
+			<SkillHint
+				what="Hasta dónde ves el mercado"
+				skills={['market_analysis']}
+				levels={market.pilotLevels}
+			/>
+		</div>
 		<p class="font-mono text-2 text-accent-bright">
 			{market.regionsInRange}
 			{market.regionsInRange === 1 ? 'región' : 'regiones'} · {market.stationCount} mercados
@@ -478,13 +535,27 @@
 			El cupo es **por lado**: tener una venta publicada no impide poner una
 			compra, así que decir un solo número mentiría sobre lo que queda libre.
 		-->
-		<Label>Órdenes</Label>
+		<div class="flex items-center gap-[0.35rem]">
+			<Label>Órdenes</Label>
+			<SkillHint
+				what="Cuántas órdenes podés tener abiertas"
+				skills={['accounting']}
+				levels={market.pilotLevels}
+			/>
+		</div>
 		<p class="font-mono text-2 text-text-body">
 			{market.openSells} / {market.orderLimit} vendo · {market.openBuys} / {market.orderLimit} compro
 		</p>
 	</div>
 	<div class="flex flex-col items-start gap-1">
-		<Label>Comisión · impuesto</Label>
+		<div class="flex items-center gap-[0.35rem]">
+			<Label>Comisión · impuesto</Label>
+			<SkillHint
+				what="Lo que se lleva la casa"
+				skills={['haggling', 'accounting']}
+				levels={market.pilotLevels}
+			/>
+		</div>
 		<p class="font-mono text-2 text-text-muted">
 			{tenths(market.brokerPermille)} % · {tenths(market.taxPermille)} %
 		</p>
@@ -510,22 +581,23 @@
 	-->
 	<div class="flex w-full items-center gap-3 border-l-[3px] border-l-border bg-surface px-4 py-3">
 		<Icon name="warning" weight="duotone" size="1rem" class="shrink-0 text-accent" />
-		<div class="flex min-w-0 flex-col gap-1">
-			{#if market.location}
-				<p class="font-mono text-2 text-text-body">{market.location}</p>
-			{/if}
-			<p class="text-1 text-text-muted">{market.whyNot}</p>
-		</div>
+		<p class="text-1 text-text-muted">{market.whyNot}</p>
 	</div>
 {:else}
-	<div class="flex w-full items-center gap-3 border-l-[3px] border-l-accent bg-surface px-4 py-3">
+	<div
+		class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 border-l-[3px] border-l-accent
+			bg-surface px-4 py-3"
+	>
 		<Icon name="storefront" weight="duotone" size="1rem" class="shrink-0 text-accent" />
 		<!--
-			Dónde está parado el piloto, de lo chico a lo grande. Es la respuesta a
-			"¿dónde estoy?", que en esta pantalla no es obvia: el título es la región
-			que se está mirando, y uno puede estar en cualquier estación de ella.
+			**El nombre del mostrador, y nada más.** Acá había un camino entero
+			—cuerpo, sistema, región— y no servía: el título ya dice qué región se
+			está mirando, y lo único que esta barra tiene que contestar es desde
+			dónde se opera, que es una estación y no una ruta.
 		-->
-		<p class="font-mono text-2 text-text-body">{market.location}</p>
+		<p class="font-mono text-2 text-text-body">
+			Operás desde <span class="text-accent-bright">{market.dockedAt}</span>
+		</p>
 		<div class="grow"></div>
 		<!--
 			La otra cosa que se puede hacer en un mercado: en vez de tomar un precio,
@@ -540,6 +612,130 @@
 		<HudButton size="2" onclick={() => (publishOpen = true)}>Poner una orden</HudButton>
 	</div>
 {/if}
+
+<!--
+	El último nivel del árbol: el ítem.
+
+	Elegirlo **muestra su libro** en el panel de al lado: todas las órdenes de venta
+	y de compra de ese módulo, con precio, cantidad y dónde están. El árbol es para
+	decidir qué mirar; operar se decide después, apretando una orden concreta.
+
+	Lleva su clase al lado —"1A"— porque en una rama con tres láseres del mismo
+	nombre, eso es lo único que los distingue.
+-->
+{#snippet hojas(items: readonly FilaMercado[], sangria: string)}
+	{#each items as item (item.itemCode)}
+		<button
+			type="button"
+			onclick={() => ver(item)}
+			class="flex w-full cursor-pointer items-center gap-2 border-l border-border-soft py-[0.3rem]
+				pr-2 {sangria} text-left transition-colors {viewing?.itemCode === item.itemCode
+				? 'bg-accent text-on-accent'
+				: 'text-text-muted hover:bg-surface-hover hover:text-accent-bright'}"
+		>
+			<Icon name={item.icon} weight="bold" size="0.7rem" class="shrink-0" />
+			<span class="truncate text-1">{item.name}</span>
+			<div class="grow"></div>
+			{#if item.tier}
+				<span class="shrink-0 font-mono text-[0.64rem] opacity-70">{item.tier}</span>
+			{/if}
+		</button>
+	{:else}
+		<span class="border-l border-border-soft py-[0.3rem] {sangria} text-1 text-text-muted">
+			Nada acá.
+		</span>
+	{/each}
+{/snippet}
+
+<!--
+	El libro de un ítem, del lado que sea.
+
+	Es lo que se ve al elegir un módulo concreto en el árbol, y es la pantalla que
+	de verdad contesta "¿a cuánto está esto y dónde?": una fila por **orden**, no
+	por ítem. Apretar una fila abre la ventana para operar contra **esa** orden y
+	no contra la mejor: quien eligió la tercera no quiere la primera.
+-->
+{#snippet libro(
+	titulo: string,
+	ordenes: readonly OrdenMercado[],
+	total: number,
+	lado: 'sell' | 'buy',
+	vacio: string
+)}
+	<div class="flex w-full flex-col gap-2">
+		<div class="flex w-full flex-wrap items-baseline gap-2">
+			<Label>{titulo}</Label>
+			<div class="grow"></div>
+			<span class="font-mono text-[0.68rem] text-text-muted">
+				{total > ordenes.length ? `${ordenes.length} de ${total}` : cuenta(total)}
+			</span>
+		</div>
+
+		<div class="w-full overflow-x-auto">
+			<table
+				class="w-full min-w-[34rem] table-fixed border-collapse text-left
+					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+			>
+				<colgroup>
+					<col class="w-[7rem]" />
+					<col class="w-[6rem]" />
+					<col />
+					<col class="w-[5rem]" />
+					<col class="w-[6rem]" />
+				</colgroup>
+				<thead>
+					<tr class="border-b border-border-soft">
+						{#each [{ label: lado === 'sell' ? 'Te cobran' : 'Te pagan', right: true }, { label: 'Cantidad', right: true }, { label: 'Dónde', right: false }, { label: 'Saltos', right: true }, { label: lado === 'sell' ? 'Vende' : 'Compra', right: true }] as columna (columna.label)}
+							<th
+								class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
+									{columna.right ? 'text-right' : ''}"
+							>
+								{columna.label}
+							</th>
+						{/each}
+					</tr>
+				</thead>
+				<tbody>
+					{#each ordenes as fila (fila.id ?? `estacion-${fila.stationId}`)}
+						<tr
+							onclick={() => viewing && !fila.mine && abrir(viewing, lado, fila)}
+							class="border-b border-border-soft/40 transition-colors {fila.mine
+								? 'cursor-default'
+								: 'cursor-pointer hover:bg-surface-hover'}"
+						>
+							<td
+								class="py-[0.4rem] pr-3 text-right font-mono text-[0.78rem]
+									{lado === 'sell' ? 'text-accent-bright' : 'text-data'}"
+							>
+								{fila.priceLabel}
+							</td>
+							<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.75rem] text-text-body">
+								{fila.quantityLabel}
+							</td>
+							<td class="py-[0.4rem] pr-3 text-2 text-text-body">
+								{@render dondeEsta(fila.place)}
+							</td>
+							<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.72rem] text-text-muted">
+								{fila.distanceLabel}
+							</td>
+							<td class="py-[0.4rem] text-right font-mono text-[0.72rem] text-text-muted">
+								<!--
+									Quién está del otro lado. Que la orden sea propia se dice, y se
+									deja de poder apretar: comprarse a uno mismo no es una operación.
+								-->
+								{fila.mine ? 'vos' : fila.npc ? 'la estación' : 'un piloto'}
+							</td>
+						</tr>
+					{:else}
+						<tr>
+							<td colspan="5" class="py-4 text-center text-1 text-text-muted">{vacio}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{/snippet}
 
 <div class="flex w-full flex-col items-start gap-4 lg:flex-row">
 	<div class="w-full min-w-0 lg:w-[16rem] lg:shrink-0">
@@ -568,6 +764,12 @@
 				<!--
 					No es un `nav`: el árbol no navega a ningún lado, filtra lo que se lista
 					al lado. El único landmark de navegación del juego es el Neocom.
+
+					**Baja hasta el ítem**, como el de EVE. Una rama que sólo llega a la
+					categoría obliga a elegir "Utilidad" y después buscar el escáner en una
+					tabla de doce; con el ítem en el árbol, ir a ver a cuánto está es un
+					camino y no una búsqueda. La rama abierta es la elegida, así que nunca
+					hay más de un ramal desplegado.
 				-->
 				<div class="flex w-full flex-col" role="group" aria-label="Categorías del mercado">
 					{#each roots as rama (rama.code)}
@@ -575,7 +777,10 @@
 							group === rama.code || children(rama.code).some((hoja) => hoja.code === group)}
 						<button
 							type="button"
-							onclick={() => (group = rama.code)}
+							onclick={() => {
+								group = rama.code;
+								viewing = null;
+							}}
 							class="flex w-full cursor-pointer items-center gap-2 px-2 py-[0.45rem] text-left
 								transition-colors {group === rama.code
 								? 'bg-accent text-on-accent'
@@ -588,10 +793,22 @@
 						</button>
 
 						{#if abierta}
+							<!--
+								Las ramas sin categorías debajo —minerales, lo que tengo— muestran
+								sus ítems de una: meterles un nivel intermedio de una sola entrada
+								sería un escalón que no dice nada.
+							-->
+							{#if children(rama.code).length === 0}
+								{@render hojas(itemsOf(rama.code), 'pl-5')}
+							{/if}
+
 							{#each children(rama.code) as hoja (hoja.code)}
 								<button
 									type="button"
-									onclick={() => (group = hoja.code)}
+									onclick={() => {
+										group = hoja.code;
+										viewing = null;
+									}}
 									class="flex w-full cursor-pointer items-center gap-2 border-l border-border-soft
 										py-[0.35rem] pr-2 pl-5 text-left transition-colors {group === hoja.code
 										? 'bg-accent text-on-accent'
@@ -602,6 +819,10 @@
 									<div class="grow"></div>
 									<span class="font-mono text-[0.64rem] opacity-70">{hoja.count}</span>
 								</button>
+
+								{#if group === hoja.code}
+									{@render hojas(itemsOf(hoja.code), 'pl-8')}
+								{/if}
 							{/each}
 						{/if}
 					{/each}
@@ -611,126 +832,75 @@
 	</div>
 
 	<div class="w-full min-w-0 flex-[1_1_0]">
-		<!--
-			El catálogo va **en dos tablas**, como el libro de un ítem: arriba lo que
-			alguien vende y abajo lo que alguien compra. Con los dos precios en la
-			misma fila hay que leer columna por columna para saber de qué lado del
-			mostrador está cada cosa; separados, la pregunta "¿qué puedo comprar acá?"
-			se contesta mirando una tabla.
+		{#if viewing}
+			<!--
+				Un ítem elegido en el árbol muestra **su libro**, no la lista de la rama:
+				una fila por orden, que es lo que contesta "¿a cuánto está y dónde?".
+			-->
+			<TitledPanel
+				title={viewing.name}
+				detail={[viewing.tier, viewing.kindLabel].filter(Boolean).join(' · ')}
+				class="w-full"
+			>
+				<div class="flex w-full flex-col gap-5">
+					{#if viewingLoading}
+						<p class="text-1 text-text-muted">Pidiendo el libro…</p>
+					{:else if viewingBook}
+						{@render libro(
+							'Órdenes de venta',
+							viewingBook.sellers,
+							viewingBook.sellersTotal,
+							'sell',
+							'Nadie vende esto ahora mismo.'
+						)}
+						{@render libro(
+							'Órdenes de compra',
+							viewingBook.buyers,
+							viewingBook.buyersTotal,
+							'buy',
+							'Nadie compra esto ahora mismo.'
+						)}
 
-			Un ítem aparece en las dos si tiene órdenes de los dos lados, que es lo
-			normal, y eso no es una repetición: son dos ofertas distintas.
-		-->
-		<TitledPanel
-			title={search.trim()
-				? 'Resultados'
-				: (roots.find((r) => r.code === group)?.label ?? 'Catálogo')}
-			detail={cuenta(enVenta.length + enCompra.length)}
-			class="w-full"
-		>
-			<div class="flex w-full flex-col gap-5">
-				{@render catalogo('Órdenes de venta', enVenta, 'sell')}
-				{@render catalogo('Órdenes de compra', enCompra, 'buy')}
-			</div>
-		</TitledPanel>
+						<div class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-3">
+							<span class="text-1 text-text-muted">
+								Tenés {viewingBook.inShip} en la nave · {viewingBook.inStation} acá
+							</span>
+							<div class="grow"></div>
+							<HudButton size="1" onclick={() => viewing && abrir(viewing, 'sell')}>
+								Operar con la mejor
+							</HudButton>
+						</div>
+					{:else}
+						<p class="text-1 text-text-muted">No se pudo traer el libro de este ítem.</p>
+					{/if}
+				</div>
+			</TitledPanel>
+		{:else}
+			<!--
+				El catálogo va **en dos tablas**, como el libro de un ítem: arriba lo que
+				alguien vende y abajo lo que alguien compra. Con los dos precios en la
+				misma fila hay que leer columna por columna para saber de qué lado del
+				mostrador está cada cosa; separados, la pregunta "¿qué puedo comprar
+				acá?" se contesta mirando una tabla.
+
+				Un ítem aparece en las dos si tiene órdenes de los dos lados, que es lo
+				normal, y eso no es una repetición: son dos ofertas distintas.
+			-->
+			<TitledPanel
+				title={search.trim()
+					? 'Resultados'
+					: (market.groups.find((rama) => rama.code === group)?.label ?? 'Catálogo')}
+				detail={cuenta(enVenta.length + enCompra.length)}
+				class="w-full"
+			>
+				<div class="flex w-full flex-col gap-5">
+					{@render catalogo('Órdenes de venta', enVenta, 'sell')}
+					{@render catalogo('Órdenes de compra', enCompra, 'buy')}
+				</div>
+			</TitledPanel>
+		{/if}
 	</div>
 </div>
-
-<!--
-	La mesa del piloto: lo que tiene puesto, de los dos lados y en toda la región.
-
-	Va en la pantalla y no escondida dentro de cada ítem porque la pregunta "¿qué
-	tengo publicado?" es de la mesa entera: con cincuenta y un ítems, contestarla
-	abriendo uno por uno no es contestarla.
--->
-{#if market.orders.length > 0}
-	<TitledPanel title="Mis órdenes" detail="{market.orders.length} abiertas" class="w-full">
-		<div class="w-full overflow-x-auto">
-			<table
-				class="w-full min-w-[34rem] border-collapse text-left
-					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-			>
-				<thead>
-					<tr class="border-b border-border-soft">
-						<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-							Orden
-						</th>
-						<th
-							class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-						>
-							Quedan
-						</th>
-						<th
-							class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-						>
-							Precio
-						</th>
-						<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-							Dónde
-						</th>
-						<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-							Vence
-						</th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each market.orders as orden (orden.id)}
-						<tr class="border-b border-border-soft/40 last:border-0">
-							<td class="py-[0.45rem] pr-3">
-								<div class="flex flex-wrap items-center gap-2">
-									<span
-										class="font-display text-[0.62rem] tracking-label uppercase
-											{orden.kind === 'sell' ? 'text-accent-bright' : 'text-data'}"
-									>
-										{orden.kindLabel}
-									</span>
-									<span class="text-2 text-text-strong">{orden.name}</span>
-									{#if orden.pending}
-										<!--
-											Todavía no está en el libro. Decirlo es lo que evita que el
-											piloto la busque ahí y crea que se perdió.
-										-->
-										<span
-											class="border border-border-soft px-[0.3rem] font-display text-[0.55rem]
-												tracking-label text-text-muted uppercase"
-										>
-											Acordando
-										</span>
-									{/if}
-								</div>
-							</td>
-							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-text-body">
-								{orden.quantity} / {orden.initialQuantity}
-							</td>
-							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-accent-bright">
-								{orden.price} CR
-							</td>
-							<td class="py-[0.45rem] pr-3 text-2 text-text-body">{orden.stationName}</td>
-							<td class="py-[0.45rem] pr-3 font-mono text-[0.72rem] text-text-muted">
-								{cuando(orden.expiresAt)}
-							</td>
-							<td class="py-[0.45rem] text-right">
-								<form
-									method="POST"
-									action="?/cancelar"
-									use:enhance={() =>
-										async ({ update }) => {
-											await update();
-											await refrescar();
-										}}
-								>
-									<input type="hidden" name="orden" value={orden.id} />
-									<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
-								</form>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	</TitledPanel>
-{/if}
 
 <!-- La ventana del ítem: sus dos libros, su historial y lo que se puede hacer. -->
 
@@ -1001,14 +1171,22 @@
 									<HudButton type="submit" size="2" variant="primary">Cancelar la orden</HudButton>
 								</form>
 							{:else}
+								<!--
+									Se cierra al enviar, como las otras dos. Quedarse abierta después
+									de vender todo dejaba la ventana con el botón apagado y sin nada
+									que hacer: la operación terminó, y lo que hay que leer —el recibo
+									o el error— está en la barra de arriba, detrás de la ventana.
+								-->
 								<form
 									method="POST"
 									action={side === 'sell' ? '?/comprar' : '?/vender'}
-									use:enhance={() =>
-										async ({ update }) => {
+									use:enhance={() => {
+										open = false;
+										return async ({ update }) => {
 											await update();
 											await refrescar();
-										}}
+										};
+									}}
 								>
 									<input type="hidden" name="orden" value={orden.id ?? 0} />
 									<input type="hidden" name="item" value={item.itemCode} />

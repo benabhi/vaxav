@@ -19,7 +19,9 @@ import {
 } from './fitting';
 import { CORE_ORDER, HULLS, STARTING_HULL, coreSlotIndex, getHull } from './hulls';
 import { EMPTY, MODULES, TIERS, getModule, modulesForSlot } from './modules';
-import { SKILLS } from './skills';
+import { SKILLS, getSkill } from './skills';
+import { PLAYABLE_PROFESSIONS, startingLevels } from './professions';
+import { TRAINABLE_FAMILIES } from './actions';
 
 const inicial = getHull(STARTING_HULL);
 
@@ -78,7 +80,50 @@ describe('el catálogo de cascos', () => {
 		// Un bono o un requisito sobre una habilidad inventada no haría nada.
 		for (const hull of HULLS) {
 			expect(Object.hasOwn(SKILLS, hull.bonus.skill), hull.name).toBe(true);
-			expect(Object.hasOwn(SKILLS, hull.requirement.skill), hull.name).toBe(true);
+			for (const requisito of hull.requirements) {
+				expect(Object.hasOwn(SKILLS, requisito.skill), hull.name).toBe(true);
+			}
+		}
+	});
+
+	it('el casco de partida no pide nada', () => {
+		// Es el que el astillero le entrega a cualquiera que se dé de alta: pedirle
+		// una habilidad sería empezar la partida con una nave que no despega.
+		expect(getHull(STARTING_HULL).requirements).toEqual([]);
+	});
+
+	it('el que pide una rama sin fuente todavía no se puede conseguir', () => {
+		// La salvaguarda que no es negociable: **nada que el piloto pueda tener se
+		// gatea con una habilidad que no puede entrenar**. La experiencia se
+		// deposita por rama, y pedir una de Ingeniería o de Combate sería cerrar la
+		// puerta con la llave adentro.
+		//
+		// La Mula pide Ingeniería de bodega y la Alabarda Puntería, y las dos
+		// cumplen la regla por una razón temporal: no hay astillero, así que el único
+		// casco que alguien puede tener es el de partida. Este test es el
+		// recordatorio: el día que se puedan comprar, o su rama tiene fuente o el
+		// requisito cambia.
+		for (const hull of HULLS) {
+			const entrenable = hull.requirements.every((requisito) =>
+				TRAINABLE_FAMILIES.includes(getSkill(requisito.skill).family)
+			);
+			if (!entrenable) {
+				expect(hull.code, `${hull.name} pide algo que nadie puede entrenar`).not.toBe(
+					STARTING_HULL
+				);
+			}
+		}
+	});
+
+	it('ningún módulo pide una habilidad que no se pueda entrenar', () => {
+		// Los módulos sí se consiguen hoy: el mercado los vende todos. Acá la regla
+		// no tiene excusa temporal que valga.
+		for (const module of MODULES) {
+			for (const requisito of module.requirements) {
+				expect(TRAINABLE_FAMILIES, `${module.name} pide ${requisito.skill}`).toContain(
+					getSkill(requisito.skill).family
+				);
+			}
 		}
 	});
 
@@ -185,11 +230,27 @@ describe('la configuración de fábrica', () => {
 		});
 	});
 
-	it('se puede volar en todo casco', () => {
-		// Si la configuración de fábrica no cierra, el catálogo está mal.
+	it('se puede volar en todo casco, sabiendo volar ese casco', () => {
+		// Si la configuración de fábrica no cierra, el catálogo está mal. Los
+		// requisitos del casco se dan por cumplidos —quien lo tiene sabe volarlo— y
+		// lo que se prueba es que **la nave de astillero no venga con módulos que su
+		// dueño no pueda usar**: el escalón de fábrica es el E, que no pide nada.
 		for (const hull of HULLS) {
-			const readout = buildReadout(hull, defaultFit(hull));
+			const skills = Object.fromEntries(
+				hull.requirements.map((requisito) => [requisito.skill, requisito.level])
+			);
+			const readout = buildReadout(hull, defaultFit(hull), skills);
 			expect(readout.flyable, `${hull.name}: ${readout.problems.join(' · ')}`).toBe(true);
+		}
+	});
+
+	it('y un piloto recién hecho vuela la suya sin entrenar nada', () => {
+		// La prueba que de verdad importa: el alta termina con una nave que despega.
+		// Si esto se rompe, el juego empieza con el piloto en tierra y sin saber por
+		// qué, que es la peor primera pantalla posible.
+		for (const profession of PLAYABLE_PROFESSIONS) {
+			const readout = buildReadout(inicial, defaultFit(inicial), startingLevels(profession.code));
+			expect(readout.flyable, `${profession.name}: ${readout.problems.join(' · ')}`).toBe(true);
 		}
 	});
 

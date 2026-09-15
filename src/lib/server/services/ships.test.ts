@@ -10,7 +10,7 @@
 
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { fittedModule, ship } from '../db/schema';
+import { fittedModule, pilotSkill, ship } from '../db/schema';
 import { crearPiloto, desguazar, seededDb } from '../db/testing';
 import { situation } from './status';
 import {
@@ -23,7 +23,7 @@ import {
 	shipContainer,
 	stationContainer
 } from './containers';
-import { defaultFit } from '$lib/game/fitting';
+import { buildReadout, defaultFit, fitFromCodes } from '$lib/game/fitting';
 import { STARTING_HULL, coreSlotIndex } from '$lib/game/hulls';
 import { EMPTY } from '$lib/game/modules';
 import {
@@ -371,5 +371,63 @@ describe('bajar y subir modulos mueve la carga', () => {
 		// Bajar una bodega adicional achica el lugar sin sacar nada de adentro.
 		expect(() => refit(db, piloto, sinBodega)).toThrow(ShipError);
 		expect(shipFit(db, nave).map((m) => m.code)).toEqual(codes);
+	});
+});
+
+describe('lo que el piloto no sabe usar', () => {
+	it('el servicio se niega a montarlo, aunque el pedido venga armado a mano', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const codes = shipFit(db, nave).map((module) => module.code);
+		const index = codes.indexOf('mining_laser_e1');
+		// Se lo metemos en la bodega para que el único impedimento sea la habilidad.
+		moveItem(db, shipContainer(db, nave.id).id, 'mining_laser_a1', 1, 'bought');
+
+		const avanzado = [...codes];
+		avanzado[index] = 'mining_laser_a1';
+
+		// El minero sale con Minería II... pero el láser A pide justamente eso, así
+		// que primero lo bajamos a I para que falte.
+		db.update(pilotSkill)
+			.set({ xp: 100 })
+			.where(and(eq(pilotSkill.pilotId, piloto.id), eq(pilotSkill.skill, 'mining')))
+			.run();
+
+		expect(() => refit(db, piloto, avanzado)).toThrow(ShipError);
+		// Y el mensaje dice qué falta, no "no podés": un piloto que lee "te falta
+		// Minería II" sabe adónde ir.
+		expect(() => refit(db, piloto, avanzado)).toThrow(/Minería II/);
+	});
+
+	it('con la habilidad entrenada, lo monta', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const codes = shipFit(db, nave).map((module) => module.code);
+		const index = codes.indexOf('mining_laser_e1');
+		moveItem(db, shipContainer(db, nave.id).id, 'mining_laser_a1', 1, 'bought');
+
+		const avanzado = [...codes];
+		avanzado[index] = 'mining_laser_a1';
+		refit(db, piloto, avanzado);
+
+		expect(shipFit(db, nave)[index].code).toBe('mining_laser_a1');
+	});
+
+	it('y la nave con algo que no sabe usar no vuela', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const hull = shipHull(nave);
+		const codes = shipFit(db, nave).map((module) => module.code);
+		codes[codes.indexOf('mining_laser_e1')] = 'mining_laser_a1';
+
+		const hoja = buildReadout(hull, fitFromCodes(hull, codes), { mining: 1 });
+
+		// Volar exige que no haya problemas, y todas las acciones lo consultan: con
+		// esto, saber usar cada módulo decide si se puede viajar, minar o escanear.
+		expect(hoja.flyable).toBe(false);
+		expect(hoja.problems.join(' · ')).toContain('Minería II');
 	});
 });

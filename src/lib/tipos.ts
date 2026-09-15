@@ -39,6 +39,14 @@ export interface NaveDelPiloto {
 /** Lo que toda pantalla del juego sabe del piloto conectado. */
 export interface PilotoConectado {
 	readonly callsign: string;
+	/**
+	 * La URL de su retrato, o vacío si no subió ninguno.
+	 *
+	 * Vacío **no es un error**: es lo que hay antes de subir una foto, y la
+	 * credencial dibuja la silueta, que dice que ahí falta algo. Lleva la marca de
+	 * tiempo de la subida en la consulta porque el archivo se llama siempre igual.
+	 */
+	readonly portrait: string;
 	readonly professionName: string;
 	readonly factionName: string;
 	readonly factionCode: string;
@@ -566,6 +574,15 @@ export interface MovimientoBilletera {
 /** La billetera del piloto: el saldo y el libro que lo explica. */
 export interface Billetera {
 	readonly balance: string;
+	/**
+	 * Lo que entró y lo que salió desde siempre, los dos en positivo.
+	 *
+	 * El saldo dice dónde estás; estos dos dicen **cómo llegaste**. Un piloto con
+	 * cien mil créditos que movió un millón y otro que movió ciento diez mil no
+	 * están en la misma situación aunque el saldo sea el mismo.
+	 */
+	readonly incoming: string;
+	readonly outgoing: string;
 	readonly entries: readonly MovimientoBilletera[];
 	readonly total: number;
 }
@@ -698,16 +715,15 @@ export interface DuracionOrden {
 /** El mercado de la región, visto desde donde está el piloto. */
 export interface Mercado {
 	readonly regionName: string;
-	/**
-	 * Dónde está parado el piloto: `Cuerpo · Sistema · Región`.
-	 *
-	 * No es una miga de navegación —no se puede subir por ella— sino **contexto**:
-	 * lo que esta pantalla muestra es la región entera, y dónde está uno es otra
-	 * cosa que hay que poder leer sin dudar.
-	 */
-	readonly location: string;
 	/** Cuántas regiones alcanza a ver, contando la propia. */
 	readonly regionsInRange: number;
+	/**
+	 * Los niveles del piloto, para la ayuda que dice qué habilidad mueve cada
+	 * número de la pantalla. Van todos y no los tres que se usan: son veintitrés
+	 * enteros, y recortarlos obligaría a tocar el servidor cada vez que la pantalla
+	 * quiera explicar un número más.
+	 */
+	readonly pilotLevels: Readonly<Record<string, number>>;
 	readonly stationCount: number;
 	/** Dónde está atracado, o vacío si no lo está. */
 	readonly dockedAt: string;
@@ -811,6 +827,21 @@ export interface OrdenMercado {
 	readonly place: LugarOrden;
 	/** Hasta dónde alcanza, sólo en las de compra. */
 	readonly rangeLabel: string;
+}
+
+/**
+ * Lo que muestra la pestaña de las órdenes propias de un lado.
+ *
+ * Es su propia vista y no un recorte del mercado entero: esta pantalla no
+ * necesita el catálogo de cincuenta y un ítems ni el árbol de ramas, y armarlos
+ * para tirarlos sería trabajo del servidor que nadie mira.
+ */
+export interface MisOrdenes {
+	readonly kind: 'sell' | 'buy';
+	readonly orders: readonly OrdenPropia[];
+	/** Cuántas hay del otro lado, para el número de la otra pestaña. */
+	readonly otherCount: number;
+	readonly balance: string;
 }
 
 /** Un día de mercado, que es la unidad en que se mira una tendencia. */

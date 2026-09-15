@@ -13,11 +13,24 @@
  * Todos los números son enteros. No hay decimales en ninguna parte del juego:
  * dos pilotos nunca tienen que poder calcular distinto por un redondeo.
  *
+ * **El escalón es la puerta de habilidad**, y ésa es la regla que ordena el
+ * catálogo: el E no pide nada —es el que vuela una nave de astillero— y el A pide
+ * la habilidad de su sistema al **nivel II**, o al **III** si es de clase 3.
+ * Entrenar deja de ser un número que sube y pasa a ser una llave.
+ *
+ * Con una salvaguarda que no es negociable: **sólo se gatea con habilidades que
+ * se puedan entrenar**. La experiencia se deposita por rama y hoy sólo cuatro
+ * ramas tienen una acción que las pague, así que pedir una habilidad de
+ * Ingeniería o de Combate sería cerrar la puerta con la llave adentro. Por eso la
+ * planta y el distribuidor A todavía no piden Gestión de energía: la recogen
+ * cuando el taller le dé a Ingeniería de dónde salir.
+ *
  * Corresponde a docs/systems/SHIPS.md.
  */
 
 import { lookup } from './catalog';
 import type { CoreSystem, SlotKind } from './hulls';
+import type { Requirement } from './skills';
 
 /**
  * Los escalones tecnológicos, **de la más modesta a la más capaz**: E, D, C, B, A.
@@ -57,6 +70,17 @@ export interface ShipModule {
 	/** Sólo los internos esenciales lo llevan: dice cuál de los siete es. */
 	readonly core: CoreSystem | null;
 
+	/**
+	 * Qué hay que saber para montarlo.
+	 *
+	 * **Es la otra mitad de lo que significa el escalón.** Un módulo A rinde más y
+	 * cuesta más, pero lo que lo vuelve una meta y no sólo un gasto es que haya que
+	 * entrenar para poder usarlo. El escalón E no pide nada: es el que vuela una
+	 * nave de astillero, y ponerle un requisito dejaría a un piloto nuevo con una
+	 * nave que no despega.
+	 */
+	readonly requirements: readonly Requirement[];
+
 	// --- Qué cuesta montarlo ---
 	readonly mass: number;
 	readonly powerDraw: number;
@@ -92,6 +116,7 @@ export interface ShipModule {
 const NOTHING = {
 	description: '',
 	core: null,
+	requirements: [] as readonly Requirement[],
 	mass: 0,
 	powerDraw: 0,
 	computingDraw: 0,
@@ -205,6 +230,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'thrusters_a2',
+		requirements: [{ skill: 'navigation', level: 2 }],
 		name: 'Propulsores',
 		kind: 'core',
 		size: 2,
@@ -229,6 +255,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'thrusters_a3',
+		requirements: [{ skill: 'navigation', level: 3 }],
 		name: 'Propulsores',
 		kind: 'core',
 		size: 3,
@@ -254,6 +281,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'jump_a2',
+		requirements: [{ skill: 'astrogation', level: 2 }],
 		name: 'Motor de salto',
 		kind: 'core',
 		size: 2,
@@ -278,6 +306,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'jump_a3',
+		requirements: [{ skill: 'astrogation', level: 3 }],
 		name: 'Motor de salto',
 		kind: 'core',
 		size: 3,
@@ -357,6 +386,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'sensors_a2',
+		requirements: [{ skill: 'scanning', level: 2 }],
 		name: 'Sensores',
 		kind: 'core',
 		size: 2,
@@ -383,6 +413,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'sensors_a3',
+		requirements: [{ skill: 'scanning', level: 3 }],
 		name: 'Sensores',
 		kind: 'core',
 		size: 3,
@@ -462,6 +493,7 @@ export const MODULES: readonly ShipModule[] = [
 	}),
 	defineModule({
 		code: 'mining_laser_a1',
+		requirements: [{ skill: 'mining', level: 2 }],
 		name: 'Láser de extracción',
 		kind: 'hardpoint',
 		size: 1,

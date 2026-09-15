@@ -65,6 +65,7 @@ import type {
 	Horquilla,
 	LugarOrden,
 	Mercado,
+	MisOrdenes,
 	OrdenPropia
 } from '$lib/tipos';
 
@@ -480,12 +481,31 @@ function freeCargo(db: Db, row: Pilot): number {
 }
 
 /**
- * Las órdenes propias, incluidas las que todavía se están acordando.
+ * Las órdenes propias de un lado del mostrador, para su pestaña.
  *
- * Van en la pantalla y no escondidas dentro de cada ítem porque la pregunta "¿qué
- * tengo puesto?" es de la mesa entera: con cincuenta y un ítems, buscarlas
- * abriendo uno por uno no es una respuesta.
+ * Van en su propia pantalla y no escondidas dentro de cada ítem porque la
+ * pregunta "¿qué tengo puesto?" es de la mesa entera: con cincuenta y un ítems,
+ * buscarlas abriendo uno por uno no es una respuesta.
+ *
+ * Y partidas por lado, porque **vender y comprar son dos oficios**: en una lista
+ * mezclada hay que leer la etiqueta de cada renglón para saber de cuál se trata,
+ * y con cincuenta órdenes eso deja de ser una lista y pasa a ser un trabajo.
  */
+export function buildOrdersView(db: Db, row: Pilot, kind: OrderKind): MisOrdenes {
+	const estaciones = marketStations(db);
+	const todas = buildOwnOrders(db, row, estaciones);
+	const mias = todas.filter((orden) => orden.kind === kind);
+
+	return {
+		kind,
+		orders: mias,
+		// Las del otro lado se cuentan igual: la pestaña de al lado lleva su número,
+		// y así se sabe si hay trabajo allá sin ir a mirar.
+		otherCount: todas.length - mias.length,
+		balance: thousands(balance(db, row.id))
+	};
+}
+
 function buildOwnOrders(
 	db: Db,
 	row: Pilot,
@@ -545,9 +565,12 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 	);
 	const tengo = holdings(db, row);
 	const porId = new Map(estaciones.map((estacion) => [estacion.stationId, estacion]));
-	// El nivel de Regateo se busca una vez y no una por renglón: es del piloto, no
-	// del ítem, y con cincuenta ítems serían cincuenta consultas iguales.
-	const regateo = pilotSkillLevels(db, row.id)[HAGGLING_SKILL] ?? 0;
+	// Los niveles se buscan una vez y no uno por renglón: son del piloto, no del
+	// ítem, y con cincuenta ítems serían cincuenta consultas iguales. Viajan además
+	// a la pantalla, que los usa para decir en cuánto está cada habilidad que mueve
+	// un número de esta pantalla.
+	const niveles = pilotSkillLevels(db, row.id);
+	const regateo = niveles[HAGGLING_SKILL] ?? 0;
 
 	const items = [
 		...ORE_LIST.map((ore) =>
@@ -576,15 +599,11 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 
 	return {
 		regionName: lugar.region || (estaciones[0]?.regionName ?? ''),
-		// Dónde está parado el piloto, de lo chico a lo grande. No es una miga de
-		// navegación —no se puede subir por ella, y el juego tiene dos niveles y
-		// nunca un tercero— sino **contexto**: lo que la pantalla muestra es la
-		// región, y dónde está uno es otra cosa que hay que poder leer sin dudar.
-		location: [lugar.body, lugar.system, lugar.region].filter(Boolean).join(' · '),
 		regionsInRange: context.regionsInRange,
 		stationCount: estaciones.length,
 		// Dónde está parado, que es lo único que decide dónde puede publicar y de
 		// dónde puede sacar mercadería.
+		pilotLevels: niveles,
 		dockedAt: desk?.stationName ?? '',
 		dockedStationId: desk?.services.trades ? desk.stationId : null,
 		canTradeHere: desk?.services.trades ?? false,

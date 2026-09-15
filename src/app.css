@@ -191,6 +191,8 @@
 	/* El halo del cian, para lo que avisa: un aviso no es una selección. */
 	--shadow-data-glow: 0 0 24px rgb(79 210 238 / 0.28);
 	--shadow-glow-strong: 0 0 34px rgb(255 122 26 / 0.3);
+	/* El halo del rojo, para lo que no se puede deshacer. */
+	--shadow-danger-glow: 0 0 24px rgb(255 74 61 / 0.32);
 	--shadow-focus: 0 0 12px rgb(255 122 26 / 0.45);
 
 	--text-shadow-*: initial;

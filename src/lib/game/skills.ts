@@ -295,18 +295,33 @@ export function entrySkills(): readonly Skill[] {
 }
 
 /**
+ * De una lista de requisitos, los que el piloto no cumple.
+ *
+ * Vive acá y no en cada catálogo porque **un requisito es un requisito**: el que
+ * pide una habilidad para entrenarse, el que pide un módulo para montarse y el
+ * que pide un casco para volarse se comprueban igual. Tres copias de esta
+ * comparación serían tres lugares donde arreglar el mismo error.
+ *
+ * `levels` son los niveles actuales del piloto por código de habilidad; lo que no
+ * está se considera nivel 0.
+ */
+export function unmetFrom(
+	requirements: readonly Requirement[],
+	levels: Readonly<Record<string, number>>
+): readonly Requirement[] {
+	return requirements.filter((requirement) => (levels[requirement.skill] ?? 0) < requirement.level);
+}
+
+/**
  * Requisitos que le faltan a un piloto para entrenar una habilidad.
  *
- * `levels` son los niveles actuales del piloto por código de habilidad; lo que
- * no está se considera nivel 0. Devuelve una lista vacía si puede entrenarla.
+ * Devuelve una lista vacía si puede entrenarla.
  */
 export function unmetRequirements(
 	code: string,
 	levels: Readonly<Record<string, number>>
 ): readonly Requirement[] {
-	return getSkill(code).requirements.filter(
-		(requirement) => (levels[requirement.skill] ?? 0) < requirement.level
-	);
+	return unmetFrom(getSkill(code).requirements, levels);
 }
 
 /** ¿El piloto cumple los requisitos para entrenar esta habilidad? */

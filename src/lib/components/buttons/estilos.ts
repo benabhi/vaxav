@@ -1,5 +1,5 @@
 /**
- * Las tres formas y los tres tamaños de un control del HUD.
+ * Las formas y los tres tamaños de un control del HUD.
  *
  * Viven acá y no adentro del componente porque el enlace con forma de botón usa
  * exactamente las mismas clases: un `<a>` y un `<button>` tienen que verse
@@ -35,7 +35,18 @@ export const BUTTON_VARIANTS = {
 	/** Para acciones secundarias que no deben pesar. */
 	ghost:
 		'bg-transparent text-text-body border border-transparent ' +
-		'hover:text-accent-bright hover:border-border-soft'
+		'hover:text-accent-bright hover:border-border-soft',
+	/**
+	 * Para lo que no se puede deshacer.
+	 *
+	 * Arranca **en contorno y no lleno**: un botón rojo sólido en una pantalla
+	 * naranja se lleva el ojo antes que cualquier otra cosa, y lo que hay que
+	 * mirar primero es lo que el aviso dice, no el botón. Se llena al señalarlo,
+	 * que es cuando la mano ya fue: ahí sí conviene que grite.
+	 */
+	danger:
+		'bg-transparent text-danger border border-danger ' +
+		'hover:bg-danger hover:text-on-accent hover:shadow-danger-glow'
 } as const;
 
 export type ButtonVariant = keyof typeof BUTTON_VARIANTS;

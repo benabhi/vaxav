@@ -101,11 +101,25 @@ número, **Escaneo** y **Prospección**, y **Ciencias** pasó a tener por fin un
 fuente de experiencia: escanear es la única acción que la paga, y por eso pesa por
 encima de uno. Ver [el universo](systems/UNIVERSE.md).
 
-### 4 · Requisitos de habilidad e inyecciones
+### 4 · Requisitos de habilidad e inyecciones · **a medias**
 
-Los módulos y los cascos piden habilidades, y las habilidades se desbloquean
-inyectándolas en el laboratorio de una estación. Va después de vender porque un
-inyector cuesta plata.
+- ~~Los módulos y los cascos declaran qué habilidades piden.~~
+- ~~Se hacen cumplir al volar y al equipar, en dos lugares y sólo dos.~~
+- Las habilidades se desbloquean inyectándolas en el laboratorio de una estación.
+- La pantalla de habilidades muestra qué módulos y qué cascos abre cada una.
+
+El escalón dejó de ser una etiqueta: el E no pide nada —es el que vuela una nave
+de astillero— y el A pide la habilidad de su sistema. Con eso, entrenar dejó de
+ser un número que sube y pasó a ser una llave.
+
+De ahí salió una regla que condiciona todo lo que venga: **sólo se gatea con
+habilidades que se puedan entrenar**. La experiencia se deposita por rama, así que
+pedir una de una rama sin fuente sería cerrar la puerta con la llave adentro.
+Ingeniería consigue la suya con el taller de la etapa 7, y Combate con el combate.
+Ver [naves](systems/SHIPS.md).
+
+Lo que falta —la inyección y el laboratorio— va después de vender porque un
+inyector cuesta plata: al revés sería una reja sin llave.
 
 ### 5 · Refinar
 
@@ -133,6 +147,27 @@ De ésos, el más cercano es **explorar**, y el mecanismo ya está construido: l
 una piedra desconocida es lo mismo que leer un sistema al que nadie fue. Lo que
 falta no es el instrumento sino el lugar adonde llevarlo, y eso llega con la
 puerta estelar de la etapa 6. Ver [universo](systems/UNIVERSE.md).
+
+### Las cargas del láser, y por qué el árbol tiene que crecer
+
+Un láser de extracción va a pedir **una carga específica para cada mineral**, como
+en EVE: no se pica iridio con la carga del silicato. La carga es un consumible que
+se compra, se lleva en la bodega y se gasta, y **cada tipo de carga tiene su
+habilidad**.
+
+Eso hace tres cosas a la vez. Le da al mineral escaso una segunda barrera que no
+es el viaje —hay que tener la carga y saber usarla—; convierte la bodega en una
+decisión antes de salir, porque el espacio que ocupa la carga no lo ocupa el
+mineral; y **alarga el árbol de habilidades**, que es el punto.
+
+Porque el catálogo de habilidades **se quiere grande a propósito**. Un juego idle
+se mide en meses, y un árbol que se termina es un juego que se termina. Las
+veintitrés de hoy son el esqueleto del primer circuito, no el destino: cada
+sistema que se agregue —cargas, drones, fabricación, combate— trae las suyas, y
+ésa es la forma en que el juego se hace largo sin inventar números más grandes.
+
+El detalle fino de todo esto se decide **cuando el circuito esté cerrado**.
+Afinarlo antes sería balancear una economía que todavía no existe.
 
 ## Lo que se decide en el camino
 

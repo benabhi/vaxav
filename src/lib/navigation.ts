@@ -95,6 +95,18 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/mercado',
 				label: 'Mercado'
+			},
+			// "Órdenes" y no "Mis ventas": lo segundo se lee como las ventas que
+			// hiciste, y lo que hay acá es lo que tenés **publicado** esperando a que
+			// alguien lo tome. Confundirlos es confundir una operación cerrada con una
+			// promesa abierta, que en un mercado no es un matiz.
+			{
+				route: '/mercado/ventas',
+				label: 'Órdenes de venta'
+			},
+			{
+				route: '/mercado/compras',
+				label: 'Órdenes de compra'
 			}
 		]
 	},
@@ -131,6 +143,10 @@ export const OPTIONS_MODULE: Module = {
 	code: 'options',
 	label: 'Opciones',
 	icon: 'gear-six',
+	// Una sola pestaña porque **todo lo que hay hoy es de la cuenta**: la foto, la
+	// contraseña y la baja. Partirlo en tres sería inventar categorías donde hay
+	// una. Las otras llegan cuando haya opciones que no sean de la cuenta —la
+	// interfaz, los avisos— y entonces cada pestaña va a nombrar algo distinto.
 	tabs: [
 		{
 			route: '/opciones',
