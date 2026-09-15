@@ -604,221 +604,227 @@
 				-->
 					<div class="flex w-full flex-col gap-2">
 						<Label>Vendedores</Label>
-						{#if libro.sellers.length === 0}
-							<p class="text-1 text-text-muted">Nadie vende esto en tu alcance.</p>
-						{:else}
-							<div class="w-full overflow-x-auto">
-								<table
-									class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-								>
-									<thead>
-										<tr class="border-b border-border-soft">
-											<th
-												class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Cantidad
-											</th>
-											<th
-												class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Precio
-											</th>
-											<th
-												class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Ubicación
-											</th>
-											<th
-												class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Distancia
-											</th>
-											<th></th>
+						<!--
+							La tabla se dibuja **aunque esté vacía**. Reemplazarla por una frase
+							cuando no hay órdenes hacía que la ventana se viera con una sola
+							tabla, y el par de libros es justamente lo que tiene que
+							reconocerse de un vistazo: arriba quién vende, abajo quién compra.
+						-->
+						<div class="w-full overflow-x-auto">
+							<table
+								class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+							>
+								<thead>
+									<tr class="border-b border-border-soft">
+										<th
+											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Cantidad
+										</th>
+										<th
+											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Precio
+										</th>
+										<th
+											class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Ubicación
+										</th>
+										<th
+											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Distancia
+										</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each libro.sellers as orden (orden.id ?? 'estacion')}
+										<tr class="border-b border-border-soft/40 last:border-0">
+											<td class="py-2 pr-3 text-right font-mono text-2 text-text-body">
+												{orden.quantityLabel}
+											</td>
+											<td class="py-2 pr-3 text-right font-mono text-2 text-accent-bright">
+												{orden.priceLabel} CR
+											</td>
+											<td class="py-2 pr-3 text-2 text-text-body">
+												{orden.stationName}
+												{#if orden.npc}
+													<span
+														class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase"
+													>
+														· estación
+													</span>
+												{:else if orden.mine}
+													<span
+														class="font-display text-[0.6rem] tracking-label text-data uppercase"
+													>
+														· tuya
+													</span>
+												{/if}
+											</td>
+											<td class="py-2 pr-3 text-right font-mono text-[0.72rem] text-text-muted">
+												{orden.distanceLabel}
+											</td>
+											<td class="py-2 text-right">
+												{#if orden.mine}
+													<form
+														method="POST"
+														action="?/cancelar"
+														use:enhance={() =>
+															async ({ update }) => {
+																await update();
+																await refrescar();
+															}}
+													>
+														<input type="hidden" name="orden" value={orden.id} />
+														<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
+													</form>
+												{:else if market.canTradeHere}
+													<form
+														method="POST"
+														action="?/comprar"
+														use:enhance={() =>
+															async ({ update }) => {
+																await update();
+																await refrescar();
+															}}
+													>
+														<input type="hidden" name="orden" value={orden.id ?? 0} />
+														<input type="hidden" name="item" value={item.itemCode} />
+														<input type="hidden" name="unidades" value={units} />
+														<HudButton type="submit" size="1">
+															Comprar {thousands(
+																orden.npc ? stationTotal('buy', units) : orden.price * units
+															)} CR
+														</HudButton>
+													</form>
+												{/if}
+											</td>
 										</tr>
-									</thead>
-									<tbody>
-										{#each libro.sellers as orden (orden.id ?? 'estacion')}
-											<tr class="border-b border-border-soft/40 last:border-0">
-												<td class="py-2 pr-3 text-right font-mono text-2 text-text-body">
-													{orden.quantityLabel}
-												</td>
-												<td class="py-2 pr-3 text-right font-mono text-2 text-accent-bright">
-													{orden.priceLabel} CR
-												</td>
-												<td class="py-2 pr-3 text-2 text-text-body">
-													{orden.stationName}
-													{#if orden.npc}
-														<span
-															class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase"
-														>
-															· estación
-														</span>
-													{:else if orden.mine}
-														<span
-															class="font-display text-[0.6rem] tracking-label text-data uppercase"
-														>
-															· tuya
-														</span>
-													{/if}
-												</td>
-												<td class="py-2 pr-3 text-right font-mono text-[0.72rem] text-text-muted">
-													{orden.distanceLabel}
-												</td>
-												<td class="py-2 text-right">
-													{#if orden.mine}
-														<form
-															method="POST"
-															action="?/cancelar"
-															use:enhance={() =>
-																async ({ update }) => {
-																	await update();
-																	await refrescar();
-																}}
-														>
-															<input type="hidden" name="orden" value={orden.id} />
-															<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
-														</form>
-													{:else if market.canTradeHere}
-														<form
-															method="POST"
-															action="?/comprar"
-															use:enhance={() =>
-																async ({ update }) => {
-																	await update();
-																	await refrescar();
-																}}
-														>
-															<input type="hidden" name="orden" value={orden.id ?? 0} />
-															<input type="hidden" name="item" value={item.itemCode} />
-															<input type="hidden" name="unidades" value={units} />
-															<HudButton type="submit" size="1">
-																Comprar {thousands(
-																	orden.npc ? stationTotal('buy', units) : orden.price * units
-																)} CR
-															</HudButton>
-														</form>
-													{/if}
-												</td>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
-							</div>
-						{/if}
+									{:else}
+										<tr>
+											<td colspan="5" class="py-3 text-center text-1 text-text-muted">
+												Nadie vende esto en tu alcance.
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
 					</div>
 
 					<!-- COMPRADORES: quién paga, del que más paga al que menos. -->
 					<div class="flex w-full flex-col gap-2">
 						<Label>Compradores</Label>
-						{#if libro.buyers.length === 0}
-							<p class="text-1 text-text-muted">Nadie compra esto en tu alcance.</p>
-						{:else}
-							<div class="w-full overflow-x-auto">
-								<table
-									class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-								>
-									<thead>
-										<tr class="border-b border-border-soft">
-											<th
-												class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Cantidad
-											</th>
-											<th
-												class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Precio
-											</th>
-											<th
-												class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Ubicación
-											</th>
-											<th
-												class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
-											>
-												Alcance
-											</th>
-											<th></th>
+						<div class="w-full overflow-x-auto">
+							<table
+								class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+							>
+								<thead>
+									<tr class="border-b border-border-soft">
+										<th
+											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Cantidad
+										</th>
+										<th
+											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Precio
+										</th>
+										<th
+											class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Ubicación
+										</th>
+										<th
+											class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
+										>
+											Alcance
+										</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each libro.buyers as orden (orden.id ?? 'estacion')}
+										<tr class="border-b border-border-soft/40 last:border-0">
+											<td class="py-2 pr-3 text-right font-mono text-2 text-text-body">
+												{orden.quantityLabel}
+											</td>
+											<td class="py-2 pr-3 text-right font-mono text-2 text-data">
+												{orden.priceLabel} CR
+											</td>
+											<td class="py-2 pr-3 text-2 text-text-body">
+												{orden.stationName}
+												{#if orden.npc}
+													<span
+														class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase"
+													>
+														· estación
+													</span>
+												{:else if orden.mine}
+													<span
+														class="font-display text-[0.6rem] tracking-label text-data uppercase"
+													>
+														· tuya
+													</span>
+												{/if}
+											</td>
+											<td class="py-2 pr-3 font-mono text-[0.72rem] text-text-muted">
+												{orden.rangeLabel}
+											</td>
+											<td class="py-2 text-right">
+												{#if orden.mine}
+													<form
+														method="POST"
+														action="?/cancelar"
+														use:enhance={() =>
+															async ({ update }) => {
+																await update();
+																await refrescar();
+															}}
+													>
+														<input type="hidden" name="orden" value={orden.id} />
+														<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
+													</form>
+												{:else if market.canTradeHere && atHand > 0}
+													<form
+														method="POST"
+														action="?/vender"
+														use:enhance={() =>
+															async ({ update }) => {
+																await update();
+																await refrescar();
+															}}
+													>
+														<input type="hidden" name="orden" value={orden.id ?? 0} />
+														<input type="hidden" name="item" value={item.itemCode} />
+														<input type="hidden" name="unidades" value={Math.min(units, atHand)} />
+														<input type="hidden" name="desde" value={fromHold} />
+														<input type="hidden" name="estacion" value={market.dockedStationId} />
+														<HudButton type="submit" size="1" variant="primary">
+															Vender {thousands(
+																orden.npc
+																	? stationTotal('sell', Math.min(units, atHand))
+																	: orden.price * Math.min(units, atHand)
+															)} CR
+														</HudButton>
+													</form>
+												{/if}
+											</td>
 										</tr>
-									</thead>
-									<tbody>
-										{#each libro.buyers as orden (orden.id ?? 'estacion')}
-											<tr class="border-b border-border-soft/40 last:border-0">
-												<td class="py-2 pr-3 text-right font-mono text-2 text-text-body">
-													{orden.quantityLabel}
-												</td>
-												<td class="py-2 pr-3 text-right font-mono text-2 text-data">
-													{orden.priceLabel} CR
-												</td>
-												<td class="py-2 pr-3 text-2 text-text-body">
-													{orden.stationName}
-													{#if orden.npc}
-														<span
-															class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase"
-														>
-															· estación
-														</span>
-													{:else if orden.mine}
-														<span
-															class="font-display text-[0.6rem] tracking-label text-data uppercase"
-														>
-															· tuya
-														</span>
-													{/if}
-												</td>
-												<td class="py-2 pr-3 font-mono text-[0.72rem] text-text-muted">
-													{orden.rangeLabel}
-												</td>
-												<td class="py-2 text-right">
-													{#if orden.mine}
-														<form
-															method="POST"
-															action="?/cancelar"
-															use:enhance={() =>
-																async ({ update }) => {
-																	await update();
-																	await refrescar();
-																}}
-														>
-															<input type="hidden" name="orden" value={orden.id} />
-															<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
-														</form>
-													{:else if market.canTradeHere && atHand > 0}
-														<form
-															method="POST"
-															action="?/vender"
-															use:enhance={() =>
-																async ({ update }) => {
-																	await update();
-																	await refrescar();
-																}}
-														>
-															<input type="hidden" name="orden" value={orden.id ?? 0} />
-															<input type="hidden" name="item" value={item.itemCode} />
-															<input
-																type="hidden"
-																name="unidades"
-																value={Math.min(units, atHand)}
-															/>
-															<input type="hidden" name="desde" value={fromHold} />
-															<input type="hidden" name="estacion" value={market.dockedStationId} />
-															<HudButton type="submit" size="1" variant="primary">
-																Vender {thousands(
-																	orden.npc
-																		? stationTotal('sell', Math.min(units, atHand))
-																		: orden.price * Math.min(units, atHand)
-																)} CR
-															</HudButton>
-														</form>
-													{/if}
-												</td>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
-							</div>
-						{/if}
+									{:else}
+										<tr>
+											<td colspan="5" class="py-3 text-center text-1 text-text-muted">
+												Nadie compra esto en tu alcance.
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
 					</div>
 				{/if}
 
