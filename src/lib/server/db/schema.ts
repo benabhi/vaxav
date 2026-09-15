@@ -468,6 +468,16 @@ export const pilotAction = sqliteTable(
 		orderId: integer('order_id').references(() => marketOrder.id),
 
 		/**
+		 * La roca que se está picando o leyendo, si la acción es de cinturón.
+		 *
+		 * Queda **nula si la roca desaparece** mientras la orden corre: otro piloto
+		 * pudo terminarla, y eso no es un error sino el mundo siguiendo su curso. La
+		 * resolución lo trata como lo que es —no había nada que sacar— igual que ya
+		 * hacía cuando el depósito se vaciaba.
+		 */
+		asteroidId: integer('asteroid_id').references(() => asteroid.id, { onDelete: 'set null' }),
+
+		/**
 		 * Sobre qué trabaja la acción, si trabaja sobre algo.
 		 *
 		 * Minar necesita saber **qué mineral**; refinar y fabricar van a necesitar
@@ -970,6 +980,76 @@ export const marketTrade = sqliteTable(
 	]
 );
 
+/**
+ * Una roca de un cinturón: lo que se escanea y lo que se mina.
+ *
+ * Es el ejemplar de lo que el depósito describe. El depósito dice qué puede dar
+ * ese cinturón y a qué ritmo se repone; **esta tabla son las rocas que hay ahora
+ * mismo**, cada una con su mineral y con lo que le queda.
+ *
+ * Una roca agotada **se borra**. No queda en cero: una roca vacía no es una roca,
+ * y un campo lleno de ceros ensucia toda consulta que lo recorra. El cinturón
+ * repone otras a su propio ritmo, así que el agotamiento sigue siendo compartido
+ * —el que llega primero se la lleva— pero a una escala que se puede señalar.
+ *
+ * `identified` no vive acá sino en la lectura del piloto: qué roca es, es algo
+ * que **cada uno averigua**, no una propiedad de la roca.
+ */
+export const asteroid = sqliteTable(
+	'asteroid',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		bodyId: integer('body_id')
+			.notNull()
+			.references(() => body.id),
+		oreCode: text('ore_code').notNull(),
+		/** Lo que le queda. Cuando llega a cero, la fila se borra. */
+		units: integer('units').notNull(),
+		/** Con cuánto apareció, para poder decir cuán trabajada está. */
+		initialUnits: integer('initial_units').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [index('asteroid_body_idx').on(table.bodyId)]
+);
+
+/**
+ * Lo que un piloto sabe de **una roca**: su última lectura.
+ *
+ * Las rocas de un cinturón se ven desde lejos —son bultos en el radar— pero de
+ * qué son y cuánto tienen no se sabe sin apuntarles el escáner. Eso lo escribe
+ * esta tabla, y por eso es por piloto: **no es una propiedad de la roca sino de
+ * quién la miró**. Dos pilotos en el mismo campo pueden tener identificadas rocas
+ * distintas.
+ *
+ * Una fila por piloto y roca. Volver a escanear **reemplaza** la lectura: lo que
+ * importa es lo último que se vio, y un historial de lecturas viejas sería
+ * guardar el error de ayer.
+ *
+ * La fila se va con la roca —tiene su clave foránea—, así que cuando alguien la
+ * agota la lectura desaparece sola y no queda nadie recordando una piedra que ya
+ * no existe.
+ */
+export const asteroidSurvey = sqliteTable(
+	'asteroid_survey',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		asteroidId: integer('asteroid_id')
+			.notNull()
+			.references(() => asteroid.id),
+		/**
+		 * Qué tan fina salió: 0 dice de qué es, 1 agrega cuánto tiene. Se guarda **la
+		 * profundidad con la que se leyó** y no se recalcula al mostrarla: subir la
+		 * habilidad después no mejora una lectura vieja, hay que volver a mirar.
+		 */
+		depth: integer('depth').notNull().default(0),
+		takenAt: integer('taken_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [uniqueIndex('asteroid_survey_unico').on(table.pilotId, table.asteroidId)]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -996,3 +1076,5 @@ export type ItemEntry = typeof itemEntry.$inferSelect;
 export type BeltDeposit = typeof beltDeposit.$inferSelect;
 export type MarketOrder = typeof marketOrder.$inferSelect;
 export type MarketTrade = typeof marketTrade.$inferSelect;
+export type Asteroid = typeof asteroid.$inferSelect;
+export type AsteroidSurvey = typeof asteroidSurvey.$inferSelect;

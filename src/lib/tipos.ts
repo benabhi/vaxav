@@ -129,15 +129,32 @@ export interface Ubicacion {
 	 * hace donde estás parado**: el árbol dice adónde ir, la ubicación dice qué
 	 * hacer una vez que llegaste.
 	 */
-	readonly ores: readonly VetaMineral[];
+	/** Lo que el piloto sabe de este cinturón, si es uno. */
+	readonly field: CampoRocas;
+	readonly asteroids: readonly Roca[];
 }
 
-/** Un mineral de este cinturón, con lo que la orden prometería. */
-export interface VetaMineral {
-	readonly code: string;
+/**
+ * Una roca del cinturón, con lo que el piloto sabe de ella.
+ *
+ * **Sin lectura vigente sale sin identificar**: se ve el bulto pero no de qué es
+ * ni cuánto tiene. Eso es lo que le da trabajo al escáner, y lo que hace que
+ * llegar a un cinturón desconocido sea algo que hacer en vez de una lista que ya
+ * venía escrita.
+ */
+export interface Roca {
+	readonly id: number;
+	/** Si tiene lectura vigente. Sin eso no se sabe de qué es ni cuánto tiene. */
+	readonly identified: boolean;
 	readonly name: string;
+	readonly icon: IconName;
 	readonly description: string;
-	/** Unidades que quedan, y cuánto es eso de su tope. */
+	/**
+	 * Unidades que quedan, y cuánto es eso de lo que traía al aparecer.
+	 *
+	 * **Vacío con una lectura superficial**: sin Escaneo se sabe de qué es la
+	 * roca, no cuánto tiene. Es lo que hace que entrenar la habilidad se note.
+	 */
 	readonly remaining: string;
 	readonly share: number;
 	/** Lo que una orden traería, ya calculado con tu nave y tu bodega. */
@@ -145,7 +162,34 @@ export interface VetaMineral {
 	readonly volume: string;
 	readonly value: string;
 	readonly duration: string;
-	/** Por qué no se puede, o vacío si se puede. */
+	/** De cuándo es la lectura: «recién», «hace 9 h». Vacío si nunca la miró. */
+	readonly age: string;
+	/** Lectura tomada pero vencida: se muestra igual, pero no habilita extraer. */
+	readonly stale: boolean;
+	/** Por qué no se puede extraer de esta roca, o vacío si se puede. */
+	readonly blocked: string;
+	/** Por qué no se puede escanearla, o vacío si se puede. */
+	readonly scanBlocked: string;
+}
+
+/**
+ * El campo de rocas y el instrumento con que se lo mira.
+ *
+ * Es lo que las rocas tienen en común —cuántas hay, cuántas están identificadas,
+ * qué lectura sacaría el escáner montado— y va aparte de ellas porque no es de
+ * ninguna: es de la nave y del cinturón.
+ */
+export interface CampoRocas {
+	/** Si acá hay algo que escanear. Falso en cualquier cuerpo que no sea un cinturón. */
+	readonly scannable: boolean;
+	/** Cuántas rocas hay y cuántas están identificadas. */
+	readonly count: string;
+	/** Qué lectura sacaría el escáner que lleva montado. */
+	readonly depthLabel: string;
+	readonly duration: string;
+	/** A qué ritmo repone el campo. Sólo con una lectura completa y vigente. */
+	readonly regen: string;
+	/** Por qué no se puede escanear nada acá, o vacío si se puede. */
 	readonly blocked: string;
 }
 
@@ -783,8 +827,17 @@ export interface DiaMercado {
 export interface LibroMercado {
 	readonly itemCode: string;
 	readonly name: string;
+	/**
+	 * La cabeza de cada lado, no el libro entero.
+	 *
+	 * Un ítem popular puede juntar miles de órdenes y nadie opera contra la
+	 * número ochocientos. El total va aparte para poder decir cuántas quedaron
+	 * afuera, que es lo que dice si el mercado está profundo.
+	 */
 	readonly sellers: readonly OrdenMercado[];
 	readonly buyers: readonly OrdenMercado[];
+	readonly sellersTotal: number;
+	readonly buyersTotal: number;
 	readonly history: readonly DiaMercado[];
 	readonly inShip: number;
 	readonly inStation: number;

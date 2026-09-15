@@ -156,6 +156,15 @@ referencia del ítem y del rubro de la corporación. Guardarla serían doscienta
 filas que habría que resembrar cada vez que se mueva una fórmula, y además su
 precio no es el mismo para todos.
 
+Su puesto se ve **desde cualquier parte**, como el resto del libro: la banda de
+cada estación con mostrador entra al catálogo aunque el piloto esté parado en un
+cinturón a medio sistema. Que haya que estar atracado para **apretar** el botón no
+significa que haya que estar atracado para **ver** el precio —esconderlo mientras
+uno mina diría que no hay a quién venderle justo cuando hay que decidir si vale la
+pena volver, y dejaría el catálogo en blanco hasta que otro piloto publicara algo.
+El requisito del módulo Mercado no se afloja: una estación sin mostrador sigue sin
+aparecer en ningún libro.
+
 Lo que la distingue es **la horquilla**: la estación siempre paga menos de lo que
 cobra, y esa diferencia es su ganancia.
 
@@ -252,8 +261,11 @@ Mezclar las dos ventanas obligaba a leer un formulario entero para hacer la
 operación más simple del mercado.
 
 El catálogo entero viaja con la pantalla; **el libro de cada ítem se pide al
-abrirlo**. Traer las órdenes de los cincuenta y un renglones para dibujar una
-lista sería pedir miles de filas de las que se miran dos.
+abrirlo**, y de cada lado viajan **sólo las primeras cincuenta**. Traer las
+órdenes de los cincuenta y un renglones para dibujar una lista sería pedir miles
+de filas de las que se miran dos, y un ítem popular puede juntar miles él solo:
+nadie opera contra la número ochocientos. La pantalla dice cuántas quedaron
+afuera, que es lo que informa si el mercado está profundo.
 
 ### La figura: el historial
 

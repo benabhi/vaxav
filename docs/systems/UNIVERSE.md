@@ -270,27 +270,87 @@ estructuras y entrar por la misma puerta.
 - **El piloto está parado en un cuerpo**, no en un nombre: su ubicación es una
   clave foránea, así que no puede apuntar a un lugar que no existe.
 
-### Los cinturones, y lo que falta: el escáner
+### Un cinturón es un campo de rocas
 
-> **Decidido, sin implementar.**
+Un cinturón **no es un tanque de mineral**: es un campo de rocas, y cada una tiene
+lo suyo. La diferencia no es de vocabulario. Con el mineral a nivel del cuerpo,
+extraer era elegir de una lista que ya venía escrita; con rocas hay que mirar cuál
+es cuál, y una roca que se agota **desaparece** en vez de bajar un número.
 
-Hoy un cinturón muestra todo lo que tiene apenas llegás: qué minerales hay y
-cuánto queda de cada uno. Es lo mínimo para que minar exista, pero deja afuera lo
-que haría rica la exploración.
+El depósito del cinturón sigue existiendo, pero cambia de papel: pasa a ser **el
+plano**. Dice qué minerales puede dar ese cinturón, cuánto aguanta y a qué ritmo
+se repone. Las rocas son los ejemplares que ese plano genera. Así el agotamiento
+sigue siendo compartido —las rocas son de todos y el que llega primero se las
+lleva— y sigue recuperándose solo, pero a una escala que se puede señalar con el
+dedo.
 
-Lo que falta es el **escáner**, y con él dos cosas que hoy son gratis:
+| Regla              | Valor | Por qué                                                                         |
+| ------------------ | ----- | ------------------------------------------------------------------------------- |
+| Rocas por cinturón | 8     | Las suficientes para tener que elegir; las pocas para que la lista quepa entera |
+| Tamaño mínimo      | 40 %  | Del tamaño típico de ese mineral en ese cinturón                                |
+| Tamaño máximo      | 160 % | Encontrar una grande tiene que ser un hallazgo, no un promedio                  |
 
-- **Saber qué hay.** Llegar a un cinturón no debería revelar su composición: eso
-  se escanea. Un cinturón sin escanear muestra que es un cinturón y nada más, y la
-  lectura depende de tus sensores y de **Escaneo**.
-- **Encontrar más.** Un cinturón no es una reserva uniforme: escanear tendría que
-  poder dar con vetas mejores dentro del mismo campo —más cantidad, o mineral que
-  la lectura superficial no ve—, y eso es lo que gobierna **Prospección**.
+El tamaño típico sale de repartir lo que el cinturón aguanta de ese mineral entre
+sus rocas, así que **un cinturón rico da rocas grandes y uno pobre las da
+chicas**, sin una segunda tabla de tamaños que mantener en pareja con la primera.
 
-Es lo que le daría trabajo a dos habilidades que hoy no mueven ningún número, y lo
-que convertiría al alcance de sensores —otro atributo hoy decorativo— en algo que
-se elige al equipar. Y sobre todo: convierte "ir al cinturón" en una actividad con
-decisiones propias en vez de un botón que siempre devuelve lo mismo.
+**Las rocas se generan de forma perezosa**, como todo lo demás acá: no hay ningún
+proceso sembrando piedras. Al mirar un cinturón se repone lo que el tiempo
+transcurrido permite, usando la marca del plano para que mirarlo dos veces
+seguidas no genere dos veces. Un campo lleno no acumula tiempo parado: lo que
+sobra se descarta, o el próximo hueco se llenaría de golpe.
+
+**Sembrar no rellena.** Un cinturón virgen recibe su primera tanda —si no,
+quedaría pelado hasta que pasara el tiempo, porque su marca es de recién—, pero
+uno que ya tiene rocas no recibe ninguna. Un despliegue no le devuelve el campo a
+nadie.
+
+### El escáner: saber qué tiene esa piedra
+
+Un cinturón se ve desde el árbol del sistema, y sus rocas se ven desde lejos —son
+bultos en el radar—, pero **de qué son y cuánto tienen no se sabe sin apuntarles
+el escáner**. Escanear es una acción con su tiempo, como minar o viajar, y lo que
+deja escrito es una **lectura**.
+
+Tres decisiones ordenan todo lo demás:
+
+1. **El requisito duro es el módulo.** Sin un escáner montado no hay nada que
+   hacer, por mucha habilidad que se tenga: es un instrumento, no una corazonada.
+   El minero sale del astillero con uno puesto.
+2. **La habilidad gobierna cuánto se ve, no si se ve.** Si la habilidad fuera el
+   permiso, un minero nuevo no podría escanear nunca: Escaneo es de **Ciencias**,
+   los pozos de experiencia son por rama, y **escanear es lo único que paga
+   Ciencias**. Sería una puerta cerrada con la llave adentro.
+3. **La lectura envejece.** La roca es de todos y se agota entre todos, así que lo
+   que uno vio ayer puede no ser lo que hay hoy.
+
+| Profundidad    | Qué revela                          | Qué hace falta                    |
+| -------------- | ----------------------------------- | --------------------------------- |
+| Superficial    | De qué es la roca                   | Nada: sólo el instrumento         |
+| Con cantidades | Además, cuánto le queda             | **Escaneo** 1                     |
+| Completa       | Además, a qué ritmo repone el campo | **Escaneo** 1 + **Prospección** 1 |
+
+**La lectura es por piloto**, no una propiedad de la roca: es de quien la miró.
+Dos pilotos en el mismo campo pueden tener identificadas rocas distintas, y el que
+tenga una lectura vieja está mirando la foto de ayer de una piedra que cualquiera
+pudo estar picando mientras tanto.
+
+Una lectura vale **un día**. Pasado eso **no se borra**: se muestra con su
+antigüedad y el piloto decide. Lo que sí hace es dejar de habilitar la extracción,
+porque encenderle el láser a una roca con datos de la semana pasada es apostar.
+Una roca que se termina **se lleva sus lecturas**: nadie tiene que quedar
+recordando una piedra que ya no existe.
+
+El tiempo de una lectura sale del **alcance de sensores** del escáner montado
+—mejor instrumento, menos pasadas— y tiene **piso**, como toda actividad del
+juego: por mucho que se monte, mirar lleva un rato.
+
+Esto es lo que le da trabajo a dos habilidades que no movían ningún número, lo que
+convierte al alcance de sensores en algo que se elige al equipar, y sobre todo lo
+que convierte "ir al cinturón" en una actividad con decisiones propias en vez de
+un botón que siempre devuelve lo mismo. Es además el mecanismo que va a servir
+para explorar sistemas nuevos: lo que se aprende de una piedra desconocida es lo
+mismo que se va a aprender de un sistema al que nadie fue.
 
 ## Por decidir
 

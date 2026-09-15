@@ -38,15 +38,24 @@ Recordatorio de costos, para leer las tablas: alcanzar el nivel 1 de una x1 son
 
 ### Minero
 
-Trabajó en los anillos hasta que juntó para su propia nave. Sabe sacar mineral y
-sabe acomodarlo.
+Trabajó en los anillos hasta que juntó para su propia nave. Sabe sacar mineral,
+sabe acomodarlo y sabe leer una roca antes de picarla.
 
-| Habilidad  | Nivel | Costo |
-| ---------- | :---: | ----: |
-| Minería    |  II   |   400 |
-| Estiba     |  II   |   400 |
-| Navegación |   I   |   100 |
-| Mecánica   |   I   |   100 |
+| Habilidad | Nivel | Costo |
+| --------- | :---: | ----: |
+| Minería   |  II   |   400 |
+| Estiba    |  II   |   400 |
+| Escaneo   |   I   |   200 |
+
+Las tres son el bucle: sacar, guardar y mirar. **Escaneo entra al oficio** desde
+que el cinturón es un campo de rocas: sin él un minero ve que la piedra es de
+silicato pero no cuánto tiene, que es justo el dato con el que se decide a cuál
+apuntarle. A cambio se fueron Navegación y Mecánica, que eran las dos de relleno
+—una mejora un viaje que igual hay que hacer, la otra repara algo que todavía no
+se rompe—.
+
+Sale además con el **escáner montado**: el módulo es el requisito duro, y sin
+instrumento no hay lectura por mucha habilidad que se tenga.
 
 ### Explorador
 

@@ -155,17 +155,37 @@ describe('el mejor precio de cada lado', () => {
 		expect(silicato.bestAsk).toBeNull();
 	});
 
-	it('parado lejos de un mostrador no hay precio de estación', async () => {
+	it('parado en un cinturón se sigue viendo lo que paga la estación', async () => {
 		const db = seededDb();
-		const piloto = await parado(db, 'anillos_anfora_iii');
+		const enElCinturon = await parado(db, 'anillos_anfora_iii');
+		const amarrado = moverPiloto(db, await crearPiloto(db, 'Amarrada'), 'puerto_anfora');
 
-		const silicato = buildMarketView(db, piloto).items.find(
+		const desdeLejos = buildMarketView(db, enElCinturon).items.find(
+			(item) => item.itemCode === 'ferrous_silicate'
+		)!;
+		const desdeAdentro = buildMarketView(db, amarrado).items.find(
 			(item) => item.itemCode === 'ferrous_silicate'
 		)!;
 
-		// La horquilla es lo que uno negocia en un mostrador concreto: sin estar en
-		// ninguno, no hay una cifra que mostrar.
-		expect(silicato.bestBid).toBeNull();
+		// El mercado se lee desde cualquier parte: esconder el precio de la estación
+		// mientras uno está minando diría que no hay a quién venderle, justo cuando
+		// hay que decidir si vale la pena volver.
+		expect(desdeLejos.bestBid).toBe(desdeAdentro.bestBid);
+		expect(desdeLejos.bestBidPlace?.station).toBe('Puerto Ánfora');
+	});
+
+	it('la estación vende módulos aunque el piloto esté lejos', async () => {
+		const db = seededDb();
+		const piloto = await parado(db, 'anillos_anfora_iii');
+
+		const laser = buildMarketView(db, piloto).items.find(
+			(item) => item.itemCode === 'mining_laser_e1'
+		)!;
+
+		// Es lo que cierra el ciclo del minero: trae mineral, lo vende y ve con qué
+		// mejorar sin depender de que otro piloto haya publicado algo.
+		expect(laser.bestAsk).not.toBeNull();
+		expect(laser.bestAskPlace?.station).toBe('Puerto Ánfora');
 	});
 });
 

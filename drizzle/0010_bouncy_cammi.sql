@@ -1,0 +1,1 @@
+ALTER TABLE `pilot_action` ADD `asteroid_id` integer REFERENCES asteroid(id);

@@ -226,7 +226,7 @@ Seis familias. El multiplicador está entre paréntesis.
 | Minería     |  x1  | —           | Rendimiento por ciclo de extracción           |
 | Estiba      |  x1  | —           | Aprovechamiento del espacio de bodega         |
 | Refinado    |  x2  | Minería II  | Mineral en bruto convertido en material útil  |
-| Prospección |  x3  | Minería III | Calidad de lo que se encuentra en un cinturón |
+| Prospección |  x3  | Minería III | Afina la lectura: a qué ritmo repone el campo |
 
 ### Comercio
 
@@ -250,7 +250,7 @@ Seis familias. El multiplicador está entre paréntesis.
 
 | Habilidad              | Dif. | Requiere                     | Gobierna                                       |
 | ---------------------- | :--: | ---------------------------- | ---------------------------------------------- |
-| Escaneo                |  x2  | —                            | Detectar qué hay en un sistema antes de llegar |
+| Escaneo                |  x2  | —                            | Cuánto revela una lectura: de qué es, y cuánto |
 | Análisis de materiales |  x2  | Escaneo II                   | Identificar lo que se extrae o se encuentra    |
 | Cartografía            |  x3  | Escaneo III · Astrogación II | Registrar rutas y sistemas no cartografiados   |
 

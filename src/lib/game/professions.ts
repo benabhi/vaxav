@@ -75,18 +75,31 @@ const CATALOG = [
 		name: 'Minero',
 		description:
 			'Trabajó en los anillos hasta que juntó para su propia nave. Sabe sacar ' +
-			'mineral y sabe acomodarlo.',
+			'mineral, sabe acomodarlo y sabe leer una roca antes de picarla.',
+		// **Escaneo entra al oficio.** Desde que el cinturón es un campo de rocas,
+		// un minero que no sabe leerlas ve bultos: sabe que la piedra es de silicato
+		// pero no cuánto tiene, que es justo el dato con el que se decide a cuál
+		// apuntarle. Traerlo de fábrica es decir que eso es parte del trabajo y no
+		// un accesorio.
+		//
+		// Los mil de presupuesto salen de algún lado: se van Navegación y Mecánica,
+		// que eran las dos de relleno —una mejora un viaje que igual hay que hacer,
+		// la otra repara algo que todavía no se rompe—. Quedan tres habilidades y
+		// las tres son el bucle: sacar, guardar y mirar.
 		grants: [
 			{ skill: 'mining', level: 2 },
 			{ skill: 'stowage', level: 2 },
-			{ skill: 'navigation', level: 1 },
-			{ skill: 'mechanics', level: 1 }
+			{ skill: 'scanning', level: 1 }
 		],
-		// Lo justo para trabajar y nada más: el láser puesto, una bodega chica y
-		// un láser de repuesto en la caja. Alguien que trabajó en los anillos
-		// hasta juntar para su nave le monta lo que sabe usar, pero no le sobra
-		// para llenar las ranuras —y que sobren es media gracia del juego, porque
-		// la ranura vacía es la que hace pensar—.
+		// Lo justo para trabajar y nada más: el láser puesto, una bodega chica, un
+		// escáner y un láser de repuesto en la caja. Alguien que trabajó en los
+		// anillos hasta juntar para su nave le monta lo que sabe usar, pero no le
+		// sobra para llenar las ranuras —y que sobren es media gracia del juego,
+		// porque la ranura vacía es la que hace pensar—.
+		//
+		// El escáner no es un lujo: **sin él un cinturón no dice qué tiene**, y un
+		// minero que no puede leer la roca no puede trabajar. Es el instrumento del
+		// oficio tanto como el láser.
 		//
 		// El repuesto no es adorno: un láser es lo primero que se rompe y lo
 		// primero que se mejora, y tenerlo en bodega enseña que la bodega también
@@ -97,6 +110,7 @@ const CATALOG = [
 		kit: [
 			{ item: 'mining_laser_e1', quantity: 1, fitted: true },
 			{ item: 'cargo_rack_e1', quantity: 1, fitted: true },
+			{ item: 'scanner_e1', quantity: 1, fitted: true },
 			{ item: 'mining_laser_e1', quantity: 1, fitted: false }
 		],
 		playable: true

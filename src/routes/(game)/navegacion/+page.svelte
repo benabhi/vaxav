@@ -153,17 +153,57 @@
 	{/if}
 
 	<!--
-		Lo que se puede extraer acá. Va en esta pantalla y no en el árbol del
-		sistema porque **minar se hace donde estás parado**: el árbol dice adónde
-		ir, esto dice qué hacer una vez que llegaste.
+		El campo de rocas. Va en esta pantalla y no en el árbol del sistema porque
+		**se trabaja donde estás parado**: el árbol dice adónde ir, esto dice qué
+		hacer una vez que llegaste.
 
-		Cada veta muestra lo que la orden traería **con esta nave y esta bodega**, y
-		no sólo cuánto queda en la roca: "quedan 48.000 unidades" no dice nada,
-		"traés 225 y tardás 38 minutos" dice si vale la pena.
+		Una roca sin lectura vigente se dibuja **apagada y sin nombre**: se ve el
+		bulto y nada más. Es lo que le da trabajo al escáner, y lo que hace que
+		llegar a un cinturón desconocido sea algo que hacer en vez de una lista que
+		ya venía escrita.
 	-->
-	{#if place.ores.length > 0}
+	{#if place.field.scannable}
 		<div class="w-full min-w-0 flex-[2_1_0]">
-			<TitledPanel title="Extracción" detail={place.name} class="w-full">
+			<TitledPanel title="Campo de rocas" detail={place.name} class="w-full">
+				<!--
+					El instrumento y el campo, una sola vez arriba: cuántas rocas hay, qué
+					lectura sacaría el escáner montado y cuánto tarda. Repetirlo en cada
+					piedra sería decir ocho veces lo mismo.
+				-->
+				<div
+					class="mb-3 flex w-full flex-wrap items-center gap-x-3 gap-y-2 border-b border-border-soft pb-3"
+				>
+					<Icon
+						name="binoculars"
+						weight="duotone"
+						size="1rem"
+						class={place.field.blocked ? 'text-text-muted' : 'text-accent'}
+					/>
+					<span class="font-mono text-[0.78rem] text-data">{place.field.count}</span>
+					<span class="flex items-baseline gap-2">
+						<Label>Lectura</Label>
+						<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+							{place.field.depthLabel}
+						</span>
+					</span>
+					<span class="flex items-baseline gap-2">
+						<Label>Tarda</Label>
+						<span class="font-mono text-[0.78rem] text-accent-bright">{place.field.duration}</span>
+					</span>
+					{#if place.field.regen}
+						<span class="flex items-baseline gap-2">
+							<Label>Repone</Label>
+							<span class="font-mono text-[0.78rem] text-data">{place.field.regen}</span>
+						</span>
+					{/if}
+
+					<div class="grow"></div>
+
+					{#if place.field.blocked}
+						<span class="text-1 text-text-muted">{place.field.blocked}</span>
+					{/if}
+				</div>
+
 				{#if form?.error}
 					<div
 						class="mb-3 flex w-full flex-wrap items-center gap-[0.4rem] border border-danger
@@ -175,67 +215,111 @@
 				{/if}
 
 				<div class="flex w-full flex-col gap-3">
-					{#each place.ores as veta (veta.code)}
+					{#each place.asteroids as roca (roca.id)}
 						<div
 							class="flex w-full flex-col gap-2 border border-l-[3px] px-[0.7rem] py-[0.7rem]
-								{veta.blocked
+								{roca.blocked
 								? 'border-border-soft border-l-border-soft bg-transparent'
 								: 'border-border-soft border-l-data bg-surface'}"
 						>
 							<div class="flex w-full flex-wrap items-baseline gap-x-3 gap-y-1">
 								<Icon
-									name="diamond"
-									weight={veta.blocked ? 'thin' : 'duotone'}
+									name={roca.icon}
+									weight={roca.identified ? 'duotone' : 'thin'}
 									size="0.95rem"
-									class={veta.blocked ? 'text-text-muted' : 'text-accent'}
+									class={roca.identified ? 'text-accent' : 'text-text-muted'}
 								/>
 								<span
 									class="font-display text-[0.84rem] font-bold tracking-display uppercase
-										{veta.blocked ? 'text-text-muted' : 'text-text-strong'}"
+										{roca.identified ? 'text-text-strong' : 'text-text-muted'}"
 								>
-									{veta.name}
+									{roca.name}
 								</span>
+								{#if roca.age}
+									<span
+										class="font-mono text-[0.75rem] {roca.stale ? 'text-warning' : 'text-data'}"
+									>
+										{roca.stale ? `lectura vieja · ${roca.age}` : roca.age}
+									</span>
+								{/if}
 								<div class="grow"></div>
-								<span class="flex shrink-0 items-baseline gap-2">
-									<Label>Queda</Label>
-									<span class="font-mono text-[0.78rem] text-accent-bright">{veta.remaining}</span>
-								</span>
+								{#if roca.remaining}
+									<span class="flex shrink-0 items-baseline gap-2">
+										<Label>Queda</Label>
+										<span class="font-mono text-[0.78rem] text-accent-bright">{roca.remaining}</span
+										>
+									</span>
+								{/if}
 							</div>
 
-							<!-- Cuánto queda contra su propio tope: dice si está trabajado. -->
-							<ProgressBar percent={veta.share} />
+							<!-- Cuánto le queda de lo que traía: dice cuán picada está. -->
+							{#if roca.remaining}
+								<ProgressBar percent={roca.share} />
+							{/if}
 
-							<p class="text-1 text-text-muted">{veta.description}</p>
+							<p class="text-1 text-text-muted">{roca.description}</p>
 
-							{#if veta.blocked}
-								<span class="text-1 text-warning">{veta.blocked}</span>
-							{:else}
-								<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+							<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+								{#if roca.blocked}
+									<span class="text-1 text-warning">{roca.blocked}</span>
+								{:else}
 									<span class="flex items-baseline gap-2">
-										<Label>Traés</Label>
+										<Label>Extraés</Label>
 										<span class="font-mono text-[0.8rem] text-data">
-											{veta.units} u · {veta.volume} m³
+											{roca.units} u · {roca.volume} m³
 										</span>
 									</span>
 									<span class="flex items-baseline gap-2">
 										<Label>Tarda</Label>
-										<span class="font-mono text-[0.8rem] text-accent-bright">{veta.duration}</span>
+										<span class="font-mono text-[0.8rem] text-accent-bright">{roca.duration}</span>
 									</span>
 									<span class="flex items-baseline gap-2">
 										<Label>Vale</Label>
-										<span class="font-mono text-[0.8rem] text-data">{veta.value} CR</span>
+										<span class="font-mono text-[0.8rem] text-data">{roca.value} CR</span>
 									</span>
-									<div class="grow"></div>
+								{/if}
 
+								<div class="grow"></div>
+
+								<!--
+									Escanear sigue disponible aunque la roca ya esté identificada: el
+									campo es de todos y se agota entre todos, así que volver a mirarla
+									antes de encender el láser es una decisión válida.
+								-->
+								{#if !roca.scanBlocked}
+									<ConfirmAction
+										formAction="?/escanear"
+										title="Escanear {roca.name}"
+										icon="binoculars"
+										confirmLabel="Escanear"
+										readings={[
+											{ label: 'Duración', value: place.field.duration },
+											{ label: 'Lectura', value: place.field.depthLabel }
+										]}
+										note="Mientras dure no vas a poder dar otra orden. La lectura deja experiencia de Ciencias."
+									>
+										{#snippet trigger(abrir)}
+											<HudButton type="button" size="1" onclick={abrir}>
+												<Icon name="binoculars" weight="bold" size="0.75rem" />
+												{roca.age ? 'Volver a escanear' : 'Escanear'}
+											</HudButton>
+										{/snippet}
+										{#snippet fields()}
+											<input type="hidden" name="roca" value={roca.id} />
+										{/snippet}
+									</ConfirmAction>
+								{/if}
+
+								{#if !roca.blocked}
 									<ConfirmAction
 										formAction="?/minar"
-										title="Extraer {veta.name}"
+										title="Extraer {roca.name}"
 										icon="diamond"
 										confirmLabel="Empezar"
 										readings={[
-											{ label: 'Traés', value: `${veta.units} u · ${veta.volume} m³` },
-											{ label: 'Duración', value: veta.duration },
-											{ label: 'Vale', value: `${veta.value} CR` }
+											{ label: 'Extraés', value: `${roca.units} u · ${roca.volume} m³` },
+											{ label: 'Duración', value: roca.duration },
+											{ label: 'Vale', value: `${roca.value} CR` }
 										]}
 										note="Mientras dure la extracción no vas a poder dar otra orden."
 									>
@@ -246,12 +330,17 @@
 											</HudButton>
 										{/snippet}
 										{#snippet fields()}
-											<input type="hidden" name="mineral" value={veta.code} />
+											<input type="hidden" name="roca" value={roca.id} />
 										{/snippet}
 									</ConfirmAction>
-								</div>
-							{/if}
+								{/if}
+							</div>
 						</div>
+					{:else}
+						<p class="text-1 text-text-muted">
+							El campo está pelado: alguien se llevó hasta la última roca. Van a aparecer otras,
+							pero hay que darle tiempo.
+						</p>
 					{/each}
 				</div>
 			</TitledPanel>

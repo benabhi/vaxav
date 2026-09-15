@@ -13,12 +13,13 @@
  * Ver docs/systems/UNIVERSE.md.
  */
 
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { beltDeposit as beltDepositTable, body, type BeltDeposit, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { cargoHold, shipContainer } from './containers';
 import { activeShip, shipReadout } from './ships';
 import { planMining, restored, type MiningPlan } from '$lib/game/mining';
+import { getAsteroid } from './asteroids';
 import { getOre } from '$lib/game/items';
 
 /** No se puede minar. El mensaje se le muestra al jugador. */
@@ -87,22 +88,38 @@ export function depositFor(
 }
 
 /**
- * La orden que saldría de minar este mineral acá y ahora.
+ * La orden que saldría de picar **esta roca** acá y ahora.
  *
- * Se calcula con la nave, la bodega y el cinturón de verdad, así que es
- * exactamente lo que la pantalla puede prometer: cuánto va a traer y cuánto va a
- * tardar. Devuelve el plan aunque esté bloqueado, porque el motivo es lo que hay
- * que mostrar.
+ * Se calcula con la nave, la bodega y la roca de verdad, así que es exactamente
+ * lo que la pantalla puede prometer: cuánto va a traer y cuánto va a tardar.
+ * Devuelve el plan aunque esté bloqueado, porque el motivo es lo que hay que
+ * mostrar.
+ *
+ * Que apunte a una roca y no a un mineral del cinturón es lo que cambió con el
+ * escáner: no se extrae «silicato de los Anillos», se pica **esa piedra**, y
+ * cuando se acaba hay que buscar otra.
  */
-export function miningPlan(db: Db, row: Pilot, oreCode: string): MiningPlan {
-	// Falla temprano y con un mensaje claro si el catálogo no lo conoce.
-	getOre(oreCode);
-
+export function miningPlan(db: Db, row: Pilot, asteroidId: number): MiningPlan {
+	const roca = getAsteroid(db, asteroidId);
 	const readout = shipReadout(db, row);
 	const nave = activeShip(db, row.id);
+
+	if (!roca) {
+		return {
+			ore: '',
+			cycles: 0,
+			cycleSeconds: 0,
+			durationSeconds: 0,
+			units: 0,
+			blocked: 'Esa roca ya no está: alguien la terminó.'
+		};
+	}
+	// Falla temprano y con un mensaje claro si el catálogo no lo conoce.
+	getOre(roca.oreCode);
+
 	if (!readout || !nave) {
 		return {
-			ore: oreCode,
+			ore: roca.oreCode,
 			cycles: 0,
 			cycleSeconds: 0,
 			durationSeconds: 0,
@@ -112,39 +129,13 @@ export function miningPlan(db: Db, row: Pilot, oreCode: string): MiningPlan {
 	}
 
 	const hold = cargoHold(db, shipContainer(db, nave.id).id, readout.cargo);
-	const deposito = depositFor(db, row.locationId, oreCode);
 
 	return planMining({
-		oreCode,
+		oreCode: roca.oreCode,
 		miningPerHour: readout.miningPerHour,
 		freeTenths: hold.freeTenths,
-		remainingUnits: deposito?.remaining ?? 0
+		remainingUnits: roca.units
 	});
-}
-
-/**
- * Saca unidades de un depósito, sin pasarse de lo que hay.
- *
- * Devuelve lo que realmente salió: entre que la orden se dio y venció, otro
- * piloto pudo llevarse lo que quedaba. Se descuenta con una sola sentencia
- * condicionada para que dos resoluciones simultáneas no puedan dejar la reserva
- * en negativo.
- */
-export function takeFromBelt(db: Db, bodyId: number, oreCode: string, units: number): number {
-	if (units <= 0) return 0;
-
-	const deposito = depositFor(db, bodyId, oreCode);
-	if (!deposito) return 0;
-
-	const sale = Math.min(units, deposito.remaining);
-	if (sale <= 0) return 0;
-
-	db.update(beltDepositTable)
-		.set({ remaining: sql`${beltDepositTable.remaining} - ${sale}` })
-		.where(and(eq(beltDepositTable.id, deposito.id), sql`${beltDepositTable.remaining} >= ${sale}`))
-		.run();
-
-	return sale;
 }
 
 /** Si ese cuerpo es un cinturón con algo para sacar. */
