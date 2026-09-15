@@ -28,7 +28,7 @@ import type { LibroMercado, OrdenMercado } from '$lib/tipos';
 /** Una orden de jugador, lista para dibujar. */
 function playerRow(
 	order: typeof marketOrder.$inferSelect,
-	place: { name: string; systemName: string; bodyId: number },
+	place: { designation: string; systemName: string; bodyId: number },
 	distance: number,
 	mine: boolean
 ): OrdenMercado {
@@ -41,7 +41,7 @@ function playerRow(
 		price: order.price,
 		priceLabel: thousands(order.price),
 		stationId: order.stationId,
-		stationName: place.name,
+		stationName: place.designation,
 		systemName: place.systemName,
 		distance,
 		distanceLabel: distance === 0 ? 'Acá' : `${thousands(distance)} ud`,

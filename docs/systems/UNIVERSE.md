@@ -30,6 +30,41 @@ en una estación, en órbita de un planeta, dentro de un cinturón. Moverse entr
 cuerpos del mismo sistema es una acción de viaje corta; entre sistemas, un salto,
 que es más caro y pide Astrogación.
 
+## Cómo se llaman las cosas
+
+La nomenclatura es la de EVE, y no es un detalle de ambientación: **el nombre de
+un cuerpo dice dónde está**. Con nombres propios sueltos hay que aprenderse el
+mapa de memoria; con esta convención, leer un nombre es leer una dirección.
+
+| Qué      | Cómo se llama                             | Ejemplo                 |
+| -------- | ----------------------------------------- | ----------------------- |
+| Estrella | El nombre del sistema                     | `Ánfora`                |
+| Planeta  | Sistema + **número romano**, hacia afuera | `Ánfora III`            |
+| Luna     | Planeta + **letra minúscula**             | `Ánfora III-a`          |
+| Cinturón | Nombre propio, o `Anillos de <planeta>`   | `Anillos de Ánfora III` |
+| Estación | **Nombre propio**                         | `Muelle de los Anillos` |
+
+Los planetas se numeran **desde la estrella hacia afuera**, y las lunas en el
+mismo orden dentro de su planeta. Así el número no es un rótulo: es la posición,
+y `Ánfora IV` está más lejos que `Ánfora II` sin tener que consultar nada.
+
+**Las estaciones son la excepción y llevan nombre propio.** Son obra de alguien
+—una corporación las construyó y las bautizó— y un número las volvería
+intercambiables, que es justo lo contrario de lo que son. Lo que sí hacen es
+**designarse con el cuerpo que orbitan adelante**:
+
+```
+Ánfora III · Muelle de los Anillos
+Ánfora III-a · Planta Escarcha
+Cinturón Exterior · Hábitat Talo
+```
+
+Es la forma en que aparecen en las listas donde importa saber a dónde hay que
+viajar —el libro de órdenes del [mercado](MARKET.md), sobre todo—. El sistema no
+entra mientras haya uno solo: repetir `Ánfora` en cada renglón de una pantalla que
+ya dice la región es ruido. Entra el día que haya dos, y ahí la designación pasa a
+ser el camino completo.
+
 ## Tipos de cuerpo
 
 | Tipo                   | Qué lo caracteriza                         | Para qué sirve                                       |

@@ -23,6 +23,7 @@
  * no sería un oficio.
  */
 
+import { alias } from 'drizzle-orm/sqlite-core';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
 	body,
@@ -77,6 +78,16 @@ export interface MarketStation {
 	readonly stationId: number;
 	readonly bodyId: number;
 	readonly name: string;
+	/**
+	 * El nombre completo, con el camino adentro: `Ánfora III · Muelle de los
+	 * Anillos`.
+	 *
+	 * Es la idea que EVE resuelve bien: el nombre de una estación **dice dónde
+	 * está**. "Muelle de los Anillos" a secas obliga a recordar de memoria en qué
+	 * cuerpo orbita; con el cuerpo adelante, un libro de órdenes se lee como un
+	 * mapa y se puede decidir sin abrir otra pantalla.
+	 */
+	readonly designation: string;
 	readonly systemName: string;
 	readonly regionName: string;
 }
@@ -92,22 +103,40 @@ export interface MarketStation {
  * haya varias sólo hay que agregarle el `where` y nada más se entera.
  */
 export function marketStations(db: Db): readonly MarketStation[] {
+	// El cuerpo que la estación orbita sale de una segunda vuelta sobre la misma
+	// tabla: los cuerpos son un árbol, y el padre de una estación es el planeta,
+	// la luna o el cinturón donde está amarrada.
+	const orbita = alias(body, 'orbita');
+
 	return db
 		.select({
 			stationId: station.id,
 			bodyId: body.id,
 			name: body.name,
+			parentName: orbita.name,
 			systemName: system.name,
 			regionName: region.name
 		})
 		.from(stationService)
 		.innerJoin(station, eq(station.id, stationService.stationId))
 		.innerJoin(body, eq(body.id, station.bodyId))
+		.leftJoin(orbita, eq(orbita.id, body.parentId))
 		.innerJoin(system, eq(system.id, body.systemId))
 		.innerJoin(constellation, eq(constellation.id, system.constellationId))
 		.innerJoin(region, eq(region.id, constellation.regionId))
 		.where(eq(stationService.service, 'market'))
-		.all();
+		.all()
+		.map((fila) => ({
+			stationId: fila.stationId,
+			bodyId: fila.bodyId,
+			name: fila.name,
+			// El sistema no entra mientras haya uno solo: repetir "Ánfora" en cada
+			// renglón de una tabla que ya dice la región es ruido. Entra el día que
+			// haya dos, y ahí el nombre pasa a ser el camino completo.
+			designation: [fila.parentName, fila.name].filter(Boolean).join(' · '),
+			systemName: fila.systemName,
+			regionName: fila.regionName
+		}));
 }
 
 /** El mejor precio de cada lado, **dónde está** y cuántas órdenes hay. */
@@ -290,11 +319,11 @@ function line(
 		basePrice: item.basePrice,
 		bestAsk,
 		bestAskLabel: bestAsk === null ? '' : thousands(bestAsk),
-		bestAskWhere: dondeAsk === null ? '' : (stations.get(dondeAsk)?.name ?? ''),
+		bestAskWhere: dondeAsk === null ? '' : (stations.get(dondeAsk)?.designation ?? ''),
 		bestAskJumps: jumpsLabel(dondeAsk, desk?.stationId ?? null),
 		bestBid,
 		bestBidLabel: bestBid === null ? '' : thousands(bestBid),
-		bestBidWhere: dondeBid === null ? '' : (stations.get(dondeBid)?.name ?? ''),
+		bestBidWhere: dondeBid === null ? '' : (stations.get(dondeBid)?.designation ?? ''),
 		bestBidJumps: jumpsLabel(dondeBid, desk?.stationId ?? null),
 		sellOrders: summary?.sellOrders ?? 0,
 		buyOrders: summary?.buyOrders ?? 0,
@@ -394,7 +423,7 @@ function buildOwnOrders(
 			initialQuantity: orden.initialQuantity,
 			price: thousands(orden.price),
 			value: thousands(orden.price * orden.quantity),
-			stationName: porId.get(orden.stationId)?.name ?? '',
+			stationName: porId.get(orden.stationId)?.designation ?? '',
 			// Mientras se acuerda no está en el libro, y decirlo es lo que evita que
 			// el piloto la busque ahí y crea que se perdió.
 			pending: orden.opensAt.getTime() > ahora,
