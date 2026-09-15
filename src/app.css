@@ -502,9 +502,13 @@ body {
 /*
  * El mismo halo en un panel, sin titileo: una lista con filas que parpadean es
  * ruido, y ahí el cian ya alcanza para distinguir lo que no se leyó.
+ *
+ * Y alcanza **solo**: la fila que lo lleva tiene el mismo relleno que las demás.
+ * Encenderle además el fondo hacía que lo nuevo se leyera como urgente, que es
+ * otra cosa; lo que hay que poder hacer es encontrarlo, no sobresaltarse.
  */
 .aviso-panel {
-	background-image: linear-gradient(to right, rgb(79 210 238 / 0.1), transparent 28%);
+	background-image: linear-gradient(to right, rgb(79 210 238 / 0.12), transparent 30%);
 }
 
 /*
