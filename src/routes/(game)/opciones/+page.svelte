@@ -12,11 +12,14 @@
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
 	import SuccessCallout from '$lib/components/forms/SuccessCallout.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
+	import PortraitPicker from '$lib/components/game/PortraitPicker.svelte';
+	import { PORTRAIT_HEIGHT, PORTRAIT_WIDTH } from '$lib/game/portraits';
+	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import type { PageProps } from './$types';
 
-	let { form }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 </script>
 
 <svelte:head><title>Cuenta · Opciones · Vaxav</title></svelte:head>
@@ -52,4 +55,20 @@
 			<HudButton variant="primary" size="3" type="submit">Guardar</HudButton>
 		</div>
 	</form>
+</TitledPanel>
+
+<!--
+	El retrato también se cambia desde acá y no sólo desde la credencial: es un dato
+	de la cuenta, y quien viene a Opciones a cambiar la contraseña espera encontrar
+	su foto en la misma pantalla. El control es el mismo componente, así que las dos
+	puertas hacen exactamente lo mismo.
+-->
+<TitledPanel title="Retrato" class="w-full max-w-[28rem]">
+	<div class="flex w-full flex-col items-start gap-4">
+		<BodyText>
+			La foto de tu credencial. Se recorta a proporción de carnet y se guarda a {PORTRAIT_WIDTH}×{PORTRAIT_HEIGHT};
+			lo que elijas se ajusta solo, así que no hace falta que la prepares.
+		</BodyText>
+		<PortraitPicker hasPortrait={data.pilot.portrait !== ''} size="2" />
+	</div>
 </TitledPanel>

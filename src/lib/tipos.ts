@@ -39,6 +39,14 @@ export interface NaveDelPiloto {
 /** Lo que toda pantalla del juego sabe del piloto conectado. */
 export interface PilotoConectado {
 	readonly callsign: string;
+	/**
+	 * La URL de su retrato, o vacío si no subió ninguno.
+	 *
+	 * Vacío **no es un error**: es lo que hay antes de subir una foto, y la
+	 * credencial dibuja la silueta, que dice que ahí falta algo. Lleva la marca de
+	 * tiempo de la subida en la consulta porque el archivo se llama siempre igual.
+	 */
+	readonly portrait: string;
 	readonly professionName: string;
 	readonly factionName: string;
 	readonly factionCode: string;

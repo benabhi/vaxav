@@ -1,21 +1,21 @@
 <!--
-	Pestaña Información: el resumen del piloto.
+	Pestaña Información: la credencial del piloto y lo que cuelga de ella.
 
-	Es la pantalla de identidad, y por eso tiene figura propia —la credencial—
-	como Nave tiene el anillo y Sistema el árbol. Lo primero es quién sos; después,
-	por dónde fuiste.
+	Es la pantalla de identidad, y su figura es **la credencial**, como Nave tiene
+	el anillo y Sistema el árbol. La tarjeta contesta las dos preguntas que definen
+	a un piloto —quién sos y en qué te convertiste— con la foto de un lado y el
+	hexágono de ramas del otro; lo de abajo son las notas al pie: las cifras
+	exactas de cada rama y lo último que pasó.
 
-	**Está armada para ir creciendo.** Hoy responde quién, dónde y con qué; a
-	medida que el juego sume corporaciones, rango, hangar o reputación, cada cosa
-	entra como una celda más de la credencial o un panel más acá abajo, sin
-	rediseñar la pantalla.
+	**Está armada para ir creciendo.** A medida que el juego sume corporaciones,
+	rango, hangar o reputación, cada cosa entra como una celda más de la credencial
+	o un panel más acá abajo, sin rediseñar la pantalla.
 -->
 <script lang="ts">
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import FamilyXpPanel from '$lib/components/game/FamilyXpPanel.svelte';
 	import ActionReport from '$lib/components/game/ActionReport.svelte';
 	import PilotCredential from '$lib/components/game/PilotCredential.svelte';
-	import SkillHexagon from '$lib/components/game/SkillHexagon.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
@@ -33,29 +33,18 @@
 	<DisplayTitle>{data.pilot.callsign}</DisplayTitle>
 </div>
 
-<PilotCredential pilot={data.pilot} />
+<PilotCredential pilot={data.pilot} serial={data.serial} />
 
 <!--
-	Dos columnas en escritorio: a la izquierda por dónde fue el piloto, a la
-	derecha lo que la facción dice de sí misma. En teléfono se apilan.
+	Las notas al pie de la credencial. A la izquierda las cifras exactas de cada
+	rama —el hexágono dice bien *qué forma* tiene el piloto y mal *cuánto*, y esta
+	lista al revés: las dos leen las mismas dos métricas—, a la derecha lo último
+	que pasó. En teléfono se apilan.
 -->
 <div class="flex w-full flex-col items-start gap-4 lg:flex-row">
-	<!--
-		La figura y la lista, como en Nave: el hexágono dice bien **qué forma tiene**
-		este piloto y mal cuánto exactamente; la lista al revés. Las dos leen las
-		mismas dos métricas de cada rama —lo invertido y lo que espera en el pozo—,
-		que es lo que hace que la figura no sea un adorno.
-	-->
 	<div class="w-full min-w-0 flex-[3_1_0]">
 		<TitledPanel title="Experiencia por rama" detail="Invertida y en pozo" class="w-full">
-			<div class="flex w-full flex-wrap items-start gap-[1.25rem]">
-				<div class="min-w-0 flex-[1_1_16rem]">
-					<SkillHexagon families={data.pilot.families} />
-				</div>
-				<div class="min-w-0 flex-[1_1_14rem]">
-					<FamilyXpPanel families={data.pilot.families} />
-				</div>
-			</div>
+			<FamilyXpPanel families={data.pilot.families} />
 		</TitledPanel>
 	</div>
 
