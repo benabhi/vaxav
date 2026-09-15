@@ -167,7 +167,7 @@ const CATALOG = [
 		name: 'Regateo',
 		family: 'trade',
 		difficulty: 1,
-		governs: 'Margen en compras y ventas',
+		governs: 'Margen con la estación y comisión del corredor',
 		requirements: []
 	},
 	{
@@ -175,7 +175,7 @@ const CATALOG = [
 		name: 'Contabilidad',
 		family: 'trade',
 		difficulty: 2,
-		governs: 'Comisiones e impuestos de estación',
+		governs: 'Impuesto de venta y cuántas órdenes podés llevar',
 		requirements: [{ skill: 'haggling', level: 2 }]
 	},
 	{
@@ -183,7 +183,7 @@ const CATALOG = [
 		name: 'Análisis de mercado',
 		family: 'trade',
 		difficulty: 3,
-		governs: 'Ver historial y tendencias de precios',
+		governs: 'Cuántas regiones del mercado ves, y alcance de tus órdenes',
 		requirements: [{ skill: 'haggling', level: 3 }]
 	},
 	{

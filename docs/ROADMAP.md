@@ -27,11 +27,11 @@ mecánica; de las 23 habilidades, **trece** no alteraban ningún número; la bod
 era una cifra sin contenido y los créditos no los escribía nadie.
 
 De eso ya se pagó buena parte: la bodega tiene contenido, el rendimiento de
-extracción decide cuánto traés, los créditos existen y cinco habilidades dejaron
-de ser decorativas. El circuito de un minero cierra de punta a punta —viajar,
-minar, volver, vender, comprar, montar—. Lo que falta es lo que lo hace crecer:
-aprender habilidades nuevas, refinar lo que se saca, salir del sistema y
-fabricar.
+extracción decide cuánto traés, los créditos existen y ocho habilidades dejaron de
+ser decorativas. El circuito de un minero cierra de punta a punta —viajar, minar,
+volver, vender, comprar, montar— y hay un mercado entre jugadores donde los
+precios los deciden ellos. Lo que falta es lo que lo hace crecer: aprender
+habilidades nuevas, refinar lo que se saca, salir del sistema y fabricar.
 
 Cerrar el primer circuito completo es lo que convierte eso en un juego: elegir
 minero, viajar al cinturón, minar, volver a una estación, vender, comprar algo
@@ -69,15 +69,20 @@ Se volvieron mecánicos la bodega, el rendimiento de extracción y la estabilida
 del acumulador, y con ellos **Minería, Ingeniería de bodega, Estiba y Gestión de
 energía**.
 
-### 3 · El mercado de la estación · **hecho**
+### 3 · El mercado regional · **hecho**
 
-- ~~Comprar y vender a precio fijo, con su asiento en los dos libros.~~
-- ~~La horquilla: lo que se queda la estación, y qué la angosta.~~
-- ~~La forma del mercado de EVE, que aguanta cientos de módulos.~~
+- ~~Comprar y vender contra la estación, con su asiento en los dos libros.~~
+- ~~Órdenes de compra y de venta entre pilotos, con garantía.~~
+- ~~Comisión al publicar e impuesto al vender, los dos con piso.~~
+- ~~El mercado en el Neocom, con alcance por regiones.~~
+- ~~Propiedades: qué tenés y dónde, en toda la galaxia.~~
+- ~~El historial de precios de cada ítem.~~
 
 Acá el bucle se cerró por primera vez: viajás, minás, volvés, cobrás y comprás.
-Es además **la única puerta para conseguir módulos**, y con ella **Regateo** dejó
-de ser decorativa. Ver [el mercado](systems/MARKET.md).
+El mercado es **la única puerta para conseguir módulos**, y con él las cuatro
+habilidades de Comercio dejaron de ser adornos: **Regateo** mueve la horquilla y
+la comisión, **Contabilidad** el impuesto y cuántas órdenes podés llevar, y
+**Análisis de mercado** hasta dónde ves. Ver [el mercado](systems/MARKET.md).
 
 ### 4 · Requisitos de habilidad e inyecciones
 

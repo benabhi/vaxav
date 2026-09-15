@@ -32,10 +32,11 @@
 	<DisplayTitle>Lo que tenés</DisplayTitle>
 </div>
 
-<div class="flex w-full flex-wrap items-end gap-x-5 gap-y-3">
+<!-- Del mismo tamaño y alineadas por arriba, como la fila del mercado. -->
+<div class="flex w-full flex-wrap items-start gap-x-5 gap-y-3">
 	<div class="flex flex-col items-start gap-1">
 		<Label>Valor de referencia</Label>
-		<p class="font-mono text-3 text-data">{assets.totalValue} CR</p>
+		<p class="font-mono text-2 text-data">{assets.totalValue} CR</p>
 	</div>
 	<div class="flex flex-col items-start gap-1">
 		<Label>Lugares con carga</Label>
@@ -83,7 +84,9 @@
 					<p class="text-1 text-text-muted">Vacía.</p>
 				{:else}
 					<div class="w-full overflow-x-auto">
-						<table class="w-full min-w-[26rem] border-collapse text-left">
+						<table
+							class="w-full min-w-[26rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+						>
 							<thead>
 								<tr class="border-b border-border-soft">
 									<th

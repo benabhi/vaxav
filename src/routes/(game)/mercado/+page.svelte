@@ -33,7 +33,7 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { askTotal, bidTotal } from '$lib/game/market';
-	import { thousands } from '$lib/format';
+	import { tenths, thousands } from '$lib/format';
 	import type { FilaMercado, LibroMercado } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
@@ -137,10 +137,18 @@
 	<DisplayTitle>{market.regionName || 'Sin región'}</DisplayTitle>
 </div>
 
-<div class="flex w-full flex-wrap items-end gap-x-5 gap-y-3">
+<!--
+	La fila de lecturas del mostrador.
+
+	Todas del mismo tamaño y alineadas por arriba: es una fila de instrumentos de
+	cabina, y uno más grande que los otros rompe la línea sin decir nada que el
+	color no diga mejor. El saldo resalta en cian, que es lo que el proyecto usa
+	para las cifras que importan.
+-->
+<div class="flex w-full flex-wrap items-start gap-x-5 gap-y-3">
 	<div class="flex flex-col items-start gap-1">
 		<Label>Alcance</Label>
-		<p class="font-display text-2 tracking-display text-accent-bright uppercase">
+		<p class="font-mono text-2 text-accent-bright">
 			{market.regionsInRange}
 			{market.regionsInRange === 1 ? 'región' : 'regiones'} · {market.stationCount} mercados
 		</p>
@@ -148,7 +156,7 @@
 	<div class="grow"></div>
 	<div class="flex flex-col items-start gap-1">
 		<Label>Saldo</Label>
-		<p class="font-mono text-3 text-data">{market.balance} CR</p>
+		<p class="font-mono text-2 text-data">{market.balance} CR</p>
 	</div>
 	<div class="flex flex-col items-start gap-1">
 		<Label>Órdenes</Label>
@@ -157,7 +165,7 @@
 	<div class="flex flex-col items-start gap-1">
 		<Label>Comisión · impuesto</Label>
 		<p class="font-mono text-2 text-text-muted">
-			{(market.brokerPermille / 10).toFixed(1)} % · {(market.taxPermille / 10).toFixed(1)} %
+			{tenths(market.brokerPermille)} % · {tenths(market.taxPermille)} %
 		</p>
 	</div>
 </div>
@@ -269,7 +277,9 @@
 		>
 			<div class="w-full overflow-x-auto">
 				<div class="max-h-[30rem] min-w-[34rem] overflow-y-auto">
-					<table class="w-full border-collapse text-left">
+					<table
+						class="w-full border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+					>
 						<thead class="sticky top-0 z-10 bg-well">
 							<tr class="border-b border-border-soft">
 								<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
@@ -385,12 +395,16 @@
 						/>
 						<div class="flex items-center gap-2">
 							{#each [{ code: 'ship' as const, label: 'De la nave', units: libro.inShip }, { code: 'station' as const, label: 'De acá', units: libro.inStation }] as origen (origen.code)}
+								<!--
+									La cantidad va con la cruz de multiplicar: un número suelto
+									detrás de un punto se lee como un identificador.
+								-->
 								<HudButton
 									size="1"
 									variant={fromHold === origen.code ? 'primary' : 'outline'}
 									onclick={() => (fromHold = origen.code)}
 								>
-									{origen.label} · {origen.units}
+									{origen.label} ×{origen.units}
 								</HudButton>
 							{/each}
 						</div>
@@ -410,7 +424,9 @@
 						<p class="text-1 text-text-muted">Nadie vende esto en tu alcance.</p>
 					{:else}
 						<div class="w-full overflow-x-auto">
-							<table class="w-full min-w-[30rem] border-collapse text-left">
+							<table
+								class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+							>
 								<thead>
 									<tr class="border-b border-border-soft">
 										<th
@@ -514,7 +530,9 @@
 						<p class="text-1 text-text-muted">Nadie compra esto en tu alcance.</p>
 					{:else}
 						<div class="w-full overflow-x-auto">
-							<table class="w-full min-w-[30rem] border-collapse text-left">
+							<table
+								class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+							>
 								<thead>
 									<tr class="border-b border-border-soft">
 										<th
@@ -625,7 +643,7 @@
 							<Label>Publicar una orden</Label>
 							<div class="grow"></div>
 							<span class="font-mono text-[0.68rem] text-text-muted">
-								comisión {(market.brokerPermille / 10).toFixed(1)} % · no se devuelve
+								comisión {tenths(market.brokerPermille)} % · no se devuelve
 							</span>
 						</div>
 

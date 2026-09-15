@@ -445,6 +445,10 @@
 											De qué bodega sale, y cuántos hay ahí. Es la diferencia que
 											importa antes de zarpar: lo de la nave viaja con vos, lo de la
 											estación se queda acá.
+
+											La cantidad va con la cruz de multiplicar, como en todo el juego:
+											un número suelto detrás de un punto se lee como un identificador,
+											y un identificador que nadie puede usar para nada es ruido.
 										-->
 										<span
 											class="flex shrink-0 items-center gap-[0.3rem] border px-[0.4rem] py-[0.1rem]
@@ -469,8 +473,8 @@
 												{option.mounted
 													? 'Puesto'
 													: option.origin === 'ship'
-														? `En la nave · ${option.units}`
-														: `En la estación · ${option.units}`}
+														? `En la nave ×${option.units}`
+														: `En la estación ×${option.units}`}
 											</span>
 										</span>
 										<span
