@@ -1,9 +1,9 @@
 /**
- * Módulo Opciones: la cuenta del piloto, aparte del juego en sí.
+ * Pestaña Seguridad: las llaves de la cuenta.
  *
- * No cuelga del Neocom junto a Piloto/Nave/etc. —vive entre "Plegar" y "Salir",
- * más cerca de la salida que del juego— pero es una pantalla más: exige sesión y
- * se registra igual que cualquier otra.
+ * Opciones no cuelga del Neocom junto a Piloto/Nave/etc. —vive entre "Plegar" y
+ * "Salir", más cerca de la salida que del juego— pero es un módulo más: exige
+ * sesión y se registra igual que cualquier otro.
  */
 
 import { fail } from '@sveltejs/kit';

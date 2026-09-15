@@ -96,13 +96,17 @@ export const MODULES: readonly Module[] = [
 				route: '/mercado',
 				label: 'Mercado'
 			},
+			// "Órdenes" y no "Mis ventas": lo segundo se lee como las ventas que
+			// hiciste, y lo que hay acá es lo que tenés **publicado** esperando a que
+			// alguien lo tome. Confundirlos es confundir una operación cerrada con una
+			// promesa abierta, que en un mercado no es un matiz.
 			{
 				route: '/mercado/ventas',
-				label: 'Mis ventas'
+				label: 'Órdenes de venta'
 			},
 			{
 				route: '/mercado/compras',
-				label: 'Mis compras'
+				label: 'Órdenes de compra'
 			}
 		]
 	},
@@ -142,6 +146,14 @@ export const OPTIONS_MODULE: Module = {
 	tabs: [
 		{
 			route: '/opciones',
+			label: 'Perfil'
+		},
+		{
+			route: '/opciones/seguridad',
+			label: 'Seguridad'
+		},
+		{
+			route: '/opciones/cuenta',
 			label: 'Cuenta'
 		}
 	]

@@ -1,5 +1,5 @@
 <!--
-	Pestaña «Mis compras»: lo que el piloto está pidiendo, con la plata ya apartada.
+	Pestaña «Órdenes de compra»: lo que el piloto está pidiendo, con la plata ya apartada.
 
 	La tabla la pone `OwnOrders`, que es la misma de la pestaña de ventas: lo único
 	que cambia entre las dos es qué órdenes le llegan.
@@ -19,11 +19,11 @@
 	let orders = $derived(data.orders);
 </script>
 
-<svelte:head><title>Mis compras · Vaxav</title></svelte:head>
+<svelte:head><title>Órdenes de compra · Vaxav</title></svelte:head>
 
 <div class="flex w-full flex-col items-start gap-1">
 	<Eyebrow>Lo que pedís</Eyebrow>
-	<DisplayTitle>Mis compras</DisplayTitle>
+	<DisplayTitle>Órdenes de compra</DisplayTitle>
 </div>
 
 <div class="flex w-full flex-wrap items-start gap-x-5 gap-y-3">

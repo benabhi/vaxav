@@ -149,50 +149,72 @@
 
 		Lleva **dos capas y por dos razones distintas**. La chapita de la esquina está
 		siempre visible: sin ella la foto parecía una imagen y nada más, y nadie
-		descubre que se puede tocar algo que no se anuncia. El velo con el texto
-		aparece al señalar o con el foco del teclado, que es cuando ya se sabe que
-		hay algo ahí y sólo falta decir qué.
+		descubre que se puede tocar algo que no se anuncia. El velo con las acciones
+		aparece al señalar o con el foco del teclado, que es cuando ya se sabe que hay
+		algo ahí y sólo falta decir qué se puede hacer.
 
-		Mientras sube, el velo se queda encendido con el aro girando: una subida sin
-		señal parece una que no pasó, y el jugador vuelve a apretar.
+		Son **dos acciones y no una**: poner una foto tiene que poder deshacerse con
+		la misma facilidad con que se hizo, o subirla es una decisión irreversible por
+		accidente. Quitar borra el archivo del servidor, no lo esconde.
+
+		Mientras trabaja, el velo se queda encendido con el aro girando: una subida
+		sin señal parece una que no pasó, y el jugador vuelve a apretar.
 	-->
-	<button
-		type="button"
-		onclick={() => input?.click()}
-		disabled={working}
-		aria-label={hasPortrait ? 'Cambiar el retrato' : 'Subir un retrato'}
-		class="group absolute inset-0 z-[2] cursor-pointer focus-visible:outline-none
-			disabled:cursor-wait"
-	>
-		<span
-			class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-well/85
+	<div class="group absolute inset-0 z-[2]">
+		<div
+			class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-well/85
 				transition-opacity {working
 				? 'opacity-100'
-				: 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'}"
+				: 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100'}"
 		>
-			<Icon
-				name={working ? 'circle-notch' : 'camera'}
-				weight="duotone"
-				size="1.5rem"
-				class={working ? 'animate-spin text-data' : 'text-accent'}
-			/>
-			<span class="font-display text-1 tracking-label text-accent-bright uppercase">
-				{working ? 'Subiendo' : hasPortrait ? 'Cambiar' : 'Subir'}
-			</span>
-		</span>
+			{#if working}
+				<Icon name="circle-notch" weight="duotone" size="1.5rem" class="animate-spin text-data" />
+				<span class="font-display text-1 tracking-label text-accent-bright uppercase">
+					Un momento
+				</span>
+			{:else}
+				<button
+					type="button"
+					onclick={() => input?.click()}
+					class="flex cursor-pointer flex-col items-center gap-[0.15rem] px-2 py-1
+						transition-colors hover:text-accent-bright focus-visible:text-accent-bright
+						focus-visible:outline-none"
+					aria-label={hasPortrait ? 'Cambiar el retrato' : 'Subir un retrato'}
+				>
+					<Icon name="camera" weight="duotone" size="1.35rem" class="text-accent" />
+					<span class="font-display text-1 tracking-label text-accent-bright uppercase">
+						{hasPortrait ? 'Cambiar' : 'Subir'}
+					</span>
+				</button>
+
+				{#if hasPortrait}
+					<button
+						type="button"
+						onclick={quitar}
+						class="flex cursor-pointer items-center gap-1 border border-border-soft px-2
+							py-[0.1rem] transition-colors hover:border-danger hover:text-danger
+							focus-visible:border-danger focus-visible:outline-none"
+						aria-label="Quitar el retrato"
+					>
+						<Icon name="x" weight="bold" size="0.6rem" />
+						<span class="font-display text-[0.62rem] tracking-label uppercase">Quitar</span>
+					</button>
+				{/if}
+			{/if}
+		</div>
 
 		<!--
 			La chapita: el único adorno que está siempre. Se apaga mientras el velo
-			está arriba para no quedar pegada encima del texto.
+			está arriba para no quedar pegada encima de las acciones.
 		-->
 		<span
-			class="absolute right-[0.3rem] bottom-[0.3rem] flex items-center border border-border-soft
-				bg-well/85 p-[0.2rem] transition-opacity group-hover:opacity-0
+			class="pointer-events-none absolute right-[0.3rem] bottom-[0.3rem] flex items-center border
+				border-border-soft bg-well/85 p-[0.2rem] transition-opacity group-hover:opacity-0
 				{working ? 'opacity-0' : 'opacity-100'}"
 		>
 			<Icon name="camera" weight="fill" size="0.7rem" class="text-accent-bright" />
 		</span>
-	</button>
+	</div>
 {:else}
 	<div class="flex flex-wrap items-center gap-3">
 		<HudButton {size} variant="primary" onclick={() => input?.click()} disabled={working}>

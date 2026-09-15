@@ -7,8 +7,24 @@
  * transacción.
  */
 
-import { count, eq, sql } from 'drizzle-orm';
-import { pilot, pilotSkill, type Pilot } from '../db/schema';
+import { count, eq, inArray, sql } from 'drizzle-orm';
+import {
+	asteroidSurvey,
+	authSession,
+	container,
+	creditEntry,
+	fittedModule,
+	itemEntry,
+	itemStack,
+	marketOrder,
+	pilot,
+	pilotAction,
+	pilotLog,
+	pilotPool,
+	pilotSkill,
+	ship,
+	type Pilot
+} from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { placeInFreeSlot } from '$lib/game/fitting';
@@ -19,6 +35,7 @@ import { moveItem, shipContainer } from './containers';
 import { credit } from './wallet';
 import { createStarterShip, saveFit, shipFit, shipHull } from './ships';
 import { UniverseError, requireStation } from './universe';
+import { deletePortrait } from './portraits';
 
 export const CALLSIGN_MIN_LENGTH = 3;
 export const CALLSIGN_MAX_LENGTH = 20;
@@ -301,6 +318,75 @@ export async function changePassword(
 
 	const passwordHash = await hashPassword(newPassword);
 	db.update(pilot).set({ passwordHash }).where(eq(pilot.id, row.id)).run();
+}
+
+/**
+ * Borra la cuenta del piloto y todo lo que colgaba de ella.
+ *
+ * **Pide la contraseña.** No es burocracia: es lo único que separa un clic mal
+ * dado —o una sesión abierta en una máquina ajena— de perder años de juego. La
+ * pantalla además hace escribir el distintivo, pero eso es una traba para el
+ * dedo apurado; esto es la que de verdad autoriza.
+ *
+ * El orden de borrado es **de las hojas a la raíz**, porque las claves foráneas
+ * están activas y al revés falla. Ese orden es conocimiento del esquema, así que
+ * vive acá y no en la pantalla que aprieta el botón.
+ *
+ * Va todo en una transacción: una cuenta borrada a medias —sin piloto pero con
+ * sus órdenes vivas en el mercado— sería peor que no haberla borrado.
+ */
+export async function deleteAccount(db: Db, row: Pilot, password: string): Promise<void> {
+	if (!(await verifyPassword(row.passwordHash, password))) {
+		throw new PilotError('La contraseña no es correcta.');
+	}
+
+	db.transaction((tx) => {
+		const naves = tx.select().from(ship).where(eq(ship.pilotId, row.id)).all();
+		const contenedores = tx.select().from(container).where(eq(container.pilotId, row.id)).all();
+		const deNaves = naves.length
+			? tx
+					.select()
+					.from(container)
+					.where(
+						inArray(
+							container.shipId,
+							naves.map((nave) => nave.id)
+						)
+					)
+					.all()
+			: [];
+		const ids = [...new Set([...contenedores, ...deNaves].map((fila) => fila.id))];
+
+		// Lo que cuelga del piloto por su cuenta.
+		tx.delete(asteroidSurvey).where(eq(asteroidSurvey.pilotId, row.id)).run();
+		tx.delete(marketOrder).where(eq(marketOrder.pilotId, row.id)).run();
+		tx.delete(creditEntry).where(eq(creditEntry.pilotId, row.id)).run();
+		tx.delete(pilotLog).where(eq(pilotLog.pilotId, row.id)).run();
+		tx.delete(pilotAction).where(eq(pilotAction.pilotId, row.id)).run();
+		tx.delete(pilotPool).where(eq(pilotPool.pilotId, row.id)).run();
+		tx.delete(pilotSkill).where(eq(pilotSkill.pilotId, row.id)).run();
+		tx.delete(authSession).where(eq(authSession.pilotId, row.id)).run();
+
+		// Lo que cuelga de sus contenedores, y después ellos.
+		if (ids.length) {
+			tx.delete(itemEntry).where(inArray(itemEntry.containerId, ids)).run();
+			tx.delete(itemStack).where(inArray(itemStack.containerId, ids)).run();
+			tx.delete(container).where(inArray(container.id, ids)).run();
+		}
+
+		// Y sus naves, con lo que tenían montado.
+		for (const nave of naves) {
+			tx.delete(fittedModule).where(eq(fittedModule.shipId, nave.id)).run();
+		}
+		tx.delete(ship).where(eq(ship.pilotId, row.id)).run();
+
+		tx.delete(pilot).where(eq(pilot.id, row.id)).run();
+	});
+
+	// El retrato es un archivo y no una fila, así que sale después de que la
+	// transacción cerró: si el borrado se hubiera deshecho, la cuenta seguiría
+	// existiendo y sería una lástima haberle tirado la foto.
+	deletePortrait(row.id);
 }
 
 /**
