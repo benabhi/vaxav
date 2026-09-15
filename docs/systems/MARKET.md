@@ -213,14 +213,28 @@ enorme. Los días sin operaciones no se rellenan: la curva une los que hubo.
 
 ## La pantalla
 
-La forma es la del mercado de EVE Online, con la voz de Elite: un **árbol de
-categorías** a la izquierda, la **lista de la rama elegida** a la derecha, y al
-abrir un ítem **una ventana con sus dos libros de órdenes** —vendedores arriba,
-compradores abajo— más el historial.
+La forma es la del mercado de EVE Online, con la voz de Elite, y se ordena en
+tres piezas que contestan tres preguntas distintas:
 
-Es una ventana y no un panel que se despliega debajo de la tabla: con dos libros,
-un gráfico y los formularios para publicar, desplegarlo estira la página hasta
-perder de vista la lista de la que uno venía.
+1. **El árbol de categorías**, a la izquierda, para examinar sin saber cómo se
+   llama lo que se busca.
+2. **El catálogo, en dos tablas**: arriba las **órdenes de venta** —lo que se
+   puede comprar— y abajo las **órdenes de compra** —lo que se puede vender—. Con
+   los dos precios en la misma fila hay que leer columna por columna para saber de
+   qué lado del mostrador está cada cosa; separados, "¿qué puedo comprar acá?" se
+   contesta mirando una tabla. Un ítem aparece en las dos si tiene órdenes de los
+   dos lados, y eso no es repetirlo: son dos ofertas distintas. Lo que existe pero
+   nadie comercia va en una lista aparte, porque sigue siendo información.
+3. **Dos ventanas**, y una sola cosa en cada una:
+   - **Operar**: se abre al clickear una fila, y la fila ya eligió el lado, así
+     que muestra esa orden —quién la puso, a cuánto, cuánto hay, a qué distancia—
+     y nada más. Si la mejor orden es la propia, lo único que ofrece es retirarla.
+   - **Poner una orden**: la otra cosa que se puede hacer en un mercado. Es una
+     decisión —cuánto, a cuánto, por cuánto tiempo— que además compromete el turno
+     del piloto, y por eso la ventana **es** la confirmación.
+
+Mezclar las dos ventanas obligaba a leer un formulario entero para hacer la
+operación más simple del mercado.
 
 El catálogo entero viaja con la pantalla; **el libro de cada ítem se pide al
 abrirlo**. Traer las órdenes de los cincuenta y un renglones para dibujar una
@@ -228,8 +242,8 @@ lista sería pedir miles de filas de las que se miran dos.
 
 ### La figura: el historial
 
-La [figura propia de la pantalla](../../CLAUDE.md) es el gráfico de precios, y
-tiene tres capas que contestan cosas distintas: **la banda** entre el mínimo y el
+La [figura propia de la pantalla](../../CLAUDE.md) es el gráfico de precios —a un
+botón de distancia en la ventana de operar— y tiene tres capas que contestan cosas distintas: **la banda** entre el mínimo y el
 máximo de cada día dice cuánta pelea hubo, **la línea** del promedio dice a
 cuánto se comerció de verdad, y **las barras** de volumen dicen cuánto se movió.
 Un precio bonito con volumen cero no es un precio: es una anécdota.

@@ -22,19 +22,15 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
-	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
-	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import PriceChart from '$lib/components/game/PriceChart.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
-	import { askTotal, bidTotal } from '$lib/game/market';
 	import { tenths, thousands } from '$lib/format';
 	import type { FilaMercado, LibroMercado } from '$lib/tipos';
 	import type { PageProps } from './$types';
@@ -53,12 +49,16 @@
 	/** Cuántas unidades mueve el próximo pedido. */
 	let units = $state(1);
 	/**
-	 * Qué se mira del ítem abierto: los libros o el historial.
+	 * De qué lado del mostrador se entró.
 	 *
-	 * Los libros primero, como en EVE: la pregunta al abrir un ítem es a cuánto lo
-	 * venden y a cuánto lo pagan. El historial es la segunda.
+	 * La fila del catálogo ya lo eligió —de la tabla de venta se compra, de la de
+	 * compra se vende—, así que la ventana no tiene que volver a preguntarlo.
 	 */
-	let tab = $state<'book' | 'history'>('book');
+	let side = $state<'sell' | 'buy'>('sell');
+	/** Si la ventana está mostrando la serie de precios en vez de la orden. */
+	let showHistory = $state(false);
+	/** Si está abierta la ventana de publicar, que es la otra cosa del mercado. */
+	let publishOpen = $state(false);
 	/** Lo que se pide al publicar. */
 	let price = $state(0);
 	let range = $state(0);
@@ -90,6 +90,19 @@
 		return market.items.filter((item) => item.group === group);
 	});
 
+	/**
+	 * La lista partida en los dos lados del mostrador.
+	 *
+	 * Un ítem puede estar en las dos —lo normal— y eso no es repetirlo: son dos
+	 * ofertas distintas. Lo que no tiene órdenes de ningún lado va aparte, porque
+	 * sigue existiendo en el catálogo aunque nadie lo esté comerciando.
+	 */
+	let enVenta = $derived(listed.filter((item) => item.bestAsk !== null));
+	let enCompra = $derived(listed.filter((item) => item.bestBid !== null));
+	let sinOrdenes = $derived(
+		listed.filter((item) => item.bestAsk === null && item.bestBid === null)
+	);
+
 	/** La horquilla que le toca a lo que está abierto. */
 	let spread = $derived(chosen && chosen.group !== 'ore' ? market.moduleSpread : market.oreSpread);
 
@@ -99,14 +112,15 @@
 	 * Traer las órdenes de los cincuenta y un renglones para dibujar la lista sería
 	 * pedir miles de filas de las que se miran dos.
 	 */
-	async function abrir(item: FilaMercado) {
+	async function abrir(item: FilaMercado, lado: 'sell' | 'buy' = 'sell') {
 		chosen = item;
+		side = lado;
 		book = null;
 		units = 1;
-		price = item.bestBid ?? item.bestAsk ?? item.basePrice;
+		price = (lado === 'sell' ? item.bestAsk : item.bestBid) ?? item.basePrice;
 		range = 0;
 		days = market.durations[0]?.days ?? 1;
-		tab = 'book';
+		showHistory = false;
 		fromHold = 'ship';
 		open = true;
 		loading = true;
@@ -129,14 +143,6 @@
 			loading = false;
 		}
 		await invalidateAll();
-	}
-
-	/** Lo que de verdad cobra o paga la estación por un lote, con su redondeo. */
-	function stationTotal(side: 'buy' | 'sell', quantity: number): number {
-		if (!chosen) return 0;
-		return side === 'buy'
-			? askTotal(chosen.basePrice, quantity, spread.percent)
-			: bidTotal(chosen.basePrice, quantity, spread.percent);
 	}
 
 	/**
@@ -169,16 +175,126 @@
 		return `en ${Math.floor(horas / 24)} d`;
 	}
 
-	/** Cómo se llama la duración elegida, para poder decirla al confirmar. */
-	let duracion = $derived(
-		market.durations.find((opcion) => opcion.days === days)?.label ?? `${days} días`
-	);
-
 	/** Lo que tiene el piloto a mano de lo que está abierto. */
 	let atHand = $derived(book ? (fromHold === 'ship' ? book.inShip : book.inStation) : 0);
+
+	/** La orden contra la que se opera: la mejor del lado por el que se entró. */
+	let orden = $derived(book ? (side === 'sell' ? book.sellers[0] : book.buyers[0]) : null);
+
+	/**
+	 * Cuántas unidades se pueden mover de verdad.
+	 *
+	 * Comprando, el tope es lo que la orden tiene; vendiendo, lo que hay en la
+	 * bodega elegida. Recortarlo acá evita mandar un pedido que el servicio va a
+	 * rechazar con un número que el jugador ya podía ver.
+	 */
+	let operables = $derived.by(() => {
+		if (!orden) return 0;
+		const tope = side === 'sell' ? (orden.quantity ?? units) : Math.min(units, atHand);
+		return Math.max(0, Math.min(units, tope));
+	});
+
+	let importe = $derived(orden ? orden.price * operables : 0);
+
+	/** Lo que se va a publicar, recortado a lo que hay si es una venta. */
+	let publishUnits = $derived(side === 'sell' ? Math.min(units, atHand) : units);
+
+	/** La comisión del corredor sobre lo que se va a publicar. */
+	let comision = $derived(
+		Math.max(1, Math.round((price * publishUnits * market.brokerPermille) / 1000))
+	);
 </script>
 
 <svelte:head><title>Mercado · Vaxav</title></svelte:head>
+<!--
+	Una tabla del catálogo. Es la misma para los dos lados y cambia sólo qué precio
+	muestra: tener dos copias sería garantizar que algún día se emprolije una y la
+	otra no.
+-->
+{#snippet catalogo(titulo: string, filas: readonly FilaMercado[], lado: 'sell' | 'buy')}
+	<div class="flex w-full flex-col gap-2">
+		<div class="flex w-full flex-wrap items-baseline gap-2">
+			<Label>{titulo}</Label>
+			<div class="grow"></div>
+			<span class="font-mono text-[0.68rem] text-text-muted">{filas.length} ítems</span>
+		</div>
+
+		<div class="w-full overflow-x-auto">
+			<div class="max-h-[20rem] min-w-[28rem] overflow-y-auto">
+				<table
+					class="w-full border-collapse text-left [&_:is(th,td):first-child]:pl-2
+						[&_:is(th,td):last-child]:pr-2"
+				>
+					<thead class="sticky top-0 z-10 bg-well">
+						<tr class="border-b border-border-soft">
+							<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
+								Ítem
+							</th>
+							<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
+								Clase
+							</th>
+							<th
+								class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+							>
+								{lado === 'sell' ? 'Te cobran' : 'Te pagan'}
+							</th>
+							<th
+								class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+							>
+								Órdenes
+							</th>
+							<th
+								class="py-2 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+							>
+								Tuyo
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each filas as item (item.itemCode)}
+							<tr
+								onclick={() => abrir(item, lado)}
+								class="cursor-pointer border-b border-border-soft/40 transition-colors hover:bg-surface-hover"
+							>
+								<td class="py-[0.4rem] pr-3">
+									<div class="flex items-center gap-2">
+										<Icon name={item.icon} weight="duotone" size="0.9rem" class="text-accent" />
+										<span class="text-2 text-text-strong">{item.name}</span>
+									</div>
+								</td>
+								<td class="py-[0.4rem] pr-3 font-mono text-[0.72rem] text-text-muted">
+									{item.tier || '—'}
+								</td>
+								<td
+									class="py-[0.4rem] pr-3 text-right font-mono text-[0.75rem]
+										{lado === 'sell' ? 'text-accent-bright' : 'text-data'}"
+								>
+									{lado === 'sell' ? item.bestAskLabel : item.bestBidLabel}
+								</td>
+								<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.7rem] text-text-muted">
+									{(lado === 'sell' ? item.sellOrders : item.buyOrders) || '—'}
+								</td>
+								<td class="py-[0.4rem] text-right font-mono text-[0.72rem] text-text-body">
+									{item.held || '—'}
+								</td>
+							</tr>
+						{:else}
+							<tr>
+								<td colspan="5" class="py-4 text-center text-1 text-text-muted">
+									{search.trim()
+										? 'Nada con ese nombre de este lado.'
+										: lado === 'sell'
+											? 'Nadie vende nada de esta rama.'
+											: 'Nadie compra nada de esta rama.'}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+{/snippet}
 
 <!--
 	El título es **la región cuyas órdenes se están mirando**, no el lugar donde
@@ -251,6 +367,15 @@
 		<p class="text-2 text-text-body">
 			Operando desde <span class="text-accent-bright">{market.dockedAt}</span>
 		</p>
+		<div class="grow"></div>
+		<!--
+			La otra cosa que se puede hacer en un mercado: en vez de tomar un precio,
+			poner el propio. Vive acá y no dentro de la ventana de operar porque no es
+			una operación sobre la orden de otro.
+		-->
+		<HudButton size="2" onclick={() => (publishOpen = true)} disabled={!chosen}>
+			Poner una orden
+		</HudButton>
 	</div>
 {/if}
 
@@ -324,6 +449,16 @@
 	</div>
 
 	<div class="w-full min-w-0 flex-[1_1_0]">
+		<!--
+			El catálogo va **en dos tablas**, como el libro de un ítem: arriba lo que
+			alguien vende y abajo lo que alguien compra. Con los dos precios en la
+			misma fila hay que leer columna por columna para saber de qué lado del
+			mostrador está cada cosa; separados, la pregunta "¿qué puedo comprar acá?"
+			se contesta mirando una tabla.
+
+			Un ítem aparece en las dos si tiene órdenes de los dos lados, que es lo
+			normal, y eso no es una repetición: son dos ofertas distintas.
+		-->
 		<TitledPanel
 			title={search.trim()
 				? 'Resultados'
@@ -331,81 +466,37 @@
 			detail="{listed.length} ítems"
 			class="w-full"
 		>
-			<div class="w-full overflow-x-auto">
-				<div class="max-h-[30rem] min-w-[34rem] overflow-y-auto">
-					<table
-						class="w-full border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-					>
-						<thead class="sticky top-0 z-10 bg-well">
-							<tr class="border-b border-border-soft">
-								<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-									Ítem
-								</th>
-								<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
-									Clase
-								</th>
-								<th
-									class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+			<div class="flex w-full flex-col gap-5">
+				{@render catalogo('Órdenes de venta', enVenta, 'sell')}
+				{@render catalogo('Órdenes de compra', enCompra, 'buy')}
+
+				{#if sinOrdenes.length > 0}
+					<!--
+						Lo que existe en el catálogo pero nadie está comerciando. Tiene que
+						poder verse igual: es la mitad de la información al decidir qué
+						fabricar o adónde ir a buscar algo.
+					-->
+					<div class="flex w-full flex-col gap-2">
+						<div class="flex w-full flex-wrap items-baseline gap-2">
+							<Label>Sin órdenes</Label>
+							<div class="grow"></div>
+							<span class="font-mono text-[0.68rem] text-text-muted">
+								{sinOrdenes.length} ítems
+							</span>
+						</div>
+						<div class="flex w-full flex-wrap gap-x-4 gap-y-1">
+							{#each sinOrdenes as item (item.itemCode)}
+								<button
+									type="button"
+									onclick={() => abrir(item, 'sell')}
+									class="cursor-pointer text-1 text-text-muted transition-colors hover:text-accent-bright"
 								>
-									Venden a
-								</th>
-								<th
-									class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-								>
-									Compran a
-								</th>
-								<th
-									class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-								>
-									Órdenes
-								</th>
-								<th
-									class="py-2 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-								>
-									Tuyo
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each listed as item (item.itemCode)}
-								<tr
-									onclick={() => abrir(item)}
-									class="cursor-pointer border-b border-border-soft/40 transition-colors hover:bg-surface-hover"
-								>
-									<td class="py-[0.4rem] pr-3">
-										<div class="flex items-center gap-2">
-											<Icon name={item.icon} weight="duotone" size="0.9rem" class="text-accent" />
-											<span class="text-2 text-text-strong">{item.name}</span>
-										</div>
-									</td>
-									<td class="py-[0.4rem] pr-3 font-mono text-[0.72rem] text-text-muted">
-										{item.tier || '—'}
-									</td>
-									<td
-										class="py-[0.4rem] pr-3 text-right font-mono text-[0.75rem] text-accent-bright"
-									>
-										{item.bestAskLabel || '—'}
-									</td>
-									<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.75rem] text-data">
-										{item.bestBidLabel || '—'}
-									</td>
-									<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.7rem] text-text-muted">
-										{item.sellOrders + item.buyOrders || '—'}
-									</td>
-									<td class="py-[0.4rem] text-right font-mono text-[0.72rem] text-text-body">
-										{item.held || '—'}
-									</td>
-								</tr>
-							{:else}
-								<tr>
-									<td colspan="6" class="py-5 text-center text-1 text-text-muted">
-										{search.trim() ? 'Nada con ese nombre.' : 'Nada en esta rama todavía.'}
-									</td>
-								</tr>
+									{item.name}{item.tier ? ` ${item.tier}` : ''}
+								</button>
 							{/each}
-						</tbody>
-					</table>
-				</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		</TitledPanel>
 	</div>
@@ -512,10 +603,183 @@
 {/if}
 
 <!-- La ventana del ítem: sus dos libros, su historial y lo que se puede hacer. -->
-<Modal bind:open title={chosen?.name ?? ''} detail={chosen?.tier ?? ''} icon="storefront" size="lg">
+
+<!--
+	Poner el propio precio en vez de tomar el de otro, en **su propia ventana**.
+
+	Es la otra cosa que se puede hacer en un mercado, y no cabe junto a la de
+	operar: aquélla es un click sobre una orden que ya existe, ésta es una decisión
+	—cuánto, a cuánto, por cuánto tiempo— que además compromete el turno del piloto.
+	Mezclarlas obligaba a leer un formulario entero para hacer lo más simple.
+
+	La ventana **es** la confirmación: muestra lo que va a costar y lo que va a
+	tardar, así que no hace falta un segundo diálogo encima preguntando lo mismo.
+
+	Trabaja sobre el último ítem que se miró, que es el que uno tiene en la cabeza
+	cuando decide que ninguno de los precios del libro le sirve.
+-->
+<Modal bind:open={publishOpen} title="Poner una orden" detail={chosen?.name ?? ''} icon="handshake">
+	{#if !chosen}
+		<p class="text-1 text-text-muted">Elegí un ítem del catálogo para poner tu propio precio.</p>
+	{:else}
+		{@const item = chosen}
+		<div class="flex w-full flex-col gap-3">
+			<div class="flex w-full flex-wrap items-center gap-3">
+				<Label>Lado</Label>
+				{#each [{ code: 'sell' as const, label: 'Vendo' }, { code: 'buy' as const, label: 'Compro' }] as opcion (opcion.code)}
+					<HudButton
+						size="2"
+						variant={side === opcion.code ? 'primary' : 'outline'}
+						onclick={() => (side = opcion.code)}
+					>
+						{opcion.label}
+					</HudButton>
+				{/each}
+
+				<Label>Precio</Label>
+				<input
+					type="number"
+					min="1"
+					bind:value={price}
+					aria-label="Precio por unidad"
+					class="{CONTROL_HEIGHTS['2']} w-28 border border-border-soft bg-field px-3 text-right
+							font-mono text-2 text-text-strong hover:border-border focus:border-accent
+							focus:shadow-glow focus:outline-none"
+				/>
+				<span class="font-mono text-[0.72rem] text-text-muted">CR c/u</span>
+
+				<Label>Cantidad</Label>
+				<input
+					type="number"
+					min="1"
+					bind:value={units}
+					aria-label="Unidades"
+					class="{CONTROL_HEIGHTS['2']} w-24 border border-border-soft bg-field px-3 text-right
+							font-mono text-2 text-text-strong hover:border-border focus:border-accent
+							focus:shadow-glow focus:outline-none"
+				/>
+			</div>
+
+			<div class="flex w-full flex-wrap items-center gap-3">
+				<Label>Dura</Label>
+				<select
+					bind:value={days}
+					aria-label="Cuánto dura la orden"
+					class="{CONTROL_HEIGHTS['2']} border border-border-soft bg-field px-2 font-mono text-2
+							text-text-strong hover:border-border focus:border-accent focus:outline-none"
+				>
+					{#each market.durations as opcion (opcion.days)}
+						<option value={opcion.days}>{opcion.label}</option>
+					{/each}
+				</select>
+
+				{#if side === 'buy' && market.maxRange > 0}
+					<Label>Alcance</Label>
+					<select
+						bind:value={range}
+						aria-label="Alcance de la orden de compra"
+						class="{CONTROL_HEIGHTS['2']} border border-border-soft bg-field px-2 font-mono text-2
+								text-text-strong hover:border-border focus:border-accent focus:outline-none"
+					>
+						<option value={0}>Esta estación</option>
+						{#each Array.from({ length: market.maxRange }, (_, i) => i + 1) as regiones (regiones)}
+							<option value={regiones}>{regiones} región{regiones > 1 ? 'es' : ''}</option>
+						{/each}
+					</select>
+				{/if}
+
+				{#if side === 'sell' && book}
+					<Label>Sale de</Label>
+					{#each [{ code: 'ship' as const, label: 'La nave', units: book.inShip }, { code: 'station' as const, label: 'Acá', units: book.inStation }] as origen (origen.code)}
+						<HudButton
+							size="2"
+							variant={fromHold === origen.code ? 'primary' : 'outline'}
+							onclick={() => (fromHold = origen.code)}
+						>
+							{origen.label} ×{origen.units}
+						</HudButton>
+					{/each}
+				{/if}
+
+				<div class="grow"></div>
+				<span class="font-mono text-[0.72rem] text-text-muted">
+					comisión {thousands(comision)} CR · no se devuelve
+				</span>
+				<span class="font-mono text-2 text-data">{thousands(price * publishUnits)} CR</span>
+			</div>
+
+			<!--
+				La horquilla de la estación, que es contra lo que se compite: nadie te va a
+				comprar por debajo de lo que paga ella, ni vender por encima de lo que
+				cobra. El precio propio se elige dentro de esa banda.
+			-->
+			{#if spread.percent > 0}
+				<p class="font-mono text-[0.68rem] text-text-muted">
+					La estación se queda con el {spread.percent} %: {spread.base} de base{#if spread.corporationEdge > 0},
+						−{spread.corporationEdge}
+						por el rubro{/if}{#if spread.haggling > 0}, −{spread.haggling} por Regateo{/if}
+				</p>
+			{/if}
+			<!--
+					La ventana ya es la parada donde se mira el número antes de comprometer
+					tiempo y plata, así que confirma acá mismo: un segundo diálogo encima
+					preguntando lo mismo es un click que no agrega nada.
+				-->
+			<div
+				class="flex w-full flex-wrap items-center justify-end gap-3 border-t border-border-soft pt-3"
+			>
+				<span class="font-mono text-[0.7rem] text-text-muted">
+					ocupa tu turno · 1 min · deja experiencia de Comercio
+				</span>
+				<div class="grow"></div>
+				<HudButton size="2" variant="ghost" onclick={() => (publishOpen = false)}>
+					Cancelar
+				</HudButton>
+				<form
+					method="POST"
+					action="?/publicar"
+					use:enhance={() => {
+						publishOpen = false;
+						return async ({ update }) => {
+							await update();
+							await refrescar();
+						};
+					}}
+				>
+					<input type="hidden" name="lado" value={side} />
+					<input type="hidden" name="item" value={item.itemCode} />
+					<input type="hidden" name="unidades" value={publishUnits} />
+					<input type="hidden" name="precio" value={price} />
+					<input type="hidden" name="dias" value={days} />
+					<input type="hidden" name="alcance" value={range} />
+					<input type="hidden" name="desde" value={fromHold} />
+					<input type="hidden" name="estacion" value={market.dockedStationId} />
+					<HudButton type="submit" size="2" variant="primary" disabled={publishUnits < 1}>
+						<Icon name="handshake" weight="bold" size="0.75rem" />
+						Acordar
+					</HudButton>
+				</form>
+			</div>
+		</div>
+	{/if}
+</Modal>
+
+<!--
+	La ventana de la operación: **una orden, y qué hacer con ella**.
+
+	Se abre desde una fila del catálogo, y esa fila ya eligió el lado del mostrador
+	—de la tabla de venta se compra, de la de compra se vende—, así que acá no hay
+	nada que volver a elegir. Todo lo que muestra es sobre esa orden: quién la puso,
+	a cuánto, cuánto hay y a qué distancia.
+
+	Poner el propio precio **no está acá**, está en su panel: son dos cosas
+	distintas, y meter el formulario adentro obligaba a leerlo entero para hacer la
+	operación más simple del mercado.
+-->
+<Modal bind:open title={chosen?.name ?? ''} detail={chosen?.tier ?? ''} icon="storefront">
 	{#if chosen}
 		{@const item = chosen}
-		<div class="flex w-full flex-col gap-5">
+		<div class="flex w-full flex-col gap-4">
 			<div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1">
 				<span class="font-display text-1 tracking-label text-accent-dim uppercase">
 					{item.groupLabel}
@@ -527,432 +791,124 @@
 					</span>
 				{/if}
 			</div>
-			<BodyText>{item.summary}</BodyText>
 
 			{#if loading && !book}
 				<p class="text-1 text-text-muted">Leyendo el libro…</p>
 			{:else if book}
 				{@const libro = book}
+				{@const orden = side === 'sell' ? libro.sellers[0] : libro.buyers[0]}
 
-				<!--
-					Los dos libros son **el contenido** de esta ventana, pegados uno al otro
-					como en EVE: vendedores arriba, compradores abajo. Lo primero que hay
-					que ver al abrir un ítem es a cuánto lo venden y a cuánto lo pagan, y
-					cualquier cosa que se meta entre medio empuja esa respuesta fuera de la
-					pantalla.
-
-					Por eso el historial va en una pestaña y no arriba de todo, que es
-					exactamente lo que hace EVE con su "Price History": es la segunda
-					pregunta, no la primera.
-				-->
-				<div
-					class="flex w-full flex-wrap items-center gap-x-4 gap-y-3 border-b border-border-soft pb-3"
-				>
-					<div class="flex items-center gap-1">
-						{#each [{ code: 'book' as const, label: 'Mercado' }, { code: 'history' as const, label: 'Historial' }] as vista (vista.code)}
-							<HudButton
-								size="2"
-								variant={tab === vista.code ? 'primary' : 'outline'}
-								onclick={() => (tab = vista.code)}
-							>
-								{vista.label}
-							</HudButton>
+				{#if showHistory}
+					<PriceChart history={libro.history} />
+					<div class="flex w-full justify-end border-t border-border-soft pt-3">
+						<HudButton size="2" variant="ghost" onclick={() => (showHistory = false)}>
+							Volver a la orden
+						</HudButton>
+					</div>
+				{:else if orden}
+					<!-- La orden elegida, escrita con todas las letras. -->
+					<div class="flex w-full flex-col gap-1 border-y border-border-soft py-3">
+						{#each [{ label: orden.mine ? 'Es tuya' : side === 'sell' ? 'Te vende' : 'Te compra', value: orden.npc ? `${orden.stationName} · la estación` : orden.stationName }, { label: 'Precio', value: `${orden.priceLabel} CR por unidad` }, { label: 'Disponible', value: orden.quantityLabel }, { label: 'Distancia', value: orden.distanceLabel }] as lectura (lectura.label)}
+							<div class="flex w-full items-baseline gap-3">
+								<span class="w-[6.5rem] shrink-0"><Label>{lectura.label}</Label></span>
+								<span class="min-w-0 font-mono text-[0.82rem] text-accent-bright">
+									{lectura.value}
+								</span>
+							</div>
 						{/each}
 					</div>
-					<div class="grow"></div>
-					<div class="flex w-full flex-wrap items-center gap-3 border-y border-border-soft py-3">
-						<Label>Cantidad</Label>
-						<input
-							type="number"
-							min="1"
-							bind:value={units}
-							aria-label="Unidades"
-							class="{CONTROL_HEIGHTS[
-								'2'
-							]} w-24 border border-border-soft bg-field px-3 text-right font-mono
-							text-2 text-text-strong hover:border-border focus:border-accent focus:shadow-glow
-							focus:outline-none"
-						/>
-						<div class="flex items-center gap-2">
-							{#each [{ code: 'ship' as const, label: 'De la nave', units: libro.inShip }, { code: 'station' as const, label: 'De acá', units: libro.inStation }] as origen (origen.code)}
-								<!--
-								La cantidad va con la cruz de multiplicar: un número suelto
-								detrás de un punto se lee como un identificador.
-							-->
-								<HudButton
-									size="2"
-									variant={fromHold === origen.code ? 'primary' : 'outline'}
-									onclick={() => (fromHold = origen.code)}
-								>
-									{origen.label} ×{origen.units}
-								</HudButton>
-							{/each}
-						</div>
-						{#if atHand > 0}
-							<HudButton size="2" variant="ghost" onclick={() => (units = atHand)}>Todo</HudButton>
-						{/if}
-					</div>
-				</div>
 
-				{#if tab === 'history'}
-					<!-- La figura: a cuánto se estuvo comerciando esto de verdad. -->
-					<PriceChart history={libro.history} />
-				{:else}
-					<!--
-					VENDEDORES: quién ofrece, del más barato al más caro. Es el orden en
-					que se compra, así que lo mejor está siempre arriba.
-				-->
-					<div class="flex w-full flex-col gap-2">
-						<Label>Vendedores</Label>
-						<!--
-							La tabla se dibuja **aunque esté vacía**. Reemplazarla por una frase
-							cuando no hay órdenes hacía que la ventana se viera con una sola
-							tabla, y el par de libros es justamente lo que tiene que
-							reconocerse de un vistazo: arriba quién vende, abajo quién compra.
-						-->
-						<div class="w-full overflow-x-auto">
-							<table
-								class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-							>
-								<thead>
-									<tr class="border-b border-border-soft">
-										<th
-											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Cantidad
-										</th>
-										<th
-											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Precio
-										</th>
-										<th
-											class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Ubicación
-										</th>
-										<th
-											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Distancia
-										</th>
-										<th></th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each libro.sellers as orden (orden.id ?? 'estacion')}
-										<tr class="border-b border-border-soft/40 last:border-0">
-											<td class="py-2 pr-3 text-right font-mono text-2 text-text-body">
-												{orden.quantityLabel}
-											</td>
-											<td class="py-2 pr-3 text-right font-mono text-2 text-accent-bright">
-												{orden.priceLabel} CR
-											</td>
-											<td class="py-2 pr-3 text-2 text-text-body">
-												{orden.stationName}
-												{#if orden.npc}
-													<span
-														class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase"
-													>
-														· estación
-													</span>
-												{:else if orden.mine}
-													<span
-														class="font-display text-[0.6rem] tracking-label text-data uppercase"
-													>
-														· tuya
-													</span>
-												{/if}
-											</td>
-											<td class="py-2 pr-3 text-right font-mono text-[0.72rem] text-text-muted">
-												{orden.distanceLabel}
-											</td>
-											<td class="py-2 text-right">
-												{#if orden.mine}
-													<form
-														method="POST"
-														action="?/cancelar"
-														use:enhance={() =>
-															async ({ update }) => {
-																await update();
-																await refrescar();
-															}}
-													>
-														<input type="hidden" name="orden" value={orden.id} />
-														<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
-													</form>
-												{:else if market.canTradeHere}
-													<form
-														method="POST"
-														action="?/comprar"
-														use:enhance={() =>
-															async ({ update }) => {
-																await update();
-																await refrescar();
-															}}
-													>
-														<input type="hidden" name="orden" value={orden.id ?? 0} />
-														<input type="hidden" name="item" value={item.itemCode} />
-														<input type="hidden" name="unidades" value={units} />
-														<HudButton type="submit" size="1">
-															Comprar {thousands(
-																orden.npc ? stationTotal('buy', units) : orden.price * units
-															)} CR
-														</HudButton>
-													</form>
-												{/if}
-											</td>
-										</tr>
-									{:else}
-										<tr>
-											<td colspan="5" class="py-3 text-center text-1 text-text-muted">
-												Nadie vende esto en tu alcance.
-											</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<!-- COMPRADORES: quién paga, del que más paga al que menos. -->
-					<div class="flex w-full flex-col gap-2">
-						<Label>Compradores</Label>
-						<div class="w-full overflow-x-auto">
-							<table
-								class="w-full min-w-[30rem] border-collapse text-left [&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-							>
-								<thead>
-									<tr class="border-b border-border-soft">
-										<th
-											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Cantidad
-										</th>
-										<th
-											class="py-1 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Precio
-										</th>
-										<th
-											class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Ubicación
-										</th>
-										<th
-											class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase"
-										>
-											Alcance
-										</th>
-										<th></th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each libro.buyers as orden (orden.id ?? 'estacion')}
-										<tr class="border-b border-border-soft/40 last:border-0">
-											<td class="py-2 pr-3 text-right font-mono text-2 text-text-body">
-												{orden.quantityLabel}
-											</td>
-											<td class="py-2 pr-3 text-right font-mono text-2 text-data">
-												{orden.priceLabel} CR
-											</td>
-											<td class="py-2 pr-3 text-2 text-text-body">
-												{orden.stationName}
-												{#if orden.npc}
-													<span
-														class="font-display text-[0.6rem] tracking-label text-accent-dim uppercase"
-													>
-														· estación
-													</span>
-												{:else if orden.mine}
-													<span
-														class="font-display text-[0.6rem] tracking-label text-data uppercase"
-													>
-														· tuya
-													</span>
-												{/if}
-											</td>
-											<td class="py-2 pr-3 font-mono text-[0.72rem] text-text-muted">
-												{orden.rangeLabel}
-											</td>
-											<td class="py-2 text-right">
-												{#if orden.mine}
-													<form
-														method="POST"
-														action="?/cancelar"
-														use:enhance={() =>
-															async ({ update }) => {
-																await update();
-																await refrescar();
-															}}
-													>
-														<input type="hidden" name="orden" value={orden.id} />
-														<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
-													</form>
-												{:else if market.canTradeHere && atHand > 0}
-													<form
-														method="POST"
-														action="?/vender"
-														use:enhance={() =>
-															async ({ update }) => {
-																await update();
-																await refrescar();
-															}}
-													>
-														<input type="hidden" name="orden" value={orden.id ?? 0} />
-														<input type="hidden" name="item" value={item.itemCode} />
-														<input type="hidden" name="unidades" value={Math.min(units, atHand)} />
-														<input type="hidden" name="desde" value={fromHold} />
-														<input type="hidden" name="estacion" value={market.dockedStationId} />
-														<HudButton type="submit" size="1" variant="primary">
-															Vender {thousands(
-																orden.npc
-																	? stationTotal('sell', Math.min(units, atHand))
-																	: orden.price * Math.min(units, atHand)
-															)} CR
-														</HudButton>
-													</form>
-												{/if}
-											</td>
-										</tr>
-									{:else}
-										<tr>
-											<td colspan="5" class="py-3 text-center text-1 text-text-muted">
-												Nadie compra esto en tu alcance.
-											</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				{/if}
-
-				{#if market.canTradeHere}
-					<!--
-						Publicar es el otro verbo del mercado: en vez de tomar el precio de
-						alguien, poner el propio y esperar. **Es una acción con tiempo** —se
-						están cerrando condiciones—, así que se confirma como viajar o minar
-						y paga experiencia de Comercio.
-					-->
-					<div class="flex w-full flex-col gap-3 border-t border-border-soft pt-4">
-						<div class="flex w-full flex-wrap items-baseline gap-2">
-							<Label>Acordar una orden</Label>
-							<div class="grow"></div>
-							<span class="font-mono text-[0.68rem] text-text-muted">
-								comisión {tenths(market.brokerPermille)} % · no se devuelve
-							</span>
-						</div>
-
+					{#if market.canTradeHere}
 						<div class="flex w-full flex-wrap items-center gap-3">
-							<Label>Precio</Label>
+							<Label>Cantidad</Label>
 							<input
 								type="number"
 								min="1"
-								bind:value={price}
-								aria-label="Precio por unidad"
+								bind:value={units}
+								aria-label="Unidades"
 								class="{CONTROL_HEIGHTS[
 									'2'
-								]} w-28 border border-border-soft bg-field px-3 text-right
+								]} w-24 border border-border-soft bg-field px-3 text-right
 									font-mono text-2 text-text-strong hover:border-border focus:border-accent
 									focus:shadow-glow focus:outline-none"
 							/>
-							<span class="font-mono text-[0.72rem] text-text-muted">CR por unidad</span>
-
-							<Label>Dura</Label>
-							<select
-								bind:value={days}
-								aria-label="Cuánto dura la orden"
-								class="{CONTROL_HEIGHTS[
-									'2'
-								]} border border-border-soft bg-field px-2 font-mono text-2
-									text-text-strong hover:border-border focus:border-accent focus:outline-none"
-							>
-								{#each market.durations as opcion (opcion.days)}
-									<option value={opcion.days}>{opcion.label}</option>
+							{#if side === 'buy'}
+								{#each [{ code: 'ship' as const, label: 'La nave', units: libro.inShip }, { code: 'station' as const, label: 'Acá', units: libro.inStation }] as origen (origen.code)}
+									<HudButton
+										size="2"
+										variant={fromHold === origen.code ? 'primary' : 'outline'}
+										onclick={() => (fromHold = origen.code)}
+									>
+										{origen.label} ×{origen.units}
+									</HudButton>
 								{/each}
-							</select>
+							{/if}
+							<div class="grow"></div>
+							<span class="font-mono text-2 text-data">{thousands(importe)} CR</span>
+						</div>
 
-							{#if market.maxRange > 0}
-								<Label>Alcance</Label>
-								<select
-									bind:value={range}
-									aria-label="Alcance de la orden de compra"
-									class="{CONTROL_HEIGHTS['2']} border border-border-soft bg-field px-2 font-mono
-										text-2 text-text-strong hover:border-border focus:border-accent focus:outline-none"
+						<div class="flex w-full flex-wrap items-center justify-end gap-3">
+							<HudButton size="2" variant="ghost" onclick={() => (showHistory = true)}>
+								Historial
+							</HudButton>
+							{#if orden.mine}
+								<!--
+									La mejor orden puede ser la propia. Comprársela a uno mismo no es
+									una operación: lo único que se puede hacer con ella es retirarla.
+								-->
+								<form
+									method="POST"
+									action="?/cancelar"
+									use:enhance={() => {
+										open = false;
+										return async ({ update }) => {
+											await update();
+											await refrescar();
+										};
+									}}
 								>
-									<option value={0}>Esta estación</option>
-									{#each Array.from({ length: market.maxRange }, (_, i) => i + 1) as regiones (regiones)}
-										<option value={regiones}>{regiones} región{regiones > 1 ? 'es' : ''}</option>
-									{/each}
-								</select>
+									<input type="hidden" name="orden" value={orden.id} />
+									<HudButton type="submit" size="2" variant="primary">Cancelar la orden</HudButton>
+								</form>
+							{:else}
+								<form
+									method="POST"
+									action={side === 'sell' ? '?/comprar' : '?/vender'}
+									use:enhance={() =>
+										async ({ update }) => {
+											await update();
+											await refrescar();
+										}}
+								>
+									<input type="hidden" name="orden" value={orden.id ?? 0} />
+									<input type="hidden" name="item" value={item.itemCode} />
+									<input type="hidden" name="unidades" value={operables} />
+									<input type="hidden" name="desde" value={fromHold} />
+									<input type="hidden" name="estacion" value={market.dockedStationId} />
+									<HudButton type="submit" size="2" variant="primary" disabled={operables < 1}>
+										{side === 'sell' ? 'Comprar' : 'Vender'}
+										{operables}
+									</HudButton>
+								</form>
 							{/if}
 						</div>
-
-						<div class="flex w-full flex-wrap items-center gap-3">
-							{#each [{ lado: 'sell' as const, label: 'Vender', cuantas: Math.min(units, atHand), bloqueado: atHand < 1 }, { lado: 'buy' as const, label: 'Comprar', cuantas: units, bloqueado: false }] as opcion (opcion.lado)}
-								<ConfirmAction
-									title="Acordar {opcion.label.toLowerCase()} {opcion.cuantas} × {item.name}"
-									icon="handshake"
-									confirmLabel="Acordar"
-									formAction="?/publicar"
-									readings={[
-										{ label: 'Unidades', value: `${opcion.cuantas}` },
-										{ label: 'Precio', value: `${thousands(price)} CR c/u` },
-										{ label: 'Total', value: `${thousands(price * opcion.cuantas)} CR` },
-										{
-											label: 'Comisión',
-											value: `${thousands(Math.max(1, Math.round((price * opcion.cuantas * market.brokerPermille) / 1000)))} CR`
-										},
-										{ label: 'Dura', value: duracion },
-										{ label: 'Tarda', value: '1 min' }
-									]}
-									note="Acordar ocupa tu turno y deja experiencia de Comercio. La orden entra al libro cuando el trato se cierra; la comisión no se devuelve."
-									disabled={opcion.bloqueado}
-								>
-									{#snippet trigger(abrir)}
-										<HudButton size="2" onclick={abrir} disabled={opcion.bloqueado}>
-											{opcion.label}: acordar
-										</HudButton>
-									{/snippet}
-									{#snippet fields()}
-										<input type="hidden" name="lado" value={opcion.lado} />
-										<input type="hidden" name="item" value={item.itemCode} />
-										<input type="hidden" name="unidades" value={opcion.cuantas} />
-										<input type="hidden" name="precio" value={price} />
-										<input type="hidden" name="dias" value={days} />
-										<input type="hidden" name="alcance" value={range} />
-										<input type="hidden" name="desde" value={fromHold} />
-										<input type="hidden" name="estacion" value={market.dockedStationId} />
-									{/snippet}
-								</ConfirmAction>
-							{/each}
-							<div class="grow"></div>
-							<span class="font-mono text-[0.72rem] text-data">
-								{thousands(price * units)} CR por {units}
-							</span>
-						</div>
-
-						<!--
-							La horquilla de la estación, en texto y no como figura: la figura de
-							esta pantalla es el historial, y dos figuras compiten y no gana
-							ninguna. Igual hay que poder explicar por qué el mostrador paga menos
-							de lo que cobra.
-						-->
-						{#if spread.percent > 0}
-							<p class="font-mono text-[0.68rem] text-text-muted">
-								La estación se queda con el {spread.percent} %: {spread.base} de base{#if spread.corporationEdge > 0},
-									−{spread.corporationEdge}
-									por el rubro{/if}{#if spread.haggling > 0}, −{spread.haggling} por Regateo{/if}{#if spread.atFloor}
-									· al piso{/if}
-							</p>
-						{/if}
+					{:else}
+						<p class="text-1 text-text-muted">{market.whyNot}</p>
+					{/if}
+				{:else}
+					<p class="text-1 text-text-muted">
+						{side === 'sell'
+							? 'Nadie vende esto en tu alcance. Podés poner tu propio precio abajo.'
+							: 'Nadie compra esto en tu alcance. Podés poner tu propio precio abajo.'}
+					</p>
+					<div class="flex w-full justify-end">
+						<HudButton size="2" variant="ghost" onclick={() => (showHistory = true)}>
+							Historial
+						</HudButton>
 					</div>
 				{/if}
 			{:else}
-				<Panel class="w-full p-4">
-					<p class="text-1 text-text-muted">No se pudo leer el libro de este ítem.</p>
-				</Panel>
+				<p class="text-1 text-text-muted">No se pudo leer el libro de este ítem.</p>
 			{/if}
 		</div>
 	{/if}
