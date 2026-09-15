@@ -32,6 +32,7 @@
 	import Label from '$lib/components/typography/Label.svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
 	import { askTotal, bidTotal } from '$lib/game/market';
 	import { tenths, thousands } from '$lib/format';
 	import type { FilaMercado, LibroMercado } from '$lib/tipos';
@@ -222,7 +223,9 @@
 						bind:value={search}
 						placeholder="Buscar"
 						aria-label="Buscar en el mercado"
-						class="h-[2.15rem] w-full border border-border-soft bg-field pr-3 pl-8 font-body text-2
+						class="{CONTROL_HEIGHTS[
+							'2'
+						]} w-full border border-border-soft bg-field pr-3 pl-8 font-body text-2
 							text-text-strong transition-[border-color,box-shadow] placeholder:text-text-muted
 							hover:border-border focus:border-accent focus:shadow-glow focus:outline-none"
 					/>
@@ -395,7 +398,9 @@
 							min="1"
 							bind:value={units}
 							aria-label="Unidades"
-							class="h-[2.15rem] w-24 border border-border-soft bg-field px-3 text-right font-mono
+							class="{CONTROL_HEIGHTS[
+								'2'
+							]} w-24 border border-border-soft bg-field px-3 text-right font-mono
 								text-2 text-text-strong hover:border-border focus:border-accent focus:shadow-glow
 								focus:outline-none"
 						/>
@@ -660,7 +665,9 @@
 								min="1"
 								bind:value={price}
 								aria-label="Precio por unidad"
-								class="h-[2.15rem] w-28 border border-border-soft bg-field px-3 text-right font-mono
+								class="{CONTROL_HEIGHTS[
+									'2'
+								]} w-28 border border-border-soft bg-field px-3 text-right font-mono
 									text-2 text-text-strong hover:border-border focus:border-accent focus:shadow-glow
 									focus:outline-none"
 							/>
@@ -712,7 +719,9 @@
 									<select
 										bind:value={range}
 										aria-label="Alcance de la orden de compra"
-										class="h-[2.15rem] border border-border-soft bg-field px-2 font-mono text-2
+										class="{CONTROL_HEIGHTS[
+											'2'
+										]} border border-border-soft bg-field px-2 font-mono text-2
 											text-text-strong hover:border-border focus:border-accent focus:outline-none"
 									>
 										<option value={0}>Esta estación</option>

@@ -16,6 +16,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Icon from '$lib/components/Icon.svelte';
+	import HudButton from '$lib/components/buttons/HudButton.svelte';
+	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
 	import SkillMeter from '$lib/components/meters/SkillMeter.svelte';
@@ -132,7 +134,13 @@
 <ErrorCallout message={form?.error} />
 
 <TitledPanel title="Árbol" detail="{visibles.length} de {tree.total}" class="w-full">
-	<!-- Los filtros. Van arriba de la lista porque son lo primero que se usa. -->
+	<!--
+		Los filtros. Van arriba de la lista porque son lo primero que se usa.
+
+		Campo y botones comparten la escala de altura de los controles: una fila
+		donde el buscador es más alto que los botones que tiene al lado se ve
+		desprolija aunque nadie sepa señalar por qué.
+	-->
 	<div class="mb-3 flex w-full flex-wrap items-center gap-2 border-b border-border-soft pb-3">
 		<label class="flex min-w-0 flex-[1_1_12rem] items-center gap-2">
 			<Icon name="magnifying-glass" weight="bold" size="0.8rem" class="shrink-0 text-accent-dim" />
@@ -140,41 +148,31 @@
 				type="search"
 				bind:value={busqueda}
 				placeholder="Buscar por nombre o por lo que mejora"
-				class="h-8 w-full min-w-0 border border-border-soft bg-field px-2 font-body text-[0.78rem]
-					text-text-strong transition-[border-color,box-shadow] placeholder:text-text-muted
-					hover:border-border focus:border-accent focus:shadow-glow focus:outline-none"
+				class="{CONTROL_HEIGHTS['2']} w-full min-w-0 border border-border-soft bg-field px-2
+					font-body text-[0.78rem] text-text-strong transition-[border-color,box-shadow]
+					placeholder:text-text-muted hover:border-border focus:border-accent focus:shadow-glow
+					focus:outline-none"
 			/>
 		</label>
 
 		<div class="flex flex-wrap items-center gap-1">
 			{#each ESTADOS as opcion (opcion.code)}
-				<button
-					type="button"
-					onclick={() => (estado = opcion.code)}
+				<HudButton
+					size="2"
+					variant={estado === opcion.code ? 'primary' : 'outline'}
 					aria-pressed={estado === opcion.code}
-					class="cursor-pointer border px-[0.55rem] py-[0.25rem] font-display text-[0.64rem]
-						font-semibold tracking-label whitespace-nowrap uppercase transition-[background-color,color]
-						{estado === opcion.code
-						? 'border-accent bg-accent text-on-accent'
-						: 'border-border-soft bg-transparent text-accent-bright hover:bg-surface-hover'}"
+					onclick={() => (estado = opcion.code)}
 				>
 					{opcion.label}
-				</button>
+				</HudButton>
 			{/each}
 		</div>
 
 		{#if filtrando}
-			<button
-				type="button"
-				onclick={limpiar}
-				class="flex cursor-pointer items-center gap-1 border border-border-soft px-[0.5rem]
-					py-[0.25rem] text-text-muted transition-colors hover:text-accent"
-			>
+			<HudButton size="2" variant="ghost" onclick={limpiar}>
 				<Icon name="x" weight="bold" size="0.6rem" />
-				<span class="font-display text-[0.64rem] font-semibold tracking-label uppercase">
-					Limpiar
-				</span>
-			</button>
+				Limpiar
+			</HudButton>
 		{/if}
 	</div>
 
