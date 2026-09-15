@@ -828,6 +828,64 @@ export const itemEntry = sqliteTable(
 	]
 );
 
+/**
+ * Una orden del mercado: alguien que quiere comprar o vender algo, a un precio.
+ *
+ * **Sólo las de los jugadores viven acá.** Las de la estación no se guardan: se
+ * calculan a partir del precio de referencia y del rubro de la corporación. Si se
+ * guardaran serían doscientas filas que habría que resembrar cada vez que se
+ * mueva una fórmula, y además su precio no es el mismo para todos —Regateo lo
+ * cambia— así que no hay un número que escribir.
+ *
+ * `quantity` es lo que **queda**, y cuando llega a cero la fila se borra: una
+ * orden agotada no es una orden, y un libro lleno de ceros ensucia toda consulta
+ * que lo recorra. Lo que pasó queda en los dos libros mayores, que es donde se
+ * mira la historia.
+ *
+ * **La garantía es el corazón de esto.** Una orden de compra reserva los créditos
+ * en el momento de publicarse y una de venta reserva la mercadería; sin eso, una
+ * orden es una promesa que puede no valer nada cuando alguien la acepte. La
+ * columna `escrow` guarda lo reservado en créditos para poder devolverlo exacto
+ * al cancelar, sin recalcular un precio que puede haber cambiado.
+ */
+export const marketOrder = sqliteTable(
+	'market_order',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		/** `buy` o `sell`, mirado desde quien la publicó. */
+		kind: text('kind').notNull(),
+		itemCode: text('item_code').notNull(),
+		/** Dónde está la orden: acá se entrega y acá se retira. */
+		stationId: integer('station_id')
+			.notNull()
+			.references(() => station.id),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		/** Créditos por unidad. */
+		price: integer('price').notNull(),
+		/** Lo que queda por comerciar. */
+		quantity: integer('quantity').notNull(),
+		/** Con cuánto salió, para poder contar cuánto lleva cumplido. */
+		initialQuantity: integer('initial_quantity').notNull(),
+		/**
+		 * Cuántas regiones alcanza, contando la propia. Cero es "sólo en esta
+		 * estación". Sólo lo usan las de compra: la mercadería de una venta está en
+		 * un lugar concreto y de ahí se retira.
+		 */
+		rangeRegions: integer('range_regions').notNull().default(0),
+		/** Créditos reservados. Cero en las de venta, que reservan mercadería. */
+		escrow: integer('escrow').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		// El libro se lee siempre igual: qué hay de este ítem, ordenado por precio.
+		index('market_order_book_idx').on(table.itemCode, table.kind, table.price),
+		index('market_order_station_idx').on(table.stationId),
+		index('market_order_pilot_idx').on(table.pilotId)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -852,3 +910,4 @@ export type ItemStack = typeof itemStack.$inferSelect;
 export type CreditEntry = typeof creditEntry.$inferSelect;
 export type ItemEntry = typeof itemEntry.$inferSelect;
 export type BeltDeposit = typeof beltDeposit.$inferSelect;
+export type MarketOrder = typeof marketOrder.$inferSelect;
