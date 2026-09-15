@@ -19,6 +19,11 @@ import {
 	cut,
 	maxOrderRange,
 	openOrderLimit,
+	ORDER_DURATIONS,
+	allowsDuration,
+	dealFactorTenths,
+	durationsFor,
+	maxOrderDays,
 	regionsInRange,
 	salesTaxPermille,
 	askPrice,
@@ -232,5 +237,56 @@ describe('lo que se lleva la casa', () => {
 
 	it('una comisión del 3 % sobre 10.000 son 300', () => {
 		expect(cut(10_000, brokerFeePermille(0))).toBe(300);
+	});
+});
+
+describe('acordar una orden', () => {
+	it('un trato chico casi no enseña nada', () => {
+		// Es lo que impide granjear experiencia publicando cien órdenes de un
+		// crédito: pagan lo mismo que publicar una, que es casi nada.
+		expect(dealFactorTenths(1)).toBe(5);
+		expect(dealFactorTenths(1_000)).toBe(5);
+	});
+
+	it('un trato grande enseña más, hasta un tope', () => {
+		expect(dealFactorTenths(250_000)).toBeGreaterThan(dealFactorTenths(10_000));
+		expect(dealFactorTenths(500_000)).toBe(30);
+		// Y de ahí no sube: sin tope, una fortuna compraría la rama entera.
+		expect(dealFactorTenths(50_000_000)).toBe(30);
+	});
+
+	it('crece sin saltos entre los dos extremos', () => {
+		let anterior = dealFactorTenths(1_000);
+		for (const valor of [10_000, 50_000, 100_000, 300_000, 499_000]) {
+			const actual = dealFactorTenths(valor);
+			expect(actual).toBeGreaterThanOrEqual(anterior);
+			expect(actual).toBeLessThanOrEqual(30);
+			anterior = actual;
+		}
+	});
+});
+
+describe('cuánto dura una orden', () => {
+	it('sin entrenar se publica por un día', () => {
+		expect(durationsFor(0)).toHaveLength(1);
+		expect(maxOrderDays(0)).toBe(1);
+	});
+
+	it('Contactos va abriendo la escalera', () => {
+		expect(maxOrderDays(2)).toBe(7);
+		expect(maxOrderDays(5)).toBe(90);
+		expect(durationsFor(5)).toHaveLength(ORDER_DURATIONS.length);
+	});
+
+	it('no deja elegir una duración que no tiene entrenada', () => {
+		expect(allowsDuration(0, 1)).toBe(true);
+		expect(allowsDuration(0, 30)).toBe(false);
+		expect(allowsDuration(4, 30)).toBe(true);
+	});
+
+	it('ninguna orden es eterna', () => {
+		// Sin vencimiento, el libro se llena de precios viejos de pilotos que
+		// dejaron de jugar, y eso es peor que un libro vacío.
+		for (const opcion of ORDER_DURATIONS) expect(opcion.days).toBeGreaterThan(0);
 	});
 });

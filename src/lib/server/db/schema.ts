@@ -458,6 +458,16 @@ export const pilotAction = sqliteTable(
 		destinationBodyId: integer('destination_body_id').references(() => body.id),
 
 		/**
+		 * La orden que se está acordando, si la acción es publicar.
+		 *
+		 * La orden se escribe al **encargar** —con su garantía tomada y su fecha de
+		 * apertura— y la acción sólo apunta a ella. Guardar acá precio, cantidad y
+		 * alcance sería tener los mismos datos en dos lugares, y el día que no
+		 * coincidan gana el que alguien recuerde leer.
+		 */
+		orderId: integer('order_id').references(() => marketOrder.id),
+
+		/**
 		 * Sobre qué trabaja la acción, si trabaja sobre algo.
 		 *
 		 * Minar necesita saber **qué mineral**; refinar y fabricar van a necesitar
@@ -876,6 +886,44 @@ export const marketOrder = sqliteTable(
 		rangeRegions: integer('range_regions').notNull().default(0),
 		/** Créditos reservados. Cero en las de venta, que reservan mercadería. */
 		escrow: integer('escrow').notNull().default(0),
+		/**
+		 * Cuándo entra al libro.
+		 *
+		 * Publicar es una acción que lleva tiempo —se está acordando el trato— y la
+		 * orden recién se ve cuando ese tiempo pasó. Es **una fecha y no un
+		 * interruptor** por la misma razón que todo lo demás en este juego: así la
+		 * orden abre sola con el reloj y no puede quedar desincronizada de la acción
+		 * que la trajo, ni siquiera si el piloto no vuelve a entrar nunca.
+		 *
+		 * El valor por defecto es **cero y no `unixepoch()`** porque SQLite no acepta
+		 * agregar una columna con un default que no sea constante, y porque un
+		 * `Date` de JavaScript ahí sale escrito como texto. Cero es la época: una
+		 * orden sin fecha explícita queda abierta desde siempre, que es lo correcto
+		 * para las que ya existían.
+		 */
+		opensAt: integer('opens_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`0`),
+		/**
+		 * Cuándo se cae del libro.
+		 *
+		 * **Ninguna orden es eterna.** Sin vencimiento, el libro se llena de precios
+		 * viejos de pilotos que dejaron de jugar, y un mercado que muestra ofertas
+		 * que nadie va a honrar es peor que uno vacío. Cuánto se puede estirar sale
+		 * de Contactos: un comerciante con agenda deja tratos parados más tiempo.
+		 *
+		 * Al vencer, la garantía vuelve entera —la mercadería a la bodega de la
+		 * estación, los créditos a la billetera—: caducar no es perder.
+		 *
+		 * El valor por defecto existe sólo para poder agregar la columna a una tabla
+		 * que ya tiene filas. **Nadie debería apoyarse en él** —toda orden fija su
+		 * vencimiento al publicarse, y hay un test que lo exige—; que sea la época
+		 * es a propósito, porque una orden sin vencimiento explícito conviene que se
+		 * caiga sola y no que viva para siempre.
+		 */
+		expiresAt: integer('expires_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`0`),
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
 	},
 	(table) => [

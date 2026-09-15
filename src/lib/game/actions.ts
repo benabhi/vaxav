@@ -42,11 +42,13 @@ export const REFERENCE_SPEED = 190;
  * frene. Cada entrada de acá necesita su resolvedor en
  * `server/services/actions.ts`, y un test lo verifica.
  */
-export const ACTION_KINDS = ['travel', 'mine'] as const;
+export const ACTION_KINDS = ['travel', 'mine', 'publish'] as const;
 export type ActionKind = (typeof ACTION_KINDS)[number];
 
 export const TRAVEL_KIND: ActionKind = 'travel';
 export const MINE_KIND: ActionKind = 'mine';
+/** Acordar una orden del mercado, que es lo que la pone en el libro. */
+export const PUBLISH_KIND: ActionKind = 'publish';
 
 /**
  * La rama a la que viajar le deposita la experiencia.
@@ -57,6 +59,8 @@ export const MINE_KIND: ActionKind = 'mine';
  * descubrirse leyendo el catálogo.
  */
 export const TRAVEL_FAMILY: SkillFamily = 'piloting';
+/** Acordar una compra o una venta paga Comercio, que es de lo que se trata. */
+export const TRADE_FAMILY: SkillFamily = 'trade';
 
 /**
  * Duración de un viaje entre dos cuerpos del mismo sistema, en segundos.

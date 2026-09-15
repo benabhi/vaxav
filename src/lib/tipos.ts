@@ -599,6 +599,34 @@ export interface FilaMercado {
 	readonly held: number;
 }
 
+/**
+ * Una orden propia, tal como se lista en la mesa del piloto.
+ *
+ * Incluye las que **todavía se están acordando**: no están en el libro y hay que
+ * decirlo, o el piloto las busca ahí y cree que se perdieron.
+ */
+export interface OrdenPropia {
+	readonly id: number;
+	readonly kind: string;
+	readonly kindLabel: string;
+	readonly itemCode: string;
+	readonly name: string;
+	readonly quantity: number;
+	readonly initialQuantity: number;
+	readonly price: string;
+	readonly value: string;
+	readonly stationName: string;
+	readonly pending: boolean;
+	readonly opensAt: number;
+	readonly expiresAt: number;
+}
+
+/** Cuánto puede durar una orden, de las que este piloto puede elegir. */
+export interface DuracionOrden {
+	readonly days: number;
+	readonly label: string;
+}
+
 /** El mercado de la región, visto desde donde está el piloto. */
 export interface Mercado {
 	readonly regionName: string;
@@ -624,6 +652,10 @@ export interface Mercado {
 	readonly moduleSpread: Horquilla;
 	readonly groups: readonly GrupoMercado[];
 	readonly items: readonly FilaMercado[];
+	/** Las duraciones que puede elegir al publicar. El tope lo da Contactos. */
+	readonly durations: readonly DuracionOrden[];
+	/** Sus órdenes abiertas y las que todavía se están acordando. */
+	readonly orders: readonly OrdenPropia[];
 	readonly cargoFree: string;
 }
 

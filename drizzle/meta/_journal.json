@@ -57,6 +57,13 @@
       "when": 1789471096511,
       "tag": "0007_slow_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789472722767,
+      "tag": "0008_charming_klaw",
+      "breakpoints": true
     }
   ]
 }

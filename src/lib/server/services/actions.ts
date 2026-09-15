@@ -17,23 +17,35 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import { body, pilot, pilotAction, type Body, type Pilot, type PilotAction } from '../db/schema';
+import {
+	body,
+	marketOrder,
+	pilot,
+	pilotAction,
+	type Body,
+	type Pilot,
+	type PilotAction
+} from '../db/schema';
 import type { Db } from '../db/types';
 import {
 	MINE_KIND,
 	TRAVEL_FAMILY,
 	TRAVEL_KIND,
+	PUBLISH_KIND,
+	TRADE_FAMILY,
 	travelDurationSeconds,
 	type ActionKind
 } from '$lib/game/actions';
-import { getOre } from '$lib/game/items';
+import { getOre, type ContainerKind } from '$lib/game/items';
 import { floorDiv } from '$lib/game/math';
 import { MINING_FAMILY, cycleSeconds, yieldPerCycleTenths } from '$lib/game/mining';
+import { PUBLISH_SECONDS, dealFactorTenths } from '$lib/game/market';
 import { actionXpPool } from '$lib/game/progression';
 import type { SkillFamily } from '$lib/game/skills';
 import { skillFamilyLabel } from '$lib/format';
 import { cargoHold, fitsUnits, moveItem, shipContainer } from './containers';
 import { isBelt, miningPlan, takeFromBelt } from './mining';
+import { placeBuyOrder, placeSellOrder } from './orders';
 import { deposit } from './pools';
 import { recordEntry, type PoolDeposit } from './log';
 import { activeShip, shipReadout } from './ships';
@@ -92,6 +104,13 @@ interface Resolution {
 /** Lo que una acción produjo, tal como se guarda en el informe. */
 export interface ActionResult {
 	readonly mined?: { readonly ore: string; readonly units: number; readonly cycles: number };
+	/** El trato que quedó acordado: qué se publicó, cuánto y a cuánto. */
+	readonly deal?: {
+		readonly kind: string;
+		readonly item: string;
+		readonly units: number;
+		readonly price: number;
+	};
 }
 
 /** Cómo se resuelve una clase de acción, una vez que la fila ya es nuestra. */
@@ -158,9 +177,44 @@ const resolveMine: Resolver = (tx, row, claimed) => {
  * Está tipado contra `ActionKind`, así que agregar una clase sin su resolvedor
  * no compila. Es la única forma de que el despachador no se olvide de nada.
  */
+/**
+ * Acordar una orden: no se mueve nada, la orden abre sola y la experiencia va a
+ * Comercio.
+ *
+ * **La orden ya existe y ya abrió** cuando esto corre: se escribió al encargar,
+ * con su garantía tomada y su fecha de apertura puesta, y el reloj la hizo
+ * visible. Acá sólo se cobra lo que el trato enseñó.
+ *
+ * Si la orden no está, es porque el piloto la canceló mientras se acordaba. No es
+ * un error: es que se arrepintió, y entonces no hay nada que aprender.
+ */
+const resolvePublish: Resolver = (tx, _row, claimed) => {
+	const vacio = { family: TRADE_FAMILY, xp: 0, movesTo: null };
+	if (claimed.orderId === null) return vacio;
+
+	const orden = tx.select().from(marketOrder).where(eq(marketOrder.id, claimed.orderId)).get();
+	if (!orden) return vacio;
+
+	const valor = orden.price * orden.initialQuantity;
+	return {
+		family: TRADE_FAMILY,
+		xp: actionXpPool(claimed.durationSeconds / 60, dealFactorTenths(valor) / 10),
+		movesTo: null,
+		result: {
+			deal: {
+				kind: orden.kind,
+				item: orden.itemCode,
+				units: orden.initialQuantity,
+				price: orden.price
+			}
+		}
+	};
+};
+
 const RESOLVERS: Readonly<Record<ActionKind, Resolver>> = {
 	travel: resolveTravel,
-	mine: resolveMine
+	mine: resolveMine,
+	publish: resolvePublish
 };
 
 /** La acción en curso del piloto, o `null` si no tiene ninguna. */
@@ -326,5 +380,58 @@ export function resolveIfDue(db: Db, row: Pilot): ActionReport | null {
 			durationSeconds: claimed.durationSeconds,
 			deposit: depositado
 		};
+	});
+}
+
+/**
+ * Encarga acordar una orden del mercado.
+ *
+ * La orden se escribe **ahora** —con su garantía tomada y su fecha de apertura
+ * puesta más adelante— y la acción sólo la acompaña. Es al revés de lo que
+ * parece: si la orden se creara al resolver, la plata o la mercadería quedarían
+ * libres mientras se negocia y el piloto podría comprometerlas dos veces.
+ *
+ * Cancelar la orden mientras se acuerda cancela también la acción: retirarse de
+ * un trato no es una negociación, es decir que no.
+ */
+export function startPublish(
+	db: Db,
+	row: Pilot,
+	spec: {
+		kind: 'buy' | 'sell';
+		itemCode: string;
+		quantity: number;
+		price: number;
+		stationId: number;
+		days?: number;
+		rangeRegions?: number;
+		from?: ContainerKind;
+	}
+): PilotAction {
+	const now = situation(db, row);
+	if (!now.canOrder) throw new ActionError(now.orderBlocked);
+	if (now.stationId === null)
+		throw new ActionError('Hay que estar atracado para acordar una orden.');
+
+	return db.transaction((tx) => {
+		const orden =
+			spec.kind === 'sell'
+				? placeSellOrder(tx, row, { ...spec, delaySeconds: PUBLISH_SECONDS })
+				: placeBuyOrder(tx, row, { ...spec, delaySeconds: PUBLISH_SECONDS });
+
+		return tx
+			.insert(pilotAction)
+			.values({
+				pilotId: row.id,
+				kind: PUBLISH_KIND,
+				durationSeconds: PUBLISH_SECONDS,
+				originBodyId: row.locationId,
+				// Acordar no mueve al piloto de lugar.
+				destinationBodyId: null,
+				targetCode: spec.itemCode,
+				orderId: orden.id
+			})
+			.returning()
+			.get();
 	});
 }

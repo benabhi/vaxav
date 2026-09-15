@@ -24,6 +24,7 @@
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import PriceChart from '$lib/components/game/PriceChart.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -54,6 +55,8 @@
 	/** Lo que se pide al publicar. */
 	let price = $state(0);
 	let range = $state(0);
+	/** Cuántos días queda publicada. Arranca en lo más corto, que es lo más barato de equivocar. */
+	let days = $state(1);
 	let fromHold = $state<'ship' | 'station'>('ship');
 
 	let roots = $derived(market.groups.filter((rama) => rama.parent === ''));
@@ -95,6 +98,7 @@
 		units = 1;
 		price = item.bestBid ?? item.bestAsk ?? item.basePrice;
 		range = 0;
+		days = market.durations[0]?.days ?? 1;
 		fromHold = 'ship';
 		open = true;
 		loading = true;
@@ -126,6 +130,26 @@
 			? askTotal(chosen.basePrice, quantity, spread.percent)
 			: bidTotal(chosen.basePrice, quantity, spread.percent);
 	}
+
+	/**
+	 * Cuánto falta para una fecha, escrito corto.
+	 *
+	 * Lo calcula el navegador y no el servidor por la misma razón que la cuenta
+	 * regresiva de la barra de estado: es la hora del jugador, y un "en 3 días"
+	 * rendido en el servidor queda viejo apenas se dibuja.
+	 */
+	function cuando(at: number): string {
+		const segundos = Math.max(0, Math.round((at - Date.now()) / 1000));
+		if (segundos < 3600) return `en ${Math.max(1, Math.floor(segundos / 60))} min`;
+		const horas = Math.floor(segundos / 3600);
+		if (horas < 48) return `en ${horas} h`;
+		return `en ${Math.floor(horas / 24)} d`;
+	}
+
+	/** Cómo se llama la duración elegida, para poder decirla al confirmar. */
+	let duracion = $derived(
+		market.durations.find((opcion) => opcion.days === days)?.label ?? `${days} días`
+	);
 
 	/** Lo que tiene el piloto a mano de lo que está abierto. */
 	let atHand = $derived(book ? (fromHold === 'ship' ? book.inShip : book.inStation) : 0);
@@ -363,6 +387,106 @@
 		</TitledPanel>
 	</div>
 </div>
+
+<!--
+	La mesa del piloto: lo que tiene puesto, de los dos lados y en toda la región.
+
+	Va en la pantalla y no escondida dentro de cada ítem porque la pregunta "¿qué
+	tengo publicado?" es de la mesa entera: con cincuenta y un ítems, contestarla
+	abriendo uno por uno no es contestarla.
+-->
+{#if market.orders.length > 0}
+	<TitledPanel
+		title="Mis órdenes"
+		detail="{market.orders.length} de {market.orderLimit}"
+		class="w-full"
+	>
+		<div class="w-full overflow-x-auto">
+			<table
+				class="w-full min-w-[34rem] border-collapse text-left
+					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
+			>
+				<thead>
+					<tr class="border-b border-border-soft">
+						<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
+							Orden
+						</th>
+						<th
+							class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+						>
+							Quedan
+						</th>
+						<th
+							class="py-2 pr-3 text-right font-display text-1 tracking-label text-accent-dim uppercase"
+						>
+							Precio
+						</th>
+						<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
+							Dónde
+						</th>
+						<th class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase">
+							Vence
+						</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each market.orders as orden (orden.id)}
+						<tr class="border-b border-border-soft/40 last:border-0">
+							<td class="py-[0.45rem] pr-3">
+								<div class="flex flex-wrap items-center gap-2">
+									<span
+										class="font-display text-[0.62rem] tracking-label uppercase
+											{orden.kind === 'sell' ? 'text-accent-bright' : 'text-data'}"
+									>
+										{orden.kindLabel}
+									</span>
+									<span class="text-2 text-text-strong">{orden.name}</span>
+									{#if orden.pending}
+										<!--
+											Todavía no está en el libro. Decirlo es lo que evita que el
+											piloto la busque ahí y crea que se perdió.
+										-->
+										<span
+											class="border border-border-soft px-[0.3rem] font-display text-[0.55rem]
+												tracking-label text-text-muted uppercase"
+										>
+											Acordando
+										</span>
+									{/if}
+								</div>
+							</td>
+							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-text-body">
+								{orden.quantity} / {orden.initialQuantity}
+							</td>
+							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-accent-bright">
+								{orden.price} CR
+							</td>
+							<td class="py-[0.45rem] pr-3 text-2 text-text-body">{orden.stationName}</td>
+							<td class="py-[0.45rem] pr-3 font-mono text-[0.72rem] text-text-muted">
+								{cuando(orden.expiresAt)}
+							</td>
+							<td class="py-[0.45rem] text-right">
+								<form
+									method="POST"
+									action="?/cancelar"
+									use:enhance={() =>
+										async ({ update }) => {
+											await update();
+											await refrescar();
+										}}
+								>
+									<input type="hidden" name="orden" value={orden.id} />
+									<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
+								</form>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</TitledPanel>
+{/if}
 
 <!-- La ventana del ítem: sus dos libros, su historial y lo que se puede hacer. -->
 <Modal bind:open title={chosen?.name ?? ''} detail={chosen?.tier ?? ''} icon="storefront" size="lg">
@@ -647,11 +771,13 @@
 				{#if market.canTradeHere}
 					<!--
 						Publicar es el otro verbo del mercado: en vez de tomar el precio de
-						alguien, poner el propio y esperar.
+						alguien, poner el propio y esperar. **Es una acción con tiempo** —se
+						están cerrando condiciones—, así que se confirma como viajar o minar
+						y paga experiencia de Comercio.
 					-->
 					<div class="flex w-full flex-col gap-3 border-t border-border-soft pt-4">
 						<div class="flex w-full flex-wrap items-baseline gap-2">
-							<Label>Publicar una orden</Label>
+							<Label>Acordar una orden</Label>
 							<div class="grow"></div>
 							<span class="font-mono text-[0.68rem] text-text-muted">
 								comisión {tenths(market.brokerPermille)} % · no se devuelve
@@ -667,70 +793,84 @@
 								aria-label="Precio por unidad"
 								class="{CONTROL_HEIGHTS[
 									'2'
-								]} w-28 border border-border-soft bg-field px-3 text-right font-mono
-									text-2 text-text-strong hover:border-border focus:border-accent focus:shadow-glow
-									focus:outline-none"
+								]} w-28 border border-border-soft bg-field px-3 text-right
+									font-mono text-2 text-text-strong hover:border-border focus:border-accent
+									focus:shadow-glow focus:outline-none"
 							/>
 							<span class="font-mono text-[0.72rem] text-text-muted">CR por unidad</span>
+
+							<Label>Dura</Label>
+							<select
+								bind:value={days}
+								aria-label="Cuánto dura la orden"
+								class="{CONTROL_HEIGHTS[
+									'2'
+								]} border border-border-soft bg-field px-2 font-mono text-2
+									text-text-strong hover:border-border focus:border-accent focus:outline-none"
+							>
+								{#each market.durations as opcion (opcion.days)}
+									<option value={opcion.days}>{opcion.label}</option>
+								{/each}
+							</select>
+
+							{#if market.maxRange > 0}
+								<Label>Alcance</Label>
+								<select
+									bind:value={range}
+									aria-label="Alcance de la orden de compra"
+									class="{CONTROL_HEIGHTS['2']} border border-border-soft bg-field px-2 font-mono
+										text-2 text-text-strong hover:border-border focus:border-accent focus:outline-none"
+								>
+									<option value={0}>Esta estación</option>
+									{#each Array.from({ length: market.maxRange }, (_, i) => i + 1) as regiones (regiones)}
+										<option value={regiones}>{regiones} región{regiones > 1 ? 'es' : ''}</option>
+									{/each}
+								</select>
+							{/if}
+						</div>
+
+						<div class="flex w-full flex-wrap items-center gap-3">
+							{#each [{ lado: 'sell' as const, label: 'Vender', cuantas: Math.min(units, atHand), bloqueado: atHand < 1 }, { lado: 'buy' as const, label: 'Comprar', cuantas: units, bloqueado: false }] as opcion (opcion.lado)}
+								<ConfirmAction
+									title="Acordar {opcion.label.toLowerCase()} {opcion.cuantas} × {item.name}"
+									icon="handshake"
+									confirmLabel="Acordar"
+									formAction="?/publicar"
+									readings={[
+										{ label: 'Unidades', value: `${opcion.cuantas}` },
+										{ label: 'Precio', value: `${thousands(price)} CR c/u` },
+										{ label: 'Total', value: `${thousands(price * opcion.cuantas)} CR` },
+										{
+											label: 'Comisión',
+											value: `${thousands(Math.max(1, Math.round((price * opcion.cuantas * market.brokerPermille) / 1000)))} CR`
+										},
+										{ label: 'Dura', value: duracion },
+										{ label: 'Tarda', value: '1 min' }
+									]}
+									note="Acordar ocupa tu turno y deja experiencia de Comercio. La orden entra al libro cuando el trato se cierra; la comisión no se devuelve."
+									disabled={opcion.bloqueado}
+								>
+									{#snippet trigger(abrir)}
+										<HudButton size="2" onclick={abrir} disabled={opcion.bloqueado}>
+											{opcion.label}: acordar
+										</HudButton>
+									{/snippet}
+									{#snippet fields()}
+										<input type="hidden" name="lado" value={opcion.lado} />
+										<input type="hidden" name="item" value={item.itemCode} />
+										<input type="hidden" name="unidades" value={opcion.cuantas} />
+										<input type="hidden" name="precio" value={price} />
+										<input type="hidden" name="dias" value={days} />
+										<input type="hidden" name="alcance" value={range} />
+										<input type="hidden" name="desde" value={fromHold} />
+										<input type="hidden" name="estacion" value={market.dockedStationId} />
+									{/snippet}
+								</ConfirmAction>
+							{/each}
 							<div class="grow"></div>
 							<span class="font-mono text-[0.72rem] text-data">
 								{thousands(price * units)} CR por {units}
 							</span>
-						</div>
-
-						<div class="flex w-full flex-wrap items-center gap-3">
-							<form
-								method="POST"
-								action="?/publicarVenta"
-								use:enhance={() =>
-									async ({ update }) => {
-										await update();
-										await refrescar();
-									}}
-							>
-								<input type="hidden" name="item" value={item.itemCode} />
-								<input type="hidden" name="unidades" value={Math.min(units, atHand)} />
-								<input type="hidden" name="precio" value={price} />
-								<input type="hidden" name="desde" value={fromHold} />
-								<input type="hidden" name="estacion" value={market.dockedStationId} />
-								<HudButton type="submit" size="2" disabled={atHand < 1}>Vender: publicar</HudButton>
-							</form>
-
-							<form
-								method="POST"
-								action="?/publicarCompra"
-								use:enhance={() =>
-									async ({ update }) => {
-										await update();
-										await refrescar();
-									}}
-							>
-								<input type="hidden" name="item" value={item.itemCode} />
-								<input type="hidden" name="unidades" value={units} />
-								<input type="hidden" name="precio" value={price} />
-								<input type="hidden" name="alcance" value={range} />
-								<input type="hidden" name="estacion" value={market.dockedStationId} />
-								<HudButton type="submit" size="2">Comprar: publicar</HudButton>
-							</form>
-
-							{#if market.maxRange > 0}
-								<div class="flex items-center gap-2">
-									<Label>Alcance</Label>
-									<select
-										bind:value={range}
-										aria-label="Alcance de la orden de compra"
-										class="{CONTROL_HEIGHTS[
-											'2'
-										]} border border-border-soft bg-field px-2 font-mono text-2
-											text-text-strong hover:border-border focus:border-accent focus:outline-none"
-									>
-										<option value={0}>Esta estación</option>
-										{#each Array.from({ length: market.maxRange }, (_, i) => i + 1) as regiones (regiones)}
-											<option value={regiones}>{regiones} región{regiones > 1 ? 'es' : ''}</option>
-										{/each}
-									</select>
-								</div>
-							{/if}
 						</div>
 
 						<!--

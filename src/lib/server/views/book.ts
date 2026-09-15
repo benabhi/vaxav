@@ -19,6 +19,7 @@ import { deskFor, quote } from '../services/market';
 import { bodyDistance } from '../services/universe';
 import { activeShip } from '../services/ships';
 import { priceHistory } from '../services/trades';
+import { aliveNow } from '../services/orders';
 import { marketStations } from './market';
 import { getItem } from '$lib/game/items';
 import { thousands } from '$lib/format';
@@ -79,7 +80,13 @@ export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercad
 		.select()
 		.from(marketOrder)
 		.where(
-			and(eq(marketOrder.itemCode, itemCode), inArray(marketOrder.stationId, [...porId.keys()]))
+			and(
+				eq(marketOrder.itemCode, itemCode),
+				inArray(marketOrder.stationId, [...porId.keys()]),
+				// Una orden que todavía se está acordando o que ya venció no está en el
+				// libro: mostrarla sería ofrecer un trato que nadie puede tomar.
+				aliveNow()
+			)
 		)
 		.all();
 

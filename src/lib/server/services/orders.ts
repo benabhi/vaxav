@@ -20,11 +20,12 @@
  * Corresponde a docs/systems/MARKET.md.
  */
 
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, lte, sql } from 'drizzle-orm';
 import {
 	body,
 	constellation,
 	marketOrder,
+	pilotAction,
 	station,
 	system,
 	type MarketOrder,
@@ -38,8 +39,12 @@ import { balance, credit, debit } from './wallet';
 import { getItem, type ContainerKind } from '$lib/game/items';
 import {
 	BROKER_SKILL,
+	DURATION_SKILL,
 	MARKET_RANGE_SKILL,
+	ORDER_DURATIONS,
 	TAX_SKILL,
+	allowsDuration,
+	maxOrderDays,
 	brokerFeePermille,
 	cut,
 	maxOrderRange,
@@ -68,6 +73,25 @@ export interface TradingContext {
 	readonly maxRange: number;
 	readonly brokerPermille: number;
 	readonly taxPermille: number;
+	/** Lo máximo que puede durar una orden suya, en días. */
+	readonly maxDays: number;
+	/** El nivel de Contactos, que es lo que decide las duraciones que puede elegir. */
+	readonly durationLevel: number;
+}
+
+/** Cuánto dura un día, en milisegundos. */
+export const MILLISECONDS_PER_DAY = 86_400_000;
+
+/**
+ * La condición de que una orden esté **viva**: ya abrió y todavía no venció.
+ *
+ * Vive acá y no repartida por cada consulta porque es la definición de qué es una
+ * orden visible, y con la definición repartida basta que una consulta se olvide
+ * para que aparezcan tratos que no existen.
+ */
+export function aliveNow() {
+	const ahora = new Date();
+	return and(lte(marketOrder.opensAt, ahora), gt(marketOrder.expiresAt, ahora));
 }
 
 /** Lo que quedó de una operación contra una orden. */
@@ -107,7 +131,9 @@ export function tradingContext(db: Db, row: Pilot): TradingContext {
 		regionsInRange: regionsInRange(analysis),
 		maxRange: maxOrderRange(analysis),
 		brokerPermille: brokerFeePermille(levels[BROKER_SKILL] ?? 0),
-		taxPermille: salesTaxPermille(accounting)
+		taxPermille: salesTaxPermille(accounting),
+		maxDays: maxOrderDays(levels[DURATION_SKILL] ?? 0),
+		durationLevel: levels[DURATION_SKILL] ?? 0
 	};
 }
 
@@ -152,6 +178,39 @@ function requireOrder(db: Db, orderId: number): MarketOrder {
 	const orden = db.select().from(marketOrder).where(eq(marketOrder.id, orderId)).get();
 	if (!orden) throw new OrderError('Esa orden ya no existe: alguien se adelantó.');
 	return orden;
+}
+
+/** La orden, o el error si todavía no abrió o ya venció. */
+function requireLiveOrder(db: Db, orderId: number): MarketOrder {
+	const orden = requireOrder(db, orderId);
+	const ahora = new Date();
+	if (orden.opensAt > ahora) throw new OrderError('Esa orden todavía se está acordando.');
+	if (orden.expiresAt <= ahora) throw new OrderError('Esa orden ya venció.');
+	return orden;
+}
+
+/**
+ * Cuándo abre y cuándo vence una orden que se publica ahora.
+ *
+ * Abre **más tarde** porque acordarla es una acción que lleva tiempo, y la fecha
+ * es lo que hace que abra sola con el reloj sin depender de que alguien resuelva
+ * nada.
+ */
+function window(
+	context: TradingContext,
+	days: number | undefined,
+	delaySeconds: number | undefined
+): { opensAt: Date; expiresAt: Date } {
+	const dias = days ?? ORDER_DURATIONS[0].days;
+	if (!allowsDuration(context.durationLevel, dias)) {
+		throw new OrderError(
+			`Tus órdenes duran hasta ${context.maxDays} ${context.maxDays === 1 ? 'día' : 'días'}. ` +
+				'Subí Contactos para dejarlas más tiempo.'
+		);
+	}
+
+	const abre = new Date(Date.now() + (delaySeconds ?? 0) * 1000);
+	return { opensAt: abre, expiresAt: new Date(abre.getTime() + dias * MILLISECONDS_PER_DAY) };
 }
 
 /** Una cantidad que se pueda comerciar. */
@@ -201,6 +260,10 @@ export function placeSellOrder(
 		price: number;
 		stationId: number;
 		from?: ContainerKind;
+		/** Cuántos días queda en el libro. El tope lo da Contactos. */
+		days?: number;
+		/** Cuánto tarda en abrir. Lo pone la acción de acordarla. */
+		delaySeconds?: number;
 	}
 ): MarketOrder {
 	const item = getItem(spec.itemCode);
@@ -211,6 +274,7 @@ export function placeSellOrder(
 	requireRoom(context);
 
 	const fee = cut(spec.price * spec.quantity, context.brokerPermille);
+	const vida = window(context, spec.days, spec.delaySeconds);
 
 	return db.transaction((tx) => {
 		const desde = holdId(tx, row, spec.stationId, spec.from ?? 'ship');
@@ -238,7 +302,8 @@ export function placeSellOrder(
 				quantity: spec.quantity,
 				initialQuantity: spec.quantity,
 				rangeRegions: 0,
-				escrow: 0
+				escrow: 0,
+				...vida
 			})
 			.returning()
 			.get();
@@ -261,6 +326,8 @@ export function placeBuyOrder(
 		price: number;
 		stationId: number;
 		rangeRegions?: number;
+		days?: number;
+		delaySeconds?: number;
 	}
 ): MarketOrder {
 	const item = getItem(spec.itemCode);
@@ -280,6 +347,7 @@ export function placeBuyOrder(
 
 	const reserva = spec.price * spec.quantity;
 	const fee = cut(reserva, context.brokerPermille);
+	const vida = window(context, spec.days, spec.delaySeconds);
 
 	return db.transaction((tx) => {
 		debit(tx, row.id, fee, {
@@ -302,7 +370,8 @@ export function placeBuyOrder(
 				quantity: spec.quantity,
 				initialQuantity: spec.quantity,
 				rangeRegions: alcance,
-				escrow: reserva
+				escrow: reserva,
+				...vida
 			})
 			.returning()
 			.get();
@@ -319,23 +388,9 @@ export function placeBuyOrder(
 export function cancelOrder(db: Db, row: Pilot, orderId: number): void {
 	const orden = requireOrder(db, orderId);
 	if (orden.pilotId !== row.id) throw new OrderError('Esa orden no es tuya');
-	const item = getItem(orden.itemCode);
-
-	db.transaction((tx) => {
-		if (orden.kind === 'sell') {
-			// La mercadería vuelve a la estación donde estaba publicada, que es donde
-			// está de verdad: cancelar no la mueve de lugar.
-			const hangar = stationContainer(tx, row.id, orden.stationId).id;
-			moveItem(tx, hangar, orden.itemCode, orden.quantity, 'unlisted');
-		} else {
-			credit(tx, row.id, orden.escrow, {
-				kind: 'order_refund',
-				memo: `Cancelada la compra de ${orden.quantity} × ${item.name}`
-			});
-		}
-
-		tx.delete(marketOrder).where(eq(marketOrder.id, orderId)).run();
-	});
+	// Cancelar es **instantáneo**, aunque publicar lleve tiempo: retirarse de un
+	// trato no es una negociación, es decir que no.
+	refund(db, orden);
 }
 
 /** Descuenta lo comerciado de una orden, y la borra si se agotó. */
@@ -358,7 +413,7 @@ function consume(db: Db, order: MarketOrder, quantity: number, escrowSpent: numb
  * la mueve: si está a tres sistemas, hay que ir.
  */
 export function buyFromOrder(db: Db, row: Pilot, orderId: number, quantity: number): Fill {
-	const orden = requireOrder(db, orderId);
+	const orden = requireLiveOrder(db, orderId);
 	if (orden.kind !== 'sell') throw new OrderError('Esa orden no vende nada');
 	if (orden.pilotId === row.id) throw new OrderError('Esa orden es tuya');
 	requireQuantity(quantity);
@@ -437,7 +492,7 @@ export function sellToOrder(
 	fromStationId: number,
 	from: ContainerKind = 'ship'
 ): Fill {
-	const orden = requireOrder(db, orderId);
+	const orden = requireLiveOrder(db, orderId);
 	if (orden.kind !== 'buy') throw new OrderError('Esa orden no compra nada');
 	if (orden.pilotId === row.id) throw new OrderError('Esa orden es tuya');
 	requireQuantity(quantity);
@@ -518,12 +573,57 @@ export function ordersOf(db: Db, pilotId: number): readonly MarketOrder[] {
 		.all();
 }
 
-/** El libro de un ítem: las órdenes de un lado, ordenadas por conveniencia. */
+/** El libro de un ítem: las órdenes vivas de un lado, ordenadas por conveniencia. */
 export function bookFor(db: Db, itemCode: string, kind: OrderKind): readonly MarketOrder[] {
 	return db
 		.select()
 		.from(marketOrder)
-		.where(and(eq(marketOrder.itemCode, itemCode), eq(marketOrder.kind, kind)))
+		.where(and(eq(marketOrder.itemCode, itemCode), eq(marketOrder.kind, kind), aliveNow()))
 		.all()
 		.sort((a, b) => (kind === 'sell' ? a.price - b.price : b.price - a.price));
+}
+
+/**
+ * Devuelve lo que quedaba de una orden y la borra.
+ *
+ * Lo usan cancelar y caducar, que son lo mismo desde el punto de vista de la
+ * garantía: la mercadería vuelve a la estación donde estaba publicada y los
+ * créditos a la billetera. **Caducar no es perder.**
+ */
+function refund(db: Db, order: MarketOrder): void {
+	const item = getItem(order.itemCode);
+	db.transaction((tx) => {
+		if (order.kind === 'sell') {
+			const hangar = stationContainer(tx, order.pilotId, order.stationId).id;
+			moveItem(tx, hangar, order.itemCode, order.quantity, 'unlisted');
+		} else if (order.escrow > 0) {
+			credit(tx, order.pilotId, order.escrow, {
+				kind: 'order_refund',
+				memo: `${order.quantity} × ${item.name}`
+			});
+		}
+		// La acción de acordarla, si todavía estaba en curso: cancelar el trato
+		// cancela la negociación, y no queda una orden fantasma esperando abrir.
+		tx.delete(pilotAction).where(eq(pilotAction.orderId, order.id)).run();
+		tx.delete(marketOrder).where(eq(marketOrder.id, order.id)).run();
+	});
+}
+
+/**
+ * Devuelve la garantía de las órdenes vencidas del piloto y las borra.
+ *
+ * Es perezoso, como todo en este juego: no hay ningún proceso de fondo mirando
+ * relojes. Las vencidas ya son invisibles para todos —el libro filtra por
+ * fecha—, así que lo único que falta es devolverle lo suyo a su dueño, y eso
+ * puede esperar a que vuelva.
+ */
+export function sweepExpired(db: Db, pilotId: number): number {
+	const vencidas = db
+		.select()
+		.from(marketOrder)
+		.where(and(eq(marketOrder.pilotId, pilotId), lte(marketOrder.expiresAt, new Date())))
+		.all();
+
+	for (const orden of vencidas) refund(db, orden);
+	return vencidas.length;
 }

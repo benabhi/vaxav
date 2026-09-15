@@ -16,14 +16,8 @@ import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { CargoError } from '$lib/server/services/containers';
 import { MarketError, buyFromStation, sellToStation } from '$lib/server/services/market';
-import {
-	OrderError,
-	buyFromOrder,
-	cancelOrder,
-	placeBuyOrder,
-	placeSellOrder,
-	sellToOrder
-} from '$lib/server/services/orders';
+import { ActionError, startPublish } from '$lib/server/services/actions';
+import { OrderError, buyFromOrder, cancelOrder, sellToOrder } from '$lib/server/services/orders';
 import { WalletError } from '$lib/server/services/wallet';
 import { buildMarketView } from '$lib/server/views/market';
 import { LOGIN_ROUTE } from '$lib/routes';
@@ -58,6 +52,7 @@ function message(error: unknown): string {
 	if (
 		error instanceof MarketError ||
 		error instanceof OrderError ||
+		error instanceof ActionError ||
 		error instanceof WalletError ||
 		error instanceof CargoError
 	) {
@@ -109,44 +104,34 @@ export const actions: Actions = {
 		}
 	},
 
-	/** Publica una orden de venta: la mercadería queda en garantía. */
-	publicarVenta: async ({ request, locals }) => {
+	/**
+	 * Encarga acordar una orden, de compra o de venta.
+	 *
+	 * Es **una acción con tiempo**, no un botón: se están cerrando condiciones con
+	 * alguien. Por eso paga experiencia de Comercio, y por eso ocupa el único turno
+	 * que el piloto tiene. La garantía se toma ahora; la orden abre cuando el trato
+	 * se cierra.
+	 */
+	publicar: async ({ request, locals }) => {
 		if (!locals.pilot) return fail(401, { error: 'Tu sesión venció. Volvé a entrar.' });
 
 		const form = await request.formData();
+		const lado = form.get('lado') === 'buy' ? 'buy' : 'sell';
+
 		try {
-			const orden = placeSellOrder(db, locals.pilot, {
+			startPublish(db, locals.pilot, {
+				kind: lado,
 				itemCode: String(form.get('item') ?? ''),
 				quantity: number(form.get('unidades')),
 				price: number(form.get('precio')),
 				stationId: number(form.get('estacion')),
+				days: number(form.get('dias')) || undefined,
+				rangeRegions: number(form.get('alcance')),
 				from: hold(form.get('desde'))
 			});
 			return {
-				done: `Publicada la venta de ${orden.quantity} × ${orden.itemCode} a ${thousands(orden.price)} CR`,
-				note: 'La mercadería queda reservada hasta que alguien la compre o canceles.'
-			};
-		} catch (error) {
-			return fail(400, { error: message(error) });
-		}
-	},
-
-	/** Publica una orden de compra: los créditos quedan reservados. */
-	publicarCompra: async ({ request, locals }) => {
-		if (!locals.pilot) return fail(401, { error: 'Tu sesión venció. Volvé a entrar.' });
-
-		const form = await request.formData();
-		try {
-			const orden = placeBuyOrder(db, locals.pilot, {
-				itemCode: String(form.get('item') ?? ''),
-				quantity: number(form.get('unidades')),
-				price: number(form.get('precio')),
-				stationId: number(form.get('estacion')),
-				rangeRegions: number(form.get('alcance'))
-			});
-			return {
-				done: `Publicada la compra de ${orden.quantity} × ${orden.itemCode} a ${thousands(orden.price)} CR`,
-				note: 'La plata queda reservada hasta que alguien te venda o canceles.'
+				done: lado === 'sell' ? 'Acordando la venta' : 'Acordando la compra',
+				note: 'La orden entra al libro cuando se cierre el trato.'
 			};
 		} catch (error) {
 			return fail(400, { error: message(error) });

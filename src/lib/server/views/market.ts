@@ -23,7 +23,7 @@
  * no sería un oficio.
  */
 
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
 	body,
 	constellation,
@@ -38,13 +38,14 @@ import {
 import type { Db } from '../db/types';
 import { cargoHold, shipContainer, stacks } from '../services/containers';
 import { deskFor, quote, spreadOf, type MarketDesk } from '../services/market';
-import { tradingContext } from '../services/orders';
+import { aliveNow, ordersOf, tradingContext } from '../services/orders';
 import { activeShip, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
 import { balance } from '../services/wallet';
 import { MODULES, type ShipModule } from '$lib/game/modules';
 import { ORE_LIST, getItem, type Item } from '$lib/game/items';
 import { SLOT_KINDS, type SlotKind } from '$lib/game/hulls';
+import { durationsFor } from '$lib/game/market';
 import {
 	cubicMeters,
 	itemIcon,
@@ -54,7 +55,7 @@ import {
 	slotKindLabel,
 	thousands
 } from '$lib/format';
-import type { FilaMercado, GrupoMercado, Horquilla, Mercado } from '$lib/tipos';
+import type { FilaMercado, GrupoMercado, Horquilla, Mercado, OrdenPropia } from '$lib/tipos';
 
 /** Las tres ramas de primer nivel del árbol. */
 export const GROUP_HELD = 'held';
@@ -136,7 +137,7 @@ function summarize(db: Db, stationIds: readonly number[]): Map<string, BookSumma
 			orders: sql<number>`count(*)`
 		})
 		.from(marketOrder)
-		.where(inArray(marketOrder.stationId, [...stationIds]))
+		.where(and(inArray(marketOrder.stationId, [...stationIds]), aliveNow()))
 		.groupBy(marketOrder.itemCode, marketOrder.kind)
 		.all();
 
@@ -304,6 +305,43 @@ function freeCargo(db: Db, row: Pilot): number {
 	return cargoHold(db, shipContainer(db, nave.id).id, shipReadout(db, row)?.cargo ?? 0).freeTenths;
 }
 
+/**
+ * Las órdenes propias, incluidas las que todavía se están acordando.
+ *
+ * Van en la pantalla y no escondidas dentro de cada ítem porque la pregunta "¿qué
+ * tengo puesto?" es de la mesa entera: con cincuenta y un ítems, buscarlas
+ * abriendo uno por uno no es una respuesta.
+ */
+function buildOwnOrders(
+	db: Db,
+	row: Pilot,
+	stations: readonly MarketStation[]
+): readonly OrdenPropia[] {
+	const porId = new Map(stations.map((estacion) => [estacion.stationId, estacion]));
+	const ahora = Date.now();
+
+	return ordersOf(db, row.id).map((orden) => {
+		const item = getItem(orden.itemCode);
+		return {
+			id: orden.id,
+			kind: orden.kind,
+			kindLabel: orden.kind === 'sell' ? 'Vendo' : 'Compro',
+			itemCode: orden.itemCode,
+			name: item.name,
+			quantity: orden.quantity,
+			initialQuantity: orden.initialQuantity,
+			price: thousands(orden.price),
+			value: thousands(orden.price * orden.quantity),
+			stationName: porId.get(orden.stationId)?.name ?? '',
+			// Mientras se acuerda no está en el libro, y decirlo es lo que evita que
+			// el piloto la busque ahí y crea que se perdió.
+			pending: orden.opensAt.getTime() > ahora,
+			opensAt: orden.opensAt.getTime(),
+			expiresAt: orden.expiresAt.getTime()
+		};
+	});
+}
+
 /** Por qué no se puede operar desde donde está el piloto, si no se puede. */
 function dockedReason(desk: MarketDesk | null, inTransit: boolean): string {
 	if (inTransit) return 'En viaje no se opera: hay que atracar en algún lado.';
@@ -367,6 +405,11 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 		moduleSpread: horquilla(desk, 'module'),
 		groups: buildGroups(items),
 		items,
+		durations: durationsFor(context.durationLevel).map((opcion) => ({
+			days: opcion.days,
+			label: opcion.label
+		})),
+		orders: buildOwnOrders(db, row, estaciones),
 		cargoFree: cubicMeters(freeCargo(db, row))
 	};
 }

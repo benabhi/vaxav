@@ -13,12 +13,13 @@
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { marketOrder } from '../db/schema';
+import { marketOrder, pilotAction } from '../db/schema';
 import { crearPiloto, moverPiloto, seededDb } from '../db/testing';
 import { auditStacks, moveItem, quantityOf, shipContainer, stationContainer } from './containers';
 import { deskFor } from './market';
 import {
 	OrderError,
+	bookFor,
 	buyFromOrder,
 	cancelOrder,
 	openOrderCount,
@@ -26,8 +27,10 @@ import {
 	placeBuyOrder,
 	placeSellOrder,
 	sellToOrder,
+	sweepExpired,
 	tradingContext
 } from './orders';
+import { currentAction, resolveIfDue, startPublish } from './actions';
 import { activeShip } from './ships';
 import { auditBalance, balance, credit } from './wallet';
 import type { Db } from '../db/types';
@@ -50,6 +53,32 @@ async function piloto(
 	const bodega = shipContainer(db, activeShip(db, row.id)!.id);
 	for (const [code, units] of opciones.carga ?? []) moveItem(db, bodega.id, code, units, 'mined');
 	return { row, bodega };
+}
+
+/**
+ * Simula que pasó el tiempo: corre hacia atrás el reloj de la acción **y el de la
+ * orden que está acordando**.
+ *
+ * Los dos se fijan en el mismo instante al encargar, así que mover uno solo
+ * rompería una invariante que en el juego no se puede romper: la orden abre
+ * exactamente cuando el trato se cierra.
+ */
+function vencer(db: Db, pilotId: number): void {
+	const accion = currentAction(db, pilotId)!;
+	const atras = (accion.durationSeconds + 5) * 1000;
+
+	db.update(pilotAction)
+		.set({ startedAt: new Date(accion.startedAt.getTime() - atras) })
+		.where(eq(pilotAction.id, accion.id))
+		.run();
+
+	if (accion.orderId !== null) {
+		const orden = ordersOf(db, pilotId).find((fila) => fila.id === accion.orderId)!;
+		db.update(marketOrder)
+			.set({ opensAt: new Date(orden.opensAt.getTime() - atras) })
+			.where(eq(marketOrder.id, orden.id))
+			.run();
+	}
 }
 
 /** El id de la estación donde está parado un piloto. */
@@ -459,5 +488,174 @@ describe('los dos libros después de todo', () => {
 		expect(auditStacks(db, hangar.id)).toEqual([]);
 		expect(auditStacks(db, stationContainer(db, comprador.row.id, enElPuerto).id)).toEqual([]);
 		expect(auditStacks(db, vendedor.bodega.id)).toEqual([]);
+	});
+});
+
+describe('acordar una orden lleva tiempo', () => {
+	it('la orden no entra al libro hasta que el trato se cierra', async () => {
+		const db = seededDb();
+		const vendedor = await piloto(db, 'Vendedora', PUERTO, {
+			creditos: 10_000,
+			carga: [['ferrous_silicate', 100]]
+		});
+
+		startPublish(db, vendedor.row, {
+			kind: 'sell',
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 14,
+			stationId: estacion(db, vendedor.row)
+		});
+
+		// Publicada pero todavía no visible: se está negociando.
+		expect(ordersOf(db, vendedor.row.id)).toHaveLength(1);
+		expect(bookFor(db, 'ferrous_silicate', 'sell')).toEqual([]);
+	});
+
+	it('la garantía se toma al encargar y no al cerrar', async () => {
+		const db = seededDb();
+		const vendedor = await piloto(db, 'Vendedora', PUERTO, {
+			creditos: 10_000,
+			carga: [['ferrous_silicate', 100]]
+		});
+
+		startPublish(db, vendedor.row, {
+			kind: 'sell',
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 14,
+			stationId: estacion(db, vendedor.row)
+		});
+
+		// Si la mercadería quedara libre mientras se negocia, el piloto podría
+		// comprometerla dos veces.
+		expect(quantityOf(db, vendedor.bodega.id, 'ferrous_silicate')).toBe(0);
+	});
+
+	it('cerrado el trato, la orden abre sola y deja experiencia de Comercio', async () => {
+		const db = seededDb();
+		const vendedor = await piloto(db, 'Vendedora', PUERTO, {
+			creditos: 10_000,
+			carga: [['ferrous_silicate', 100]]
+		});
+		startPublish(db, vendedor.row, {
+			kind: 'sell',
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 14,
+			stationId: estacion(db, vendedor.row)
+		});
+		vencer(db, vendedor.row.id);
+
+		const informe = resolveIfDue(db, vendedor.row)!;
+
+		expect(informe.deposit.family).toBe('trade');
+		expect(informe.deposit.xp).toBeGreaterThan(0);
+		expect(bookFor(db, 'ferrous_silicate', 'sell')).toHaveLength(1);
+	});
+
+	it('cancelar mientras se acuerda cancela también la negociación', async () => {
+		const db = seededDb();
+		const vendedor = await piloto(db, 'Vendedora', PUERTO, {
+			creditos: 10_000,
+			carga: [['ferrous_silicate', 100]]
+		});
+		startPublish(db, vendedor.row, {
+			kind: 'sell',
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 14,
+			stationId: estacion(db, vendedor.row)
+		});
+
+		cancelOrder(db, vendedor.row, ordersOf(db, vendedor.row.id)[0].id);
+
+		// Retirarse de un trato no es una negociación: es decir que no.
+		expect(ordersOf(db, vendedor.row.id)).toEqual([]);
+		expect(currentAction(db, vendedor.row.id)).toBeNull();
+		const hangar = stationContainer(db, vendedor.row.id, estacion(db, vendedor.row));
+		expect(quantityOf(db, hangar.id, 'ferrous_silicate')).toBe(100);
+	});
+});
+
+describe('las órdenes vencen', () => {
+	it('una vencida sale del libro y devuelve la garantía', async () => {
+		const db = seededDb();
+		const vendedor = await piloto(db, 'Vendedora', PUERTO, {
+			creditos: 10_000,
+			carga: [['ferrous_silicate', 100]]
+		});
+		const orden = placeSellOrder(db, vendedor.row, {
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 14,
+			stationId: estacion(db, vendedor.row)
+		});
+		db.update(marketOrder)
+			.set({ expiresAt: new Date(Date.now() - 1000) })
+			.where(eq(marketOrder.id, orden.id))
+			.run();
+
+		// Para los demás ya era invisible desde que venció.
+		expect(bookFor(db, 'ferrous_silicate', 'sell')).toEqual([]);
+
+		expect(sweepExpired(db, vendedor.row.id)).toBe(1);
+
+		// Y caducar no es perder: la mercadería vuelve a la estación.
+		const hangar = stationContainer(db, vendedor.row.id, estacion(db, vendedor.row));
+		expect(quantityOf(db, hangar.id, 'ferrous_silicate')).toBe(100);
+		expect(ordersOf(db, vendedor.row.id)).toEqual([]);
+	});
+
+	it('una compra vencida devuelve la plata reservada', async () => {
+		const db = seededDb();
+		const comprador = await piloto(db, 'Compradora', PUERTO, { creditos: 10_000 });
+		const orden = placeBuyOrder(db, comprador.row, {
+			itemCode: 'ferrous_silicate',
+			quantity: 100,
+			price: 11,
+			stationId: estacion(db, comprador.row)
+		});
+		db.update(marketOrder)
+			.set({ expiresAt: new Date(Date.now() - 1000) })
+			.where(eq(marketOrder.id, orden.id))
+			.run();
+
+		sweepExpired(db, comprador.row.id);
+
+		// Vuelven los 1.100; los 33 de comisión no, que para eso se pagaron.
+		expect(balance(db, comprador.row.id)).toBe(10_000 - 33);
+		expect(auditBalance(db, comprador.row.id)).toBeNull();
+	});
+
+	it('toda orden nace con un vencimiento en el futuro', async () => {
+		const db = seededDb();
+		const comprador = await piloto(db, 'Compradora', PUERTO, { creditos: 10_000 });
+
+		const orden = placeBuyOrder(db, comprador.row, {
+			itemCode: 'ferrous_silicate',
+			quantity: 10,
+			price: 11,
+			stationId: estacion(db, comprador.row)
+		});
+
+		// El valor por defecto de la columna es la época, y nadie debería apoyarse
+		// en él: toda orden fija su vencimiento al publicarse.
+		expect(orden.expiresAt.getTime()).toBeGreaterThan(Date.now());
+	});
+
+	it('no se puede publicar por más tiempo del que da Contactos', async () => {
+		const db = seededDb();
+		const comprador = await piloto(db, 'Compradora', PUERTO, { creditos: 100_000 });
+
+		expect(() =>
+			placeBuyOrder(db, comprador.row, {
+				itemCode: 'ferrous_silicate',
+				quantity: 10,
+				price: 11,
+				stationId: estacion(db, comprador.row),
+				days: 90
+			})
+		).toThrow(OrderError);
 	});
 });

@@ -30,7 +30,7 @@
  */
 
 import type { ItemKind } from './items';
-import { roundHalfEven } from './math';
+import { floorDiv, roundHalfEven } from './math';
 import type { CorporationKind, StationServiceKind } from './universe';
 
 /**
@@ -325,4 +325,97 @@ export function cut(amount: number, permille: number): number {
 	if (amount < 0) throw new RangeError('El monto no puede ser negativo');
 	if (amount === 0) return 0;
 	return Math.max(1, roundHalfEven((amount * permille) / 1000));
+}
+
+/* ------------------------------------------------------------------------- *
+ * Acordar una orden
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Lo que lleva acordar una orden, en segundos.
+ *
+ * **Corto a propósito.** Publicar es una acción como minar o viajar —ocupa el
+ * único turno que el piloto tiene— y por eso paga experiencia de Comercio, que
+ * hasta ahora no tenía de dónde salir: un piloto que quisiera dedicarse a
+ * comerciar estaba obligado a ir a picar piedra para poder negociar mejor, que
+ * es exactamente al revés de lo que promete el árbol.
+ *
+ * Pero un comerciante con doce órdenes abiertas no puede perder media hora en
+ * trámites, así que el trato se cierra en un minuto y lo que varía es cuánto
+ * paga.
+ */
+export const PUBLISH_SECONDS = 60;
+
+/**
+ * El peso de un trato, en décimas, de 0,5 a 3.
+ *
+ * Es lo que decide cuánta experiencia deja acordarlo, y **sale del valor de la
+ * orden** justamente para que no se pueda granjear: publicar cien órdenes de un
+ * crédito paga lo mismo que publicar una, que es casi nada. Para llegar al tope
+ * hay que comprometer una fortuna y pagar la comisión que le corresponde, y a
+ * ese precio la experiencia sale carísima.
+ *
+ * En décimas para que la interpolación quede en enteros. El factor flotante
+ * aparece recién al llamar a `actionXpPool`, que trunca.
+ */
+export const MIN_DEAL_TENTHS = 5;
+export const MAX_DEAL_TENTHS = 30;
+/** Por debajo de esto un trato no enseña nada; por encima, ya no enseña más. */
+export const SMALL_DEAL = 1_000;
+export const BIG_DEAL = 500_000;
+
+export function dealFactorTenths(orderValue: number): number {
+	if (orderValue <= SMALL_DEAL) return MIN_DEAL_TENTHS;
+	if (orderValue >= BIG_DEAL) return MAX_DEAL_TENTHS;
+	return (
+		MIN_DEAL_TENTHS +
+		floorDiv((orderValue - SMALL_DEAL) * (MAX_DEAL_TENTHS - MIN_DEAL_TENTHS), BIG_DEAL - SMALL_DEAL)
+	);
+}
+
+/* ------------------------------------------------------------------------- *
+ * Cuánto vive una orden
+ * ------------------------------------------------------------------------- */
+
+/** La habilidad que decide hasta cuándo se puede dejar una orden parada. */
+export const DURATION_SKILL = 'contacts';
+
+/**
+ * Cuánto puede durar una orden en el libro.
+ *
+ * **Ninguna es eterna.** Sin vencimiento, el libro se llena de precios viejos de
+ * pilotos que dejaron de jugar, y un mercado que muestra ofertas que nadie va a
+ * honrar es peor que uno vacío.
+ *
+ * La escalera es la de EVE y el tope lo da **Contactos**, que hasta ahora era la
+ * única de Comercio sin ningún número atrás: un comerciante con agenda deja
+ * tratos parados más tiempo, y eso es exactamente lo que la habilidad dice ser.
+ * Un piloto nuevo publica por un día, que alcanza de sobra para liquidar una
+ * bodega.
+ */
+export const ORDER_DURATIONS = [
+	{ days: 1, label: '1 día', level: 0 },
+	{ days: 3, label: '3 días', level: 1 },
+	{ days: 7, label: '1 semana', level: 2 },
+	{ days: 14, label: '2 semanas', level: 3 },
+	{ days: 30, label: '1 mes', level: 4 },
+	{ days: 90, label: '3 meses', level: 5 }
+] as const;
+
+export type OrderDuration = (typeof ORDER_DURATIONS)[number];
+
+/** Las duraciones que un piloto puede elegir con lo que tiene entrenado. */
+export function durationsFor(level: number): readonly OrderDuration[] {
+	return ORDER_DURATIONS.filter((opcion) => opcion.level <= Math.max(0, level));
+}
+
+/** Lo máximo que puede durar una orden suya, en días. */
+export function maxOrderDays(level: number): number {
+	const alcanzables = durationsFor(level);
+	return alcanzables[alcanzables.length - 1].days;
+}
+
+/** Si esa cantidad de días está permitida, que es lo que valida el servicio. */
+export function allowsDuration(level: number, days: number): boolean {
+	return durationsFor(level).some((opcion) => opcion.days === days);
 }
