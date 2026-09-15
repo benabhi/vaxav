@@ -105,10 +105,13 @@ export function assetsOf(db: Db, row: Pilot): readonly AssetPlace[] {
 		const bodega = shipContainer(db, nave.id);
 		const lines = linesOf(db, bodega.id);
 		const naveRow = db.select().from(ship).where(eq(ship.id, nave.id)).get();
+		const readout = shipReadout(db, row);
 		lugares.push({
 			containerId: bodega.id,
 			kind: 'ship',
-			name: naveRow?.name || 'Tu nave',
+			// Sin nombre propio se la llama por su casco, igual que en la bodega: una
+			// nave se reconoce por lo que es antes que por cómo la bautizaron.
+			name: naveRow?.name || readout?.hull.name || 'Tu nave',
 			systemName: '',
 			regionName: '',
 			bodyId: null,
@@ -116,7 +119,7 @@ export function assetsOf(db: Db, row: Pilot): readonly AssetPlace[] {
 			lines,
 			listed: [],
 			usedTenths: volumeOfLines(lines),
-			capacityTenths: capacityTenths(shipReadout(db, row)?.cargo ?? 0)
+			capacityTenths: capacityTenths(readout?.cargo ?? 0)
 		});
 	}
 

@@ -672,3 +672,52 @@ export interface Propiedades {
 	readonly totalValue: string;
 	readonly placeCount: number;
 }
+
+/**
+ * Una orden del libro, lista para dibujar.
+ *
+ * Es la misma forma para las dos tablas y para los dos orígenes: una orden de
+ * jugador y la de la estación se dibujan igual, y lo único que las distingue es
+ * que la de la estación **no se agota** y que no tiene id con el que operar.
+ */
+export interface OrdenMercado {
+	/** Nulo en la de la estación: no es una fila de la base. */
+	readonly id: number | null;
+	readonly npc: boolean;
+	/** Si es del propio piloto, para poder cancelarla y no comprarse a sí mismo. */
+	readonly mine: boolean;
+	/** Nulo cuando no tiene tope. */
+	readonly quantity: number | null;
+	readonly quantityLabel: string;
+	readonly price: number;
+	readonly priceLabel: string;
+	readonly stationId: number;
+	readonly stationName: string;
+	readonly systemName: string;
+	/** Cuán lejos está de donde está el piloto. Cero es "acá mismo". */
+	readonly distance: number;
+	readonly distanceLabel: string;
+	/** Hasta dónde alcanza, sólo en las de compra. */
+	readonly rangeLabel: string;
+}
+
+/** Un día de mercado, que es la unidad en que se mira una tendencia. */
+export interface DiaMercado {
+	readonly at: number;
+	readonly low: number;
+	readonly high: number;
+	readonly average: number;
+	readonly volume: number;
+	readonly trades: number;
+}
+
+/** Los dos libros de un ítem, con su historial y lo que el piloto tiene a mano. */
+export interface LibroMercado {
+	readonly itemCode: string;
+	readonly name: string;
+	readonly sellers: readonly OrdenMercado[];
+	readonly buyers: readonly OrdenMercado[];
+	readonly history: readonly DiaMercado[];
+	readonly inShip: number;
+	readonly inStation: number;
+}
