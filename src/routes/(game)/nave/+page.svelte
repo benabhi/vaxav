@@ -23,8 +23,8 @@
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
-	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
+	import type { Snippet } from 'svelte';
 	import Popover from '$lib/components/ui/Popover.svelte';
 	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
 	import {
@@ -232,7 +232,9 @@
 			label: damageTypeShort(tipo),
 			value: thousands(hoja.effectiveHp[tipo]),
 			percent: roundHalfEven((hoja.effectiveHp[tipo] * 100) / techo),
-			weak: tipo === hoja.weakSpot,
+			// La capa más floja se pinta como un problema, porque eso es: por ahí te
+			// van a romper.
+			over: tipo === hoja.weakSpot,
 			delta: cambio(readout.effectiveHp[tipo], hoja.effectiveHp[tipo])
 		}));
 	});
@@ -241,10 +243,9 @@
 	let damage = $derived.by(() => {
 		const techo = Math.max(...Object.values(hoja.dps)) || 1;
 		return DAMAGE_TYPES.map((tipo) => ({
-			label: damageTypeShort(tipo),
+			label: `Daño ${damageTypeShort(tipo)}`,
 			value: tenths(hoja.dps[tipo]),
 			percent: roundHalfEven((hoja.dps[tipo] * 100) / techo),
-			weak: false,
 			delta: cambio(readout.dps[tipo], hoja.dps[tipo])
 		}));
 	});
@@ -331,6 +332,36 @@
 	/** Cuántos requisitos del casco le faltan al piloto. */
 	let missingHull = $derived(hullRequirements.filter((requisito) => !requisito.met).length);
 
+	/** El banco de trabajo, para poder acomodarle el desplazamiento. */
+	let banco = $state<HTMLElement>();
+
+	/**
+	 * Al abrir una ranura, el banco se acomoda para dejarla arriba.
+	 *
+	 * Sin esto, tocar una del anillo abre una fila que puede estar fuera de la
+	 * parte visible de la lista: el jugador aprieta, no pasa nada a la vista, y
+	 * tiene que ir a buscar qué se abrió. Con la fila arriba, lo que se abrió y sus
+	 * opciones quedan a la mano sin mover la mano.
+	 *
+	 * Se mide con rectángulos y no con `offsetTop` porque eso último depende de
+	 * quién sea el padre posicionado, y acá el contenedor cambia de altura al
+	 * abrirse la fila.
+	 */
+	$effect(() => {
+		// Leer `selected` es lo que hace que esto vuelva a correr al cambiar de
+		// ranura; sin la lectura, el efecto no se suscribe a nada.
+		if (selected < 0 || !banco) return;
+
+		const fila = banco.querySelector<HTMLElement>('[aria-expanded="true"]');
+		if (!fila) return;
+
+		// Se asigna la posición en vez de pedir `scrollBy` con `behavior: 'smooth'`:
+		// hay navegadores donde ese modo simplemente no hace nada, y entonces el
+		// acomodo no ocurre en absoluto. Con la asignación siempre pasa, y quien
+		// pueda animarlo lo anima por el `scroll-smooth` del contenedor.
+		banco.scrollTop += fila.getBoundingClientRect().top - banco.getBoundingClientRect().top;
+	});
+
 	/** Abre una ranura, o la cierra si ya estaba abierta. */
 	function chooseSlot(index: number) {
 		selected = index === selected ? -1 : index;
@@ -341,30 +372,6 @@
 </script>
 
 <svelte:head><title>Ficha · Nave · Vaxav</title></svelte:head>
-
-<!--
-	Un presupuesto: cuánto se usa de cuánto hay, con su barra. Se pone en rojo al
-	pasarse en vez de impedir la elección: el jugador tiene que poder armar algo
-	imposible y **ver** por qué no cierra.
--->
-{#snippet budget(
-	name: string,
-	value: string,
-	percent: number,
-	over: boolean,
-	delta: number | null = null
-)}
-	<div class="flex w-full flex-col gap-1">
-		<div class="flex w-full items-center gap-2">
-			<Label>{name}</Label>
-			<div class="grow"></div>
-			<!-- En un presupuesto, gastar más es peor: el signo se lee al revés. -->
-			{@render chip(delta, true)}
-			<span class="font-mono text-[0.78rem] {over ? 'text-danger' : 'text-data'}">{value}</span>
-		</div>
-		<ProgressBar {percent} color={over ? 'var(--color-danger)' : 'var(--color-accent)'} />
-	</div>
-{/snippet}
 
 <!--
 	Cuánto movería el módulo que se está señalando. **Sólo aparece si algo se
@@ -384,72 +391,149 @@
 {/snippet}
 
 <!--
-	Una fila comparable: el rótulo corto, la barra y la cifra. Tres letras y una
-	barra es la forma de ver de un vistazo cuál es el flojo, que es la pregunta
-	que se le hace a esta tabla.
+	Un renglón de la consola: **la forma que tienen todos**.
+
+	Rótulo a la izquierda, cifra a la derecha y la barra cruzando debajo cuando hay
+	algo que medir contra un tope. Que sea siempre igual es lo que hace que los
+	cuatro grupos se lean como un tablero y no como cuatro listas apiladas: las
+	cifras caen en la misma columna y el ojo baja por ellas sin reaprender nada.
+
+	`percent` es opcional porque no todo se mide contra un tope: la masa y la
+	velocidad no tienen máximo, la potencia sí. `over` pinta en rojo lo que se pasó
+	—un presupuesto reventado o la capa más floja— en vez de impedirlo: el jugador
+	tiene que poder armar algo imposible y **ver** por qué no cierra.
 -->
-{#snippet barRow(row: {
+{#snippet linea(row: {
 	label: string;
 	value: string;
-	percent: number;
-	weak: boolean;
+	unit?: string;
 	delta?: number | null;
+	lowerIsBetter?: boolean;
+	percent?: number;
+	over?: boolean;
 })}
-	<div class="flex w-full items-center gap-2">
-		<span
-			class="w-[2.2rem] shrink-0 font-display text-[0.65rem] font-bold tracking-label
-				{row.weak ? 'text-warning' : 'text-accent-dim'}"
-		>
-			{row.label}
-		</span>
-		<div class="min-w-0 flex-[1_1_0]">
+	<div class="flex w-full flex-col gap-[0.25rem]">
+		<div class="flex w-full items-baseline gap-2">
+			<Label>{row.label}</Label>
+			<div class="grow"></div>
+			{@render chip(row.delta ?? null, row.lowerIsBetter ?? false)}
+			<span class="font-mono text-[0.88rem] {row.over ? 'text-danger' : 'text-data'}">
+				{row.value}
+			</span>
+			{#if row.unit}
+				<span class="w-[2.2rem] shrink-0 text-1 text-text-muted">{row.unit}</span>
+			{/if}
+		</div>
+		{#if row.percent !== undefined}
 			<ProgressBar
 				percent={row.percent}
-				color={row.weak ? 'var(--color-warning)' : 'var(--color-accent)'}
+				color={row.over ? 'var(--color-danger)' : 'var(--color-accent)'}
 			/>
-		</div>
-		{@render chip(row.delta ?? null)}
-		<span class="w-[3.6rem] shrink-0 text-right font-mono text-[0.75rem] text-text-strong">
-			{row.value}
-		</span>
-	</div>
-{/snippet}
-
-<!--
-	El corte entre dos secciones de la hoja: una línea fina y un rótulo.
-
-	Es lo que reemplaza a media docena de tarjetas. Un panel con su borde y su
-	título cuesta casi dos centímetros de alto cada vez, y acá lo que hace falta es
-	separar grupos de lecturas, no encerrarlos.
--->
-{#snippet seccion(name: string, detail: string)}
-	<div
-		class="mt-[0.35rem] flex w-full items-baseline gap-2 border-t border-border-soft pt-[0.6rem]"
-	>
-		<span class="font-display text-1 tracking-label text-accent-dim uppercase">{name}</span>
-		<div class="grow"></div>
-		{#if detail}
-			<span class="font-mono text-[0.68rem] text-text-muted">{detail}</span>
 		{/if}
 	</div>
 {/snippet}
 
-<!-- Una lectura suelta: rótulo arriba, valor abajo. -->
-{#snippet reading(row: {
-	label: string;
-	value: string;
-	unit: string;
-	delta?: number | null;
-	lowerIsBetter?: boolean;
-})}
-	<div class="flex min-w-0 flex-col items-start gap-1">
-		<Label>{row.label}</Label>
-		<div class="flex items-baseline gap-2">
-			<span class="font-mono text-[0.95rem] text-data">{row.value}</span>
-			{#if row.unit}<span class="text-1 text-text-muted">{row.unit}</span>{/if}
-			{@render chip(row.delta ?? null, row.lowerIsBetter ?? false)}
+<!--
+	Una esfera del tablero: su nombre arriba y sus renglones debajo.
+
+	La línea vertical que la separa de la anterior es lo único que las divide, y es
+	a propósito: un marco por grupo los convertiría en cuatro tarjetas, y lo que
+	son es cuatro partes del mismo aparato.
+-->
+{#snippet celda(name: string, detail: string, body: Snippet)}
+	<div
+		class="flex min-w-0 flex-col gap-[0.55rem] lg:[&:not(:first-child)]:border-l
+			lg:[&:not(:first-child)]:border-border-soft lg:[&:not(:first-child)]:pl-6
+			sm:[&:nth-child(2n)]:border-l sm:[&:nth-child(2n)]:border-border-soft
+			sm:[&:nth-child(2n)]:pl-6"
+	>
+		<div class="flex w-full items-baseline gap-2 border-b border-border-soft pb-[0.35rem]">
+			<span class="font-display text-1 font-bold tracking-label text-accent-dim uppercase">
+				{name}
+			</span>
+			<div class="grow"></div>
+			{#if detail}
+				<span class="font-mono text-[0.66rem] text-text-muted">{detail}</span>
+			{/if}
 		</div>
+		{@render body()}
 	</div>
+{/snippet}
+
+{#snippet presupuestos()}
+	{@render linea({
+		label: 'Potencia',
+		value: `${hoja.power.used} / ${hoja.power.total}`,
+		unit: 'MW',
+		delta: cambio(readout.power.used, hoja.power.used),
+		lowerIsBetter: true,
+		percent: hoja.power.percent,
+		over: hoja.power.over
+	})}
+	{@render linea({
+		label: 'Cómputo',
+		value: `${hoja.computing.used} / ${hoja.computing.total}`,
+		unit: 'u',
+		delta: cambio(readout.computing.used, hoja.computing.used),
+		lowerIsBetter: true,
+		percent: hoja.computing.percent,
+		over: hoja.computing.over
+	})}
+	{@render linea({
+		label: 'Acumulador',
+		value: `${hoja.capacitor}`,
+		unit: 'u',
+		delta: cambio(readout.capacitor, hoja.capacitor),
+		percent: capacitorPercent,
+		over: !hoja.stable
+	})}
+	{@render linea({
+		label: 'Recarga',
+		value: tenths(Math.round((hoja.rechargePerHour / 3600) * 10)),
+		unit: 'u/s',
+		delta: cambio(readout.rechargePerHour, hoja.rechargePerHour)
+	})}
+	{#if !hoja.stable}
+		<p class="text-1 text-warning">
+			El acumulador no sostiene lo encendido: el trabajo rinde en proporción a lo que la recarga
+			paga.
+		</p>
+	{/if}
+{/snippet}
+
+{#snippet defensa()}
+	{#each effectiveHp as row (row.label)}
+		{@render linea(row)}
+	{/each}
+	{#if hoja.totalDps > 0}
+		{#each damage as row (row.label)}
+			{@render linea(row)}
+		{/each}
+	{/if}
+{/snippet}
+
+{#snippet movilidad()}
+	{#each mobility as row (row.label)}
+		{@render linea(row)}
+	{/each}
+{/snippet}
+
+{#snippet capacidad()}
+	{#each capacity as row (row.label)}
+		{@render linea(row)}
+	{/each}
+	<!--
+		Lo que la nave **hace**, debajo de lo que la nave **tiene**: la extracción
+		sale de la bodega y del láser, así que se lee después.
+	-->
+	{#if hoja.miningPerHour > 0}
+		{@render linea({
+			label: 'Extracción',
+			value: thousands(hoja.miningPerHour),
+			unit: 'm³/h',
+			delta: cambio(readout.miningPerHour, hoja.miningPerHour)
+		})}
+	{/if}
 {/snippet}
 
 <!--
@@ -776,13 +860,18 @@
 {/if}
 
 <!--
-	La bancada de equipamiento, en tres columnas que se leen de izquierda a
-	derecha: **qué nave es, qué le estoy haciendo, en qué queda**.
+	La bancada de equipamiento: **la nave y su banco de trabajo arriba, la consola
+	de lecturas abajo**.
 
-	Esa es la causalidad de la pantalla y por eso es también su orden. El anillo es
-	la identidad y no se toca mientras se trabaja; la lista es el banco, donde cada
-	ranura se abre en su lugar; la hoja es el resultado, y está del lado donde
-	termina la lectura.
+	Arriba, dos columnas de alto parejo: el anillo es la identidad y no se toca
+	mientras se trabaja, y la lista es el banco, donde cada ranura se abre en su
+	lugar. Abajo, de lado a lado, en qué queda la nave. Es la disposición de una
+	cabina —parabrisas arriba, consola abajo— y por eso se lee sola.
+
+	El corte es `md` y no `lg`: a partir de novecientos noventa y dos píxeles ya
+	entran las dos columnas, y dejar la disposición de teléfono hasta los mil
+	doscientos ochenta le daba una pantalla apilada a un portátil que tiene ancho
+	de sobra.
 
 	El reparto de oficios es lo que resuelve el problema que tenía esta pantalla.
 	Un anillo informa por su forma pero **no tiene un costado donde abrir un panel**
@@ -790,7 +879,7 @@
 	selector que le colgara iba a tapar algo o a correr el dibujo. Separando figura
 	de banco de trabajo, no hay nada que acomodar: la fila se abre donde está.
 -->
-<div class="flex w-full flex-col items-start gap-5 lg:flex-row lg:items-stretch">
+<div class="flex w-full flex-col items-start gap-5 md:h-[28rem] md:flex-row md:items-stretch">
 	<!--
 		El emblema. Grande, quieto y sin nada encima: es lo que hace que esta
 		pantalla se reconozca antes de leer una palabra, y lo único del juego que se
@@ -799,7 +888,9 @@
 		Sigue siendo clickeable —tocar una ranura abre su fila en la lista— pero ya no
 		carga con el trabajo: refleja lo que pasa, incluido lo que estás por montar.
 	-->
-	<div class="flex w-full flex-col items-center gap-3 lg:w-[23rem] lg:shrink-0">
+	<div
+		class="flex w-full flex-col items-center gap-3 md:h-full md:w-[20rem] md:shrink-0 lg:w-[23rem]"
+	>
 		<FittingRig {slots} onChoose={chooseSlot} hasShield={hoja.shield > 0} />
 		<IntegrityReadings
 			shield={thousands(hoja.shield)}
@@ -831,21 +922,20 @@
 		lo único que se mueve es lo que está debajo de esa fila.
 
 		**Se desplaza por dentro** en pantalla grande, y ésa es la última pieza que
-		faltaba. Tres columnas que comparten el borde de arriba y no el de abajo se
-		leen como algo a medio terminar, y encima ésta crecía al abrir una ranura:
-		la página entera se estiraba y las otras dos quedaban cortas. Acotada, las
-		tres miden lo mismo siempre —el alto lo fijan el anillo y la hoja, que no
-		cambian— y abrir una ranura no mueve el alto de nada.
+		faltaba. Dos columnas que comparten el borde de arriba y no el de abajo se
+		leen como algo a medio terminar, y encima ésta crecía al abrir una ranura: la
+		página se estiraba y la otra quedaba corta. Con el alto fijo de la bancada,
+		abrir una ranura no mueve el alto de nada.
 
-		El techo va atado a la ventana y no a un número fijo, porque lo que se quiere
-		es que **la herramienta entre en la pantalla**: doce rem son el encabezado
-		—barra, título y ficha del casco— y el resto es banco. El `min-h-0` es lo que
-		lo hace posible: sin él, un hijo de flex no se deja achicar por debajo de su
-		contenido y el desplazamiento nunca aparece.
+		Las veintiocho rem son las que mide el anillo con sus lecturas debajo: la
+		bancada mide lo que mide la nave, y el banco se acomoda a eso. El `min-h-0`
+		es lo que hace posible el desplazamiento: sin él, un hijo de flex no se deja
+		achicar por debajo de su contenido y la barra nunca aparece.
 	-->
 	<div
-		class="flex w-full min-w-0 flex-[1_1_0] flex-col gap-3 lg:max-h-[calc(100dvh-12rem)]
-			lg:min-h-0 lg:overflow-y-auto"
+		bind:this={banco}
+		class="flex w-full min-w-0 flex-[1_1_0] flex-col gap-3 scroll-smooth md:h-full md:min-h-0
+			md:overflow-y-auto"
 	>
 		<SlotList {groups} onChoose={chooseSlot} detail={equipamiento} />
 
@@ -860,100 +950,52 @@
 			</p>
 		{/if}
 	</div>
+</div>
 
-	<!--
-		La hoja de rendimiento: en qué se convirtió la nave que se armó.
+<!--
+	La hoja de rendimiento: en qué se convirtió la nave que se armó.
 
-		Ya no hace falta que se pegue arriba: ahora la página no crece al trabajar
-		—el banco se desplaza por dentro—, así que la hoja está siempre a la vista
-		sin trucos.
-	-->
-	<div class="flex w-full flex-col gap-4 lg:w-[19rem] lg:shrink-0">
+	Va **abajo y de lado a lado**, no en una tercera columna. Apilada en vertical
+	era una torre que medía el doble que el anillo, y dos columnas que comparten el
+	borde de arriba pero no el de abajo se leen como algo a medio terminar.
+	Acostada, sus cuatro grupos caben en paralelo y la banda entera mide lo que
+	mide un grupo: deja de ser una torre y pasa a ser la consola de abajo de una
+	cabina, que es exactamente lo que es.
+
+	**Todos los renglones tienen la misma forma**, y ésa es la diferencia entre un
+	tablero y cuatro listas juntas: rótulo a la izquierda, cifra a la derecha
+	alineada con las de arriba y las de abajo, y la barra —cuando la hay— cruzando
+	debajo. Antes cada grupo usaba su propia gramática —uno con el rótulo encima,
+	otro al costado, unos con barra y otros no— y el ojo tenía que reaprender a
+	leer cuatro veces en la misma banda.
+
+	Los grupos se separan con una línea vertical y no con un marco cada uno: son
+	**cuatro esferas de un mismo aparato**, no cuatro tarjetas que se juntaron.
+-->
+<TitledPanel title="Hoja de rendimiento" detail={hull.name} class="w-full">
+	<div class="flex w-full flex-col gap-4">
 		<!--
-			Que lo que se está mirando es una simulación y no la nave. Sin esto, las
-			cifras cambian solas al pasar el dedo por la lista y uno no sabe si ya montó
-			algo sin querer.
+			Que lo que se está mirando es una simulación y no la nave. Va **dentro** de
+			la banda y cruzándola entera: es una advertencia sobre todo lo que sigue,
+			no un panel aparte. Sin esto, las cifras cambian solas al pasar el dedo por
+			la lista y uno no sabe si ya montó algo sin querer.
 		-->
 		{#if futuro}
 			<div
-				class="flex w-full items-center gap-2 border border-l-[3px] border-border-soft
-					border-l-data bg-surface px-3 py-2"
+				class="flex w-full items-center gap-2 border-l-[3px] border-l-data bg-data-wash px-3 py-[0.4rem]"
 			>
-				<Icon name="eye-slash" weight="duotone" size="0.9rem" class="shrink-0 text-data" />
+				<Icon name="eye-slash" weight="duotone" size="0.85rem" class="shrink-0 text-data" />
 				<span class="text-1 text-text-body">
 					Así quedaría con <span class="text-data">{previewLabel}</span>
 				</span>
 			</div>
 		{/if}
 
-		<!--
-			La hoja entera en **un solo instrumento**, no en seis tarjetas apiladas.
-
-			Cada tarjeta traía su borde, su título y su aire, y seis de ellas estiraban
-			la columna hasta el doble del alto del anillo: la mitad de la herramienta
-			quedaba abajo del pliegue y había que bajar para comparar. Con secciones
-			separadas por una línea fina, lo mismo entra de una vez, que es lo que
-			convierte esto en un panel de cabina en vez de una página con cajas.
-		-->
-		<TitledPanel title="Hoja de rendimiento" detail={hull.name} class="w-full">
-			<div class="flex w-full flex-col gap-[0.6rem]">
-				{@render budget(
-					'Potencia',
-					`${hoja.power.used} / ${hoja.power.total} MW`,
-					hoja.power.percent,
-					hoja.power.over,
-					cambio(readout.power.used, hoja.power.used)
-				)}
-				{@render budget(
-					'Cómputo',
-					`${hoja.computing.used} / ${hoja.computing.total} u`,
-					hoja.computing.percent,
-					hoja.computing.over,
-					cambio(readout.computing.used, hoja.computing.used)
-				)}
-				{@render budget(
-					'Acumulador',
-					`${hoja.capacitor} u · ${Math.floor(hoja.rechargePerHour / 3600)} u/s`,
-					capacitorPercent,
-					!hoja.stable,
-					cambio(readout.drainPerHour, hoja.drainPerHour)
-				)}
-				{#if !hoja.stable}
-					<p class="text-1 text-warning">
-						El acumulador no sostiene todo lo encendido: el trabajo rinde en proporción a lo que la
-						recarga paga.
-					</p>
-				{/if}
-
-				{@render seccion('Aguante', damageTypeShort(hoja.weakSpot))}
-				{#each effectiveHp as row (row.label)}
-					{@render barRow(row)}
-				{/each}
-
-				{#if hoja.totalDps > 0}
-					{@render seccion('Armamento', `${tenths(hoja.totalDps)} total`)}
-					{#each damage as row (row.label)}
-						{@render barRow(row)}
-					{/each}
-				{/if}
-
-				{#if hoja.miningPerHour > 0}
-					{@render seccion('Trabajo', '')}
-					<div class="flex w-full items-center gap-2">
-						<Label>Extracción</Label>
-						<div class="grow"></div>
-						{@render chip(cambio(readout.miningPerHour, hoja.miningPerHour))}
-						<HudValue>{thousands(hoja.miningPerHour)} m³/h</HudValue>
-					</div>
-				{/if}
-
-				{@render seccion('Movilidad y capacidad', '')}
-				<div class="grid w-full grid-cols-2 gap-x-4 gap-y-[0.6rem] xs:grid-cols-4 lg:grid-cols-2">
-					{#each [...mobility, ...capacity] as row (row.label)}
-						{@render reading(row)}
-					{/each}
-				</div>
-			</div>
-		</TitledPanel>
+		<div class="grid w-full grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+			{@render celda('Presupuestos', '', presupuestos)}
+			{@render celda('Aguante', `flojo: ${damageTypeShort(hoja.weakSpot)}`, defensa)}
+			{@render celda('Movilidad', '', movilidad)}
+			{@render celda('Capacidad', '', capacidad)}
+		</div>
 	</div>
-</div>
+</TitledPanel>

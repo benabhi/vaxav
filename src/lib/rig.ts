@@ -50,54 +50,32 @@ function pointAt(angleDegrees: number): RingPosition {
 }
 
 /**
- * Reparte las ranuras alrededor del anillo, **dejando un lugar vacío entre
- * categorías**.
+ * Reparte las ranuras alrededor del anillo, **todas a la misma distancia**.
  *
- * Todas las ranuras caen sobre la misma grilla pareja, y el corte entre una
- * categoría y la siguiente es un lugar de esa grilla que queda sin ocupar. Eso
- * da las dos cosas a la vez: un círculo regular, donde ningún tramo se ve
- * apelotonado ni desierto, y **arcos que se pueden señalar con el dedo**, cuyo
- * tamaño es la firma del casco — la nave de guerra muestra un arco de armas
- * gordo y la de carga uno de bodegas.
+ * Van agrupadas por categoría —eso lo decide `ringOrder`— pero sin ningún corte
+ * entre una y otra, y esa uniformidad no es pereza: es lo único que se ve bien.
  *
- * Repartir el círculo en proporción a cada categoría, que fue el primer intento,
- * no sirve: las categorías chicas terminan todas juntas de un lado con huecos
- * enormes entre ellas, y los siete internos esenciales —que son siempre siete en
- * todos los cascos— se apelotonan del otro. El anillo queda visiblemente
- * desbalanceado aunque las cuentas cierren.
+ * El intento anterior separaba las categorías con un hueco, para que el tamaño
+ * de cada arco fuera la firma del casco. La idea no sobrevive a los datos: **los
+ * siete internos esenciales son siempre siete**, en los cinco cascos, así que
+ * ocupan más de la mitad del círculo y todo lo que de verdad varía —una a tres
+ * armas, dos a cuatro opcionales— se amontona en la otra mitad. Con huecos de por
+ * medio, esa mitad queda con el doble de separación que la otra y el anillo se ve
+ * torcido, por mucho que las cuentas cierren.
  *
- * El cero apunta arriba y no a la derecha: un anillo que arranca de costado se
- * lee torcido, y **la primera ranura va en las doce**, que es donde el ojo
- * empieza.
+ * Qué categoría es cada ranura se lee igual, por otros tres caminos que no
+ * deforman el círculo: el ícono del nodo, su tamaño —que es la clase— y la
+ * leyenda de abajo. El día que los esenciales salgan del anillo se podrá volver a
+ * intentar; mientras estén, la separación pareja es la que manda.
+ *
+ * El cero apunta arriba y no a la derecha: en pantalla el ángulo cero apunta a
+ * la derecha, y un anillo que arranca de costado se lee torcido.
  */
 export function ringPositions(counts: readonly number[]): readonly RingPosition[] {
-	const grupos = counts.filter((cuantas) => cuantas > 0);
-	const total = grupos.reduce((suma, cuantas) => suma + cuantas, 0);
+	const total = counts.reduce((suma, cuantas) => suma + Math.max(0, cuantas), 0);
 	if (total === 0) return [];
 
-	// Con una sola categoría no hay nada que separar: el hueco existiría igual
-	// pero no diría nada, y se comería un lugar del círculo por nada.
-	if (grupos.length < 2) {
-		return Array.from({ length: total }, (_, puesto) => pointAt((puesto * 360) / total));
-	}
-
-	// Un lugar por ranura, más uno por cada corte.
-	const lugares = total + grupos.length;
-	const paso = 360 / lugares;
-
-	const posiciones: RingPosition[] = [];
-	let lugar = 0;
-
-	for (const cuantas of grupos) {
-		for (let puesto = 0; puesto < cuantas; puesto++) {
-			posiciones.push(pointAt(lugar * paso));
-			lugar++;
-		}
-		// El corte: se saltea un lugar y ahí queda el hueco.
-		lugar++;
-	}
-
-	return posiciones;
+	return Array.from({ length: total }, (_, puesto) => pointAt((puesto * 360) / total));
 }
 
 /**

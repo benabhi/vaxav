@@ -55,43 +55,24 @@ describe('las posiciones del anillo', () => {
 		for (const salto of saltos) expect(salto).toBeCloseTo(30, 1);
 	});
 
-	it('deja un hueco entre categorías, y ninguno adentro', () => {
-		// Es lo que convierte el collar de cuentas en arcos que se pueden señalar:
-		// el salto entre dos vecinas de la misma categoría es el chico, y el que
-		// cruza de una categoría a otra es visiblemente mayor.
-		const cuentas = [3, 2, 3, 7];
-		const posiciones = ringPositions(cuentas);
+	it('todas quedan a la misma distancia, sin importar las categorías', () => {
+		// La uniformidad es lo único que se ve bien acá. Separar las categorías con un
+		// hueco parece mejor idea de la que es: los siete internos esenciales son
+		// siempre siete, así que ocupan más de media vuelta y todo lo que varía queda
+		// amontonado en la otra mitad, con el doble de separación. El anillo se ve
+		// torcido aunque las cuentas cierren.
+		const posiciones = ringPositions([3, 2, 3, 7]);
+		const saltos = posiciones
+			.slice(1)
+			.map((p, i) => ((p.angle - posiciones[i].angle + 540) % 360) - 180);
 
-		let puesto = 0;
-		const dentro: number[] = [];
-		const entre: number[] = [];
-		for (const [grupo, cuantas] of cuentas.entries()) {
-			for (let i = 1; i < cuantas; i++) {
-				dentro.push(posiciones[puesto + i].angle - posiciones[puesto + i - 1].angle);
-			}
-			if (grupo < cuentas.length - 1) {
-				entre.push(posiciones[puesto + cuantas].angle - posiciones[puesto + cuantas - 1].angle);
-			}
-			puesto += cuantas;
-		}
-
-		expect(Math.max(...dentro)).toBeLessThan(Math.min(...entre));
+		const paso = 360 / 15;
+		for (const salto of saltos) expect(salto).toBeCloseTo(paso, 1);
 	});
 
-	it('el arco de una categoría crece con sus ranuras', () => {
-		// Ésta es la prueba de que el anillo **dice qué nave es**: el casco de tres
-		// anclajes tiene que mostrar un arco de armas más ancho que el de uno.
-		const arco = (cuentas: readonly number[]) => {
-			const posiciones = ringPositions(cuentas);
-			return posiciones[cuentas[0] - 1].angle - posiciones[0].angle;
-		};
-
-		expect(arco([3, 2, 3, 7])).toBeGreaterThan(arco([1, 2, 3, 7]));
-	});
-
-	it('una categoría vacía no deja un hueco fantasma', () => {
-		// Un casco sin anclajes no tiene por qué mostrar el corte de una categoría
-		// que no existe: sería un vacío que no significa nada.
+	it('una categoría vacía no ocupa lugar', () => {
+		// Un casco sin anclajes reparte sus ranuras como si esa categoría no
+		// existiera: un hueco reservado para algo que no está no significa nada.
 		expect(ringPositions([0, 2, 3, 7])).toEqual(ringPositions([2, 3, 7]));
 	});
 });

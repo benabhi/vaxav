@@ -90,6 +90,8 @@
 	--color-danger-wash: rgb(255 74 61 / 0.1);
 	--color-success-wash: rgb(91 212 107 / 0.1);
 	--color-warning-wash: rgb(255 193 77 / 0.1);
+	/* El lavado del cian, para lo que avisa sin ser un error. */
+	--color-data-wash: rgb(79 210 238 / 0.09);
 	/* Casi opaco: el fondo del Neocom y el de una ranura vacía. */
 	--color-well: rgb(8 10 14 / 0.92);
 	/*
