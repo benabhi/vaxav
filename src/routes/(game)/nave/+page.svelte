@@ -317,7 +317,7 @@
 			// ningún módulo.
 			label: 'Combustible',
 			value: `${combustible} / ${hoja.fuel}`,
-			unit: '',
+			unit: 'u',
 			delta: cambio(readout.fuel, hoja.fuel),
 			lowerIsBetter: false,
 			percent: hoja.fuel > 0 ? Math.round((combustible * 100) / hoja.fuel) : 0

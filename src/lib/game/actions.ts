@@ -44,10 +44,20 @@ export const REFERENCE_SPEED = 190;
  * frene. Cada entrada de acá necesita su resolvedor en
  * `server/services/actions.ts`, y un test lo verifica.
  */
-export const ACTION_KINDS = ['travel', 'mine', 'publish', 'survey'] as const;
+export const ACTION_KINDS = ['travel', 'jump', 'mine', 'publish', 'survey'] as const;
 export type ActionKind = (typeof ACTION_KINDS)[number];
 
 export const TRAVEL_KIND: ActionKind = 'travel';
+/**
+ * Cruzar una puerta hacia otro sistema.
+ *
+ * Es una acción aparte de viajar y no un viaje más largo: gasta combustible,
+ * cambia de sistema y pide alcance. Viajar no hace ninguna de las tres cosas, y
+ * meterlas en el mismo resolvedor obligaría a preguntarse en cada rama si esto es
+ * un salto — que es exactamente el error que el despachador por clase existe para
+ * evitar.
+ */
+export const JUMP_KIND: ActionKind = 'jump';
 export const MINE_KIND: ActionKind = 'mine';
 /** Acordar una orden del mercado, que es lo que la pone en el libro. */
 export const PUBLISH_KIND: ActionKind = 'publish';

@@ -109,6 +109,45 @@ El caso que define el bucle. Un piloto está en Puerto Ánfora y quiere minar.
 6. **Decide**: seguir minando, volver a vender, o gastar el viaje en otra cosa.
    La bodega llena obliga a elegir, que es de lo que se trata.
 
+## Saltar
+
+Cruzar una puerta estelar es una acción como cualquier otra —tiene inicio,
+duración y resolución perezosa— con tres diferencias que la hacen la primera que
+**consume algo**.
+
+**Se salta parado en la puerta.** No desde cualquier lado del sistema: hay que
+viajar hasta ella primero. Eso es lo que hace que la distancia orbital de una
+puerta importe —una puerta lejos de la estrella cuesta un viaje largo antes del
+salto— y lo que ata el mapa de adentro del sistema con el de la galaxia.
+
+**Cuánto tarda y cuánto quema se sabe antes de apretar.** Los dos números están
+en la pantalla junto al botón, y también en el cartel de confirmación:
+
+```
+duración = máx(1, máx(base · 30 ÷ alcance, base · 40 %))
+consumo  = máx(1, (masa ÷ 40) · años luz ÷ (1 + eficiencia))
+```
+
+donde `base` son 240 segundos por año luz. El **alcance de salto** de la nave
+divide el tiempo: una nave con mejor motor cruza la misma puerta más rápido. El
+piso del 40 % es la misma regla de siempre —[la regla del piso](#cuánto-tarda)—:
+por mucho que se mejore, nadie cruza en cero. Y el consumo nunca baja de una
+unidad, así que **saltar siempre cuesta**.
+
+El motivo por el que un salto no se puede dar sale de una sola función pura,
+`jumpProblem`, que comparten la pantalla y el servicio: el botón que se apaga y
+el rechazo del servidor dicen exactamente lo mismo, y el jugador nunca aprieta
+algo que va a rebotar.
+
+**El combustible se quema al resolver, no al ordenar.** Si al llegar el tanque no
+alcanza —porque algo lo vació en el medio—, el salto se aborta y la nave **no se
+mueve**: nadie queda partido a la mitad del camino. Cobrar por adelantado sería
+más simple y dejaría al jugador pagando por un viaje que después no ocurre.
+
+Es la primera pieza de [la cadena](../DESIGN.md#la-cadena) que se cierra hasta
+el final: el verbo es saltar, el insumo el combustible, el aparato el motor de
+salto y el tanque, y la llave Astrogación y Eficiencia de combustible.
+
 ## Qué paga cada acción
 
 Una acción deposita en el pozo de **una sola rama**, y de ahí sale una regla que

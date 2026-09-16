@@ -27,6 +27,7 @@ import {
 	thousands
 } from '$lib/format';
 import { baseValueOf, getItem } from '$lib/game/items';
+import { lightYears } from '$lib/game/jumps';
 import type { GananciaCarga, GananciaPozo, GananciaXp, Informe, PaginaBitacora } from '$lib/tipos';
 
 /**
@@ -152,6 +153,37 @@ function buildLoot(raw: string): GananciaCarga | null {
 }
 
 /**
+ * Lo que costó un salto, para que el informe lo cuente.
+ *
+ * Un informe tiene que decir **todo lo que pasó**: si la acción gastó algo, el
+ * gasto es parte del relato y no un detalle interno. Un salto que no dice cuánto
+ * combustible se llevó obliga a abrir la ficha de la nave y restar de memoria.
+ */
+function buildJump(raw: string): { label: string; value: string }[] {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw || '{}');
+	} catch {
+		return [];
+	}
+
+	if (!parsed || typeof parsed !== 'object' || !('jump' in parsed)) return [];
+	const jump = (parsed as { jump?: { fuel?: number; tenths?: number } }).jump;
+	if (!jump) return [];
+
+	const filas: { label: string; value: string }[] = [];
+	if (typeof jump.tenths === 'number') {
+		filas.push({ label: 'Distancia', value: lightYears(jump.tenths) });
+	}
+	if (typeof jump.fuel === 'number') {
+		// Con su unidad: una cifra pelada en un informe obliga a adivinar de qué
+		// está hablando, y el informe existe justamente para no tener que adivinar.
+		filas.push({ label: 'Combustible', value: `−${jump.fuel} u` });
+	}
+	return filas;
+}
+
+/**
  * Arma un informe a partir de su fila.
  *
  * Los nombres de los cuerpos llegan ya resueltos: la bitácora es una lista y
@@ -171,6 +203,7 @@ function buildEntry(row: PilotLog, names: ReadonlyMap<number, string>): Informe 
 	if (row.durationSeconds) {
 		details.push({ label: 'Duración', value: remainingLabel(row.durationSeconds) });
 	}
+	details.push(...buildJump(row.result));
 
 	const deposit = buildDeposit(row.xpAwarded);
 	const xp = deposit ? [] : buildLegacyXp(row.xpAwarded);

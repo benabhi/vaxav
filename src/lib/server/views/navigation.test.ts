@@ -126,13 +126,52 @@ describe('la ficha del lugar', () => {
 		const vista = buildLocationView(db, piloto);
 
 		expect(vista.inTransit).toBe(true);
-		expect(vista.name).toBe('En tránsito');
+		// Nombra **el destino**, no el lugar que se dejó atrás: mostrar el origen
+		// como si se estuviera ahí es la mentira que este test cuida.
+		expect(vista.name).toBe('Rumbo a Muelle de los Anillos');
+		expect(vista.leg?.destination.name).toBe('Muelle de los Anillos');
+		expect(vista.leg?.origin.name).toBe('Puerto Ánfora');
+
 		// Vaciar módulos y agentes es parte de decir la verdad: no se está en
 		// ninguna estación.
 		expect(vista.isStation).toBe(false);
 		expect(vista.modules).toEqual([]);
 		expect(vista.agents).toEqual([]);
 		expect(vista.moduleCount).toBe('');
+	});
+
+	it('el tramo lleva el sistema de las dos puntas, no sólo el de llegada', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const destino = getBody(db, 'muelle_de_los_anillos')!;
+		startTravel(db, piloto, destino);
+
+		const tramo = buildLocationView(db, piloto).leg!;
+
+		// En un viaje interno las dos puntas caen en el mismo sistema; el día que
+		// sea un salto van a ser distintos, y por eso el dato viaja duplicado en vez
+		// de una sola vez en la llegada.
+		expect(tramo.origin.system).toBe('Ánfora');
+		expect(tramo.destination.system).toBe('Ánfora');
+		// Con qué se está tratando: es lo único que lo dice mientras la nave vuela,
+		// porque la ficha del lugar se apaga en tránsito.
+		expect(tramo.destination.faction).not.toBe('');
+		expect(tramo.destination.security).not.toBe('');
+		expect(tramo.destination.kindLabel).toBe('Estación');
+		expect(tramo.duration).not.toBe('');
+	});
+
+	it('un viaje dentro del sistema no inventa distancia ni combustible', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		startTravel(db, piloto, getBody(db, 'muelle_de_los_anillos')!);
+
+		const tramo = buildLocationView(db, piloto).leg!;
+
+		// Vacío y no cero: sólo los saltos queman, y una fila en blanco miente más
+		// que una fila que no está.
+		expect(tramo.distance).toBe('');
+		expect(tramo.fuel).toBe('');
 	});
 });
 

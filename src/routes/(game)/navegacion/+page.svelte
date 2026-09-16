@@ -25,6 +25,7 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
+	import type { PuntaTramo } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -81,9 +82,116 @@
 {/snippet}
 
 <div class="flex flex-col items-start gap-1">
-	<Eyebrow>Estás en</Eyebrow>
+	<Eyebrow>{place.inTransit ? 'Vas' : 'Estás en'}</Eyebrow>
 	<DisplayTitle>{place.name}</DisplayTitle>
 </div>
+
+<!--
+	Una punta del tramo: el cuerpo arriba y su sistema abajo.
+
+	El sistema se dibuja en las dos puntas, no sólo en la de llegada, porque en un
+	salto son distintos y ésa es toda la gracia del salto. Con bandera, gobierno y
+	ley, porque mientras la nave vuela **la ficha del lugar está apagada** y no hay
+	ninguna otra pantalla donde mirar a qué se está entrando.
+-->
+{#snippet punta(titulo: string, lado: PuntaTramo)}
+	<div class="flex min-w-0 flex-col gap-2">
+		<div class="flex min-w-0 items-center gap-3">
+			<Icon name={lado.icon} weight="duotone" size="1.3rem" class="shrink-0 text-accent" />
+			<div class="flex min-w-0 flex-col gap-[0.1rem]">
+				<Label>{titulo}</Label>
+				<HudValue class="text-[0.88rem]">{lado.name || '—'}</HudValue>
+				<span class="text-1 text-text-muted">{lado.kindLabel}</span>
+			</div>
+		</div>
+
+		{#if lado.system}
+			<div class="flex flex-col gap-[0.1rem] border-l-2 border-l-border pl-3">
+				<span class="tracking-wide font-mono text-[0.8rem] text-accent-bright">
+					{lado.system}
+				</span>
+				<span class="text-1 text-text-muted">{lado.faction} · {lado.government}</span>
+				<span class="text-1 text-text-muted">Seguridad {lado.security}</span>
+			</div>
+		{/if}
+	</div>
+{/snippet}
+
+<!--
+	El tramo en curso, mientras la nave está en camino.
+
+	Es lo único que se puede decir con verdad ahí —no está en ningún lado— y es
+	justo el momento en que uno abre esta pestaña: para ver cuánto falta. Antes
+	decía «la nave está en camino» y nada más, que es un cartel, no una pantalla.
+
+	La cuenta la lleva `ActionIndicator` en la barra de estado; acá va **de dónde a
+	dónde**, con qué hay de cada lado, que es lo que la barra no tiene lugar para
+	decir.
+-->
+{#if place.leg}
+	<TitledPanel
+		title={place.leg.kindLabel}
+		detail={place.leg.destination.system}
+		class="mb-[1.25rem] w-full"
+	>
+		<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-4">
+			{@render punta('Salida', place.leg.origin)}
+
+			<!--
+				La flecha sólo cuando las dos puntas están una al lado de la otra.
+				Apiladas en un teléfono apunta hacia la derecha, a un costado, y señala
+				el margen: los rótulos «Salida» y «Llegada» ya ordenan la lectura.
+			-->
+			<Icon
+				name="caret-right"
+				weight="bold"
+				size="0.8rem"
+				class="mt-3 hidden shrink-0 text-accent-dim sm:block"
+			/>
+
+			{@render punta('Llegada', place.leg.destination)}
+
+			<div class="grow"></div>
+
+			<!--
+				Lo que cuesta el tramo. La distancia y el combustible sólo aparecen
+				cuando hay un salto detrás: un viaje dentro del sistema no quema nada, y
+				una fila en blanco miente más que una fila que no está.
+			-->
+			<div class="flex flex-wrap items-start gap-x-6 gap-y-3">
+				{#if place.leg.distance}
+					<div class="flex flex-col items-start gap-1">
+						<Label>Distancia</Label>
+						<span class="font-mono text-[0.88rem] whitespace-nowrap text-data">
+							{place.leg.distance}
+						</span>
+					</div>
+				{/if}
+
+				{#if place.leg.fuel}
+					<div class="flex flex-col items-start gap-1">
+						<Label>Combustible</Label>
+						<span class="font-mono text-[0.88rem] whitespace-nowrap text-data">
+							{place.leg.fuel}
+						</span>
+					</div>
+				{/if}
+
+				<div class="flex flex-col items-start gap-1">
+					<Label>Tarda</Label>
+					<span class="font-mono text-[0.88rem] whitespace-nowrap text-accent-bright">
+						{place.leg.duration}
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<p class="mt-4 text-1 text-text-muted">
+			Mientras la nave esté en camino no se pueden dar otras órdenes. Cuando llegue vas a poder
+			atracar y reconfigurarla.
+		</p>
+	</TitledPanel>
+{/if}
 
 <!--
 	Apilado, los dos bloques se llevan el ancho entero; recién en pantalla grande
@@ -162,6 +270,115 @@
 		llegar a un cinturón desconocido sea algo que hacer en vez de una lista que
 		ya venía escrita.
 	-->
+	<!--
+		La puerta: adónde lleva y qué cuesta, **antes** de apretar.
+
+		Un salto que se cobra después de ordenarlo es un salto que nadie puede
+		planear, y planear es la mitad de lo que se hace en un juego de naves. Por
+		eso el tiempo y el combustible se muestran siempre, incluso cuando no se
+		puede cruzar: saber que faltan doce unidades es lo que dice qué hacer, y un
+		"no podés" sin cifras no dice nada.
+	-->
+	{#if place.gate}
+		<div class="w-full min-w-0 flex-[2_1_0]">
+			<TitledPanel
+				title="Puerta estelar"
+				detail={place.gate.destination || 'sin conectar'}
+				class="w-full"
+			>
+				<div class="flex w-full flex-col gap-4">
+					{#if place.gate.destination}
+						<div class="flex w-full flex-wrap items-center gap-3">
+							<Icon name="arrow-circle-right" weight="duotone" size="1.3rem" class="text-accent" />
+							<div class="flex min-w-0 flex-col gap-[0.1rem]">
+								<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
+								<Label>llegás a {place.gate.arrival}</Label>
+							</div>
+						</div>
+
+						<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
+							<div class="flex flex-col items-start gap-1">
+								<Label>Distancia</Label>
+								<span class="font-mono text-[0.85rem] text-data">{place.gate.distance}</span>
+							</div>
+							<div class="flex flex-col items-start gap-1">
+								<Label>Alcance</Label>
+								<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
+							</div>
+							<div class="flex flex-col items-start gap-1">
+								<Label>Tarda</Label>
+								<span class="font-mono text-[0.85rem] text-accent-bright">
+									{place.gate.duration}
+								</span>
+							</div>
+							<div class="flex flex-col items-start gap-1">
+								<Label>Combustible</Label>
+								<!--
+									Lo que cuesta sobre lo que hay: la resta es la pregunta, y
+									hacerla de memoria entre dos pantallas es lo que hace que un
+									juego se sienta incómodo.
+								-->
+								<span
+									class="font-mono text-[0.85rem] {place.gate.fuel > place.gate.fuelInTank
+										? 'text-danger'
+										: 'text-data'}"
+								>
+									{place.gate.fuel} de {place.gate.fuelInTank} u
+								</span>
+							</div>
+						</div>
+					{:else}
+						<BodyText>
+							Esta puerta todavía no lleva a ninguna parte. Alguien la plantó y nadie la conectó del
+							otro lado.
+						</BodyText>
+					{/if}
+
+					{#if place.gate.blocked}
+						<p class="text-2 text-danger">{place.gate.blocked}</p>
+					{/if}
+
+					<!--
+						Con confirmación, como toda orden: un salto compromete tiempo real y
+						además **gasta combustible que no vuelve**. El diálogo repite lo que
+						cuesta en vez de preguntar a secas, porque un aviso que sólo pregunta
+						se aprende a apretar sin leer.
+					-->
+					<ConfirmAction
+						formAction="?/saltar"
+						title="Saltar a {place.gate.destination}"
+						icon="arrow-circle-right"
+						confirmLabel="Saltar"
+						disabled={Boolean(place.gate.blocked)}
+						readings={[
+							{ label: 'Llegás a', value: place.gate.arrival },
+							{ label: 'Distancia', value: place.gate.distance },
+							{ label: 'Duración', value: place.gate.duration },
+							{
+								label: 'Combustible',
+								value: `${place.gate.fuel} de ${place.gate.fuelInTank} u`
+							}
+						]}
+						note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
+					>
+						{#snippet trigger(abrir)}
+							<HudButton
+								type="button"
+								variant="primary"
+								disabled={Boolean(place.gate?.blocked)}
+								onclick={abrir}
+							>
+								<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
+								Saltar
+							</HudButton>
+						{/snippet}
+						{#snippet fields()}{/snippet}
+					</ConfirmAction>
+				</div>
+			</TitledPanel>
+		</div>
+	{/if}
+
 	{#if place.field.scannable}
 		<div class="w-full min-w-0 flex-[2_1_0]">
 			<TitledPanel title="Campo de rocas" detail={place.name} class="w-full">
@@ -351,37 +568,43 @@
 		La ficha del lugar: qué es, dónde está y quién lo opera. En la columna
 		angosta las lecturas van apiladas: es la misma pieza que en la pestaña
 		Sistema, pero acá tiene un tercio del ancho.
-	-->
-	<div class="w-full min-w-0 flex-[1_1_0]">
-		<div class="flex w-full min-w-0 flex-col gap-4">
-			<TitledPanel title="Ficha del lugar" class="w-full">
-				<div class="flex w-full min-w-0 flex-col items-start gap-4">
-					<div class="flex w-full items-start gap-[0.9rem]">
-						<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
-						<BodyText>{place.description}</BodyText>
-					</div>
-					<div class="grid w-full grid-cols-2 gap-4">
-						{@render reading('Tipo', place.kind)}
-						{@render reading('Sistema', place.system)}
-						{@render reading('Orbita a', place.parent)}
-						{@render reading('Distancia', place.distance, true)}
-						{@render reading('Estado', place.exploration)}
-					</div>
-				</div>
-			</TitledPanel>
 
-			{#if place.isStation}
-				<TitledPanel title="Operada por" class="w-full">
-					<div class="flex w-full flex-col items-start gap-2">
-						<HudValue>{place.corporation}</HudValue>
-						<div class="flex flex-wrap items-center gap-[0.4rem]">
-							<Label>{place.corporationKind}</Label>
-							<span class="text-accent-dim">·</span>
-							<Label>{place.owner}</Label>
+		**En tránsito no se dibuja.** No hay lugar del que dar ficha, así que sus
+		cinco lecturas salen vacías y el panel queda diciendo «Órbita a: nada,
+		Distancia: nada». El tramo de arriba ya cuenta todo lo que hay para contar.
+	-->
+	{#if !place.inTransit}
+		<div class="w-full min-w-0 flex-[1_1_0]">
+			<div class="flex w-full min-w-0 flex-col gap-4">
+				<TitledPanel title="Ficha del lugar" class="w-full">
+					<div class="flex w-full min-w-0 flex-col items-start gap-4">
+						<div class="flex w-full items-start gap-[0.9rem]">
+							<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
+							<BodyText>{place.description}</BodyText>
+						</div>
+						<div class="grid w-full grid-cols-2 gap-4">
+							{@render reading('Tipo', place.kind)}
+							{@render reading('Sistema', place.system)}
+							{@render reading('Orbita a', place.parent)}
+							{@render reading('Distancia', place.distance, true)}
+							{@render reading('Estado', place.exploration)}
 						</div>
 					</div>
 				</TitledPanel>
-			{/if}
+
+				{#if place.isStation}
+					<TitledPanel title="Operada por" class="w-full">
+						<div class="flex w-full flex-col items-start gap-2">
+							<HudValue>{place.corporation}</HudValue>
+							<div class="flex flex-wrap items-center gap-[0.4rem]">
+								<Label>{place.corporationKind}</Label>
+								<span class="text-accent-dim">·</span>
+								<Label>{place.owner}</Label>
+							</div>
+						</div>
+					</TitledPanel>
+				{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>

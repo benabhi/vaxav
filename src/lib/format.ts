@@ -442,6 +442,7 @@ const ITEM_KINDS: Record<ItemKind, string> = {
  */
 const ACTIONS: Record<ActionKind, { label: string; icon: IconName }> = {
 	travel: { label: 'Viajando', icon: 'rocket-launch' },
+	jump: { label: 'Saltando', icon: 'arrow-circle-right' },
 	mine: { label: 'Extrayendo', icon: 'diamond' },
 	publish: { label: 'Acordando', icon: 'handshake' },
 	survey: { label: 'Escaneando', icon: 'binoculars' }
@@ -465,6 +466,7 @@ export function actionIcon(kind: string): IconName {
  */
 const ACTION_NOUNS: Record<ActionKind, string> = {
 	travel: 'Viaje',
+	jump: 'Salto',
 	mine: 'Extracción',
 	publish: 'Acuerdo',
 	survey: 'Escaneo'

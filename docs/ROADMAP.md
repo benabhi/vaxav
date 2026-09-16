@@ -154,6 +154,15 @@ Las puertas estelares como cuerpos del sistema, el salto como acción, y el
 combustible que se gasta. Se vuelven mecánicos el alcance de salto y la eficiencia
 de combustible.
 
+- ~~La puerta como cuerpo, con su rumbo de la roseta y su gemela del otro lado.~~
+- ~~El tanque con contenido: la nave guarda cuánto combustible le queda.~~
+- ~~El salto como acción, con su costo y su tiempo dichos **antes** de apretar, y
+  la pantalla de tránsito que dice de dónde a dónde.~~
+- El combustible con nombre —helio-3— y dónde se carga: repostar en una estación,
+  y el hielo del que sale.
+- Repartir mineral propio y precios propios al segundo sistema, para que sea un
+  lugar y no un pasillo.
+
 ### 7 · El taller
 
 Recetas de módulos a partir de materiales refinados. El escalón marca qué

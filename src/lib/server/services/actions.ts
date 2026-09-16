@@ -19,6 +19,7 @@
 import { and, eq } from 'drizzle-orm';
 import {
 	body,
+	gate,
 	marketOrder,
 	pilot,
 	pilotAction,
@@ -30,6 +31,7 @@ import type { Db } from '../db/types';
 import {
 	MINE_KIND,
 	TRAVEL_FAMILY,
+	JUMP_KIND,
 	TRAVEL_KIND,
 	PUBLISH_KIND,
 	SURVEY_KIND,
@@ -39,6 +41,7 @@ import {
 } from '$lib/game/actions';
 import { getOre, type ContainerKind } from '$lib/game/items';
 import { floorDiv } from '$lib/game/math';
+import { jumpFuel, jumpProblem, jumpSeconds } from '$lib/game/jumps';
 import { MINING_FAMILY, cycleSeconds, yieldPerCycleTenths } from '$lib/game/mining';
 import { PUBLISH_SECONDS, dealFactorTenths } from '$lib/game/market';
 import { SURVEY_DIFFICULTY, SURVEY_FAMILY } from '$lib/game/prospecting';
@@ -46,6 +49,7 @@ import { actionXpPool } from '$lib/game/progression';
 import type { SkillFamily } from '$lib/game/skills';
 import { skillFamilyLabel } from '$lib/format';
 import { cargoHold, fitsUnits, moveItem, shipContainer } from './containers';
+import { burnFuel } from './ships';
 import { getAsteroid, takeFromAsteroid } from './asteroids';
 import { isBelt, miningPlan } from './mining';
 import { placeBuyOrder, placeSellOrder } from './orders';
@@ -117,6 +121,8 @@ export interface ActionResult {
 	};
 	/** La lectura que quedó del cinturón, con qué tan fina salió. */
 	readonly survey?: { readonly depth: number };
+	/** Lo que costó cruzar: cuánto combustible y qué distancia. */
+	readonly jump?: { readonly fuel: number; readonly tenths: number };
 }
 
 /** Cómo se resuelve una clase de acción, una vez que la fila ya es nuestra. */
@@ -135,6 +141,41 @@ const resolveTravel: Resolver = (_tx, _row, claimed) => ({
 	xp: actionXpPool(claimed.durationSeconds / 60),
 	movesTo: claimed.destinationBodyId
 });
+
+/**
+ * Saltar: el piloto aparece del otro lado y la experiencia va a Pilotaje.
+ *
+ * **El combustible se gasta al resolver, no al encargar.** Entre que la orden se
+ * dio y venció, la nave pudo cambiar de configuración y pesar otra cosa; cobrar
+ * por adelantado lo que después no cuesta lo mismo deja el tanque mintiendo.
+ *
+ * Si al resolver no alcanza —porque alguien desmontó el tanque a mitad de
+ * salto—, el salto no ocurre: se queda donde estaba y no se le cobra nada. Es
+ * preferible a dejarlo con el tanque en cero del otro lado.
+ */
+const resolveJump: Resolver = (tx, row, claimed) => {
+	const nave = activeShip(tx, row.id);
+	const readout = shipReadout(tx, row);
+	const quieto = { family: TRAVEL_FAMILY, xp: 0, movesTo: null };
+	if (!nave || !readout || claimed.destinationBodyId === null) return quieto;
+
+	const origen = getBodyById(tx, claimed.originBodyId ?? row.locationId);
+	const destino = getBodyById(tx, claimed.destinationBodyId);
+	if (!origen || !destino) return quieto;
+
+	const puerta = tx.select().from(gate).where(eq(gate.bodyId, origen.id)).get();
+	const cuesta = jumpFuel(puerta?.jumpDistance ?? 0, readout.mass);
+	if (nave.fuel < cuesta) return quieto;
+
+	burnFuel(tx, nave, cuesta);
+
+	return {
+		family: TRAVEL_FAMILY,
+		xp: actionXpPool(claimed.durationSeconds / 60),
+		movesTo: destino.id,
+		result: { jump: { fuel: cuesta, tenths: puerta?.jumpDistance ?? 0 } }
+	};
+};
 
 /**
  * Minar: el piloto no se mueve, la carga entra a la bodega y la experiencia va a
@@ -245,6 +286,7 @@ const resolveSurvey: Resolver = (tx, row, claimed) => {
 
 const RESOLVERS: Readonly<Record<ActionKind, Resolver>> = {
 	travel: resolveTravel,
+	jump: resolveJump,
 	mine: resolveMine,
 	publish: resolvePublish,
 	survey: resolveSurvey
@@ -295,6 +337,59 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 			durationSeconds: duration,
 			originBodyId: row.locationId,
 			destinationBodyId: destination.id
+		})
+		.returning()
+		.get();
+}
+
+/**
+ * Ordena cruzar la puerta donde está parado el piloto.
+ *
+ * **Se salta desde la puerta**, no desde cualquier lado: hay que haber viajado
+ * hasta ella primero. Eso es lo que hace que su distancia orbital importe —una
+ * puerta lejos de la estrella cuesta un viaje largo antes del salto— y lo que
+ * ata el mapa de adentro del sistema con el de la galaxia.
+ *
+ * Todo lo que impide saltar lo decide `jumpProblem`, que es puro y lo comparte la
+ * pantalla: así el botón que se apaga y el servicio que rechaza dicen exactamente
+ * lo mismo, y el jugador nunca aprieta algo que va a rebotar.
+ */
+export function startJump(db: Db, row: Pilot): PilotAction {
+	const now = situation(db, row);
+	if (!now.canOrder) throw new ActionError(now.orderBlocked);
+
+	const origen = getBodyById(db, row.locationId);
+	if (!origen || origen.kind !== 'gate') {
+		throw new ActionError('Para saltar hay que estar en una puerta estelar.');
+	}
+
+	const readout = shipReadout(db, row);
+	const nave = activeShip(db, row.id);
+	if (readout === null || nave === null) throw new ActionError('Necesitás una nave para saltar.');
+
+	const puerta = db.select().from(gate).where(eq(gate.bodyId, origen.id)).get();
+	const destino =
+		puerta && puerta.destinationId !== null ? getBodyById(db, puerta.destinationId) : null;
+
+	const problema = jumpProblem(
+		{
+			jumpRange: readout.jumpRange,
+			mass: readout.mass,
+			fuel: nave.fuel,
+			flyable: readout.flyable
+		},
+		destino && puerta ? puerta.jumpDistance : null
+	);
+	if (problema) throw new ActionError(problema);
+
+	return db
+		.insert(pilotAction)
+		.values({
+			pilotId: row.id,
+			kind: JUMP_KIND,
+			durationSeconds: jumpSeconds(puerta!.jumpDistance, readout.jumpRange),
+			originBodyId: origen.id,
+			destinationBodyId: destino!.id
 		})
 		.returning()
 		.get();

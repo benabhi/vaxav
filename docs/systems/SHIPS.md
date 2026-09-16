@@ -87,6 +87,20 @@ consume nada— igual te cueste algo.
 _Cuántos_ saltos podés dar **no es un atributo**: es combustible sobre consumo, y
 el consumo es proporcional a la masa. Se calcula.
 
+**Y el atributo es el tanque, no lo que hay adentro.** «Combustible» en la ficha
+del casco es _cuánto entra_; lo que la nave lleva encima se guarda en la nave y se
+gasta al saltar. Son dos números distintos y la pantalla los muestra juntos
+—`113 / 120`— porque el que importa es la resta.
+
+De ahí sale una regla chica que no es obvia: **lo que hay se acota a lo que
+entra** cada vez que se lee. Desmontar un tanque deja la nave con más combustible
+del que ahora le cabe, y mostrar `140 / 120` es mostrar un error.
+
+El combustible **sólo se gasta saltando**. Moverse dentro de un sistema es
+gratis, a propósito: una nave varada entre dos planetas sin con qué encender el
+motor es una partida rota, y el costo de evitarlo —rescates, remolques, un botón
+de auxilio— no compra nada que el juego necesite.
+
 ### Capacidad e información
 
 | Atributo                | Qué decide                                                           |

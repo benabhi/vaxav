@@ -200,6 +200,29 @@ Detalles que definen si se siente bien:
 - Tiene que entrar en un teléfono: ahí el origen y el destino se esconden y quedan
   el ícono, la barra, el porcentaje y el tiempo.
 
+### La pantalla mientras se vuela
+
+El indicador de arriba dice cuánto falta. La pestaña **Ubicación**, mientras
+tanto, tiene un problema propio: el piloto **no está en ningún lado**.
+
+La respuesta es no fingir que sí. Mientras la nave está en camino:
+
+- **La ficha del lugar se apaga.** Sus cinco lecturas —tipo, sistema, órbita,
+  distancia, estado— salen en blanco o, peor, describen el lugar que se dejó
+  atrás. Un panel que miente es peor que un panel que no está.
+- **En su lugar va el tramo**, que es lo único verdadero ahí: de dónde a dónde,
+  qué se quema, cuánto tarda.
+- **Cada punta lleva su sistema**, con bandera, gobierno y nivel de ley. En un
+  salto los dos sistemas son distintos y ésa es toda la gracia del salto; y como
+  la ficha del lugar está apagada, **no hay ninguna otra pantalla** donde mirar a
+  qué se está entrando justo cuando uno quiere saberlo.
+- La distancia y el combustible **sólo aparecen si hubo un salto detrás**. Un
+  viaje dentro del sistema no quema nada, y una fila en blanco miente más que una
+  fila que no está.
+
+Es la misma idea que el indicador, un nivel más abajo: el título de la pantalla
+deja de ser dónde estás y pasa a ser **adónde vas**.
+
 ### El chat
 
 > **Sin construir.** Hubo una ventana con líneas inventadas y se sacó: una maqueta
@@ -318,6 +341,16 @@ El hexágono de ramas va **adentro**, al otro lado de los datos. Una credencial
 dice quién sos, y en un juego de progresión eso no es el nombre: es la silueta de
 aquello a lo que le dedicaste el tiempo. La tarjeta contesta las dos preguntas de
 un vistazo, y un botón la abre en grande junto a las cifras exactas de cada rama.
+
+Abajo del todo, **la franja de la nave**: el casco, su rol, el tanque y las tres
+capas en el orden en que se las come el daño. El detalle entero está a una pestaña
+de distancia y no se repite acá —salvo el combustible, que viene igual porque es
+el único de esos números que **se gasta**, y el que decide si el próximo salto se
+puede dar—. Un dato así no puede costar dos pestañas mirarlo.
+
+Es una regla, no una excepción: **lo que se agota se muestra donde se lo va a
+extrañar**, no sólo en su ficha. El combustible aparece en la nave, en la
+credencial, junto al botón de saltar y en el informe del viaje.
 
 **El retrato:**
 

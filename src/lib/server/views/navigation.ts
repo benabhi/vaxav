@@ -7,7 +7,7 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { body, system as systemTable, type Pilot } from '../db/schema';
+import { body, gate, system as systemTable, type Body, type Pilot } from '../db/schema';
 import { railsFor } from '$lib/tree';
 import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
@@ -21,18 +21,22 @@ import { depthLabel, surveyAge } from '$lib/game/prospecting';
 import {
 	bodyDetail,
 	bodyDistance,
+	getBodyById,
 	systemOverview,
 	systemTree,
 	type AgentInfo,
 	type SystemNode
 } from '../services/universe';
-import { REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
+import { JUMP_KIND, REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
 import { FACTIONS } from '$lib/game/factions';
 import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
+import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
 import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
-import { SERVICES, type StationServiceKind } from '$lib/game/universe';
+import { SERVICES, securityLevel, type StationServiceKind } from '$lib/game/universe';
 import {
+	actionIcon,
+	actionLabel,
 	bodyKindIcon,
 	bodyKindLabel,
 	corporationKindLabel,
@@ -51,6 +55,9 @@ import {
 	thousands
 } from '$lib/format';
 import type {
+	PuntaTramo,
+	SalidaPuerta,
+	Tramo,
 	BaldosaModulo,
 	FilaAgente,
 	FilaCuerpo,
@@ -121,12 +128,88 @@ export function buildAgentRows(
 	});
 }
 
-/** Lo que muestra la pestaña mientras la nave está en camino. */
-function transit(): Ubicacion {
+/**
+ * Una punta del tramo, con el sistema donde está.
+ *
+ * El sistema viaja en las dos puntas porque en un salto son distintos, y ésa es
+ * toda la gracia del salto. Va con bandera, gobierno y ley porque mientras la
+ * nave está en camino **no hay ninguna otra pantalla que lo diga**: la ficha del
+ * lugar se apaga en tránsito, y justo ahí es cuando uno quiere saber a qué está
+ * entrando.
+ */
+function punta(db: Db, cuerpo: Body | null): PuntaTramo {
+	if (!cuerpo) {
+		return {
+			name: '',
+			kindLabel: '',
+			icon: 'map-pin',
+			system: '',
+			faction: '',
+			security: '',
+			government: ''
+		};
+	}
+
+	const suyo = db.select().from(systemTable).where(eq(systemTable.id, cuerpo.systemId)).get();
+
 	return {
-		name: 'En tránsito',
-		kind: 'Viaje',
-		icon: 'rocket-launch',
+		name: cuerpo.name,
+		kindLabel: bodyKindLabel(cuerpo.kind),
+		icon: bodyKindIcon(cuerpo.kind),
+		system: suyo?.name ?? '',
+		faction: suyo
+			? suyo.controllingFaction
+				? factionName(suyo.controllingFaction)
+				: 'Sin bandera'
+			: '',
+		security: suyo ? `${securityLabel(securityLevel(suyo.security))} ${suyo.security}` : '',
+		government: suyo ? governmentLabel(suyo.government) : ''
+	};
+}
+
+/**
+ * Lo que muestra la pestaña mientras la nave está en camino.
+ *
+ * **Dice de dónde a dónde y cuánto falta.** No puede decir dónde está —no está en
+ * ningún lado— pero un cartel que sólo dice «esperá» es una pantalla que no sirve
+ * para nada, y el viaje es justo el momento en que uno la mira para ver cuánto
+ * queda.
+ */
+function transit(db: Db, row: Pilot): Ubicacion {
+	const orden = currentAction(db, row.id);
+	const origen = orden?.originBodyId ? getBodyById(db, orden.originBodyId) : null;
+	const destino = orden?.destinationBodyId ? getBodyById(db, orden.destinationBodyId) : null;
+
+	// La distancia y el combustible sólo existen si esto es un salto: un viaje
+	// dentro del sistema no quema nada y su distancia ya la dice el árbol. Se
+	// vuelven a calcular acá en vez de guardarse en la orden porque `resolveJump`
+	// también los recalcula al llegar, y dos cuentas que tienen que dar lo mismo
+	// es mejor que dos números que pueden desfasarse.
+	const puerta =
+		orden?.kind === JUMP_KIND && origen
+			? db.select().from(gate).where(eq(gate.bodyId, origen.id)).get()
+			: undefined;
+	const readout = puerta ? shipReadout(db, row) : null;
+
+	const leg: Tramo | null = orden
+		? {
+				kind: orden.kind,
+				kindLabel: actionLabel(orden.kind),
+				icon: actionIcon(orden.kind),
+				origin: punta(db, origen),
+				destination: punta(db, destino),
+				startedAt: orden.startedAt.getTime(),
+				durationSeconds: orden.durationSeconds,
+				duration: remainingLabel(orden.durationSeconds),
+				distance: puerta ? lightYears(puerta.jumpDistance) : '',
+				fuel: puerta && readout ? `${jumpFuel(puerta.jumpDistance, readout.mass)} u` : ''
+			}
+		: null;
+
+	return {
+		name: destino ? `Rumbo a ${destino.name}` : 'En tránsito',
+		kind: leg?.kindLabel ?? 'Viaje',
+		icon: leg?.icon ?? 'rocket-launch',
 		description:
 			'La nave está en camino. Cuando llegue vas a poder atracar, ' +
 			'reconfigurarla y volver a dar órdenes.',
@@ -144,20 +227,43 @@ function transit(): Ubicacion {
 		agents: [],
 		agentCount: '',
 		field: SIN_CAMPO,
-		asteroids: []
+		asteroids: [],
+		gate: null,
+		leg
 	};
 }
 
-/** Lo que muestra la pestaña cuando el piloto no está parado en ningún lado. */
+/**
+ * Lo que muestra la pestaña cuando el piloto no está parado en ningún lado.
+ *
+ * Ya no se arma copiando la de tránsito: aquélla pasó a leer la orden en curso, y
+ * acá no hay ninguna. Son dos vacíos distintos —ir en camino y no estar en
+ * ningún lado— y uno no puede definirse como el otro.
+ */
 function nowhere(): Ubicacion {
 	return {
-		...transit(),
 		name: 'Sin ubicación',
 		kind: '',
 		icon: 'map-pin',
 		description:
 			'No hay un cuerpo asignado a este piloto. Puede que la base no tenga universo cargado.',
-		inTransit: false
+		parent: '',
+		system: '',
+		distance: '',
+		exploration: '',
+		isStation: false,
+		inTransit: false,
+		corporation: '',
+		corporationKind: '',
+		owner: '',
+		modules: [],
+		moduleCount: '',
+		agents: [],
+		agentCount: '',
+		field: SIN_CAMPO,
+		asteroids: [],
+		gate: null,
+		leg: null
 	};
 }
 
@@ -174,7 +280,7 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 	// tapar la pantalla mientras trabajás sería decir que no estás en ningún lado,
 	// que es falso. Lo que sí corresponde es apagar las acciones, y de eso se
 	// encarga el motivo de bloqueo que viaja con cada veta.
-	if (ahora.inTransit) return transit();
+	if (ahora.inTransit) return transit(db, row);
 
 	const place = db.select().from(body).where(eq(body.id, row.locationId)).get();
 	const detail = place ? bodyDetail(db, place.code) : null;
@@ -212,7 +318,9 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		agents,
 		agentCount: isStation ? `${abiertos} de ${agents.length}` : '',
 		field: cinturon.field,
-		asteroids: cinturon.asteroids
+		asteroids: cinturon.asteroids,
+		gate: buildSalida(db, row, detail.body),
+		leg: null
 	};
 }
 
@@ -284,6 +392,60 @@ export function buildBodyRows(
 	}
 
 	return filas;
+}
+
+/**
+ * Lo que hay del otro lado de una puerta, y qué cuesta cruzarla.
+ *
+ * **Todo se calcula antes de apretar.** Un salto que se cobra después de
+ * ordenarlo es un salto que nadie puede planear, y planear es la mitad de lo que
+ * se hace en un juego de naves. El motivo por el que no se puede sale de
+ * `jumpProblem`, que es puro y lo comparte el servicio: el botón apagado y el
+ * rechazo del servidor dicen exactamente lo mismo.
+ */
+function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
+	if (cuerpo.kind !== 'gate') return null;
+
+	const puerta = db.select().from(gate).where(eq(gate.bodyId, cuerpo.id)).get();
+	if (!puerta) return null;
+
+	const gemela = puerta.destinationId === null ? null : getBodyById(db, puerta.destinationId);
+	const suSistema = gemela
+		? db.select().from(systemTable).where(eq(systemTable.id, gemela.systemId)).get()
+		: null;
+
+	const readout = shipReadout(db, row);
+	const nave = activeShip(db, row.id);
+
+	const tenths = gemela ? puerta.jumpDistance : null;
+	const alcance = readout?.jumpRange ?? 0;
+	const masa = readout?.mass ?? 0;
+	const tanque = nave?.fuel ?? 0;
+
+	const problema =
+		readout === null || nave === null
+			? 'Necesitás una nave para saltar.'
+			: jumpProblem(
+					{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
+					tenths
+				);
+
+	// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que
+	// faltan doce de combustible es lo que dice qué hacer, y un panel en blanco
+	// con un "no podés" no dice nada.
+	const segundos = tenths !== null && alcance > 0 ? jumpSeconds(tenths, alcance) : 0;
+
+	return {
+		destination: suSistema?.name ?? '',
+		arrival: gemela?.name ?? '',
+		distance: tenths === null ? '' : lightYears(tenths),
+		seconds: segundos,
+		duration: segundos > 0 ? remainingLabel(segundos) : '',
+		fuel: tenths === null ? 0 : jumpFuel(tenths, masa),
+		fuelInTank: tanque,
+		range: lightYears(alcance),
+		blocked: problema ?? ''
+	};
 }
 
 /** Lo que muestra la pestaña Sistema cuando no hay universo sembrado. */

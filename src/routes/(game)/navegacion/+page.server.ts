@@ -11,7 +11,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { ActionError, startMining, startSurvey } from '$lib/server/services/actions';
+import { ActionError, startMining, startSurvey, startJump } from '$lib/server/services/actions';
 import { buildLocationView } from '$lib/server/views/navigation';
 import { LOGIN_ROUTE } from '$lib/routes';
 import type { Actions, PageServerLoad } from './$types';
@@ -32,6 +32,27 @@ export const actions: Actions = {
 	 * sirva, que haya qué sacar y dónde ponerlo—: la pantalla ya lo filtra, pero nadie más que el
 	 * servicio escribe en la base.
 	 */
+	/**
+	 * Cruza la puerta donde está parado el piloto.
+	 *
+	 * No lleva ningún dato: se salta desde donde se está, y el servicio revalida
+	 * todo —que sea una puerta, que lleve a algún lado, que la nave alcance y que
+	 * el tanque llegue—. La pantalla ya apaga el botón, pero nadie más que el
+	 * servicio escribe en la base.
+	 */
+	saltar: async ({ locals }) => {
+		if (!locals.pilot) return fail(401, { error: 'Tu sesión venció. Volvé a entrar.' });
+
+		try {
+			startJump(db, locals.pilot);
+		} catch (error) {
+			if (error instanceof ActionError) return fail(400, { error: error.message });
+			throw error;
+		}
+
+		return { ok: true };
+	},
+
 	minar: async ({ request, locals }) => {
 		if (!locals.pilot) return fail(401, { error: 'Tu sesión venció. Volvé a entrar.' });
 

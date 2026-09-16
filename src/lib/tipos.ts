@@ -32,6 +32,16 @@ export interface NaveDelPiloto {
 	readonly shield: string;
 	readonly armor: string;
 	readonly structure: string;
+	/**
+	 * Lo que hay en el tanque sobre lo que entra: `113 / 120`.
+	 *
+	 * Va en la credencial y no sólo en la ficha de la nave porque es un número que
+	 * se agota y que decide si el próximo salto se puede dar. Un dato así no puede
+	 * vivir a dos pestañas de distancia: mirarlo tiene que ser gratis.
+	 */
+	readonly fuel: string;
+	/** Cuántos saltos permite lo que hay, no lo que entraría con el tanque lleno. */
+	readonly jumps: string;
 	/** Si la configuración que lleva se puede volar. */
 	readonly flyable: boolean;
 }
@@ -140,6 +150,85 @@ export interface Ubicacion {
 	/** Lo que el piloto sabe de este cinturón, si es uno. */
 	readonly field: CampoRocas;
 	readonly asteroids: readonly Roca[];
+	/** Adónde lleva y qué cuesta, si es una puerta. */
+	readonly gate: SalidaPuerta | null;
+	/** El tramo que está haciendo, si va en camino. */
+	readonly leg: Tramo | null;
+}
+
+/**
+ * El viaje en curso, visto desde la ubicación.
+ *
+ * Mientras la nave está en camino, la pestaña no puede decir dónde está —no está
+ * en ningún lado— pero sí **de dónde a dónde y cuánto falta**, que es todo lo que
+ * uno quiere saber mirando por la ventanilla. Sin eso la pantalla es un cartel
+ * que dice «esperá» y nada más.
+ */
+export interface Tramo {
+	readonly kind: string;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	/** De dónde sale y adónde llega, cada punta con su sistema. */
+	readonly origin: PuntaTramo;
+	readonly destination: PuntaTramo;
+	/** Milisegundos desde la época, para que el navegador cuente solo. */
+	readonly startedAt: number;
+	readonly durationSeconds: number;
+	/** Cuánto tarda en total, ya escrito: `4 m 27 s`. */
+	readonly duration: string;
+	/** La distancia del salto, ya escrita, o vacío si el viaje es interno. */
+	readonly distance: string;
+	/** Qué se quema al llegar, ya escrito, o vacío si no se quema nada. */
+	readonly fuel: string;
+}
+
+/**
+ * Una punta del tramo: el cuerpo, y **el sistema donde está**.
+ *
+ * El sistema va en las dos puntas y no sólo en la de llegada porque en un salto
+ * son distintos, y la gracia del salto es justamente ésa. Además viaja con quién
+ * manda y cuánta ley hay: el momento en que uno mira adónde va es el momento en
+ * que quiere saber a qué está entrando, y en tránsito no hay ninguna otra
+ * pantalla que lo diga —la ficha del lugar no existe mientras la nave vuela—.
+ */
+export interface PuntaTramo {
+	readonly name: string;
+	/** Qué clase de cuerpo es: estación, puerta estelar, planeta. */
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	readonly system: string;
+	/** Quién lo controla, o el rótulo del espacio libre. */
+	readonly faction: string;
+	/** Cuánta ley hay: `Alta 72`. */
+	readonly security: string;
+	/** Cómo se gobierna. */
+	readonly government: string;
+}
+
+/**
+ * Una puerta vista desde adentro: adónde lleva y qué cuesta cruzarla.
+ *
+ * **Todo se dice antes de apretar.** Un salto que se cobra después de ordenarlo
+ * es un salto que nadie puede planear, y planear es la mitad de lo que se hace en
+ * un juego de naves.
+ */
+export interface SalidaPuerta {
+	/** El sistema del otro lado, o vacío si todavía no lleva a ninguna parte. */
+	readonly destination: string;
+	/** La puerta gemela, que es donde se aparece. */
+	readonly arrival: string;
+	/** La distancia, ya escrita: `1,4 al`. */
+	readonly distance: string;
+	/** Cuánto tarda, en segundos, y escrito. */
+	readonly seconds: number;
+	readonly duration: string;
+	/** Cuánto combustible cuesta, y cuánto hay. */
+	readonly fuel: number;
+	readonly fuelInTank: number;
+	/** El alcance de la nave, para comparar con la distancia. */
+	readonly range: string;
+	/** Por qué no se puede, o vacío si se puede. */
+	readonly blocked: string;
 }
 
 /**
