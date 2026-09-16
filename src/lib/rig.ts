@@ -28,26 +28,80 @@ export const RING_ORDER: readonly SlotKind[] = ['hardpoint', 'utility', 'optiona
 
 /** Dónde cae una ranura del anillo, en porcentaje del cuadro. */
 export interface RingPosition {
+	/** Grados desde arriba, en el sentido del reloj. */
+	readonly angle: number;
 	readonly left: string;
 	readonly top: string;
 }
 
 /**
- * Reparte `total` ranuras alrededor del anillo, arrancando arriba.
+ * El hueco que separa dos categorías en el anillo, en grados.
  *
- * El menos noventa es lo que pone la primera en las doce y no en las tres: en
- * pantalla el ángulo cero apunta a la derecha, y un anillo que arranca de
- * costado se lee torcido.
+ * Es lo que convierte un collar de cuentas iguales en **arcos que se pueden
+ * señalar con el dedo**: sin el corte, un casco de tres anclajes y uno de uno se
+ * ven igual —un círculo con nodos— porque todos los puntos pesan lo mismo. Con
+ * él, el tamaño de cada arco es la firma del casco: la nave de guerra tiene un
+ * arco de armas gordo y la de carga uno de bodegas.
  */
-export function ringPositions(total: number): readonly RingPosition[] {
-	const posiciones: RingPosition[] = [];
-	for (let puesto = 0; puesto < total; puesto++) {
-		const angulo = ((-90 + (puesto * 360) / total) * Math.PI) / 180;
-		posiciones.push({
-			left: `${(50 + RING_RADIUS * Math.cos(angulo)).toFixed(2)}%`,
-			top: `${(50 + RING_RADIUS * Math.sin(angulo)).toFixed(2)}%`
-		});
+export const RING_GAP_DEGREES = 12;
+
+/**
+ * Un punto del anillo, en grados desde arriba.
+ *
+ * Se guarda el ángulo además de la posición porque la pantalla lo necesita para
+ * decidir **hacia dónde abrir** el panel de una ranura: hacia afuera del
+ * círculo, que es el único lado donde no tapa ni la nave ni las otras ranuras.
+ */
+function pointAt(angleDegrees: number): RingPosition {
+	const radianes = ((angleDegrees - 90) * Math.PI) / 180;
+	return {
+		angle: angleDegrees,
+		left: `${(50 + RING_RADIUS * Math.cos(radianes)).toFixed(2)}%`,
+		top: `${(50 + RING_RADIUS * Math.sin(radianes)).toFixed(2)}%`
+	};
+}
+
+/**
+ * Reparte las ranuras alrededor del anillo, **un arco por categoría**.
+ *
+ * Cada categoría se lleva una porción del círculo proporcional a cuántas
+ * ranuras tiene, y entre una y otra queda un hueco. Así el anillo deja de ser
+ * un reparto parejo donde todo pesa igual y pasa a tener forma propia según el
+ * casco, que es lo que un dibujo tiene que hacer para no ser un adorno.
+ *
+ * El cero apunta arriba y no a la derecha: un anillo que arranca de costado se
+ * lee torcido.
+ *
+ * Con una sola categoría no hay nada que separar y se reparte parejo, que es lo
+ * que hacía antes: el hueco existiría igual pero no diría nada.
+ */
+export function ringPositions(counts: readonly number[]): readonly RingPosition[] {
+	const grupos = counts.filter((cuantas) => cuantas > 0);
+	const total = grupos.reduce((suma, cuantas) => suma + cuantas, 0);
+	if (total === 0) return [];
+
+	// Sin cortes, o con tan pocas ranuras que los huecos se comerían el círculo.
+	if (grupos.length < 2) {
+		return Array.from({ length: total }, (_, puesto) => pointAt((puesto * 360) / total));
 	}
+
+	const huecos = grupos.length * RING_GAP_DEGREES;
+	const util = 360 - huecos;
+
+	const posiciones: RingPosition[] = [];
+	let cursor = RING_GAP_DEGREES / 2;
+
+	for (const cuantas of grupos) {
+		const arco = (util * cuantas) / total;
+		// Los nodos se reparten **dentro** del arco, con medio paso de aire en cada
+		// punta: pegarlos al borde haría que dos categorías vecinas parecieran una.
+		const paso = arco / cuantas;
+		for (let puesto = 0; puesto < cuantas; puesto++) {
+			posiciones.push(pointAt(cursor + paso * (puesto + 0.5)));
+		}
+		cursor += arco + RING_GAP_DEGREES;
+	}
+
 	return posiciones;
 }
 
@@ -78,7 +132,7 @@ function slotRow(
 	modules: readonly ShipModule[],
 	index: number,
 	selected: number,
-	position: RingPosition = { left: '50%', top: '50%' }
+	position: RingPosition = { angle: 0, left: '50%', top: '50%' }
 ): FilaRanura {
 	const slot = hull.slots[index];
 	const module = modules[index];
@@ -97,6 +151,10 @@ function slotRow(
 		badge: montado ? `${module.size}${module.tier}` : `c${slot.size}`,
 		filled: montado,
 		selected: index === selected,
+		// La clase de la ranura, para que el nodo la diga por su tamaño: una nave
+		// que traga módulos grandes se reconoce sin leer una cifra.
+		size: slot.size,
+		angle: position.angle,
 		left: position.left,
 		top: position.top
 	};
@@ -116,7 +174,10 @@ export function buildRingSlots(
 	const hull = getHull(hullCode);
 	const modules = fittedModules(hullCode, fitted);
 	const orden = ringOrder(hull);
-	const posiciones = ringPositions(orden.length);
+	// Cuántas ranuras tiene cada categoría, en el orden en que se recorre el
+	// anillo: es lo que decide el tamaño de cada arco.
+	const cuentas = RING_ORDER.map((kind) => hull.slots.filter((slot) => slot.kind === kind).length);
+	const posiciones = ringPositions(cuentas);
 
 	return orden.map((index, puesto) => slotRow(hull, modules, index, selected, posiciones[puesto]));
 }

@@ -1,26 +1,43 @@
 <!--
-	La lista de ranuras que acompaña al anillo de equipamiento.
+	Las ranuras de la nave: **el banco de trabajo** de la pantalla de equipamiento.
 
-	Es un **índice del anillo, no una segunda interfaz**: lee las mismas filas y
-	comparte la ranura elegida, así que señalar en cualquiera de los dos prende
-	los dos.
+	Empezó siendo un índice del anillo y terminó siendo donde se trabaja, y eso no
+	es un accidente de diseño sino una consecuencia de la geometría. Un anillo dice
+	muy bien *dónde* está cada cosa y muy mal *qué* es cada una; y sobre todo, sus
+	elementos están repartidos en trescientos sesenta grados, así que **un panel que
+	sirva a una ranura no tiene ningún lado natural donde abrirse**. Abajo obliga a
+	bajar, al costado achica el anillo, flotando tapa algo — siempre. Un círculo no
+	tiene un costado.
 
-	Existe porque un anillo dice bien *dónde* está cada cosa y mal *qué* es cada
-	una: once círculos ordenados alrededor se recorren con el ojo, pero una lista
-	con encabezados se lee de arriba abajo. Y en un teléfono, donde apuntarle a un
-	círculo de cuarenta píxeles es incómodo, la lista es lo que termina usándose.
+	La lista sí lo tiene: cada fila se abre **en su lugar**, empujando sólo lo que
+	tiene debajo. Es el mismo gesto que el árbol de habilidades, que ya funciona
+	así, y por eso no hay nada nuevo que aprender.
+
+	El anillo no se va: se queda con el oficio que sí hace bien, que es ser la
+	figura de la pantalla. Los dos leen las mismas filas y comparten la ranura
+	elegida, así que tocar en cualquiera de los dos prende los dos.
 -->
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import Icon from '../Icon.svelte';
 	import type { GrupoRanuras } from '$lib/tipos';
 
 	interface Props {
 		groups: readonly GrupoRanuras[];
 		onChoose: (index: number) => void;
+		/**
+		 * Qué se dibuja debajo de la ranura abierta.
+		 *
+		 * Llega como snippet y no como datos porque lo que va ahí —las opciones, sus
+		 * formularios, el aviso de por qué no se puede tocar la nave— es de la
+		 * pantalla y no de la lista. La lista sabe **dónde** va el detalle; qué dice,
+		 * no es asunto suyo.
+		 */
+		detail?: Snippet;
 		class?: string;
 	}
 
-	let { groups, onChoose, class: extra = '' }: Props = $props();
+	let { groups, onChoose, detail, class: extra = '' }: Props = $props();
 </script>
 
 <div class="flex w-full min-w-0 flex-col items-start gap-3 {extra}">
@@ -41,7 +58,7 @@
 					type="button"
 					onclick={() => onChoose(slot.index)}
 					title={slot.title}
-					aria-pressed={slot.selected}
+					aria-expanded={slot.selected}
 					class="flex w-full cursor-pointer items-center gap-[0.45rem] border-l-[2px] px-[0.45rem]
 						py-[0.3rem] text-left transition-[background-color,color]
 						{slot.selected
@@ -58,7 +75,28 @@
 						{slot.moduleName}
 					</span>
 					<span class="shrink-0 font-mono text-[0.68rem]">{slot.badge}</span>
+					<!--
+						La flecha dice que la fila se abre. Sin ella, una lista donde algunas
+						filas esconden cosas y otras no es una lotería.
+					-->
+					<Icon
+						name={slot.selected ? 'caret-up' : 'caret-down'}
+						weight="bold"
+						size="0.6rem"
+						class="shrink-0 opacity-70"
+					/>
 				</button>
+
+				<!--
+					El detalle, debajo de su propia fila. Va sangrado y con una línea al
+					costado: es lo que dice "esto pertenece a la ranura de arriba" sin
+					escribirlo.
+				-->
+				{#if slot.selected && detail}
+					<div class="w-full border-l-[2px] border-l-accent-dim pt-1 pb-2 pl-[0.45rem]">
+						{@render detail()}
+					</div>
+				{/if}
 			{/each}
 		</div>
 	{/each}

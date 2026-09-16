@@ -21,15 +21,16 @@ function percent(value: string): number {
 
 describe('las posiciones del anillo', () => {
 	it('arranca arriba, que es donde el ojo empieza a leer', () => {
-		const [primera] = ringPositions(8);
+		// Con una sola categoría no hay cortes y el reparto es parejo desde las doce.
+		const [primera] = ringPositions([8]);
 
 		expect(percent(primera.left)).toBeCloseTo(50, 1);
 		expect(percent(primera.top)).toBeCloseTo(50 - RING_RADIUS, 1);
 	});
 
-	it('reparte parejo: todas caen sobre el mismo círculo', () => {
-		for (const total of [1, 3, 8, 11, 15]) {
-			for (const { left, top } of ringPositions(total)) {
+	it('todas caen sobre el mismo círculo', () => {
+		for (const cuentas of [[1], [3], [1, 1, 2, 7], [3, 2, 3, 7], [2, 2, 4, 7]]) {
+			for (const { left, top } of ringPositions(cuentas)) {
 				const dx = percent(left) - 50;
 				const dy = percent(top) - 50;
 				expect(Math.hypot(dx, dy)).toBeCloseTo(RING_RADIUS, 1);
@@ -38,24 +39,60 @@ describe('las posiciones del anillo', () => {
 	});
 
 	it('no repite lugar: dos ranuras nunca se pisan', () => {
-		for (const total of [2, 9, 11, 15]) {
-			const lugares = ringPositions(total).map(({ left, top }) => `${left}|${top}`);
+		for (const cuentas of [[2], [1, 1, 2, 7], [3, 2, 3, 7], [1, 2, 4, 7]]) {
+			const total = cuentas.reduce((suma, cuantas) => suma + cuantas, 0);
+			const lugares = ringPositions(cuentas).map(({ left, top }) => `${left}|${top}`);
 			expect(new Set(lugares).size).toBe(total);
 		}
 	});
 
-	it('las separa por el mismo ángulo', () => {
-		const posiciones = ringPositions(12);
-		const grados = (p: { left: string; top: string }) =>
-			(Math.atan2(percent(p.top) - 50, percent(p.left) - 50) * 180) / Math.PI;
-
-		// `atan2` corta en ±180, así que una de las doce vueltas cruza esa
-		// discontinuidad: la diferencia se normaliza antes de compararla.
+	it('sin categorías que separar, reparte parejo', () => {
+		const posiciones = ringPositions([12]);
 		const saltos = posiciones
 			.slice(1)
-			.map((p, i) => ((grados(p) - grados(posiciones[i]) + 540) % 360) - 180);
+			.map((p, i) => ((p.angle - posiciones[i].angle + 540) % 360) - 180);
 
 		for (const salto of saltos) expect(salto).toBeCloseTo(30, 1);
+	});
+
+	it('deja un hueco entre categorías, y ninguno adentro', () => {
+		// Es lo que convierte el collar de cuentas en arcos que se pueden señalar:
+		// el salto entre dos vecinas de la misma categoría es el chico, y el que
+		// cruza de una categoría a otra es visiblemente mayor.
+		const cuentas = [3, 2, 3, 7];
+		const posiciones = ringPositions(cuentas);
+
+		let puesto = 0;
+		const dentro: number[] = [];
+		const entre: number[] = [];
+		for (const [grupo, cuantas] of cuentas.entries()) {
+			for (let i = 1; i < cuantas; i++) {
+				dentro.push(posiciones[puesto + i].angle - posiciones[puesto + i - 1].angle);
+			}
+			if (grupo < cuentas.length - 1) {
+				entre.push(posiciones[puesto + cuantas].angle - posiciones[puesto + cuantas - 1].angle);
+			}
+			puesto += cuantas;
+		}
+
+		expect(Math.max(...dentro)).toBeLessThan(Math.min(...entre));
+	});
+
+	it('el arco de una categoría crece con sus ranuras', () => {
+		// Ésta es la prueba de que el anillo **dice qué nave es**: el casco de tres
+		// anclajes tiene que mostrar un arco de armas más ancho que el de uno.
+		const arco = (cuentas: readonly number[]) => {
+			const posiciones = ringPositions(cuentas);
+			return posiciones[cuentas[0] - 1].angle - posiciones[0].angle;
+		};
+
+		expect(arco([3, 2, 3, 7])).toBeGreaterThan(arco([1, 2, 3, 7]));
+	});
+
+	it('una categoría vacía no deja un hueco fantasma', () => {
+		// Un casco sin anclajes no tiene por qué mostrar el corte de una categoría
+		// que no existe: sería un vacío que no significa nada.
+		expect(ringPositions([0, 2, 3, 7])).toEqual(ringPositions([2, 3, 7]));
 	});
 });
 

@@ -25,10 +25,13 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
+	import Popover from '$lib/components/ui/Popover.svelte';
+	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
 	import {
 		bonusTargetLabel,
 		damageTypeShort,
 		moduleIcon,
+		requirementLabel,
 		slotKindIcon,
 		slotKindLabel,
 		tenths,
@@ -311,6 +314,23 @@
 		}
 	]);
 
+	/**
+	 * Lo que el casco pide para volarse, y si el piloto lo cumple.
+	 *
+	 * Se mira contra los niveles de verdad y no contra los del modo "con todo
+	 * entrenado": ese modo es para comparar equipamiento, y un requisito que se
+	 * pone en verde porque uno activó una simulación sería una mentira.
+	 */
+	let hullRequirements = $derived(
+		hull.requirements.map((requisito) => ({
+			label: requirementLabel(requisito),
+			met: (ship.pilotLevels[requisito.skill] ?? 0) >= requisito.level
+		}))
+	);
+
+	/** Cuántos requisitos del casco le faltan al piloto. */
+	let missingHull = $derived(hullRequirements.filter((requisito) => !requisito.met).length);
+
 	/** Abre una ranura, o la cierra si ya estaba abierta. */
 	function chooseSlot(index: number) {
 		selected = index === selected ? -1 : index;
@@ -440,166 +460,169 @@
 	Fabricar se hace en el Taller, que es otro módulo de estación y se entra desde
 	Ubicación.
 
-	Va **al lado del anillo y no debajo de todo**, que es donde estaba. Elegir una
-	ranura obligaba a bajar, y bajar sacaba de la pantalla justo lo que hay que
-	mirar para decidir: la hoja de rendimiento. Ahora el anillo queda a la
-	izquierda, lo que entra en la ranura al medio y la hoja a la derecha, y montar
-	un módulo no mueve nada de lugar.
+	Se dibuja **dentro de la fila de su ranura**, en la lista. No es un panel con
+	título propio: es el detalle de un renglón, y ponerle marco lo haría parecer
+	otra cosa que está al lado en vez de algo que sale de ahí.
 -->
 {#snippet equipamiento()}
-	<TitledPanel title="Equipamiento" detail={selectedTitle} class="w-full">
-		<div class="flex w-full flex-col gap-2">
-			<!--
-				Por qué no se puede tocar la nave, si no se puede. Un banco de
-				trabajo apagado sin explicación es peor que uno que no está.
-			-->
-			{#if !ship.canRefit}
-				<div
-					class="flex w-full flex-wrap items-center gap-[0.4rem] border border-warning
-						bg-warning-wash px-[0.6rem] py-2"
+	<div class="flex w-full flex-col gap-2">
+		<!--
+			Qué ranura es y de qué clase. La fila de arriba dice qué hay montado; esto
+			dice qué **cabe**, que es la pregunta de este bloque.
+		-->
+		<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+			{selectedTitle}
+		</span>
+		<!--
+			Por qué no se puede tocar la nave, si no se puede. Un banco de
+			trabajo apagado sin explicación es peor que uno que no está.
+		-->
+		{#if !ship.canRefit}
+			<div
+				class="flex w-full flex-wrap items-center gap-[0.4rem] border border-warning
+					bg-warning-wash px-[0.6rem] py-2"
+			>
+				<Icon name="warning" weight="fill" size="0.85rem" class="text-warning" />
+				<span class="text-1 text-warning">{ship.refitBlocked}</span>
+			</div>
+		{/if}
+
+		{#if form?.error}
+			<div
+				class="flex w-full flex-wrap items-center gap-[0.4rem] border border-danger
+					bg-danger-wash px-[0.6rem] py-2"
+			>
+				<Icon name="warning" weight="fill" size="0.85rem" class="text-danger" />
+				<span class="text-1 text-danger">{form.error}</span>
+			</div>
+		{/if}
+
+		{#if selectedIsCore}
+			<p class="text-1 text-text-muted">Un interno esencial se mejora, no se quita.</p>
+		{:else}
+			<form method="POST" action="?/montar" use:enhance class="w-fit">
+				<input type="hidden" name="ranura" value={selected} />
+				<input type="hidden" name="modulo" value="" />
+				<button
+					type="submit"
+					disabled={!ship.canRefit}
+					onmouseenter={() => (preview = '')}
+					onmouseleave={() => (preview = null)}
+					onfocus={() => (preview = '')}
+					onblur={() => (preview = null)}
+					class="flex cursor-pointer items-center gap-[0.35rem] border border-border-soft
+						px-2 py-1 text-text-muted transition-colors hover:text-danger
+						disabled:cursor-not-allowed disabled:opacity-45"
 				>
-					<Icon name="warning" weight="fill" size="0.85rem" class="text-warning" />
-					<span class="text-1 text-warning">{ship.refitBlocked}</span>
-				</div>
-			{/if}
+					<Icon name="x" weight="bold" size="0.7rem" />
+					<span class="font-display text-[0.68rem] font-semibold tracking-label uppercase">
+						Dejar vacía
+					</span>
+				</button>
+			</form>
+		{/if}
 
-			{#if form?.error}
-				<div
-					class="flex w-full flex-wrap items-center gap-[0.4rem] border border-danger
-						bg-danger-wash px-[0.6rem] py-2"
-				>
-					<Icon name="warning" weight="fill" size="0.85rem" class="text-danger" />
-					<span class="text-1 text-danger">{form.error}</span>
-				</div>
-			{/if}
+		{#if nothingAvailable}
+			<p class="text-1 text-warning">{nothingAvailable}</p>
+		{/if}
 
-			{#if selectedIsCore}
-				<p class="text-1 text-text-muted">Un interno esencial se mejora, no se quita.</p>
-			{:else}
-				<form method="POST" action="?/montar" use:enhance class="w-fit">
-					<input type="hidden" name="ranura" value={selected} />
-					<input type="hidden" name="modulo" value="" />
-					<button
-						type="submit"
-						disabled={!ship.canRefit}
-						onmouseenter={() => (preview = '')}
-						onmouseleave={() => (preview = null)}
-						onfocus={() => (preview = '')}
-						onblur={() => (preview = null)}
-						class="flex cursor-pointer items-center gap-[0.35rem] border border-border-soft
-							px-2 py-1 text-text-muted transition-colors hover:text-danger
-							disabled:cursor-not-allowed disabled:opacity-45"
-					>
-						<Icon name="x" weight="bold" size="0.7rem" />
-						<span class="font-display text-[0.68rem] font-semibold tracking-label uppercase">
-							Dejar vacía
-						</span>
-					</button>
-				</form>
-			{/if}
-
-			{#if nothingAvailable}
-				<p class="text-1 text-warning">{nothingAvailable}</p>
-			{/if}
-
+		<!--
+			Un renglón por montón, con **de qué bodega sale**. Lo montado va
+			primero y encendido; lo demás es lo que podés poner en su lugar.
+		-->
+		{#each options as option (`${option.origin}:${option.code}`)}
 			<!--
-				Un renglón por montón, con **de qué bodega sale**. Lo montado va
-				primero y encendido; lo demás es lo que podés poner en su lugar.
+				Señalar un módulo **simula montarlo**: la hoja de la derecha pasa a
+				mostrar cómo quedaría y marca lo que se mueve. Con el foco del teclado
+				también, porque si no la simulación sólo existiría para quien usa mouse.
 			-->
-			{#each options as option (`${option.origin}:${option.code}`)}
-				<!--
-					Señalar un módulo **simula montarlo**: la hoja de la derecha pasa a
-					mostrar cómo quedaría y marca lo que se mueve. Con el foco del teclado
-					también, porque si no la simulación sólo existiría para quien usa mouse.
-				-->
-				<form method="POST" action="?/montar" use:enhance class="w-full">
-					<input type="hidden" name="ranura" value={selected} />
-					<input type="hidden" name="modulo" value={option.code} />
-					<input type="hidden" name="origen" value={option.origin} />
-					<button
-						type="submit"
-						disabled={!ship.canRefit}
-						onmouseenter={() => (preview = option.code)}
-						onmouseleave={() => (preview = null)}
-						onfocus={() => (preview = option.code)}
-						onblur={() => (preview = null)}
-						class="w-full border border-l-[3px] border-border-soft px-3 py-[0.6rem] text-left
-							transition-[background-color,color] disabled:cursor-not-allowed disabled:opacity-45
-							{option.mounted
-							? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
-							: 'border-l-accent-dim bg-surface text-text-strong hover:bg-surface-hover'}"
-					>
-						<div class="flex w-full flex-col items-start gap-1">
-							<div class="flex w-full items-center gap-2">
+			<form method="POST" action="?/montar" use:enhance class="w-full">
+				<input type="hidden" name="ranura" value={selected} />
+				<input type="hidden" name="modulo" value={option.code} />
+				<input type="hidden" name="origen" value={option.origin} />
+				<button
+					type="submit"
+					disabled={!ship.canRefit}
+					onmouseenter={() => (preview = option.code)}
+					onmouseleave={() => (preview = null)}
+					onfocus={() => (preview = option.code)}
+					onblur={() => (preview = null)}
+					class="w-full border border-l-[3px] border-border-soft px-3 py-[0.6rem] text-left
+						transition-[background-color,color] disabled:cursor-not-allowed disabled:opacity-45
+						{option.mounted
+						? 'border-l-accent-bright bg-accent text-on-accent hover:bg-accent'
+						: 'border-l-accent-dim bg-surface text-text-strong hover:bg-surface-hover'}"
+				>
+					<div class="flex w-full flex-col items-start gap-1">
+						<div class="flex w-full items-center gap-2">
+							<Icon
+								name={option.icon}
+								weight="duotone"
+								size="0.95rem"
+								class={option.mounted ? 'text-on-accent' : 'text-accent'}
+							/>
+							<span
+								class="min-w-0 font-display text-[0.82rem] font-bold tracking-display uppercase"
+							>
+								{option.name}
+							</span>
+							<div class="grow"></div>
+							<!--
+								De qué bodega sale, y cuántos hay ahí. Es la diferencia que
+								importa antes de zarpar: lo de la nave viaja con vos, lo de la
+								estación se queda acá.
+
+								La cantidad va con la cruz de multiplicar, como en todo el juego:
+								un número suelto detrás de un punto se lee como un identificador,
+								y un identificador que nadie puede usar para nada es ruido.
+							-->
+							<span
+								class="flex shrink-0 items-center gap-[0.3rem] border px-[0.4rem] py-[0.1rem]
+									{option.mounted
+									? 'border-on-accent/40 text-on-accent'
+									: option.origin === 'ship'
+										? 'border-border-soft text-accent-bright'
+										: 'border-border-soft text-text-muted'}"
+							>
 								<Icon
-									name={option.icon}
-									weight="duotone"
-									size="0.95rem"
-									class={option.mounted ? 'text-on-accent' : 'text-accent'}
+									name={option.mounted
+										? 'check'
+										: option.origin === 'ship'
+											? 'package'
+											: 'buildings'}
+									weight="fill"
+									size="0.6rem"
 								/>
 								<span
-									class="min-w-0 font-display text-[0.82rem] font-bold tracking-display uppercase"
+									class="font-display text-[0.58rem] font-semibold tracking-label whitespace-nowrap uppercase"
 								>
-									{option.name}
-								</span>
-								<div class="grow"></div>
-								<!--
-									De qué bodega sale, y cuántos hay ahí. Es la diferencia que
-									importa antes de zarpar: lo de la nave viaja con vos, lo de la
-									estación se queda acá.
-
-									La cantidad va con la cruz de multiplicar, como en todo el juego:
-									un número suelto detrás de un punto se lee como un identificador,
-									y un identificador que nadie puede usar para nada es ruido.
-								-->
-								<span
-									class="flex shrink-0 items-center gap-[0.3rem] border px-[0.4rem] py-[0.1rem]
-										{option.mounted
-										? 'border-on-accent/40 text-on-accent'
+									{option.mounted
+										? 'Puesto'
 										: option.origin === 'ship'
-											? 'border-border-soft text-accent-bright'
-											: 'border-border-soft text-text-muted'}"
-								>
-									<Icon
-										name={option.mounted
-											? 'check'
-											: option.origin === 'ship'
-												? 'package'
-												: 'buildings'}
-										weight="fill"
-										size="0.6rem"
-									/>
-									<span
-										class="font-display text-[0.58rem] font-semibold tracking-label whitespace-nowrap uppercase"
-									>
-										{option.mounted
-											? 'Puesto'
-											: option.origin === 'ship'
-												? `En la nave ×${option.units}`
-												: `En la estación ×${option.units}`}
-									</span>
+											? `En la nave ×${option.units}`
+											: `En la estación ×${option.units}`}
 								</span>
-								<span
-									class="shrink-0 font-mono text-[0.75rem] {option.mounted
-										? 'text-on-accent'
-										: 'text-data'}"
-								>
-									{option.tier}
-								</span>
-							</div>
+							</span>
 							<span
-								class="font-mono text-1 leading-[1.4] {option.mounted
+								class="shrink-0 font-mono text-[0.75rem] {option.mounted
 									? 'text-on-accent'
-									: 'text-text-muted'}"
+									: 'text-data'}"
 							>
-								{option.summary}
+								{option.tier}
 							</span>
 						</div>
-					</button>
-				</form>
-			{/each}
-		</div>
-	</TitledPanel>
+						<span
+							class="font-mono text-1 leading-[1.4] {option.mounted
+								? 'text-on-accent'
+								: 'text-text-muted'}"
+						>
+							{option.summary}
+						</span>
+					</div>
+				</button>
+			</form>
+		{/each}
+	</div>
 {/snippet}
 
 <div class="flex w-full flex-wrap items-center gap-4">
@@ -632,6 +655,109 @@
 	</button>
 </div>
 
+<!--
+	La ficha del casco: **una línea**, no un panel.
+
+	Es de la nave y no del equipamiento —qué es, qué la mejora, qué hay que saber
+	para volarla—, así que va debajo del título y no entre los instrumentos: se lee
+	una vez al entrar y después no se vuelve a mirar, de modo que pelea por el
+	renglón de arriba y no por el espacio del medio, donde está lo que se toca.
+
+	Y va **en un renglón que no crece**. Un casco puede pedir una habilidad o
+	quince, y una ficha que se estira con cada requisito empuja la herramienta hacia
+	abajo justo cuando más cascos haya. Acá el renglón dice **cuántos** y el detalle
+	vive detrás del aviso: con uno o con quince, la pantalla mide lo mismo.
+
+	La descripción sigue el mismo criterio. Es sabor, no dato: se lee una vez y
+	ocupaba cuatro renglones, así que se guarda detrás del signo de pregunta.
+-->
+<div
+	class="flex w-full flex-wrap items-center gap-x-4 gap-y-2 border-l-[3px] border-l-accent
+		bg-surface px-4 py-[0.55rem]"
+>
+	<span class="flex items-center gap-[0.4rem]">
+		<Icon name="rocket" weight="duotone" size="0.85rem" class="shrink-0 text-accent" />
+		<span class="font-display text-[0.72rem] font-bold tracking-label text-text-strong uppercase">
+			{hull.role}
+		</span>
+	</span>
+
+	<span class="flex items-center gap-[0.35rem]">
+		<Icon name="star" weight="fill" size="0.7rem" class="shrink-0 text-accent" />
+		<span class="text-1 text-text-body">{hullBonus}</span>
+	</span>
+
+	<!--
+		Qué hay que saber para volarla, **contado y no listado**. Lo que importa de un
+		vistazo es si falta algo; cuáles son es la segunda pregunta, y va adentro.
+	-->
+	<span class="flex items-center gap-[0.35rem]">
+		<Label>Para volarla</Label>
+		{#if hullRequirements.length === 0}
+			<span class="text-1 text-text-muted">no pide nada</span>
+		{:else}
+			<Popover label="Qué pide este casco">
+				{#snippet trigger()}
+					<span
+						class="flex cursor-pointer items-center gap-[0.3rem] transition-colors
+							{missingHull > 0 ? 'text-danger' : 'text-text-body hover:text-accent-bright'}"
+					>
+						<Icon
+							name={missingHull > 0 ? 'warning' : 'check'}
+							weight="fill"
+							size="0.6rem"
+							class="shrink-0"
+						/>
+						<span class="text-1">
+							{missingHull > 0
+								? `te faltan ${missingHull} de ${hullRequirements.length}`
+								: `${hullRequirements.length} ${hullRequirements.length === 1 ? 'habilidad' : 'habilidades'}`}
+						</span>
+					</span>
+				{/snippet}
+				<FloatingPanel class="flex max-w-[18rem] flex-col gap-2 p-3">
+					<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+						Para volar un {hull.name}
+					</span>
+					{#each hullRequirements as requisito (requisito.label)}
+						<span
+							class="flex items-center gap-[0.4rem] {requisito.met
+								? 'text-text-body'
+								: 'text-danger'}"
+						>
+							<Icon
+								name={requisito.met ? 'check' : 'warning'}
+								weight="fill"
+								size="0.6rem"
+								class="shrink-0"
+							/>
+							<span class="text-2">{requisito.label}</span>
+						</span>
+					{/each}
+				</FloatingPanel>
+			</Popover>
+		{/if}
+	</span>
+
+	<div class="grow"></div>
+
+	<!-- La descripción, guardada: es sabor y se lee una vez. -->
+	<Popover label="Qué es este casco">
+		{#snippet trigger()}
+			<Icon
+				name="question"
+				weight="bold"
+				size="0.75rem"
+				class="text-text-muted transition-colors hover:text-accent-bright"
+			/>
+		{/snippet}
+		<FloatingPanel class="flex max-w-[22rem] flex-col gap-1 p-3">
+			<span class="font-display text-1 tracking-label text-accent-dim uppercase">{hull.name}</span>
+			<BodyText>{hull.description}</BodyText>
+		</FloatingPanel>
+	</Popover>
+</div>
+
 <!-- Por qué la nave no se puede volar. Vacío cuando cierra. -->
 {#if !readout.flyable}
 	<Panel class="w-full border-danger bg-danger-wash">
@@ -649,81 +775,74 @@
 	</Panel>
 {/if}
 
-<div class="flex w-full flex-col items-start gap-6 lg:flex-row">
+<!--
+	La bancada de equipamiento, en tres columnas que se leen de izquierda a
+	derecha: **qué nave es, qué le estoy haciendo, en qué queda**.
+
+	Esa es la causalidad de la pantalla y por eso es también su orden. El anillo es
+	la identidad y no se toca mientras se trabaja; la lista es el banco, donde cada
+	ranura se abre en su lugar; la hoja es el resultado, y está del lado donde
+	termina la lectura.
+
+	El reparto de oficios es lo que resuelve el problema que tenía esta pantalla.
+	Un anillo informa por su forma pero **no tiene un costado donde abrir un panel**
+	—sus ranuras están repartidas en trescientos sesenta grados—, así que todo
+	selector que le colgara iba a tapar algo o a correr el dibujo. Separando figura
+	de banco de trabajo, no hay nada que acomodar: la fila se abre donde está.
+-->
+<div class="flex w-full flex-col items-start gap-5 lg:flex-row lg:items-start">
 	<!--
-		Tres quintos para el anillo y su lista, dos para la hoja: el anillo necesita
-		ancho para no achicarse, la hoja no.
+		El emblema. Grande, quieto y sin nada encima: es lo que hace que esta
+		pantalla se reconozca antes de leer una palabra, y lo único del juego que se
+		organiza alrededor de un círculo.
+
+		Sigue siendo clickeable —tocar una ranura abre su fila en la lista— pero ya no
+		carga con el trabajo: refleja lo que pasa, incluido lo que estás por montar.
 	-->
-	<div class="flex w-full min-w-0 flex-[3_1_0] flex-col gap-4">
-		<div class="flex w-full flex-wrap items-start gap-[1.25rem]">
-			<!--
-				Con una ranura abierta el anillo cede ancho: los dos piden lo suyo y en la
-				columna no entran los dos enteros, así que uno se iba abajo y volvíamos a
-				tener que bajar. El anillo achicado sigue leyéndose —es un círculo de
-				doce baldosas, no un plano— y a cambio todo queda en la misma pantalla.
-			-->
-			<div
-				class="flex min-w-0 flex-col gap-3 {hasSelection ? 'flex-[1_1_15rem]' : 'flex-[1_1_20rem]'}"
-			>
-				<FittingRig {slots} onChoose={chooseSlot} hasShield={hoja.shield > 0} />
-				<IntegrityReadings
-					shield={thousands(hoja.shield)}
-					armor={thousands(hoja.armor)}
-					structure={thousands(hoja.structure)}
-				/>
-				<!--
-					Las cuatro categorías del anillo, en una línea. Cuesta un renglón y
-					explica la estructura del anillo de un vistazo.
-				-->
-				<div class="flex w-full flex-wrap justify-center gap-[0.9rem]">
-					{#each SLOT_KINDS as kind (kind)}
-						<span class="flex items-center gap-[0.3rem] text-text-muted">
-							<Icon name={slotKindIcon(kind)} weight="bold" size="0.7rem" />
-							<span
-								class="font-display text-[0.6rem] font-semibold tracking-label whitespace-nowrap uppercase"
-							>
-								{slotKindLabel(kind)}
-							</span>
-						</span>
-					{/each}
-				</div>
-			</div>
-			<!--
-				La columna del medio cambia de oficio según haya ranura elegida o no: sin
-				elegir muestra **qué hay montado**, y con una elegida **qué le entra**. Es
-				la misma pregunta en dos momentos, y por eso ocupa el mismo lugar en vez
-				de empujar la pantalla hacia abajo.
+	<div class="flex w-full flex-col items-center gap-3 lg:w-[23rem] lg:shrink-0">
+		<FittingRig {slots} onChoose={chooseSlot} hasShield={hoja.shield > 0} />
+		<IntegrityReadings
+			shield={thousands(hoja.shield)}
+			armor={thousands(hoja.armor)}
+			structure={thousands(hoja.structure)}
+		/>
 
-				En pantalla angosta se envuelve y cae debajo del anillo.
-			-->
-			<div class="min-w-0 {hasSelection ? 'flex-[1_1_18rem]' : 'flex-[1_1_12rem]'}">
-				{#if hasSelection}
-					{@render equipamiento()}
-				{:else}
-					<div class="flex w-full flex-col gap-2">
-						<SlotList {groups} onChoose={chooseSlot} />
-						<!--
-							La única instrucción de la pantalla, y sólo mientras haga falta:
-							apenas se elige una ranura desaparece, porque ya se aprendió.
-						-->
-						<p class="text-1 text-text-muted">
-							Tocá una ranura del anillo para ver qué le entra. Lo que montes se refleja al instante
-							en la hoja.
-						</p>
-					</div>
-				{/if}
-			</div>
+		<!--
+			Las cuatro categorías del anillo, en una línea. Ahora que cada una ocupa su
+			propio arco, esta línea es su leyenda: dice qué significa cada tramo del
+			círculo.
+		-->
+		<div class="flex w-full flex-wrap justify-center gap-[0.9rem]">
+			{#each SLOT_KINDS as kind (kind)}
+				<span class="flex items-center gap-[0.3rem] text-text-muted">
+					<Icon name={slotKindIcon(kind)} weight="bold" size="0.7rem" />
+					<span
+						class="font-display text-[0.6rem] font-semibold tracking-label whitespace-nowrap uppercase"
+					>
+						{slotKindLabel(kind)}
+					</span>
+				</span>
+			{/each}
 		</div>
+	</div>
 
-		<Panel class="w-full">
-			<div class="flex w-full flex-col items-start gap-2">
-				<BodyText>{hull.description}</BodyText>
-				<div class="flex flex-wrap items-center gap-[0.4rem]">
-					<Icon name="star" weight="fill" size="0.75rem" class="text-accent" />
-					<span class="text-1 text-accent-bright">{hullBonus}</span>
-				</div>
-			</div>
-		</Panel>
+	<!--
+		El banco de trabajo. Cada ranura se abre en su lugar y muestra qué le entra;
+		lo único que se mueve es lo que está debajo de esa fila.
+	-->
+	<div class="flex w-full min-w-0 flex-[1_1_0] flex-col gap-3">
+		<SlotList {groups} onChoose={chooseSlot} detail={equipamiento} />
+
+		{#if !hasSelection}
+			<!--
+				La única instrucción de la pantalla, y sólo mientras haga falta: apenas se
+				abre una ranura desaparece, porque ya se aprendió.
+			-->
+			<p class="text-1 text-text-muted">
+				Abrí una ranura —acá o en el anillo— para ver qué le entra. Señalando un módulo, la hoja
+				muestra cómo quedaría la nave antes de montarlo.
+			</p>
+		{/if}
 	</div>
 
 	<!--
@@ -734,7 +853,7 @@
 		que uno estaba mirando. En pantalla chica no se pega, porque ahí no hay dos
 		columnas que mirar a la vez.
 	-->
-	<div class="flex w-full min-w-0 flex-[2_1_0] flex-col gap-4 lg:sticky lg:top-4">
+	<div class="flex w-full flex-col gap-4 lg:sticky lg:top-4 lg:w-[19rem] lg:shrink-0">
 		<!--
 			Que lo que se está mirando es una simulación y no la nave. Sin esto, las
 			cifras cambian solas al pasar el dedo por la lista y uno no sabe si ya montó

@@ -92,6 +92,15 @@
 	--color-warning-wash: rgb(255 193 77 / 0.1);
 	/* Casi opaco: el fondo del Neocom y el de una ranura vacía. */
 	--color-well: rgb(8 10 14 / 0.92);
+	/*
+	 * El fondo de lo que flota **por encima** de otra cosa: opaco del todo.
+	 *
+	 * El pozo tiene un ocho por ciento de transparencia y eso está bien para un
+	 * hueco dentro de un panel, pero un menú que se abre encima de otro panel con
+	 * esa transparencia se funde con lo que tapa y se lee como un error de
+	 * dibujado. Lo que está adelante tiene que tapar.
+	 */
+	--color-overlay: #0b0e13;
 
 	/* --- Tipografía ----------------------------------------------------------
 	 *
@@ -194,6 +203,12 @@
 	/* El halo del rojo, para lo que no se puede deshacer. */
 	--shadow-danger-glow: 0 0 24px rgb(255 74 61 / 0.32);
 	--shadow-focus: 0 0 12px rgb(255 122 26 / 0.45);
+	/*
+	 * La sombra de lo que flota por encima de otra cosa. Negra y ancha, no naranja:
+	 * no es una selección encendida, es un panel que está adelante y tiene que
+	 * despegarse del que tapa.
+	 */
+	--shadow-float: 0 12px 34px rgb(0 0 0 / 0.6);
 
 	--text-shadow-*: initial;
 	--text-shadow-glow: 0 0 14px rgb(255 122 26 / 0.38);

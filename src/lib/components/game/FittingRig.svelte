@@ -15,6 +15,10 @@
 	El alto no se fija: sale de `aspect-ratio`, que es lo único que lo mantiene
 	cuadrado cuando la columna se angosta. Con alto fijo, un círculo dentro de un
 	rectángulo se vuelve una elipse.
+
+	Y ocupa lo que la columna le dé hasta treinta rem, porque **es el centro de su
+	pantalla**: la figura que manda la composición no puede ser la más chica de la
+	fila. El tope existe para que en un monitor ancho no se vuelva un póster.
 -->
 <script lang="ts">
 	import type { FilaRanura } from '$lib/tipos';
@@ -43,7 +47,7 @@
 	></span>
 {/snippet}
 
-<div class="relative mx-auto aspect-square w-[min(24rem,100%)]">
+<div class="relative mx-auto aspect-square w-[min(30rem,100%)]">
 	<!-- Punteado quiere decir "esta capa no existe": es la forma más directa de
 		 mostrar que a la nave le falta el generador de escudo. -->
 	{@render ring(
