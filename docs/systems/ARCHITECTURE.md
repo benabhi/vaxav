@@ -134,10 +134,12 @@ puede deshacer:
 
 ## Lo que ya está decidido y por qué
 
-| Decisión                                       | Motivo                                                                                                                                    |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| SvelteKit y TypeScript                         | El juego es textual y denso en datos; un solo lenguaje de punta a punta y el estado de pantalla en el navegador, donde no cuesta un viaje |
-| Drizzle con sus migraciones                    | El esquema se escribe una vez y el tipo sale de ahí; nada de una capa que adivine                                                         |
-| SQLite en desarrollo, PostgreSQL en producción | Simplicidad ahora sin atarse; la portabilidad se sostiene con disciplina                                                                  |
-| Reglas puras en `src/lib/game/`                | Se prueban sin levantar nada, y el balance se verifica con tests                                                                          |
-| Capas en un solo sentido                       | `game/` ← `services/` ← `views/` ← `load` y form actions ← componentes                                                                    |
+| Decisión                                       | Motivo                                                                                                                                                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SvelteKit y TypeScript                         | El juego es textual y denso en datos; un solo lenguaje de punta a punta y el estado de pantalla en el navegador, donde no cuesta un viaje                                                               |
+| Drizzle con sus migraciones                    | El esquema se escribe una vez y el tipo sale de ahí; nada de una capa que adivine                                                                                                                       |
+| SQLite en desarrollo, PostgreSQL en producción | Simplicidad ahora sin atarse; la portabilidad se sostiene con disciplina                                                                                                                                |
+| Reglas puras en `src/lib/game/`                | Se prueban sin levantar nada, y el balance se verifica con tests                                                                                                                                        |
+| Capas en un solo sentido                       | `game/` ← `services/` ← `views/` ← `load` y form actions ← componentes                                                                                                                                  |
+| Los permisos en código y los roles en la base  | Un permiso es la llave que consulta un `if` del servidor: uno inventado desde un panel no lo mira nadie. Un rol es un manojo, y armarlo no debería costar un despliegue. Ver [administración](ADMIN.md) |
+| El registro de eventos sin claves foráneas     | Tiene que sobrevivir a lo que describe: un evento que dice «se borró la cuenta 7» apunta a una fila que ya no existe                                                                                    |

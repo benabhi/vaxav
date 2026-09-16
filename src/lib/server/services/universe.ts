@@ -35,8 +35,7 @@ import type { AgentBlueprint } from '$lib/game/agents';
 import {
 	CORPORATIONS,
 	GALAXY,
-	allAgents,
-	securityFor,
+	securityLevel,
 	type BodyBlueprint,
 	type CorporationBlueprint,
 	type DepositBlueprint,
@@ -59,7 +58,10 @@ export interface SystemOverview {
 	readonly constellation: Constellation;
 	readonly region: Region;
 	readonly galaxy: Galaxy;
-	readonly security: SecurityLevel;
+	/** El número guardado, de 0 a 100. */
+	readonly security: number;
+	/** En qué cajón cae ese número, que es como se lee. */
+	readonly securityLevel: SecurityLevel;
 	readonly claimable: boolean;
 	readonly bodyCount: number;
 	readonly stationCount: number;
@@ -114,6 +116,13 @@ export interface SystemNode {
 // --- Siembra -----------------------------------------------------------------
 
 /** Cuántas filas quedaron por nivel después de sembrar. */
+/**
+ * Cuánto **creó** la siembra, no cuánto hay.
+ *
+ * Cambió de significado junto con la regla: antes contaba todo lo que procesaba
+ * y siempre daba lo mismo, así que no decía nada. Ahora un cero quiere decir «no
+ * hacía falta nada», que es lo que uno quiere saber al correrla.
+ */
 export interface SeedCount {
 	corporaciones: number;
 	agentes: number;
@@ -125,57 +134,57 @@ export interface SeedCount {
 
 /** Siembra las corporaciones del mundo. Van antes que las estaciones. */
 function seedCorporations(db: Db, blueprints: readonly CorporationBlueprint[]): number {
+	let creadas = 0;
+
 	for (const blueprint of blueprints) {
-		const values = {
-			code: blueprint.code,
-			name: blueprint.name,
-			kind: blueprint.kind,
-			faction: blueprint.faction,
-			isNpc: true,
-			description: blueprint.description
-		};
+		const existente = db
+			.select()
+			.from(corporation)
+			.where(eq(corporation.code, blueprint.code))
+			.get();
+		if (existente) continue;
+
 		db.insert(corporation)
-			.values(values)
-			.onConflictDoUpdate({ target: corporation.code, set: values })
+			.values({
+				code: blueprint.code,
+				name: blueprint.name,
+				kind: blueprint.kind,
+				faction: blueprint.faction,
+				isNpc: true,
+				description: blueprint.description
+			})
 			.run();
+		creadas++;
 	}
-	return blueprints.length;
+
+	return creadas;
 }
 
-/** Deja la estación con exactamente estos servicios: agrega y quita. */
-function syncServices(db: Db, stationId: number, services: readonly StationServiceKind[]): void {
-	const current = db
-		.select()
-		.from(stationService)
-		.where(eq(stationService.stationId, stationId))
-		.all();
-	const wanted = new Set(services);
-
-	for (const row of current) {
-		if (!wanted.has(row.service)) {
-			db.delete(stationService).where(eq(stationService.id, row.id)).run();
-		}
-	}
-	const has = new Set(current.map((row) => row.service));
-	for (const service of wanted) {
-		if (!has.has(service)) db.insert(stationService).values({ stationId, service }).run();
+/**
+ * Instala los módulos de una estación recién creada.
+ *
+ * **Ya no quita los que sobran.** Quitar era lo correcto cuando el plano era la
+ * verdad; ahora un módulo que no está en el plano puede haberlo instalado
+ * alguien desde el constructor, y borrárselo en la próxima siembra sería el
+ * peor de los errores silenciosos.
+ */
+function seedServices(db: Db, stationId: number, services: readonly StationServiceKind[]): void {
+	for (const service of services) {
+		db.insert(stationService)
+			.values({ stationId, service })
+			.onConflictDoNothing({ target: [stationService.stationId, stationService.service] })
+			.run();
 	}
 }
 
 /**
- * Deja la estación con exactamente estos agentes: agrega, corrige y quita.
+ * Sienta a los agentes de una estación recién creada.
  *
- * Un agente que sale del plano tiene que desaparecer de la base: si no, queda
- * repartiendo trabajo un NPC que ya no existe en ninguna parte.
+ * **Ya no sincroniza.** Antes borraba de la base los que no estuvieran en el
+ * plano, y eso dejó de ser correcto el día que el constructor pasó a mandar: un
+ * agente puesto desde el panel no está en el plano y no por eso sobra.
  */
-function syncAgents(db: Db, stationId: number, agents: readonly AgentBlueprint[]): void {
-	const current = db.select().from(agent).where(eq(agent.stationId, stationId)).all();
-	const wanted = new Set(agents.map((blueprint) => blueprint.code));
-
-	for (const row of current) {
-		if (!wanted.has(row.code)) db.delete(agent).where(eq(agent.id, row.id)).run();
-	}
-
+function seedAgents(db: Db, stationId: number, agents: readonly AgentBlueprint[]): void {
 	for (const blueprint of agents) {
 		const corp = db
 			.select()
@@ -198,7 +207,7 @@ function syncAgents(db: Db, stationId: number, agents: readonly AgentBlueprint[]
 			description: blueprint.description ?? '',
 			appearance: blueprint.appearance ?? ('x' as const)
 		};
-		db.insert(agent).values(values).onConflictDoUpdate({ target: agent.code, set: values }).run();
+		db.insert(agent).values(values).onConflictDoNothing({ target: agent.code }).run();
 	}
 }
 
@@ -206,15 +215,15 @@ function syncAgents(db: Db, stationId: number, agents: readonly AgentBlueprint[]
 /**
  * Los depósitos de un cinturón: el contenido, no el estado.
  *
- * **Sembrar no rellena los cinturones.** Se tocan el tope y el ritmo de
- * recuperación —que son contenido y pueden cambiar con el balance— pero nunca lo
- * que queda ni hasta cuándo se recuperó, que son estado de la partida. Sin esa
- * distinción, cada `npm run db:seed` devolvería todos los cinturones del juego a
- * capacidad llena y borraría el trabajo de todos.
+ * **Sembrar no rellena los cinturones.** Un depósito que ya existe no se toca en
+ * absoluto: ni su tope, ni su ritmo, ni lo que le queda. Sin esa regla, cada
+ * `npm run db:seed` devolvería todos los cinturones del juego a capacidad llena y
+ * borraría el trabajo de todos.
  *
- * Un mineral que sale del plano sí se borra: dejó de existir ahí.
+ * Tampoco borra un mineral que no esté en el plano: puede haberlo puesto el
+ * constructor.
  */
-function syncDeposits(db: Db, bodyId: number, deposits: readonly DepositBlueprint[]): void {
+function seedDeposits(db: Db, bodyId: number, deposits: readonly DepositBlueprint[]): void {
 	for (const spec of deposits) {
 		db.insert(beltDeposit)
 			.values({
@@ -222,26 +231,11 @@ function syncDeposits(db: Db, bodyId: number, deposits: readonly DepositBlueprin
 				oreCode: spec.ore,
 				capacity: spec.capacity,
 				regenPerHour: spec.regenPerHour,
-				// Un cinturón nuevo nace lleno; uno que ya existía conserva lo suyo.
+				// Un cinturón nuevo nace lleno.
 				remaining: spec.capacity
 			})
-			.onConflictDoUpdate({
-				target: [beltDeposit.bodyId, beltDeposit.oreCode],
-				set: { capacity: spec.capacity, regenPerHour: spec.regenPerHour }
-			})
+			.onConflictDoNothing({ target: [beltDeposit.bodyId, beltDeposit.oreCode] })
 			.run();
-	}
-
-	const declarados = deposits.map((spec) => spec.ore);
-	const sobran = db
-		.select()
-		.from(beltDeposit)
-		.where(eq(beltDeposit.bodyId, bodyId))
-		.all()
-		.filter((fila) => !declarados.includes(fila.oreCode));
-
-	for (const fila of sobran) {
-		db.delete(beltDeposit).where(eq(beltDeposit.id, fila.id)).run();
 	}
 
 	// Un cinturón virgen no tiene de dónde reponer —su marca es de recién— y
@@ -256,20 +250,35 @@ function seedBody(
 	systemId: number,
 	parentId: number | null = null
 ): number {
-	const values = {
-		code: blueprint.code,
-		name: blueprint.name,
-		systemId,
-		parentId,
-		kind: blueprint.kind,
-		orbitDistance: blueprint.orbitDistance,
-		explored: blueprint.explored,
-		description: blueprint.description
-	};
+	const existente = db.select().from(body).where(eq(body.code, blueprint.code)).get();
+
+	// El que ya está **no se toca en nada**: ni su nombre, ni su órbita, ni su
+	// estación, ni sus minerales. Puede haberlo editado alguien desde el
+	// constructor, y la siembra no tiene forma de saber si lo que dice el plano es
+	// más nuevo o más viejo que lo que hay.
+	//
+	// Los hijos sí se recorren igual: agregarle una luna a un planeta que ya
+	// existe es contenido nuevo, y eso sí hay que crearlo.
+	if (existente) {
+		let bajo = 0;
+		for (const child of blueprint.children) {
+			bajo += seedBody(db, child, systemId, existente.id);
+		}
+		return bajo;
+	}
+
 	const row = db
 		.insert(body)
-		.values(values)
-		.onConflictDoUpdate({ target: body.code, set: values })
+		.values({
+			code: blueprint.code,
+			name: blueprint.name,
+			systemId,
+			parentId,
+			kind: blueprint.kind,
+			orbitDistance: blueprint.orbitDistance,
+			explored: blueprint.explored,
+			description: blueprint.description
+		})
 		.returning()
 		.get();
 
@@ -291,15 +300,14 @@ function seedBody(
 		const saved = db
 			.insert(station)
 			.values({ bodyId: row.id, corporationId: corp.id })
-			.onConflictDoUpdate({ target: station.bodyId, set: { corporationId: corp.id } })
 			.returning()
 			.get();
 
-		syncServices(db, saved.id, blueprint.station.services);
-		syncAgents(db, saved.id, blueprint.station.agents);
+		seedServices(db, saved.id, blueprint.station.services);
+		seedAgents(db, saved.id, blueprint.station.agents);
 	}
 
-	syncDeposits(db, row.id, blueprint.deposits);
+	seedDeposits(db, row.id, blueprint.deposits);
 
 	for (const child of blueprint.children) {
 		total += seedBody(db, child, systemId, row.id);
@@ -307,18 +315,32 @@ function seedBody(
 	return total;
 }
 
-/** Escribe el plano en la base y devuelve cuántas filas quedaron por nivel. */
+/**
+ * Escribe en la base lo que falte del plano, y **nada más**.
+ *
+ * Cambió la regla que la gobierna. Antes el plano de `game/universe.ts` era la
+ * verdad y la siembra lo imponía con `onConflictDoUpdate`: corregir el nombre de
+ * un planeta era editar el archivo y volver a correrla.
+ *
+ * Desde que existe el constructor de sistemas, **la base manda**. El plano pasó a
+ * ser la semilla del primer arranque: crea lo que no está y no toca una fila que
+ * ya exista. Si no fuera así, cada `npm run db:seed` desharía en silencio todo lo
+ * que alguien hubiera armado desde el panel, que es exactamente la clase de error
+ * que no se nota hasta que el trabajo ya se perdió.
+ *
+ * La contrapartida, y hay que decirla: **corregir el plano ya no corrige la
+ * base**. Un nombre mal escrito en Ánfora se arregla desde el constructor, o
+ * borrando la base y volviendo a sembrar. Y como la base pasó a ser la única
+ * copia del universo, deja de ser desechable.
+ */
 export function seedUniverse(db: Db, blueprint: GalaxyBlueprint = GALAXY): SeedCount {
-	const savedGalaxy = db
-		.insert(galaxy)
-		.values({ code: blueprint.code, name: blueprint.name })
-		.onConflictDoUpdate({ target: galaxy.code, set: { name: blueprint.name } })
-		.returning()
-		.get();
+	const savedGalaxy =
+		db.select().from(galaxy).where(eq(galaxy.code, blueprint.code)).get() ??
+		db.insert(galaxy).values({ code: blueprint.code, name: blueprint.name }).returning().get();
 
 	const count: SeedCount = {
 		corporaciones: seedCorporations(db, CORPORATIONS),
-		agentes: allAgents().length,
+		agentes: 0,
 		regiones: 0,
 		constelaciones: 0,
 		sistemas: 0,
@@ -326,57 +348,64 @@ export function seedUniverse(db: Db, blueprint: GalaxyBlueprint = GALAXY): SeedC
 	};
 
 	for (const regionBp of blueprint.regions) {
-		const savedRegion = db
-			.insert(region)
-			.values({ code: regionBp.code, name: regionBp.name, galaxyId: savedGalaxy.id })
-			.onConflictDoUpdate({
-				target: region.code,
-				set: { name: regionBp.name, galaxyId: savedGalaxy.id }
-			})
-			.returning()
-			.get();
-		count.regiones += 1;
-
-		for (const constellationBp of regionBp.constellations) {
-			const savedConstellation = db
-				.insert(constellation)
-				.values({
-					code: constellationBp.code,
-					name: constellationBp.name,
-					regionId: savedRegion.id
-				})
-				.onConflictDoUpdate({
-					target: constellation.code,
-					set: { name: constellationBp.name, regionId: savedRegion.id }
-				})
+		const existeRegion = db.select().from(region).where(eq(region.code, regionBp.code)).get();
+		const savedRegion =
+			existeRegion ??
+			db
+				.insert(region)
+				.values({ code: regionBp.code, name: regionBp.name, galaxyId: savedGalaxy.id })
 				.returning()
 				.get();
-			count.constelaciones += 1;
+		if (!existeRegion) count.regiones += 1;
 
-			for (const systemBp of constellationBp.systems) {
-				const values = {
-					code: systemBp.code,
-					name: systemBp.name,
-					constellationId: savedConstellation.id,
-					x: systemBp.x,
-					y: systemBp.y,
-					z: systemBp.z,
-					description: systemBp.description,
-					government: systemBp.government,
-					controllingFaction: systemBp.controllingFaction
-				};
-				const savedSystem = db
-					.insert(system)
-					.values(values)
-					.onConflictDoUpdate({ target: system.code, set: values })
+		for (const constellationBp of regionBp.constellations) {
+			const existeConstelacion = db
+				.select()
+				.from(constellation)
+				.where(eq(constellation.code, constellationBp.code))
+				.get();
+			const savedConstellation =
+				existeConstelacion ??
+				db
+					.insert(constellation)
+					.values({
+						code: constellationBp.code,
+						name: constellationBp.name,
+						regionId: savedRegion.id
+					})
 					.returning()
 					.get();
-				count.sistemas += 1;
+			if (!existeConstelacion) count.constelaciones += 1;
+
+			for (const systemBp of constellationBp.systems) {
+				const existeSistema = db.select().from(system).where(eq(system.code, systemBp.code)).get();
+				const savedSystem =
+					existeSistema ??
+					db
+						.insert(system)
+						.values({
+							code: systemBp.code,
+							name: systemBp.name,
+							constellationId: savedConstellation.id,
+							x: systemBp.x,
+							y: systemBp.y,
+							z: systemBp.z,
+							description: systemBp.description,
+							government: systemBp.government,
+							security: systemBp.security,
+							controllingFaction: systemBp.controllingFaction,
+							capitalOf: systemBp.capitalOf
+						})
+						.returning()
+						.get();
+				if (!existeSistema) count.sistemas += 1;
+
 				count.cuerpos += seedBody(db, systemBp.root, savedSystem.id);
 			}
 		}
 	}
 
+	count.agentes = db.select().from(agent).all().length;
 	return count;
 }
 
@@ -443,8 +472,11 @@ export function systemOverview(db: Db, code: string): SystemOverview | null {
 		constellation: foundConstellation,
 		region: foundRegion,
 		galaxy: foundGalaxy,
-		// La seguridad no está en la base: sale del gobierno.
-		security: securityFor(found.government),
+		// La seguridad **sí** está en la base: es un número que el constructor
+		// elige dentro de la banda que le deja el gobierno. El cajón se calcula al
+		// leerlo, porque es presentación y no dato.
+		security: found.security,
+		securityLevel: securityLevel(found.security),
 		claimable: !found.controllingFaction,
 		bodyCount: bodies.length,
 		stationCount: bodies.filter((row) => row.kind === 'station').length,

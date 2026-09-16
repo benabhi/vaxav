@@ -882,3 +882,250 @@ export interface LibroMercado {
 	readonly inShip: number;
 	readonly inStation: number;
 }
+
+// --- Cuartel general --------------------------------------------------------
+
+/** Una fila del registro de eventos, lista para dibujar. */
+export interface FilaEvento {
+	readonly id: number;
+	/** Milisegundos desde la época, en UTC. */
+	readonly at: number;
+	readonly kind: string;
+	readonly label: string;
+	readonly icon: IconName;
+	readonly tone: 'neutral' | 'notable' | 'grave';
+	readonly categoryLabel: string;
+	/** La frase ya redactada a partir de lo que se guardó. */
+	readonly text: string;
+	/** Quién lo hizo. Vacío quiere decir que no lo hizo nadie. */
+	readonly actor: string;
+	/**
+	 * Su número de piloto, para poder filtrar por él.
+	 *
+	 * Sigue viniendo aunque la cuenta ya no exista: el registro lo guarda y
+	 * filtrar por ella es justo lo que uno quiere hacer después de una baja.
+	 */
+	readonly actorId: number | null;
+}
+
+/**
+ * Un día de la traza de actividad.
+ *
+ * Es la unidad de la figura del registro: una barra por día. El alto sale del
+ * total y no de un porcentaje calculado en el servidor, para que la figura pueda
+ * escalarse contra el día más movido sin pedir nada de vuelta.
+ */
+export interface DiaRegistro {
+	/** El día en UTC, como `2026-09-16`. */
+	readonly day: string;
+	readonly total: number;
+}
+
+/** Con qué se está filtrando el registro ahora mismo. */
+export interface FiltroRegistro {
+	readonly category: string;
+	readonly kind: string;
+	/** El día elegido en la traza, o vacío si se miran todos. */
+	readonly day: string;
+	/**
+	 * El piloto cuyos actos se están mirando, o `null` si se miran los de todos.
+	 *
+	 * Va el número y el nombre por separado: el número es lo que arma la URL y el
+	 * nombre lo que se muestra, y el nombre de una cuenta dada de baja tiene que
+	 * poder salir del propio registro.
+	 */
+	readonly actor: number | null;
+	readonly actorName: string;
+}
+
+/** Una opción del filtro, con su cuenta dentro del período mirado. */
+export interface OpcionFiltro {
+	readonly value: string;
+	readonly label: string;
+}
+
+/** El registro de eventos, tal como lo dibuja el cuartel. */
+export interface Registro {
+	readonly rows: readonly FilaEvento[];
+	readonly total: number;
+	readonly page: number;
+	readonly pages: number;
+	readonly days: readonly DiaRegistro[];
+	readonly filters: FiltroRegistro;
+	readonly categories: readonly OpcionFiltro[];
+	readonly kinds: readonly OpcionFiltro[];
+}
+
+/** Un rol del piloto, tal como se lo muestra en el cuartel. */
+export interface RolPropio {
+	readonly code: string;
+	readonly name: string;
+	readonly description: string;
+}
+
+/** Una llave, con lo que abre explicado para quien no escribió el código. */
+export interface LlaveCuartel {
+	readonly label: string;
+	readonly summary: string;
+	readonly dangerous: boolean;
+}
+
+/** Las llaves de un área, agrupadas para poder leerlas. */
+export interface AreaCuartel {
+	readonly label: string;
+	readonly keys: readonly LlaveCuartel[];
+}
+
+/** La portada del cuartel: qué podés hacer y qué pasó recién. */
+export interface Cuartel {
+	readonly roles: readonly RolPropio[];
+	readonly areas: readonly AreaCuartel[];
+	/** Los últimos eventos, o vacío si no tiene la llave para verlos. */
+	readonly recent: readonly FilaEvento[];
+	readonly events: number;
+}
+
+// --- El constructor de sistemas ---------------------------------------------
+
+/** Una opción de un desplegable del constructor. */
+export interface OpcionConstructor {
+	readonly value: string;
+	readonly label: string;
+	/** Para agrupar: la constelación dice de qué región es. */
+	readonly group?: string;
+}
+
+/** Un gobierno con la banda de seguridad que admite. */
+export interface OpcionGobierno {
+	readonly value: string;
+	readonly label: string;
+	readonly min: number;
+	readonly max: number;
+	/** La misma banda, ya recortada por el techo del espacio libre. */
+	readonly freeMin: number;
+	readonly freeMax: number;
+}
+
+/** Lo que el constructor ofrece para llenar sus formularios. */
+export interface OpcionesConstructor {
+	readonly regions: readonly OpcionConstructor[];
+	readonly constellations: readonly OpcionConstructor[];
+	readonly factions: readonly OpcionConstructor[];
+	readonly governments: readonly OpcionGobierno[];
+	readonly corporations: readonly OpcionConstructor[];
+	readonly services: readonly OpcionConstructor[];
+	readonly ores: readonly OpcionConstructor[];
+	readonly bodyKinds: readonly OpcionConstructor[];
+}
+
+/** Un sistema en el listado del cuartel. */
+export interface FilaSistema {
+	readonly id: number;
+	readonly code: string;
+	readonly name: string;
+	readonly constellation: string;
+	readonly region: string;
+	readonly government: string;
+	readonly security: number;
+	readonly securityLevel: string;
+	/** Quién lo controla, o «Espacio libre». */
+	readonly controlledBy: string;
+	/** De quién es capital, o vacío. */
+	readonly capitalOf: string;
+	readonly bodies: number;
+	readonly stations: number;
+	readonly gates: number;
+	/** Cuántas de sus puertas todavía no llevan a ninguna parte. */
+	readonly loose: number;
+}
+
+/** El universo entero, como lo ve quien lo construye. */
+export interface Universo {
+	readonly systems: readonly FilaSistema[];
+	readonly options: OpcionesConstructor;
+	readonly totalBodies: number;
+	readonly totalGates: number;
+	readonly totalLoose: number;
+}
+
+/** Un mineral de un cinturón, en el constructor. */
+export interface FilaMineral {
+	readonly ore: string;
+	readonly name: string;
+	readonly capacity: number;
+	readonly remaining: number;
+	readonly regenPerHour: number;
+}
+
+/** Una salida del sistema, con su rumbo y adónde va. */
+export interface FilaPuerta {
+	readonly gateId: number;
+	readonly bodyId: number;
+	readonly name: string;
+	readonly bearing: string;
+	readonly bearingLabel: string;
+	/** El ángulo en la roseta, para dibujarla. */
+	readonly angle: number;
+	/** Adónde lleva, o vacío si todavía no lleva a ninguna parte. */
+	readonly destination: string;
+	readonly destinationSystem: string;
+	readonly jumpDistance: number;
+}
+
+/** Un cuerpo en el árbol del constructor. */
+export interface FilaConstruccion {
+	readonly id: number;
+	readonly code: string;
+	readonly name: string;
+	readonly kind: string;
+	readonly kindLabel: string;
+	readonly icon: IconName;
+	readonly depth: number;
+	readonly rails: readonly boolean[];
+	readonly isLast: boolean;
+	readonly hasChildren: boolean;
+	readonly parentId: number | null;
+	readonly orbitDistance: number;
+	readonly explored: boolean;
+	readonly description: string;
+	/** Qué tipos de cuerpo pueden colgar de éste. Vacío quiere decir ninguno. */
+	readonly accepts: readonly OpcionConstructor[];
+	/** Qué lo retiene, si algo lo retiene. Vacío quiere decir que se puede borrar. */
+	readonly blockers: readonly string[];
+	/** Sólo si es estación. */
+	readonly corporation: string;
+	readonly services: readonly string[];
+	/** Sólo si es cinturón. */
+	readonly ores: readonly FilaMineral[];
+	/** Sólo si es puerta. */
+	readonly gate: FilaPuerta | null;
+}
+
+/** Un sistema abierto en el constructor. */
+export interface Constructor {
+	readonly id: number;
+	readonly code: string;
+	readonly name: string;
+	readonly description: string;
+	readonly constellationId: number;
+	readonly constellation: string;
+	readonly region: string;
+	readonly government: string;
+	readonly governmentLabel: string;
+	readonly security: number;
+	readonly securityLevel: string;
+	readonly controllingFaction: string;
+	readonly controlledBy: string;
+	readonly capitalOf: string;
+	readonly x: number;
+	readonly y: number;
+	readonly z: number;
+	readonly bodies: readonly FilaConstruccion[];
+	readonly gates: readonly FilaPuerta[];
+	/** Los ocho rumbos, diciendo cuál está ocupado. */
+	readonly bearings: readonly { value: string; label: string; angle: number; taken: boolean }[];
+	/** Las puertas sueltas de toda la galaxia, para poder enlazar. */
+	readonly loose: readonly { gateId: number; label: string }[];
+	readonly blockers: readonly string[];
+	readonly options: OpcionesConstructor;
+}

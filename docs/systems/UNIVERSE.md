@@ -78,6 +78,7 @@ falta es una pregunta puntual sobre un renglón, y ahí aparece.
 | Luna                   | Tamaño, hielo                              | Agua y combustible                                   |
 | Cinturón de asteroides | Densidad, riqueza, agotamiento             | Extracción de mineral                                |
 | Estación               | Corporación que la opera, servicios, tasas | Atracar, reparar, refinar, comerciar                 |
+| Puerta estelar         | Rumbo, adónde lleva, distancia de salto    | Salir del sistema                                    |
 
 Cada cuerpo tiene **atributos que se traducen a mecánica**, no a ambientación:
 una atmósfera densa encarece el aterrizaje, un cinturón agotado da menos por
@@ -199,23 +200,51 @@ tabla, y llega con la cartografía.
 
 ## Gobierno y seguridad
 
-Cada sistema tiene un **gobierno**, y de él sale su **seguridad**. Son seis
-tomados de Elite, que cubren todo el arco:
+Cada sistema tiene un **gobierno** y una **seguridad de 0 a 100**. El gobierno no
+fija la seguridad: le fija la **banda** dentro de la cual puede moverse.
 
-| Gobierno      | Seguridad |
-| ------------- | --------- |
-| Anarquía      | Sin ley   |
-| Feudal        | Baja      |
-| Colonia penal | Media     |
-| Dictadura     | Media     |
-| Democracia    | Alta      |
-| Corporativo   | Alta      |
+| Gobierno      | Banda  | Qué lo distingue                          |
+| ------------- | ------ | ----------------------------------------- |
+| Anarquía      | 0      | No hay a quién llamar                     |
+| Feudal        | 10–35  | Manda alguien, no una ley                 |
+| Colonia penal | 25–50  | **Vigilado, no protegido**                |
+| Dictadura     | 30–60  | Orden por la fuerza, arbitrario           |
+| Democracia    | 55–85  | Lento pero previsible                     |
+| Corporativo   | 60–100 | Se paga la protección, y por eso funciona |
 
-**La seguridad no se guarda: se calcula.** Con las dos cosas en la base, tarde o
-temprano se contradicen, y "anarquía con seguridad alta" es el error que nadie
-nota hasta que un jugador lo explota. De esta tabla van a salir después las
-defensas del sistema y qué NPC aparecen: cerca de lo corporativo, patrullas y
-comerciantes; cerca de la anarquía, piratas y contrabandistas.
+**Es un número y no cuatro cajones** porque este documento ya lo prometía más
+abajo: «la seguridad es un gradiente, no un interruptor». Con cuatro niveles
+derivados del gobierno, cincuenta sistemas caen en cuatro montones
+indistinguibles, y dos de los seis gobiernos no significan nada por su cuenta —la
+colonia penal y la dictadura eran el mismo sistema con otro nombre—.
+
+La contradicción que había que evitar —«anarquía con seguridad alta»— la sigue
+impidiendo la banda, que se valida antes de dejar entrar cualquier número.
+
+Los cuatro cajones **siguen existiendo para leer**: `Sin ley` (0), `Baja` (1–34),
+`Media` (35–64) y `Alta` (65–100). Una columna que dice «Media» se recorre de un
+vistazo y una que dice `47` no. Las mecánicas usan el número. Las bandas cruzan
+los cajones a propósito, y eso es justamente lo que hace que valga la pena
+guardarlo.
+
+### El techo del espacio sin dueño
+
+Una facción controladora no es un rótulo: es **quién paga las patrullas**. Sin
+ella, la seguridad no pasa de **50** por muy corporativo que sea el gobierno
+local, y **el piso del gobierno no aplica**: un sistema sin dueño puede ser
+cualquier cosa entre la nada y el techo, que es lo que uno espera de una
+frontera. El piso es una garantía, y garantizarla es lo que hace una facción.
+
+Es lo que le da por fin una consecuencia mecánica a la facción controladora.
+
+### Lo que falta
+
+La seguridad **todavía no la consume ninguna mecánica**: se guarda y se dibuja. El
+consumidor más barato que ya tiene maquinaria es la horquilla del mercado —un
+sistema peligroso paga más por el mineral y cobra más por los módulos— y el
+siguiente son las patrullas y los piratas, cuando exista el combate. Hasta
+entonces es un atributo dibujado, que es la clase de cosa que este proyecto
+prefiere no tener.
 
 ## Quién controla qué
 
@@ -232,27 +261,92 @@ disputándose sistemas por su cuenta. **El contenido lo mueven los jugadores**, 
 que los estados intermedios —disputado, en guerra— llegan cuando existan las
 mecánicas que los cambien.
 
-**Ánfora está bajo el Dominio, con gobierno corporativo**: un sistema de frontera
-administrado como una concesión comercial. Eso explica por qué las otras dos
+Un sistema puede además ser la **capital** de la facción que lo controla, y una
+facción tiene una sola: la base lo hace cumplir con un índice único parcial. Se
+guarda de quién es capital y no un simple «sí/no», porque la pregunta que se le
+hace no es «¿es capital?» sino «¿de quién?», y con un booleano nada impediría
+escribir la capital de una facción que ni siquiera controla el sistema.
+
+**Ánfora está bajo el Dominio, con gobierno corporativo y seguridad 78**: un
+sistema de frontera administrado como una concesión comercial. Eso explica por qué las otras dos
 potencias tienen estaciones ahí por acuerdo y no por conquista, y le da al sistema
 inicial la seguridad alta que un piloto nuevo necesita.
 
-## Cómo se agrega contenido
+## Las puertas estelares
 
-El plano vive en `src/lib/game/universe.ts` como datos puros —sin base de datos ni
-interfaz— y se escribe en la base con:
+Una puerta **es un cuerpo más** —`kind = 'gate'`— y no una tabla de cuerpos
+aparte. Así aparece en el árbol del sistema, tiene distancia orbital y se le puede
+viajar sin tocar una línea de lo que ya existe: es un lugar del sistema al que hay
+que llegar antes de poder usarlo, que es exactamente lo que es.
 
-```bash
-npm run db:seed
+Lo que sí es una tabla propia es **a dónde lleva**, porque es una relación entre
+dos cuerpos y no un atributo de uno:
+
+```
+gate   id · body_id → body(kind='gate') · system_id → system
+       bearing · destination_id? → body · jump_distance(décimas de a.l.)
+       unique(body_id) · unique(system_id, bearing)
 ```
 
-Es **idempotente**: busca por código, crea lo que falta y actualiza lo que
-cambió. Corregir el nombre de un planeta es editar el archivo y volver a correrlo;
-correrlo diez veces deja lo mismo que correrlo una. Las migraciones quedan sólo
-para el esquema.
+Apunta a **la puerta gemela y no al sistema**: llegar «a Vela» no alcanza, hay que
+llegar a un lugar de Vela. Son dos filas, una por extremo, con la misma distancia,
+y un test verifica que ninguna quede huérfana.
 
-El día que exista un generador de galaxias, va a producir estas mismas
-estructuras y entrar por la misma puerta.
+**El destino es anulable**, y ése es el orden en que uno construye: primero se
+decide que de acá se sale hacia el norte, y después —a veces mucho después,
+cuando el sistema del otro lado exista— se dice adónde va. Una puerta sin destino
+es una obra en curso, no un error.
+
+### La roseta
+
+Cada puerta guarda por **qué lado del sistema sale**, de una roseta de ocho: `n`,
+`ne`, `e`, `se`, `s`, `sw`, `w`, `nw`. La base garantiza **un rumbo por sistema**
+con un índice único.
+
+Existe para el **mapa de la galaxia**, que va a dibujarse como el de X4: cada
+sistema una casilla y sus salidas apuntando hacia afuera. Sin un rumbo, dos
+puertas del mismo sistema no tienen dónde ponerse y el mapa se arma solo, mal.
+
+Ocho y no cuatro porque un sistema bisagra puede tener seis vecinos; ocho y no
+grados porque lo que hace falta es que no se pisen: dos puertas a 12° y 13° son un
+choque, dos en `n` y `ne` no lo son nunca.
+
+Al conectar dos puertas se propone el **rumbo opuesto** para la gemela —de Ánfora
+se sale al norte, desde el otro lado se vuelve por el sur— pero es una sugerencia:
+una galaxia donde todo cierra en espejo es una grilla, y un mapa interesante tiene
+atajos torcidos.
+
+## Cómo se agrega contenido
+
+Hay **dos puertas de entrada**, y desde que existe el constructor la que manda es
+la segunda:
+
+1. **El plano**, en `src/lib/game/universe.ts`: datos puros, sin base de datos ni
+   interfaz, que `npm run db:seed` escribe en la base.
+2. **El constructor de sistemas**, en el cuartel general. Ver
+   [administración](ADMIN.md).
+
+### La base manda
+
+La siembra **crea lo que falta y no toca una fila que ya exista**. Antes el plano
+era la verdad y la siembra lo imponía: corregir el nombre de un planeta era editar
+el archivo y volver a correrla. Eso dejó de ser correcto el día que se pudo editar
+el universo desde una pantalla, porque cada `npm run db:seed` desharía en silencio
+todo lo que alguien hubiera armado, que es la clase de error que no se nota hasta
+que el trabajo ya se perdió.
+
+Vale para todo: los módulos de una estación, sus agentes y los minerales de un
+cinturón tampoco se sincronizan más. Un módulo que no está en el plano puede
+haberlo instalado alguien, y borrárselo sería lo mismo.
+
+**La contrapartida hay que decirla**: corregir el plano ya no corrige la base —se
+corrige desde el constructor, o borrando la base y volviendo a sembrar—, y
+`data/vaxav.db` dejó de ser desechable. Es la única copia del universo y está
+fuera de git.
+
+El plano queda como **la semilla del primer arranque**: lo que hace que una base
+vacía tenga un lugar donde empezar. El día que exista un generador de galaxias, va
+a producir estas mismas estructuras y entrar por la misma puerta.
 
 ## Reglas de diseño
 

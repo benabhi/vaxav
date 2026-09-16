@@ -27,6 +27,7 @@ export const ICON_NAMES = [
 	'address-book',
 	'anchor',
 	'arrows-out',
+	'arrow-circle-right',
 	'arrows-out-cardinal',
 	'atom',
 	'battery-charging',

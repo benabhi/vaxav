@@ -8,6 +8,7 @@
 
 import { eq } from 'drizzle-orm';
 import { body, system as systemTable, type Pilot } from '../db/schema';
+import { railsFor } from '$lib/tree';
 import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
@@ -226,18 +227,10 @@ const SIN_CAMPO: CampoRocas = {
 };
 
 /**
- * Aplana el árbol en filas, calculando las guías de cada una.
+ * Aplana el árbol en filas.
  *
- * Las guías se llevan en una pila mientras se baja: al llegar a un nodo se
- * recorta a su profundidad —lo que sobra son ramas ya cerradas— y queda una
- * marca por ancestro, que dice si la línea de ese ancestro sigue bajando. Es la
- * forma barata de dibujar un árbol con una lista plana.
- *
- * La columna `k` es la del cuerpo de profundidad `k`, y lo que hay que saber ahí
- * no es si **ese** cuerpo tiene hermanos sino si su hijo en este camino es el
- * último: la vertical baja mientras le queden hijos por dibujar. Ese dato es el
- * del nivel de abajo, y de ahí el corrimiento de uno. Se descarta la primera
- * marca, que no le corresponde a ninguna columna.
+ * Las guías las calcula `railsFor`, que es el mismo cálculo que usa el
+ * constructor del universo: vive aparte porque es de los que se re-deducen mal.
  *
  * De paso, cada fila que no sea la del piloto lleva **su distancia desde donde
  * está el piloto** y cuánto tardaría llegar. La distancia al cuerpo que se
@@ -253,10 +246,9 @@ export function buildBodyRows(
 	speed: number
 ): readonly FilaCuerpo[] {
 	const filas: FilaCuerpo[] = [];
-	const sigue: boolean[] = [];
+	const guias = railsFor(nodes);
 
-	for (const node of nodes) {
-		sigue.length = node.depth;
+	for (const [indice, node] of nodes.entries()) {
 		const esAqui = node.body.code === here;
 
 		let distance = '';
@@ -273,7 +265,7 @@ export function buildBodyRows(
 			kind: bodyKindLabel(node.body.kind),
 			icon: bodyKindIcon(node.body.kind),
 			depth: node.depth,
-			rails: sigue.slice(1),
+			rails: guias[indice],
 			isLast: node.isLast,
 			hasChildren: node.hasChildren,
 			explored: node.body.explored,
@@ -289,9 +281,6 @@ export function buildBodyRows(
 			services: node.services.map(serviceLabel).sort(),
 			isHere: esAqui
 		});
-
-		// Para los hijos: la línea de este nodo sigue si le quedan hermanos.
-		sigue.push(!node.isLast);
 	}
 
 	return filas;
@@ -447,7 +436,8 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			? factionName(system.controllingFaction)
 			: 'Espacio libre',
 		government: governmentLabel(system.government),
-		security: securityLabel(overview.security),
+		// El cajón y el número: «Alta» se lee de un vistazo y el 78 dice cuánto.
+		security: `${securityLabel(overview.securityLevel)} · ${overview.security}`,
 		coordinates: `${system.x} · ${system.y} · ${system.z}`,
 		bodyCount: String(overview.bodyCount),
 		stationCount: String(overview.stationCount),

@@ -35,9 +35,44 @@
 		onToggle: () => void;
 		/** Las rutas que tienen algo sin leer. El módulo que las contenga titila. */
 		notices?: readonly string[];
+		/**
+		 * Qué lista dibuja.
+		 *
+		 * Por omisión, los módulos del juego. El cuartel general pasa los suyos y
+		 * reusa la barra entera: es la misma columna, la misma mecánica de plegado y
+		 * el mismo aspecto, que es justo lo que hace que no parezca otra aplicación.
+		 */
+		modules?: readonly Module[];
+		/** El bloque naranja de arriba: a dónde lleva y cómo se llama. */
+		brand?: string;
+		brandIcon?: IconName;
+		brandRoute?: string;
+		/** Lo que va abajo de todo, entre "Plegar" y "Salir". */
+		extra?: readonly Module[];
+		/**
+		 * La entrada al cuartel general, si este piloto la tiene.
+		 *
+		 * Va en **su propio recuadro** y no como una fila más de la lista, y eso es
+		 * deliberado: lo que se hace ahí adentro no le pasa a un piloto sino a
+		 * todos, y una puerta así no puede estar puesta entre "Mercado" y
+		 * "Billetera" como si fuera otra pantalla del juego. El recuadro es lo que
+		 * hace que entrar sea un gesto aparte.
+		 */
+		admin?: Module | null;
 	}
 
-	let { expanded, activeModule, onToggle, notices = [] }: Props = $props();
+	let {
+		expanded,
+		activeModule,
+		onToggle,
+		notices = [],
+		modules = MODULES,
+		brand = 'VAXAV',
+		brandIcon = 'planet',
+		brandRoute = PILOT_ROUTE,
+		extra = [OPTIONS_MODULE],
+		admin = null
+	}: Props = $props();
 
 	/** Lo que comparten todas las filas: alto, cursor y el movimiento del HUD. */
 	const FILA =
@@ -83,6 +118,31 @@
 	</a>
 {/snippet}
 
+<!--
+	El recuadro del cuartel general.
+
+	Dorado y no naranja: el naranja es el color de jugar, y esto no es jugar. La
+	distinción tiene que leerse antes de leer la palabra, porque es la única fila
+	de la barra desde la que se le puede tocar la cuenta a otro.
+
+	Abierto se llena, como todo lo seleccionado en Vaxav, pero **se llena de
+	dorado**: mantiene la regla y mantiene la advertencia.
+-->
+{#snippet cuartel(module: Module)}
+	{@const active = activeModule === module.code}
+	<a
+		href={moduleRoute(module)}
+		title="{module.label} · herramientas de administración"
+		class="{FILA} border-y border-y-warning/30 no-underline
+			{active
+			? 'border-l-warning bg-warning text-on-accent'
+			: 'border-l-transparent bg-warning-wash text-warning hover:bg-warning/20'}"
+	>
+		{@render rail(module.icon, active)}
+		{@render nombre(module.label)}
+	</a>
+{/snippet}
+
 <nav class="neocom {expanded ? 'is-expanded' : ''}">
 	<!--
 		El bloque naranja con el nombre del juego, arriba de todo. Mismo alto que la
@@ -95,12 +155,12 @@
 	-->
 	<div class="neocom-fixed w-full">
 		<a
-			href={PILOT_ROUTE}
-			title="Vaxav"
+			href={brandRoute}
+			title={brand}
 			class="flex h-topbar w-full items-center border-b border-b-background bg-accent text-on-accent no-underline shadow-glow"
 		>
-			{@render rail('planet', true, '1.3rem')}
-			{@render nombre('VAXAV', 'text-[1.05rem] font-bold tracking-brand')}
+			{@render rail(brandIcon, true, '1.3rem')}
+			{@render nombre(brand, 'text-[1.05rem] font-bold tracking-brand')}
 		</a>
 	</div>
 
@@ -109,17 +169,22 @@
 		apilados del juego. Nada flota.
 	-->
 	<div class="neocom-scroll flex w-full flex-col pb-2">
-		{#each MODULES as module (module.code)}
+		{#each modules as module (module.code)}
 			{@render enlace(module)}
 		{/each}
 	</div>
 
 	<div class="neocom-fixed flex w-full flex-col border-t border-border bg-surface-overlay pb-2">
+		{#if admin}
+			{@render cuartel(admin)}
+		{/if}
 		<button type="button" class="{FILA} {estado(false)}" onclick={onToggle}>
 			{@render rail('sidebar-simple', false)}
 			{@render nombre('Plegar')}
 		</button>
-		{@render enlace(OPTIONS_MODULE)}
+		{#each extra as module (module.code)}
+			{@render enlace(module)}
+		{/each}
 		<form method="POST" action="/salir" class="w-full">
 			<button
 				type="submit"

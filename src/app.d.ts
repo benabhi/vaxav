@@ -13,6 +13,11 @@ declare global {
 			 * La resuelve el hook para que todas las pantallas vean lo mismo.
 			 */
 			resolved: ActionReport | null;
+			/**
+			 * Las llaves de administración del piloto, resueltas por el hook.
+			 * Vacío si no hay sesión: **no hay permisos implícitos**.
+			 */
+			permissions: ReadonlySet<string>;
 		}
 	}
 }

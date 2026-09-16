@@ -13,9 +13,43 @@
 
 import type { AgentBlueprint } from './agents';
 
-/** Qué es un cuerpo. Define qué se puede hacer con él y cómo se dibuja. */
-export const BODY_KINDS = ['star', 'planet', 'moon', 'belt', 'station'] as const;
+/**
+ * Qué es un cuerpo. Define qué se puede hacer con él y cómo se dibuja.
+ *
+ * **La puerta estelar es un cuerpo más**, y no una tabla aparte. Así aparece en
+ * el árbol del sistema, tiene distancia orbital y se le puede viajar sin tocar
+ * una línea de lo que ya existe: es un lugar del sistema al que hay que llegar
+ * antes de poder usarlo, que es exactamente lo que es. A dónde lleva sí es una
+ * tabla propia, porque es una relación entre dos cuerpos y no un atributo.
+ */
+export const BODY_KINDS = ['star', 'planet', 'moon', 'belt', 'station', 'gate'] as const;
 export type BodyKind = (typeof BODY_KINDS)[number];
+
+/**
+ * Los cuerpos que pueden colgar de otro, y de cuáles.
+ *
+ * Es la regla que impide armar un sistema imposible desde el constructor: una
+ * luna orbitando una estación, o dos estrellas anidadas. Se lee como se dice en
+ * voz alta —«de un planeta cuelgan lunas, cinturones y estaciones»— y el
+ * constructor la usa para ofrecer sólo lo que entra.
+ *
+ * La **estrella es la raíz** y por eso no figura como hija de nadie.
+ */
+export const BODY_CHILDREN: Readonly<Record<BodyKind, readonly BodyKind[]>> = {
+	star: ['planet', 'belt', 'station', 'gate'],
+	planet: ['moon', 'belt', 'station'],
+	moon: ['station'],
+	belt: ['station'],
+	// Ni una estación ni una puerta tienen nada orbitándolas: son el final de la
+	// rama. Una estación colgada de otra sería un muelle, que es otra cosa.
+	station: [],
+	gate: []
+};
+
+/** Si un cuerpo de ese tipo puede colgar de uno de aquél. */
+export function canOrbit(child: BodyKind, parent: BodyKind): boolean {
+	return BODY_CHILDREN[parent].includes(child);
+}
 
 /**
  * Los servicios que puede ofrecer una estación.
@@ -125,35 +159,138 @@ export const GOVERNMENTS = [
 ] as const;
 export type Government = (typeof GOVERNMENTS)[number];
 
-/** Cuánta protección hay. Sale del gobierno; no se guarda aparte. */
+/**
+ * Cuánta protección hay, **como número de 0 a 100**.
+ *
+ * Es un número y no cuatro cajones porque la doc del proyecto ya lo había
+ * prometido: «la seguridad es un gradiente, no un interruptor». Con cuatro
+ * niveles, cincuenta sistemas se parten en cuatro montones indistinguibles; con
+ * un número, dos sistemas corporativos pueden no ser el mismo lugar.
+ *
+ * Entero, como todo número del juego: 70, no 0,7.
+ */
+export const SECURITY_MIN = 0;
+export const SECURITY_MAX = 100;
+
+/** Los cuatro cajones en que se **lee** un número de seguridad. */
 export const SECURITY_LEVELS = ['lawless', 'low', 'medium', 'high'] as const;
 export type SecurityLevel = (typeof SECURITY_LEVELS)[number];
 
+/** Desde qué número empieza cada cajón, del más alto al más bajo. */
+const LEVEL_FLOORS: readonly (readonly [number, SecurityLevel])[] = [
+	[65, 'high'],
+	[35, 'medium'],
+	[1, 'low'],
+	[SECURITY_MIN, 'lawless']
+];
+
 /**
- * De qué gobierno sale cada nivel de seguridad.
+ * En qué cajón cae un número.
  *
- * Es la tabla que después va a decidir qué defensas tiene un sistema y qué NPC
- * aparecen: cerca de lo corporativo, patrullas y comerciantes; cerca de la
- * anarquía, piratas.
+ * Los cajones son para **leer**, no para calcular: una columna que dice «Media»
+ * se recorre de un vistazo y una que dice `47` no. Las mecánicas usan el número.
+ *
+ * Las bandas de los gobiernos cruzan los cajones a propósito —una colonia penal
+ * puede quedar baja o media— y eso es justamente lo que hace que valga la pena
+ * guardar el número.
  */
-const SECURITY_BY_GOVERNMENT: Readonly<Record<Government, SecurityLevel>> = {
-	anarchy: 'lawless',
-	feudal: 'low',
-	prison: 'medium',
-	dictatorship: 'medium',
-	democracy: 'high',
-	corporate: 'high'
+export function securityLevel(security: number): SecurityLevel {
+	for (const [desde, level] of LEVEL_FLOORS) if (security >= desde) return level;
+	return 'lawless';
+}
+
+/** Entre qué números puede moverse la seguridad de un sistema. */
+export interface SecurityBand {
+	readonly min: number;
+	readonly max: number;
+}
+
+/**
+ * Qué seguridad admite cada gobierno.
+ *
+ * El gobierno **no fija** la seguridad: fija hasta dónde puede llegar. Es lo que
+ * deja que el gobierno signifique algo por sí mismo en vez de ser otro nombre
+ * para el mismo número, y lo que sigue impidiendo la contradicción que preocupaba
+ * desde el principio: una anarquía no puede tener seguridad alta porque su banda
+ * no llega hasta ahí.
+ *
+ * **La colonia penal y la dictadura dejan de ser lo mismo.** Una colonia penal
+ * está *vigilada*, no *protegida*: mucho ojo encima y poca ayuda si pasa algo.
+ * Ése es el matiz que se perdía al mapear las dos a «media».
+ */
+export const SECURITY_BANDS: Readonly<Record<Government, SecurityBand>> = {
+	anarchy: { min: 0, max: 0 },
+	feudal: { min: 10, max: 35 },
+	prison: { min: 25, max: 50 },
+	dictatorship: { min: 30, max: 60 },
+	democracy: { min: 55, max: 85 },
+	corporate: { min: 60, max: 100 }
 };
 
 /**
- * La seguridad de un sistema, a partir de cómo se gobierna.
+ * El techo del espacio sin dueño.
  *
- * Se calcula y no se guarda: con las dos cosas en la base, tarde o temprano se
- * contradicen, y "anarquía con seguridad alta" es el error que nadie nota hasta
- * que un jugador lo explota.
+ * Una facción controladora no es un rótulo: es **quién paga las patrullas**. Sin
+ * ella no hay a quién reclamarle, por muy corporativo que sea el gobierno local,
+ * así que la seguridad no pasa de acá. Es lo que le da por fin una consecuencia
+ * mecánica a `controllingFaction`, y la forma imperio contra espacio libre que el
+ * proyecto ya había elegido.
  */
-export function securityFor(government: Government): SecurityLevel {
-	return SECURITY_BY_GOVERNMENT[government];
+export const FREE_SPACE_CEILING = 50;
+
+/**
+ * La banda real de un sistema: la de su gobierno, con el techo del espacio libre.
+ *
+ * En espacio libre **el piso del gobierno no aplica, sólo el techo**. El piso es
+ * una garantía —«acá se responde al menos hasta tanto»— y garantizarlo es lo que
+ * hace una facción; sin ella no hay quien lo sostenga, por corporativo que sea el
+ * gobierno local. Así un sistema sin dueño puede ser cualquier cosa entre la nada
+ * y el techo, que es lo que uno espera de una frontera.
+ */
+export function securityBand(government: Government, controlled: boolean): SecurityBand {
+	const banda = SECURITY_BANDS[government];
+	if (controlled) return banda;
+
+	return { min: SECURITY_MIN, max: Math.min(banda.max, FREE_SPACE_CEILING) };
+}
+
+/**
+ * Qué problema tiene esa seguridad, o `null` si no tiene ninguno.
+ *
+ * Devuelve la frase lista para mostrar, como el resto de las validaciones del
+ * proyecto: quien la llama no tiene que saber redactar el motivo.
+ */
+export function securityProblem(
+	security: number,
+	government: Government,
+	controlled: boolean
+): string | null {
+	if (!Number.isInteger(security)) return 'La seguridad es un número entero.';
+
+	const { min, max } = securityBand(government, controlled);
+	if (security < min || security > max) {
+		return controlled
+			? 'Con ese gobierno, la seguridad va de ' + min + ' a ' + max + '.'
+			: 'Sin una facción que lo controle, la seguridad va de ' +
+					min +
+					' a ' +
+					max +
+					': no hay quien pague las patrullas.';
+	}
+
+	return null;
+}
+
+/**
+ * La seguridad que se propone por omisión.
+ *
+ * El medio de la banda: ni el sistema más protegido de su clase ni el peor, que
+ * es lo que uno quiere cuando todavía no pensó el número. El constructor lo
+ * ofrece y quien lo usa lo mueve.
+ */
+export function suggestedSecurity(government: Government, controlled: boolean): number {
+	const { min, max } = securityBand(government, controlled);
+	return Math.floor((min + max) / 2);
 }
 
 /** A qué se dedica una corporación. */
@@ -285,8 +422,20 @@ export interface SystemBlueprint {
 	readonly z: number;
 	readonly description: string;
 	readonly government: Government;
+	/** De 0 a 100, dentro de la banda que le deja el gobierno. */
+	readonly security: number;
 	readonly root: BodyBlueprint;
 	readonly controllingFaction: string;
+	/**
+	 * La facción de la que éste es el sistema **principal**, o vacío.
+	 *
+	 * Es un campo aparte de `controllingFaction` y no un booleano porque la
+	 * pregunta que se le hace no es «¿es capital?» sino «¿de quién?». Con un
+	 * booleano habría que cruzarlo siempre con la otra columna para contestar,
+	 * y una capital de una facción que no controla el sistema sería un estado
+	 * imposible que nada impediría escribir.
+	 */
+	readonly capitalOf: string;
 }
 
 export interface ConstellationBlueprint {
@@ -385,7 +534,11 @@ const ANFORA: SystemBlueprint = {
 		'Una estrella amarilla tranquila en el borde de la región. Es ' +
 		'donde empiezan todos los pilotos.',
 	government: 'corporate',
+	// Alta, pero no lo más alto que da el gobierno corporativo: es un sistema de
+	// frontera administrado como concesión, no el corazón del Dominio.
+	security: 78,
 	controllingFaction: 'dominion',
+	capitalOf: '',
 	root: defineBody({
 		code: 'anfora_estrella',
 		name: 'Ánfora',
@@ -718,4 +871,217 @@ export function isClaimable(system: SystemBlueprint): boolean {
 /** Busca un cuerpo por código en todo el plano. */
 export function findBody(code: string): BodyBlueprint | null {
 	return allBodies().find((body) => body.code === code) ?? null;
+}
+
+// --- Las puertas y la roseta ------------------------------------------------
+
+/**
+ * Por qué lado del sistema sale una puerta.
+ *
+ * Existe para el **mapa de la galaxia**, que va a dibujarse como en X4: cada
+ * sistema es una casilla y sus salidas apuntan hacia afuera. Sin un rumbo, dos
+ * puertas del mismo sistema no tienen dónde ponerse y el mapa se arma solo, mal;
+ * con un rumbo, cada sistema tiene ocho lugares donde colgar una salida y el
+ * dibujo sale del dato en vez de adivinarse.
+ *
+ * **Ocho y no cuatro** porque un sistema bisagra puede tener seis vecinos, y
+ * ocho y no grados porque lo que hace falta es que no se pisen: dos puertas a
+ * 12° y 13° son un choque, dos en `n` y `ne` no lo son nunca. La base lo
+ * garantiza con un índice único por sistema y rumbo.
+ *
+ * Va en la puerta y no en el sistema porque es de la puerta: describe **esta
+ * salida**, no el lugar.
+ */
+export const GATE_BEARINGS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'] as const;
+export type GateBearing = (typeof GATE_BEARINGS)[number];
+
+/**
+ * El rumbo de enfrente.
+ *
+ * Sirve para proponer el de la puerta gemela: lo normal es que si de Ánfora se
+ * sale al norte, desde el otro lado se vuelva por el sur. Es una **sugerencia**
+ * —el constructor la ofrece y se puede pisar—, porque una galaxia donde todo
+ * cierra en espejo es una grilla, y un mapa interesante tiene atajos torcidos.
+ */
+export function oppositeBearing(bearing: GateBearing): GateBearing {
+	const mitad = GATE_BEARINGS.length / 2;
+	const posicion = GATE_BEARINGS.indexOf(bearing);
+	return GATE_BEARINGS[(posicion + mitad) % GATE_BEARINGS.length];
+}
+
+/**
+ * El ángulo de un rumbo, en grados, con el norte arriba y girando como el reloj.
+ *
+ * Lo usa el dibujo: la roseta reparte los ocho rumbos cada 45°, así que la
+ * posición de una salida en el borde de una casilla sale de una multiplicación y
+ * no de una tabla de coordenadas que haya que mantener.
+ */
+export function bearingAngle(bearing: GateBearing): number {
+	return GATE_BEARINGS.indexOf(bearing) * (360 / GATE_BEARINGS.length);
+}
+
+/** Los rumbos que todavía tiene libres un sistema. */
+export function freeBearings(taken: readonly GateBearing[]): readonly GateBearing[] {
+	return GATE_BEARINGS.filter((bearing) => !taken.includes(bearing));
+}
+
+// --- Cómo se llaman las cosas -----------------------------------------------
+//
+// La nomenclatura es la de EVE y **el nombre de un cuerpo dice dónde está**: con
+// nombres propios sueltos hay que aprenderse el mapa de memoria; con esta
+// convención, leer un nombre es leer una dirección. Ver docs/systems/UNIVERSE.md.
+//
+// Todo lo de acá abajo **propone**, no impone. El constructor ofrece el nombre
+// que sigue y quien lo usa lo pisa cuando quiere: un cinturón con nombre propio
+// —«Cinturón Exterior»— dice más que «Cinturón de Ánfora V».
+
+/** Los símbolos romanos, de mayor a menor, para armar cualquier número. */
+const ROMAN: readonly (readonly [number, string])[] = [
+	[1000, 'M'],
+	[900, 'CM'],
+	[500, 'D'],
+	[400, 'CD'],
+	[100, 'C'],
+	[90, 'XC'],
+	[50, 'L'],
+	[40, 'XL'],
+	[10, 'X'],
+	[9, 'IX'],
+	[5, 'V'],
+	[4, 'IV'],
+	[1, 'I']
+];
+
+/**
+ * El número romano de una posición, contando desde 1.
+ *
+ * Los planetas se numeran **desde la estrella hacia afuera**, así que el número
+ * no es un rótulo sino la posición: «Ánfora IV» está más lejos que «Ánfora II»
+ * sin tener que consultar nada.
+ */
+export function romanNumeral(position: number): string {
+	let resto = Math.max(1, Math.trunc(position));
+	let salida = '';
+
+	for (const [valor, simbolo] of ROMAN) {
+		while (resto >= valor) {
+			salida += simbolo;
+			resto -= valor;
+		}
+	}
+
+	return salida;
+}
+
+/**
+ * La letra de una luna, contando desde 1: `a`, `b`, … `z`, `aa`.
+ *
+ * Sigue después de la z en vez de cortarse: un gigante gaseoso con veintisiete
+ * lunas es raro, pero que el generador se quede sin nombres es peor que un
+ * nombre feo.
+ */
+export function moonLetter(position: number): string {
+	let resto = Math.max(1, Math.trunc(position));
+	let salida = '';
+
+	while (resto > 0) {
+		resto--;
+		salida = String.fromCharCode(97 + (resto % 26)) + salida;
+		resto = Math.floor(resto / 26);
+	}
+
+	return salida;
+}
+
+/**
+ * El código de un nombre: minúsculas, sin acentos y con guiones bajos.
+ *
+ * Los códigos no se escriben a mano. `body.code` es **único en toda la galaxia**
+ * —no por sistema—, así que copiar un sistema sin renombrar cada cuerpo es la
+ * clase de error que revienta recién al sembrar. Derivarlo del nombre, con el
+ * sistema por delante, lo vuelve imposible de olvidar.
+ */
+export function codeFrom(name: string): string {
+	return (
+		name
+			.normalize('NFD')
+			// Los diacríticos quedan como caracteres sueltos después de normalizar.
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '_')
+			.replace(/^_+|_+$/g, '')
+	);
+}
+
+/** El código de un cuerpo, con el del sistema por delante para que no choque. */
+export function bodyCodeFrom(systemCode: string, name: string): string {
+	const propio = codeFrom(name);
+	// Si el nombre ya arranca con el del sistema —«Ánfora III»— no se repite.
+	return propio.startsWith(systemCode + '_') || propio === systemCode
+		? propio
+		: systemCode + '_' + propio;
+}
+
+/** Qué hace falta saber para proponer el nombre de un cuerpo nuevo. */
+export interface NameContext {
+	/** Cómo se llama el sistema: `Ánfora`. */
+	readonly systemName: string;
+	/** Cómo se llama el cuerpo del que va a colgar, si cuelga de alguno. */
+	readonly parentName?: string;
+	/**
+	 * Cuántos hermanos de su mismo tipo ya tiene el padre.
+	 *
+	 * Se cuenta **por tipo y no en total**: las lunas se nombran entre lunas y los
+	 * planetas entre planetas, así que un planeta con un cinturón y dos lunas
+	 * sigue proponiendo `-c` para la tercera luna.
+	 */
+	readonly siblings: number;
+	/** Adónde lleva, si es una puerta. */
+	readonly destinationName?: string;
+	/**
+	 * Por qué lado sale, si es una puerta que todavía no lleva a ningún lado.
+	 *
+	 * Una puerta se planta antes de saber qué hay del otro lado, así que nombrarla
+	 * por su destino no siempre es posible. Por el rumbo sí, siempre: «Puerta
+	 * Norte» dice dónde está aunque no diga adónde va, y renombrarla cuando se
+	 * conecte es un renglón.
+	 */
+	readonly bearingName?: string;
+}
+
+/**
+ * El nombre que le toca a un cuerpo nuevo.
+ *
+ * Las **estaciones llevan nombre propio** y por eso se proponen en blanco: son
+ * obra de alguien —una corporación las construyó y las bautizó— y un número las
+ * volvería intercambiables, que es justo lo contrario de lo que son.
+ */
+export function suggestedBodyName(kind: BodyKind, context: NameContext): string {
+	const { systemName, parentName, siblings, destinationName, bearingName } = context;
+	const posicion = siblings + 1;
+
+	switch (kind) {
+		case 'star':
+			// La estrella se llama como el sistema. Una segunda —un binario— lleva
+			// letra, como en el cielo de verdad: Ánfora A, Ánfora B.
+			return siblings === 0 ? systemName : systemName + ' ' + moonLetter(posicion).toUpperCase();
+
+		case 'planet':
+			return systemName + ' ' + romanNumeral(posicion);
+
+		case 'moon':
+			return parentName ? parentName + '-' + moonLetter(posicion) : '';
+
+		case 'belt':
+			// Los anillos de un planeta se nombran por él; un cinturón suelto en la
+			// órbita de la estrella es un lugar y suele merecer nombre propio.
+			return parentName ? 'Anillos de ' + parentName : '';
+
+		case 'gate':
+			if (destinationName) return 'Puerta a ' + destinationName;
+			return bearingName ? 'Puerta ' + bearingName : '';
+
+		case 'station':
+			return '';
+	}
 }

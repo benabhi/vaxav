@@ -19,6 +19,7 @@ import { getSkill, type Requirement, type SkillFamily } from '$lib/game/skills';
 import {
 	SERVICES,
 	type BodyKind,
+	type GateBearing,
 	type CorporationKind,
 	type Government,
 	type SecurityLevel,
@@ -150,7 +151,8 @@ const BODY_KINDS: Record<BodyKind, string> = {
 	planet: 'Planeta',
 	moon: 'Luna',
 	belt: 'Cinturón',
-	station: 'Estación'
+	station: 'Estación',
+	gate: 'Puerta'
 };
 
 const BODY_ICONS: Record<BodyKind, IconName> = {
@@ -158,7 +160,10 @@ const BODY_ICONS: Record<BodyKind, IconName> = {
 	planet: 'planet',
 	moon: 'moon',
 	belt: 'circles-three',
-	station: 'buildings'
+	station: 'buildings',
+	// Un anillo con una flecha que lo cruza: la puerta es un aro por el que se
+	// sale del sistema, y eso se lee sin leyenda.
+	gate: 'arrow-circle-right'
 };
 
 /**
@@ -182,6 +187,28 @@ const SERVICE_ICONS: Record<StationServiceKind, IconName> = {
 	missions: 'clipboard-text',
 	storage: 'warehouse'
 };
+
+/**
+ * Cómo se lee un rumbo de la roseta.
+ *
+ * Con el nombre entero y no la sigla: «NE» se entiende en una brújula dibujada,
+ * pero en una lista de salidas de un sistema lo que se lee es «Noreste».
+ */
+const BEARINGS: Record<GateBearing, string> = {
+	n: 'Norte',
+	ne: 'Noreste',
+	e: 'Este',
+	se: 'Sureste',
+	s: 'Sur',
+	sw: 'Suroeste',
+	w: 'Oeste',
+	nw: 'Noroeste'
+};
+
+/** Cómo se llama un rumbo en pantalla. */
+export function bearingLabel(bearing: GateBearing): string {
+	return BEARINGS[bearing] ?? bearing;
+}
 
 /** Cómo se llama un tipo de cuerpo en pantalla. */
 export function bodyKindLabel(kind: BodyKind): string {

@@ -121,6 +121,29 @@ Ver [naves](systems/SHIPS.md).
 Lo que falta —la inyección y el laboratorio— va después de vender porque un
 inyector cuesta plata: al revés sería una reja sin llave.
 
+### El cuartel general · **a medias**
+
+Va fuera de la numeración porque **no es una etapa del circuito**: no agrega un
+verbo al juego, agrega herramientas para operarlo. Se construye en paralelo, y por
+eso no empuja para atrás a las etapas que siguen.
+
+- ~~Roles, permisos y el guardia del área.~~
+- ~~El registro de eventos, escribiendo desde los servicios que ya existen.~~
+- ~~La pantalla que lo lista, con su traza de actividad, sus filtros y su
+  paginado.~~
+- ~~El constructor de sistemas: estrellas, planetas, estaciones y las puertas
+  conectadas a mano.~~
+- La pantalla para administrar roles: crearlos, cambiarles permisos y
+  asignárselos.
+- La ficha de piloto desde administración, y las estadísticas.
+- El mapa de la galaxia, dibujado con los rumbos que ya guardan las puertas.
+
+El orden no es caprichoso: el registro va **primero** porque es lo que hace
+auditables a todas las herramientas que vengan después. Una que crea entidades sin
+dejar constancia es una que nadie puede revisar, y agregarle el registro más tarde
+significa que lo que pasó hasta entonces se perdió. Ver
+[administración](systems/ADMIN.md).
+
 ### 5 · Refinar
 
 La refinería convierte mineral en material, con su merma.

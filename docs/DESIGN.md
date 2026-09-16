@@ -69,6 +69,7 @@ la mecánica es la intención de diseño y los números están para corregirse.
 | [Agentes y misiones](systems/MISSIONS.md)            | Los NPC de las estaciones, la reputación y los cinco niveles                    |
 | [Identidad visual](systems/VISUAL.md)                | La paleta naranja, la tipografía, los medidores y la portada                    |
 | [Interfaz del juego](systems/INTERFACE.md)           | El Neocom lateral, la barra superior y el área central                          |
+| [Administración](systems/ADMIN.md)                   | Roles, permisos, el registro de eventos y el cuartel general                    |
 
 ## Progresión
 

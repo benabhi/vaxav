@@ -12,18 +12,20 @@
  */
 
 import { expect, test, type Page } from '@playwright/test';
-import { PILOTO } from './preparar';
+import { JEFE, PILOTO } from './preparar';
+import { ADMIN_SECTIONS } from '../src/lib/admin';
 import { TABS } from '../src/lib/navigation';
 import { INDEX_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE } from '../src/lib/routes';
 
 const PUBLICAS = [INDEX_ROUTE, LOGIN_ROUTE, REGISTER_ROUTE];
 const DEL_JUEGO = TABS.map((tab) => tab.route);
+const DEL_CUARTEL = ADMIN_SECTIONS.map((section) => section.tabs[0].route);
 
-/** Entra con el piloto del humo y deja la sesión abierta en esa pestaña. */
-async function entrar(page: Page): Promise<void> {
+/** Entra con un piloto y deja la sesión abierta en esa pestaña. */
+async function entrar(page: Page, quien = PILOTO): Promise<void> {
 	await page.goto(LOGIN_ROUTE);
-	await page.getByLabel('Distintivo').fill(PILOTO.callsign);
-	await page.getByLabel('Contraseña').fill(PILOTO.password);
+	await page.getByLabel('Distintivo').fill(quien.callsign);
+	await page.getByLabel('Contraseña').fill(quien.password);
 	await page.getByRole('button', { name: 'Entrar' }).click();
 	await page.waitForURL('**/piloto');
 }
@@ -73,4 +75,48 @@ test('ninguna entrada del Neocom lleva a un 404', async ({ page }) => {
 		const respuesta = await page.goto(ruta);
 		expect(respuesta?.status(), `${ruta} está en el Neocom y no responde`).toBe(200);
 	}
+});
+
+test.describe('el cuartel general', () => {
+	test('sin sesión manda a entrar, y no a un error', async ({ page }) => {
+		const respuesta = await page.goto(DEL_CUARTEL[0]);
+		expect(respuesta?.status()).toBe(200);
+		expect(new URL(page.url()).pathname).toBe(LOGIN_ROUTE);
+	});
+
+	/*
+	 * 404 y no 403: un 403 confirma que la página existe, y a quien está probando
+	 * URL a ver qué encuentra no hay por qué contestarle esa pregunta.
+	 */
+	test('a un piloto sin llaves, el área no le existe', async ({ page }) => {
+		await entrar(page);
+
+		for (const ruta of DEL_CUARTEL) {
+			const respuesta = await page.goto(ruta);
+			expect(respuesta?.status(), `${ruta} no tendría que existir para él`).toBe(404);
+		}
+
+		// Y tampoco se la ofrece: el recuadro dorado no está en su Neocom.
+		await page.goto(DEL_JUEGO[0]);
+		await expect(page.getByRole('navigation').getByRole('link', { name: 'Cuartel' })).toHaveCount(
+			0
+		);
+	});
+
+	test('con las llaves, todas las secciones existen y se llega desde el Neocom', async ({
+		page
+	}) => {
+		await entrar(page, JEFE);
+
+		for (const ruta of DEL_CUARTEL) {
+			const respuesta = await page.goto(ruta);
+			expect(respuesta?.status(), `${ruta} tendría que responder 200`).toBe(200);
+			await expect(page.getByRole('navigation'), `${ruta} no dibujó la barra`).toBeVisible();
+			await expect(page).toHaveTitle(/Vaxav/);
+		}
+
+		await page.goto(DEL_JUEGO[0]);
+		await page.getByRole('navigation').getByRole('link', { name: 'Cuartel' }).click();
+		await page.waitForURL(`**${DEL_CUARTEL[0]}`);
+	});
 });

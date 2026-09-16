@@ -6,7 +6,8 @@
 > una puerta cerrada con el nombre puesto, y prometer es peor que no ofrecer: el
 > Neocom crece cuando hay algo detrás.
 >
-> Ver también: [identidad visual](VISUAL.md) · [acciones](ACTIONS.md)
+> Ver también: [identidad visual](VISUAL.md) · [acciones](ACTIONS.md) ·
+> [administración](ADMIN.md)
 
 El juego es textual, así que la interfaz **es** el juego. Tiene que ser densa en
 información y liviana en adornos: números legibles, jerarquía clara, y siempre a
@@ -124,6 +125,19 @@ para la misma pantalla.
 En pantallas angostas la fila **se desliza** con el dedo, con un degradado en el
 borde que avisa que hay más, en vez de partirse en dos renglones: la pantalla se
 ve igual en el teléfono y en el monitor.
+
+### El recuadro del cuartel
+
+Quien tenga alguna llave de administración ve, abajo del todo y **antes de
+"Plegar"**, un recuadro dorado que lleva al [cuartel general](ADMIN.md). Va
+aparte y no como una entrada más de la lista por dos razones: lo que se hace ahí
+adentro no le pasa a un piloto sino a todos, y **el naranja es el color de
+jugar**. La distinción tiene que leerse antes de leer la palabra.
+
+Adentro del cuartel, la barra lateral es **el mismo Neocom con otra lista**: el
+mismo plegado, el mismo aspecto y el mismo comportamiento en teléfono, con el
+bloque de marca cambiado y la vuelta al juego abajo de todo. Que no parezca otra
+aplicación es parte de lo que dice que seguís en Vaxav.
 
 ### Cuando no entran
 

@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { ADMIN_ENTRY } from '$lib/admin';
 	import type { Tab } from '$lib/navigation';
 	import type { AccionEnCurso, Informe } from '$lib/tipos';
 	import ActionNotice from '../game/ActionNotice.svelte';
@@ -24,6 +25,8 @@
 		notice?: Informe | null;
 		/** Las rutas que tienen algo sin leer. */
 		notices?: readonly string[];
+		/** Si este piloto tiene llaves del cuartel general. */
+		admin?: boolean;
 	}
 
 	let {
@@ -33,7 +36,8 @@
 		activeTab,
 		action,
 		notice = null,
-		notices = []
+		notices = [],
+		admin = false
 	}: Props = $props();
 
 	/** La clave con la que el navegador recuerda si la barra quedó desplegada. */
@@ -64,7 +68,13 @@
 	}
 </script>
 
-<Neocom {expanded} {activeModule} onToggle={alternar} {notices} />
+<Neocom
+	{expanded}
+	{activeModule}
+	onToggle={alternar}
+	{notices}
+	admin={admin ? ADMIN_ENTRY : null}
+/>
 
 <!--
 	El contenido va en su propio contenedor: así el CSS lo corre junto cuando el

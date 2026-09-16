@@ -1,6 +1,8 @@
 /** La siembra deja el universo como dice el plano, y se puede repetir. */
 
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { body as bodyTable } from '../db/schema';
 import { freshDb, seededDb } from '../db/testing';
 import { allAgents, allBodies, CORPORATIONS } from '$lib/game/universe';
 import {
@@ -26,13 +28,45 @@ describe('la siembra', () => {
 		});
 	});
 
-	it('es idempotente', () => {
-		// Correrla diez veces deja lo mismo que correrla una.
+	/*
+	 * Correrla diez veces deja lo mismo que correrla una, pero ya no devuelve lo
+	 * mismo: la cuenta dice cuánto **creó**, y la segunda vez no crea nada. Un
+	 * cero ahí es la respuesta correcta a «¿hacía falta sembrar?».
+	 */
+	it('es idempotente, y la segunda vez no crea nada', () => {
 		const db = freshDb();
 		const primera = seedUniverse(db);
 		const segunda = seedUniverse(db);
-		expect(segunda).toEqual(primera);
+
+		expect(primera.sistemas).toBe(1);
+		expect(segunda).toMatchObject({
+			corporaciones: 0,
+			regiones: 0,
+			constelaciones: 0,
+			sistemas: 0,
+			cuerpos: 0
+		});
 		expect(systemTree(db, 'anfora')).toHaveLength(allBodies().length);
+	});
+
+	/*
+	 * Es la regla nueva y la que más puede doler si se olvida: desde que existe el
+	 * constructor, **la base manda**. Una siembra que reimpusiera el plano
+	 * desharía en silencio lo que alguien armó desde el panel.
+	 */
+	it('no pisa lo que ya está en la base', () => {
+		const db = seededDb();
+		const anfora = getBody(db, 'anfora_ii')!;
+		db.update(bodyTable)
+			.set({ name: 'Otro nombre', orbitDistance: 999 })
+			.where(eq(bodyTable.id, anfora.id))
+			.run();
+
+		seedUniverse(db);
+
+		const despues = getBody(db, 'anfora_ii')!;
+		expect(despues.name).toBe('Otro nombre');
+		expect(despues.orbitDistance).toBe(999);
 	});
 });
 
@@ -43,11 +77,13 @@ describe('la consulta', () => {
 		expect(getBody(db, 'inventado')).toBeNull();
 	});
 
-	it('deriva la seguridad del gobierno', () => {
+	it('trae la seguridad guardada y en qué cajón cae', () => {
 		const db = seededDb();
 		const ficha = systemOverview(db, 'anfora')!;
+
 		expect(ficha.system.government).toBe('corporate');
-		expect(ficha.security).toBe('high');
+		expect(ficha.security).toBe(78);
+		expect(ficha.securityLevel).toBe('high');
 		expect(ficha.claimable).toBe(false);
 	});
 

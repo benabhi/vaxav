@@ -21,6 +21,7 @@ import {
 	pilotAction,
 	pilotLog,
 	pilotPool,
+	pilotRole,
 	pilotSkill,
 	ship,
 	type Pilot
@@ -36,6 +37,8 @@ import { credit } from './wallet';
 import { createStarterShip, saveFit, shipFit, shipHull } from './ships';
 import { UniverseError, requireStation } from './universe';
 import { deletePortrait } from './portraits';
+import { record } from './events';
+import { ADMIN_ROLE, adminCount, rolesOf } from './roles';
 
 export const CALLSIGN_MIN_LENGTH = 3;
 export const CALLSIGN_MAX_LENGTH = 20;
@@ -259,6 +262,21 @@ export async function createPilot(
 
 		saveFit(tx, nave, codes);
 
+		// Dentro de la transacción: si el alta se deshace, no queda constancia de
+		// un piloto que no existe. Se anota a sí mismo como actor porque nadie más
+		// lo dio de alta.
+		record(tx, {
+			kind: 'account.registered',
+			actorId: created.id,
+			subject: { kind: 'pilot', id: created.id },
+			payload: {
+				actor: created.callsign,
+				callsign: created.callsign,
+				faction: chosenFaction.name,
+				profession: chosenProfession.name
+			}
+		});
+
 		return created;
 	});
 }
@@ -317,7 +335,20 @@ export async function changePassword(
 	if (newPassword !== confirmation) throw new PilotError('Las contraseñas nuevas no coinciden.');
 
 	const passwordHash = await hashPassword(newPassword);
-	db.update(pilot).set({ passwordHash }).where(eq(pilot.id, row.id)).run();
+
+	db.transaction((tx) => {
+		tx.update(pilot).set({ passwordHash }).where(eq(pilot.id, row.id)).run();
+
+		// Queda constancia del cambio, **no de la contraseña**. El registro sirve
+		// para reconstruir qué pasó con una cuenta, y que le cambiaron la clave es
+		// justo el dato que se busca cuando alguien dice que perdió la suya.
+		record(tx, {
+			kind: 'account.password_changed',
+			actorId: row.id,
+			subject: { kind: 'pilot', id: row.id },
+			payload: { actor: row.callsign, callsign: row.callsign }
+		});
+	});
 }
 
 /**
@@ -338,6 +369,17 @@ export async function changePassword(
 export async function deleteAccount(db: Db, row: Pilot, password: string): Promise<void> {
 	if (!(await verifyPassword(row.passwordHash, password))) {
 		throw new PilotError('La contraseña no es correcta.');
+	}
+
+	// El último administrador no se puede ir. No es por cuidarlo a él: sin
+	// ninguno no queda nadie que pueda crear otro, y el juego se queda sin
+	// cuartel para siempre. Pasarle el rol a alguien antes cuesta un minuto;
+	// recuperarlo después de esto es meterse en la base a mano.
+	const suyos = rolesOf(db, row.id);
+	if (suyos.some((rol) => rol.code === ADMIN_ROLE) && adminCount(db) <= 1) {
+		throw new PilotError(
+			'Sos el único administrador: pasale el rol a otro piloto antes de darte de baja.'
+		);
 	}
 
 	db.transaction((tx) => {
@@ -367,6 +409,12 @@ export async function deleteAccount(db: Db, row: Pilot, password: string): Promi
 		tx.delete(pilotSkill).where(eq(pilotSkill.pilotId, row.id)).run();
 		tx.delete(authSession).where(eq(authSession.pilotId, row.id)).run();
 
+		// Sus roles se van con él, y los que él repartió pierden el padrino pero no
+		// el rol: quien recibió un permiso lo sigue teniendo aunque quien se lo dio
+		// ya no esté.
+		tx.delete(pilotRole).where(eq(pilotRole.pilotId, row.id)).run();
+		tx.update(pilotRole).set({ grantedBy: null }).where(eq(pilotRole.grantedBy, row.id)).run();
+
 		// Lo que cuelga de sus contenedores, y después ellos.
 		if (ids.length) {
 			tx.delete(itemEntry).where(inArray(itemEntry.containerId, ids)).run();
@@ -381,6 +429,16 @@ export async function deleteAccount(db: Db, row: Pilot, password: string): Promi
 		tx.delete(ship).where(eq(ship.pilotId, row.id)).run();
 
 		tx.delete(pilot).where(eq(pilot.id, row.id)).run();
+
+		// El registro se escribe **después** de que la fila dejó de existir, y sobre
+		// todo sobrevive a ella: es la única tabla que no cuelga del piloto, y por
+		// eso es la única que puede contar que la cuenta existió.
+		record(tx, {
+			kind: 'account.deleted',
+			actorId: row.id,
+			subject: { kind: 'pilot', id: row.id },
+			payload: { actor: row.callsign, callsign: row.callsign, faction: row.faction }
+		});
 	});
 
 	// El retrato es un archivo y no una fila, así que sale después de que la
@@ -411,42 +469,83 @@ export function skillXp(db: Db, pilotId: number): Record<string, number> {
 }
 
 /**
- * El piloto de prueba, que la semilla deja siempre disponible.
+ * Los pilotos que la semilla deja siempre disponibles.
  *
- * No es contenido del juego: es la herramienta con la que se mira el juego.
- * Entrar a revisar una pantalla no puede costar pasar por el alta de cuatro pasos
- * cada vez que se borra la base, y hacerlo a mano en la consola es la clase de
- * paso no escrito que termina siendo folclore.
+ * No son contenido del juego: son las herramientas con las que se lo mira.
+ * Entrar a revisar una pantalla no puede costar pasar por el alta de cuatro
+ * pasos cada vez que se borra la base, y hacerlo a mano en la consola es la
+ * clase de paso no escrito que termina siendo folclore.
  *
- * **Es idempotente**, como el resto de la siembra: si ya existe no lo toca, así
- * que volver a sembrar no le devuelve los créditos ni le borra lo que juntó
- * probando.
+ * Son **dos y no uno** porque hay dos pares de ojos: uno es el del dueño del
+ * proyecto y el otro el que usa la asistencia para revisar lo que construye.
+ * Con una sola cuenta compartida, cada uno le pisa al otro dónde estaba parado.
  *
- * Arranca con un colchón de créditos a propósito. Sale de un asiento del libro
+ * Arrancan con un colchón de créditos a propósito. Sale de un asiento del libro
  * mayor como cualquier otro movimiento —nadie escribe el saldo a mano, ni
  * siquiera acá— y está para poder mirar el mercado del lado del que compra sin
  * tener que minar primero.
  */
-export const DEV_PILOT_CALLSIGN = 'Prueba';
-export const DEV_PILOT_EMAIL = 'prueba@vaxav.test';
-export const DEV_PILOT_PASSWORD = 'vaxav-desarrollo';
-const DEV_PILOT_CREDITS = 250_000;
+export interface SeedPilot {
+	readonly callsign: string;
+	readonly email: string;
+	readonly password: string;
+	readonly profession: string;
+	readonly faction: string;
+	readonly credits: number;
+}
 
-export async function ensureDevPilot(db: Db): Promise<boolean> {
-	if (callsignTaken(db, DEV_PILOT_CALLSIGN) || emailTaken(db, DEV_PILOT_EMAIL)) return false;
+/** El colchón con el que arrancan, igual para los dos. */
+const SEED_CREDITS = 250_000;
 
-	const creado = await createPilot(
-		db,
-		DEV_PILOT_CALLSIGN,
-		DEV_PILOT_EMAIL,
-		DEV_PILOT_PASSWORD,
-		'miner',
-		'dominion'
-	);
-	credit(db, creado.id, DEV_PILOT_CREDITS, {
-		kind: 'adjustment',
-		memo: 'Fondo de prueba'
-	});
+export const SEED_PILOTS: readonly SeedPilot[] = [
+	{
+		callsign: 'benabhi',
+		email: 'benabhi@vaxav.test',
+		password: '31860933',
+		profession: 'miner',
+		faction: 'dominion',
+		credits: SEED_CREDITS
+	},
+	// De otra facción a propósito: con las dos cuentas en la misma, nada de lo
+	// que depende de la facción —la estación de partida, los precios de su
+	// corporación— se ve nunca desde el otro lado.
+	{
+		callsign: 'Prueba',
+		email: 'prueba@vaxav.test',
+		password: 'vaxav-desarrollo',
+		profession: 'miner',
+		faction: 'concord',
+		credits: SEED_CREDITS
+	}
+];
 
-	return true;
+/**
+ * Los deja creados, **sin tocar los que ya existen**.
+ *
+ * Es idempotente como el resto de la siembra: volver a sembrar no le devuelve
+ * los créditos a nadie ni le borra lo que juntó probando. La contrapartida es
+ * que a un piloto que ya existe **no se le cambia la contraseña**: si hace falta
+ * la de esta lista, hay que dar de baja la cuenta y volver a sembrar.
+ *
+ * Devuelve cuántos creó.
+ */
+export async function ensureSeedPilots(db: Db): Promise<number> {
+	let creados = 0;
+
+	for (const spec of SEED_PILOTS) {
+		if (callsignTaken(db, spec.callsign) || emailTaken(db, spec.email)) continue;
+
+		const creado = await createPilot(
+			db,
+			spec.callsign,
+			spec.email,
+			spec.password,
+			spec.profession,
+			spec.faction
+		);
+		credit(db, creado.id, spec.credits, { kind: 'adjustment', memo: 'Fondo de prueba' });
+		creados++;
+	}
+
+	return creados;
 }

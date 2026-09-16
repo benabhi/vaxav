@@ -18,15 +18,28 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from '../src/lib/server/db/schema';
 import { createPilot } from '../src/lib/server/services/pilots';
+import { ensureAdminRole, grantRole } from '../src/lib/server/services/roles';
 import { seedUniverse } from '../src/lib/server/services/universe';
 
 /** Dónde vive. Fuera de git, como la de desarrollo. */
 export const E2E_DATABASE = 'data/vaxav-e2e.db';
 
-/** El piloto con el que el humo recorre el juego. */
+/** El piloto con el que el humo recorre el juego. **Sin ninguna llave.** */
 export const PILOTO = {
 	callsign: 'Humo',
 	email: 'humo@ejemplo.com',
+	password: 'contrasena-larga'
+};
+
+/**
+ * Y uno con todas, para el cuartel general.
+ *
+ * Hacen falta los dos: con uno solo no se puede comprobar lo que más importa del
+ * guardia, que es que **al que no tiene llaves el área no le existe**.
+ */
+export const JEFE = {
+	callsign: 'Jefe',
+	email: 'jefe@ejemplo.com',
 	password: 'contrasena-larga'
 };
 
@@ -46,6 +59,9 @@ export default async function preparar(): Promise<void> {
 	migrate(db, { migrationsFolder: 'drizzle' });
 	seedUniverse(db);
 	await createPilot(db, PILOTO.callsign, PILOTO.email, PILOTO.password, 'miner', 'dominion');
+
+	const jefe = await createPilot(db, JEFE.callsign, JEFE.email, JEFE.password, 'miner', 'dominion');
+	grantRole(db, jefe.id, ensureAdminRole(db).id, null);
 
 	sqlite.close();
 }

@@ -20,6 +20,10 @@
  * orden caduca vuelve cuando su dueño aparece. Para los demás ya era invisible
  * desde el momento en que venció, porque el libro filtra por fecha.
  *
+ * Y acá se resuelven los **permisos de administración**, por la misma razón que
+ * todo lo demás: los mira el guardia del cuartel y los miran las pantallas para
+ * no ofrecer un botón que va a rebotar.
+ *
  * **Esto no protege nada por sí solo**: sólo averigua. Quién puede entrar a qué
  * lo decide el `+layout.server.ts` de cada grupo de rutas.
  */
@@ -32,6 +36,7 @@ import { pilot as pilotTable } from '$lib/server/db/schema';
 import { resolveIfDue } from '$lib/server/services/actions';
 import { sweepExpired } from '$lib/server/services/orders';
 import { pilotForToken } from '$lib/server/services/sessions';
+import { permissionsOf } from '$lib/server/services/roles';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get(SESSION_COOKIE) ?? '';
@@ -40,6 +45,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const found = token ? pilotForToken(db, token) : null;
 	event.locals.pilot = found;
 	event.locals.resolved = null;
+
+	// Las llaves del piloto, una sola vez por pedido. Las consulta el guardia del
+	// cuartel y también cada pantalla que decide si dibuja un botón, así que
+	// resolverlas en cada `load` sería la misma consulta repetida.
+	event.locals.permissions = found ? permissionsOf(db, found.id) : new Set();
 
 	if (found) {
 		// Primero lo vencido y después lo resuelto: una orden que caducó puede

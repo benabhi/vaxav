@@ -24,7 +24,13 @@ import {
 import { ACTION_KINDS } from '$lib/game/actions';
 import { CONTAINER_KINDS } from '$lib/game/items';
 import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
-import { BODY_KINDS, CORPORATION_KINDS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
+import {
+	BODY_KINDS,
+	CORPORATION_KINDS,
+	GATE_BEARINGS,
+	GOVERNMENTS,
+	STATION_SERVICES
+} from '$lib/game/universe';
 
 /** Ahora, en segundos desde la época. */
 const NOW = sql`(unixepoch())`;
@@ -186,10 +192,26 @@ export const system = sqliteTable(
 			.references(() => constellation.id),
 
 		/**
-		 * Cómo se gobierna. De acá sale la seguridad, que no se guarda: se calcula
-		 * con `securityFor`.
+		 * Cómo se gobierna.
+		 *
+		 * Ya no *fija* la seguridad: le fija la **banda** dentro de la cual puede
+		 * moverse. Así el gobierno significa algo por sí mismo —una colonia penal
+		 * está vigilada pero no protegida— en vez de ser otro nombre para el mismo
+		 * número.
 		 */
 		government: text('government', { enum: GOVERNMENTS }).notNull().default('corporate'),
+
+		/**
+		 * Cuánta protección hay, de 0 a 100.
+		 *
+		 * **Se guarda**, al revés que antes. Con cuatro niveles derivados del
+		 * gobierno, cincuenta sistemas caían en cuatro montones indistinguibles; la
+		 * doc ya prometía un gradiente y esto lo cumple. Lo que impide la
+		 * contradicción que preocupaba —«anarquía con seguridad alta»— no es que el
+		 * número no exista, es `securityProblem`, que lo valida contra la banda del
+		 * gobierno antes de dejarlo entrar.
+		 */
+		security: integer('security').notNull().default(0),
 
 		/**
 		 * Qué facción lo controla, **o vacío**. Vacío es espacio libre: como en
@@ -207,11 +229,29 @@ export const system = sqliteTable(
 		y: integer('y').notNull().default(0),
 		z: integer('z').notNull().default(0),
 
+		/**
+		 * De qué facción es éste el sistema **principal**, o vacío.
+		 *
+		 * Es un código de facción y no un booleano porque la pregunta que se le hace
+		 * no es «¿es capital?» sino «¿de quién?». Con un booleano habría que cruzarlo
+		 * siempre con `controlling_faction` para contestar, y nada impediría escribir
+		 * una capital de una facción que ni siquiera controla el sistema.
+		 *
+		 * El índice único lo hace cumplir: **una capital por facción**, y ninguna
+		 * restricción sobre los que no lo son.
+		 */
+		capitalOf: text('capital_of').notNull().default(''),
+
 		description: text('description').notNull().default('')
 	},
 	(table) => [
 		uniqueIndex('system_code_idx').on(table.code),
-		index('system_constellation_idx').on(table.constellationId)
+		index('system_constellation_idx').on(table.constellationId),
+		// Parcial: sin el filtro, todos los sistemas que no son capital chocarían
+		// entre sí por compartir la cadena vacía.
+		uniqueIndex('system_capital_idx')
+			.on(table.capitalOf)
+			.where(sql`${table.capitalOf} != ''`)
 	]
 );
 
@@ -305,6 +345,67 @@ export const station = sqliteTable(
 );
 
 /** Un servicio disponible en una estación. */
+/**
+ * A dónde lleva una puerta estelar.
+ *
+ * La puerta **es un cuerpo** —`body.kind = 'gate'`— y esto es sólo su destino.
+ * Se separa porque es una relación entre dos cuerpos, no un atributo de uno: un
+ * cuerpo tiene nombre y órbita, una puerta además tiene la otra punta.
+ *
+ * Apunta a **la puerta gemela y no al sistema**, porque lo que el salto necesita
+ * saber es dónde aparecés: llegar «a Vela» no alcanza, hay que llegar a un lugar
+ * de Vela. Son dos filas, una por extremo, y un test verifica que ninguna quede
+ * huérfana.
+ */
+export const gate = sqliteTable(
+	'gate',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		bodyId: integer('body_id')
+			.notNull()
+			.references(() => body.id),
+
+		/**
+		 * El sistema al que pertenece, repetido acá a propósito.
+		 *
+		 * Ya sale de `body.system_id`, y se guarda igual porque es la única forma de
+		 * que la base garantice **un rumbo por sistema**: un índice único no puede
+		 * cruzar dos tablas. Una puerta no se muda de sistema, así que la copia no
+		 * puede desfasarse.
+		 */
+		systemId: integer('system_id')
+			.notNull()
+			.references(() => system.id),
+
+		/**
+		 * Por qué lado se sale, de la roseta de ocho.
+		 *
+		 * Es para el mapa de la galaxia, que va a dibujarse como el de X4: cada
+		 * sistema una casilla y sus salidas apuntando hacia afuera. Sin rumbo, dos
+		 * puertas del mismo sistema no tienen dónde ponerse.
+		 */
+		bearing: text('bearing', { enum: GATE_BEARINGS }).notNull(),
+
+		/**
+		 * La puerta de la otra punta, **o nulo mientras no esté conectada**.
+		 *
+		 * Anulable porque el constructor trabaja por pasos: primero se planta la
+		 * puerta en el sistema y después se la enlaza, y a veces el sistema del otro
+		 * lado todavía no existe. Una puerta sin destino es una puerta que no lleva
+		 * a ninguna parte, que es un estado legítimo de una obra en curso.
+		 */
+		destinationId: integer('destination_id').references((): AnySQLiteColumn => body.id),
+
+		/** Cuánto hay que saltar, en décimas de año luz. Entero, como todo. */
+		jumpDistance: integer('jump_distance').notNull().default(0)
+	},
+	(table) => [
+		uniqueIndex('gate_body_idx').on(table.bodyId),
+		uniqueIndex('gate_rumbo_idx').on(table.systemId, table.bearing),
+		index('gate_destination_idx').on(table.destinationId)
+	]
+);
+
 export const stationService = sqliteTable(
 	'station_service',
 	{
@@ -1050,6 +1151,140 @@ export const asteroidSurvey = sqliteTable(
 	(table) => [uniqueIndex('asteroid_survey_unico').on(table.pilotId, table.asteroidId)]
 );
 
+/**
+ * Un rol: un manojo de permisos con nombre.
+ *
+ * **Los roles son filas y los permisos no.** Un permiso es la llave que algún
+ * `if` del servidor consulta, así que inventarlo desde un panel sería una
+ * casilla que no abre nada; un rol, en cambio, es una manera de agrupar llaves y
+ * tiene todo el sentido armarlo sin desplegar código.
+ *
+ * `builtin` marca los que trae la siembra. No se pueden borrar ni renombrar
+ * —quedarse sin el rol de administrador es quedarse afuera del cuartel— pero sí
+ * se les pueden cambiar los permisos: el día que el catálogo crezca, el
+ * administrador tiene que poder recibir las llaves nuevas.
+ */
+export const role = sqliteTable(
+	'role',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		/** Corto y estable: es lo que el código nombra cuando necesita uno. */
+		code: text('code').notNull(),
+		name: text('name').notNull(),
+		description: text('description').notNull().default(''),
+		builtin: integer('builtin', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [uniqueIndex('role_code_idx').on(table.code)]
+);
+
+/**
+ * Una llave que lleva un rol.
+ *
+ * Una fila por permiso en vez de una lista guardada en una columna: así se puede
+ * preguntar quién tiene tal permiso sin leer todos los roles y desarmar textos,
+ * que es la consulta que va a hacer falta el día que alguien pregunte quién
+ * puede borrar cuentas.
+ */
+export const rolePermission = sqliteTable(
+	'role_permission',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		roleId: integer('role_id')
+			.notNull()
+			.references(() => role.id),
+		/** Un código del catálogo de `$lib/permissions.ts`. */
+		permission: text('permission').notNull()
+	},
+	(table) => [uniqueIndex('role_permission_unico').on(table.roleId, table.permission)]
+);
+
+/**
+ * Qué roles tiene un piloto.
+ *
+ * Varios por piloto a propósito: los oficios de administración se acumulan —el
+ * que modera también puede mirar estadísticas— y un solo rol por cuenta obligaría
+ * a inventar un rol combinado por cada mezcla que haga falta.
+ *
+ * Queda escrito **quién lo dio y cuándo**. Repartir poder es de las cosas que hay
+ * que poder auditar, y el registro de eventos guarda el hecho pero esto guarda el
+ * estado: con sólo el registro, saber quién le dio el rol a alguien obligaría a
+ * recorrer el historial entero.
+ */
+export const pilotRole = sqliteTable(
+	'pilot_role',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		roleId: integer('role_id')
+			.notNull()
+			.references(() => role.id),
+		/** Quién se lo dio, o nulo si lo puso la siembra. */
+		grantedBy: integer('granted_by').references(() => pilot.id),
+		grantedAt: integer('granted_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		uniqueIndex('pilot_role_unico').on(table.pilotId, table.roleId),
+		index('pilot_role_pilot_idx').on(table.pilotId)
+	]
+);
+
+/**
+ * El registro de lo que pasó: quién hizo qué, cuándo y sobre qué.
+ *
+ * Es **append-only**: no se edita ni se borra una fila. Un registro que se puede
+ * retocar no sirve para lo único que sirve un registro, que es creerle cuando
+ * algo no cierra.
+ *
+ * Guarda `kind` y un JSON, y **no la frase ya escrita**. Es la misma decisión que
+ * toma la bitácora del piloto y por la misma razón: cambiar cómo se redacta un
+ * evento no debería obligar a reescribir el pasado, y un historial con dos
+ * redacciones distintas del mismo hecho se lee como si fueran dos hechos.
+ *
+ * El actor es **anulable**: hay cosas que no las hace nadie —una orden que
+ * caduca, la siembra que crea el universo— y forzar un responsable inventaría
+ * uno.
+ */
+export const auditEvent = sqliteTable(
+	'audit_event',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		/** Un código del catálogo de eventos. */
+		kind: text('kind').notNull(),
+		/**
+		 * Quién lo hizo, o nulo si no lo hizo nadie.
+		 *
+		 * **Sin clave foránea**, igual que el sujeto y por lo mismo: el día que una
+		 * cuenta se da de baja, todo lo que esa cuenta hizo tiene que seguir
+		 * constando. Con una foránea habría que elegir entre borrar su historial o
+		 * dejarlo anónimo, y las dos cosas son lo contrario de un registro. El
+		 * nombre se guarda además en el JSON, así que la fila se lee completa
+		 * aunque el piloto ya no exista.
+		 */
+		actorId: integer('actor_id'),
+		/**
+		 * Sobre qué fue, en dos campos sueltos y sin clave foránea.
+		 *
+		 * Sin foránea a propósito: el registro tiene que sobrevivir a lo que
+		 * describe. Un evento que dice "se borró la cuenta 7" apunta a una fila que
+		 * ya no existe, y con una foránea o no se podría escribir o se borraría con
+		 * ella, que es exactamente lo contrario de para qué está.
+		 */
+		subjectKind: text('subject_kind').notNull().default(''),
+		subjectId: integer('subject_id'),
+		/** Los datos del hecho, para poder redactarlo después. */
+		payload: text('payload').notNull().default('{}'),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		index('audit_event_fecha_idx').on(table.createdAt),
+		index('audit_event_kind_idx').on(table.kind),
+		index('audit_event_actor_idx').on(table.actorId)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -1063,6 +1298,7 @@ export type Body = typeof body.$inferSelect;
 export type Corporation = typeof corporation.$inferSelect;
 export type Station = typeof station.$inferSelect;
 export type StationService = typeof stationService.$inferSelect;
+export type Gate = typeof gate.$inferSelect;
 export type Agent = typeof agent.$inferSelect;
 export type Ship = typeof ship.$inferSelect;
 export type FittedModule = typeof fittedModule.$inferSelect;
@@ -1078,3 +1314,7 @@ export type MarketOrder = typeof marketOrder.$inferSelect;
 export type MarketTrade = typeof marketTrade.$inferSelect;
 export type Asteroid = typeof asteroid.$inferSelect;
 export type AsteroidSurvey = typeof asteroidSurvey.$inferSelect;
+export type Role = typeof role.$inferSelect;
+export type RolePermission = typeof rolePermission.$inferSelect;
+export type PilotRole = typeof pilotRole.$inferSelect;
+export type AuditEvent = typeof auditEvent.$inferSelect;

@@ -13,6 +13,7 @@
 	action={data.action}
 	notice={data.notice}
 	notices={data.notices}
+	admin={data.admin}
 >
 	{@render children()}
 </GameShell>

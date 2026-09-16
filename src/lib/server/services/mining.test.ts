@@ -103,7 +103,13 @@ describe('sembrar de nuevo', () => {
 		expect(asteroidsAt(db, anillos.id).length).toBe(1);
 	});
 
-	it('pero sí actualiza el tope y el ritmo', () => {
+	/*
+	 * Antes sí los actualizaba, y dejó de hacerlo el día que el constructor pasó a
+	 * mandar sobre el plano: un tope cambiado desde el panel es una decisión de
+	 * quien lo cambió, y la siembra no tiene forma de saber si el plano es más
+	 * nuevo o más viejo. Ver `seedUniverse`.
+	 */
+	it('y tampoco pisa el tope ni el ritmo de un depósito que ya existe', () => {
 		const db = seededDb();
 		const anillos = getBody(db, 'anillos_anfora_iii')!;
 		db.update(beltDeposit)
@@ -113,7 +119,7 @@ describe('sembrar de nuevo', () => {
 
 		seedUniverse(db);
 
-		expect(depositFor(db, anillos.id, 'ferrous_silicate')!.capacity).toBeGreaterThan(1);
+		expect(depositFor(db, anillos.id, 'ferrous_silicate')!.capacity).toBe(1);
 	});
 });
 
