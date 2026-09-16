@@ -133,6 +133,37 @@ Y hay una consecuencia de orden: **el insumo entra con el verbo que lo gasta, no
 antes**. Agregar helio-3 sin la puerta que lo consume es fabricar un huérfano a
 propósito.
 
+### La cadena se muestra, o no existe
+
+Escribir la cadena es la mitad del trabajo. La otra mitad es que **el jugador la
+vea**, porque una cadena que sólo conoce el código se siente exactamente igual que
+el azar: aprietas un botón, a veces se puede y a veces no, y nadie sabe por qué.
+
+Tres reglas, y ninguna es opcional:
+
+1. **Toda acción que pida habilidades dice cuáles, ahí mismo.** No en una ficha
+   aparte ni en una ayuda: junto al botón, con el nivel que hace falta y el que se
+   tiene. Si falta, el motivo se lee sin buscarlo; si sobra, también, porque saber
+   que estás sobrado es parte de decidir qué mejorar después.
+2. **Toda acción que exista gracias a un módulo lo nombra.** Minar aparece porque
+   hay un láser montado, prospectar porque hay un escáner, saltar porque hay un
+   motor de salto y un tanque. El verbo tiene que llevar encima **de qué aparato
+   salió**, o el jugador no puede razonar al revés —«quiero hacer esto, ¿qué me
+   falta?»— que es justamente como se compra el próximo módulo.
+3. **Y al revés: lo que no se puede hacer dice por qué no se puede.** Un verbo que
+   directamente no aparece enseña menos que uno apagado con su motivo al lado. La
+   ficha de un módulo que no está montado también es información: es la lista de
+   lo que se abre si lo comprás.
+
+El caso testigo es el salto: el panel de la puerta dice la distancia, el alcance
+de la nave, cuánto tarda y cuánto quema **antes** de apretar, y cuando no se
+puede, el motivo sale de la misma función pura que usa el servidor para
+rechazarlo. El botón apagado y el rechazo del servidor dicen lo mismo, y el
+jugador nunca aprieta algo que va a rebotar.
+
+Dicho corto: **la cadena es la explicación de por qué el juego te deja o no te
+deja, y esa explicación es interfaz, no documentación.**
+
 ### Cada eslabón reusa lo que ya existe
 
 La cadena se alarga rápido, así que cada eslabón tiene que apoyarse en maquinaria

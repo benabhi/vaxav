@@ -441,6 +441,23 @@ una pantalla naranja se lleva el ojo antes que el aviso que hay que leer.
   de `src/lib/components/`. Esa es la razón de haber hecho el sistema de estilos
   antes que el juego.
 
+### Decir por qué se puede y por qué no
+
+La regla es de diseño y está escrita entera en
+[«La cadena»](../DESIGN.md#la-cadena-se-muestra-o-no-existe); acá está lo que le
+toca a la interfaz hacer con ella:
+
+- **Las habilidades que pide una acción van junto al botón**, con el nivel que
+  hace falta y el que se tiene. No en una ficha aparte.
+- **El módulo que habilita una acción se nombra** en la acción misma. Es lo que
+  deja razonar al revés —«quiero hacer esto, ¿qué me falta?»— que es como se
+  decide la próxima compra.
+- **Un verbo que no se puede usar se apaga con su motivo al lado**, en vez de
+  desaparecer. Uno que no está no enseña nada.
+- **El motivo lo decide una función pura que comparten pantalla y servicio**, así
+  el botón apagado y el rechazo del servidor dicen exactamente lo mismo.
+  `jumpProblem` es el caso testigo.
+
 ## Reglas de diseño
 
 - **El estado en curso nunca se esconde.** Se ve desde cualquier sección.

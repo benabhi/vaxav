@@ -7,7 +7,12 @@ la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas.
 insumo, fuente, aparato, llave, fábrica y lugar— y lo que no se cierra queda como
 huérfano: un atributo que sólo se dibuja, una habilidad que no mueve nada, un
 módulo que no pide nada. No hace falta cerrarla de una vez, pero sí saber dónde
-están los huecos. Ver «La cadena» en `docs/DESIGN.md`.
+están los huecos.
+
+Y **la cadena se muestra**: una acción que pide habilidades dice cuáles junto al
+botón, una que existe gracias a un módulo nombra ese módulo, y una que no se puede
+hacer dice por qué no. Una cadena que sólo conoce el código se siente igual que el
+azar. Ver «La cadena» en `docs/DESIGN.md`.
 
 ## Entorno
 
