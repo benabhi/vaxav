@@ -106,13 +106,20 @@
 		{/if}
 
 		<!--
-			La columna propia del cuerpo: por acá baja la línea hacia sus hijos. Va
-			vacía y sin nada encima; la flecha de plegar está al lado del nombre para
-			no cruzarle el trazo justo donde tiene que verse continuo.
+			La columna propia del cuerpo: por acá baja la línea hacia sus hijos.
+
+			**Arranca a la altura del brazo del codo**, que es el mismo alto al que
+			entra la línea del padre. Antes empezaba más abajo, debajo del ícono, y
+			quedaba colgando en el aire: nada la tocaba por arriba y la rama se veía
+			cortada justo en el punto donde tiene que verse continua. Con las dos a la
+			misma altura forman una T, y el trazo del padre al hijo no se interrumpe.
+
+			La flecha de plegar está al lado del nombre y no acá para no cruzarle el
+			trazo.
 		-->
 		<span class="relative w-[1rem] shrink-0 self-stretch">
 			{#if body.hasChildren && expanded}
-				{@render vertical('2.85rem', 'calc(100% - 2.85rem)')}
+				{@render vertical('1.725rem', 'calc(100% - 1.725rem)')}
 			{/if}
 		</span>
 
