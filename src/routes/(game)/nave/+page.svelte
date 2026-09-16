@@ -40,6 +40,7 @@
 	import { roundHalfEven } from '$lib/game/math';
 	import { DAMAGE_TYPES } from '$lib/game/damage';
 	import { buildReadout, fitFromCodes, maxedSkills } from '$lib/game/fitting';
+	import { jumpsWithFuel } from '$lib/game/jumps';
 	import { SLOT_KINDS, getHull } from '$lib/game/hulls';
 	import { availableForSlot } from '$lib/game/inventory';
 	import { getModule } from '$lib/game/modules';
@@ -107,6 +108,18 @@
 
 	/** Lo que los paneles dibujan: la simulación si la hay, y si no lo que hay. */
 	let hoja = $derived(futuro ?? readout);
+
+	/**
+	 * Lo que hay en el tanque, acotado a lo que entra.
+	 *
+	 * Se acota porque desmontar un tanque deja la nave con más combustible del que
+	 * puede llevar hasta que el servicio lo recorte, y una ficha que dice
+	 * `140 / 120` se lee como un error del juego.
+	 */
+	let combustible = $derived(Math.min(ship.fuel, hoja.fuel));
+
+	/** Los saltos que permite lo que hay, no lo que entraría con el tanque lleno. */
+	let saltos = $derived(jumpsWithFuel(combustible, hoja.mass));
 
 	/**
 	 * Cuánto cambiaría una magnitud, o `null` si no cambia.
@@ -275,10 +288,13 @@
 			lowerIsBetter: false
 		},
 		{
+			// **Los saltos que puede hacer ahora**, no los que entrarían con el tanque
+			// lleno. La ficha de una nave a medio tanque que promete la autonomía de
+			// una llena es la clase de cifra que deja a alguien tirado.
 			label: 'Saltos',
-			value: String(hoja.jumps),
+			value: String(saltos),
 			unit: '',
-			delta: cambio(readout.jumps, hoja.jumps),
+			delta: cambio(jumpsWithFuel(combustible, readout.mass), saltos),
 			lowerIsBetter: false
 		}
 	]);
@@ -292,11 +308,19 @@
 			lowerIsBetter: false
 		},
 		{
+			// Lo que hay sobre lo que entra, con su barra: es la misma forma que los
+			// presupuestos de potencia y cómputo, y por la misma razón — lo que
+			// importa no es la cifra sola sino cuánto margen queda.
+			//
+			// La diferencia que marca el simulador es la de la **capacidad**, que es
+			// lo que cambia al montar un tanque; lo que hay adentro no lo mueve
+			// ningún módulo.
 			label: 'Combustible',
-			value: String(hoja.fuel),
+			value: `${combustible} / ${hoja.fuel}`,
 			unit: '',
 			delta: cambio(readout.fuel, hoja.fuel),
-			lowerIsBetter: false
+			lowerIsBetter: false,
+			percent: hoja.fuel > 0 ? Math.round((combustible * 100) / hoja.fuel) : 0
 		},
 		{
 			label: 'Sensores',
@@ -417,7 +441,15 @@
 			<Label>{row.label}</Label>
 			<div class="grow"></div>
 			{@render chip(row.delta ?? null, row.lowerIsBetter ?? false)}
-			<span class="font-mono text-[0.88rem] {row.over ? 'text-danger' : 'text-data'}">
+			<!--
+				Sin cortar: un valor de dos partes —`120 / 120`, `12 / 40`— parte en dos
+				renglones apenas las cifras crecen, y la fila deja de leerse como una
+				línea de tablero. El espacio lo cede el hueco de la izquierda, que para
+				eso está.
+			-->
+			<span
+				class="font-mono text-[0.88rem] whitespace-nowrap {row.over ? 'text-danger' : 'text-data'}"
+			>
 				{row.value}
 			</span>
 			<!--

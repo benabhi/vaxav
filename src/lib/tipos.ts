@@ -313,6 +313,14 @@ export interface Nave {
 	/** Un código de módulo por ranura. Vacío quiere decir ranura libre. */
 	readonly fitted: readonly string[];
 	readonly pilotLevels: Readonly<Record<string, number>>;
+	/**
+	 * Lo que le queda en el tanque.
+	 *
+	 * Es el contenido; la capacidad la calcula la ficha con el equipamiento. Van
+	 * separados porque cambian por motivos distintos: la capacidad al montar un
+	 * tanque, el contenido al saltar.
+	 */
+	readonly fuel: number;
 	/** Dónde está atracado el piloto y qué módulos tiene ese lugar. */
 	readonly stationName: string;
 	/**

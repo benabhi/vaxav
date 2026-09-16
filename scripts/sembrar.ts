@@ -15,7 +15,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../src/lib/server/db/schema';
 import { SEED_PILOTS, ensureSeedPilots, findByCallsign } from '../src/lib/server/services/pilots';
 import { ensureAdminRole, grantRole } from '../src/lib/server/services/roles';
-import { ensureEveryPilotHasAShip } from '../src/lib/server/services/ships';
+import { ensureEveryPilotHasAShip, ensureEveryShipHasFuel } from '../src/lib/server/services/ships';
 import { seedUniverse } from '../src/lib/server/services/universe';
 
 const url = process.env.DATABASE_URL;
@@ -36,6 +36,11 @@ conteo['pilotos de prueba'] = await ensureSeedPilots(db);
 // Arreglarlos desde una migración sería escribir datos desde donde sólo va el
 // esquema.
 conteo['naves repartidas'] = ensureEveryPilotHasAShip(db);
+
+// Y las que quedaron con el tanque en cero porque nacieron antes de que el
+// tanque existiera. Sólo las vacías: una a medio tanque saltó, y rellenarla
+// sería regalar combustible en cada siembra.
+conteo['tanques llenados'] = ensureEveryShipHasFuel(db);
 
 // El rol de administrador y su dueño. Se rehace en cada corrida porque el
 // catálogo de permisos crece con el código: un administrador al que le faltara

@@ -484,6 +484,20 @@ export const ship = sqliteTable(
 		name: text('name').notNull().default(''),
 
 		/**
+		 * Lo que le queda en el tanque.
+		 *
+		 * **Es el contenido, no la capacidad.** La capacidad la calcula el
+		 * equipamiento —sale del casco más los módulos— y vive en la ficha; esto es
+		 * cuánto hay ahora, que es estado de la partida y por eso está en la base.
+		 *
+		 * Sólo se gasta **saltando**. Moverse dentro de un sistema no consume nada,
+		 * y eso es a propósito: un piloto sin combustible se queda sin poder salir
+		 * del sistema, no tirado en el vacío. La peor situación posible es estar en
+		 * un lugar donde todavía se puede minar, vender y comprar.
+		 */
+		fuel: integer('fuel').notNull().default(0),
+
+		/**
 		 * Cuál está usando. Una bandera y no una nave única por piloto: tener
 		 * varias es "por decidir" en docs/systems/SHIPS.md, y así la puerta queda
 		 * abierta sin costar nada hoy.

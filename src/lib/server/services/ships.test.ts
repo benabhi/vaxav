@@ -29,11 +29,16 @@ import { EMPTY } from '$lib/game/modules';
 import {
 	ShipError,
 	activeShip,
+	burnFuel,
 	createStarterShip,
 	ensureEveryPilotHasAShip,
+	ensureEveryShipHasFuel,
+	fill,
+	fuelCapacity,
 	pilotSkillLevels,
 	refit,
 	saveFit,
+	setFuel,
 	shipFit,
 	shipHull,
 	shipReadout
@@ -429,5 +434,66 @@ describe('lo que el piloto no sabe usar', () => {
 		// esto, saber usar cada módulo decide si se puede viajar, minar o escanear.
 		expect(hoja.flyable).toBe(false);
 		expect(hoja.problems.join(' · ')).toContain('Minería II');
+	});
+});
+
+describe('el tanque', () => {
+	/*
+	 * Una nave nueva vacía sería un piloto que no puede saltar y no sabe por qué:
+	 * el combustible no se ve hasta abrir la ficha, y nadie la abre antes del
+	 * primer viaje.
+	 */
+	it('una nave nueva sale del astillero llena', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		expect(nave.fuel).toBe(fuelCapacity(db, nave));
+		expect(nave.fuel).toBeGreaterThan(0);
+	});
+
+	it('gastar le saca del tanque y nunca lo deja en negativo', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+
+		const despues = burnFuel(db, nave, 10);
+		expect(despues.fuel).toBe(nave.fuel - 10);
+
+		expect(burnFuel(db, despues, 100_000).fuel).toBe(0);
+	});
+
+	/*
+	 * Desmontar un tanque deja la nave con más combustible del que puede llevar.
+	 * Se recorta en vez de fallar: no tiene por qué tumbar lo que el piloto
+	 * estaba haciendo.
+	 */
+	it('no deja más combustible del que entra', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const capacidad = fuelCapacity(db, nave);
+
+		expect(setFuel(db, nave, capacidad + 500).fuel).toBe(capacidad);
+	});
+
+	it('llenar lo deja al tope', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const vacia = burnFuel(db, nave, 100_000);
+
+		expect(fill(db, vacia).fuel).toBe(fuelCapacity(db, nave));
+	});
+
+	/* Sólo las vacías: una a medio tanque saltó, y rellenarla sería un regalo. */
+	it('el relleno de la siembra no toca una nave a medio tanque', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const usada = burnFuel(db, nave, 10);
+
+		expect(ensureEveryShipHasFuel(db)).toBe(0);
+		expect(activeShip(db, piloto.id)!.fuel).toBe(usada.fuel);
 	});
 });

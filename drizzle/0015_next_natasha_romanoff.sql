@@ -1,0 +1,1 @@
+ALTER TABLE `ship` ADD `fuel` integer DEFAULT 0 NOT NULL;

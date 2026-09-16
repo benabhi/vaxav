@@ -64,7 +64,49 @@ export function createStarterShip(db: Db, pilotId: number, hullCode = STARTING_H
 		.filter((row) => row.moduleCode !== '');
 	if (rows.length) db.insert(fittedModule).values(rows).run();
 
-	return created;
+	// **Sale del astillero con el tanque lleno.** Una nave nueva vacía sería un
+	// piloto que no puede saltar y no sabe por qué: el combustible no se ve hasta
+	// que se abre la ficha, y nadie abre la ficha antes del primer viaje.
+	return fill(db, created);
+}
+
+/**
+ * La capacidad del tanque de una nave.
+ *
+ * Sale del **equipamiento**, no del casco: un tanque montado la sube. Por eso hay
+ * que leer la configuración para saberla, y por eso no se guarda.
+ *
+ * Se calcula sin niveles de habilidad porque hoy **ninguna toca la capacidad**:
+ * los bonos llegan al alcance, a la bodega y a la velocidad, no al tanque. El día
+ * que alguno lo haga, hay que pasarle los del piloto acá.
+ */
+export function fuelCapacity(db: Db, row: Ship): number {
+	return buildReadout(shipHull(row), shipFit(db, row), {}).fuel;
+}
+
+/** Le llena el tanque hasta donde le da la capacidad. */
+export function fill(db: Db, row: Ship): Ship {
+	return setFuel(db, row, fuelCapacity(db, row));
+}
+
+/**
+ * Le deja el tanque en esa cantidad, acotada entre cero y su capacidad.
+ *
+ * Acota en vez de fallar porque los dos extremos pasan solos: desmontar un tanque
+ * deja la nave con más combustible del que puede llevar, y un consumo mal
+ * calculado la dejaría en negativo. Ninguna de las dos cosas tiene por qué tumbar
+ * lo que el piloto estaba haciendo.
+ */
+export function setFuel(db: Db, row: Ship, units: number): Ship {
+	const capacidad = fuelCapacity(db, row);
+	const puesto = Math.min(Math.max(0, Math.trunc(units)), capacidad);
+
+	return db.update(ship).set({ fuel: puesto }).where(eq(ship.id, row.id)).returning().get();
+}
+
+/** Le saca combustible del tanque. Nunca lo deja en negativo. */
+export function burnFuel(db: Db, row: Ship, units: number): Ship {
+	return setFuel(db, row, row.fuel - Math.max(0, Math.trunc(units)));
 }
 
 /** El casco de una nave, o un error que dice cuál falta del catálogo. */
@@ -169,6 +211,26 @@ export function ensureEveryPilotHasAShip(db: Db): number {
 		}
 	}
 	return created;
+}
+
+/**
+ * Le llena el tanque a toda nave que lo tenga vacío, y devuelve cuántas tocó.
+ *
+ * Existe por la misma razón que el reparto de naves: las que se crearon antes de
+ * que el tanque existiera quedaron en cero, y un piloto que no puede saltar
+ * porque su nave nació sin combustible no tiene forma de enterarse de por qué.
+ *
+ * **Sólo toca las que están en cero.** Una nave a medio tanque es el resultado de
+ * haber saltado, y rellenarla sería regalar combustible en cada siembra.
+ */
+export function ensureEveryShipHasFuel(db: Db): number {
+	let filled = 0;
+	for (const row of db.select().from(ship).all()) {
+		if (row.fuel > 0) continue;
+		fill(db, row);
+		filled += 1;
+	}
+	return filled;
 }
 
 /**
