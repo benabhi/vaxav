@@ -18,7 +18,9 @@ import { deskFor } from '../services/market';
 import { placeBuyOrder, placeSellOrder } from '../services/orders';
 import { activeShip } from '../services/ships';
 import { credit } from '../services/wallet';
-import { buildMarketView, marketStations } from './market';
+import { getBody } from '../services/universe';
+import { constellationsIn, createBody, createSystem, setStation } from '../services/worldbuilding';
+import { buildMarketView, marketStations, systemOf } from './market';
 import type { Db } from '../db/types';
 
 /** Un piloto parado donde se diga, con lo que se diga en la bodega. */
@@ -104,6 +106,56 @@ describe('el catálogo', () => {
 		// La Planta Escarcha refina pero no comercia.
 		expect(conMercado).not.toContain('Planta Escarcha');
 		expect(conMercado).toContain('Puerto Ánfora');
+	});
+
+	/*
+	 * Mientras no exista el salto entre sistemas, una orden de otro sistema es un
+	 * trato que nadie puede tomar. Y además la distancia entre dos cuerpos de
+	 * sistemas distintos no existe: mostrarla no era sólo inútil, tumbaba la
+	 * pantalla con un 500 apenas hubo un segundo sistema.
+	 */
+	it('no alcanza las de otro sistema', () => {
+		const db = seededDb();
+		const vela = createSystem(
+			db,
+			{
+				name: 'Vela',
+				constellationId: constellationsIn(db)[0].id,
+				government: 'corporate',
+				security: 70,
+				controllingFaction: 'dominion',
+				capitalOf: '',
+				description: '',
+				x: 10,
+				y: 0,
+				z: 0
+			},
+			null
+		);
+
+		const muelle = createBody(
+			db,
+			vela.system.id,
+			{
+				name: 'Muelle Largo',
+				kind: 'station',
+				parentId: vela.star.id,
+				orbitDistance: 5,
+				description: '',
+				explored: true
+			},
+			null
+		);
+		setStation(db, muelle.id, 'casa_verlan', ['market'], null);
+
+		// Sin recorte, las de los dos sistemas.
+		expect(marketStations(db).map((una) => una.name)).toContain('Muelle Largo');
+
+		// Recortado al sistema de Ánfora, sólo las de Ánfora.
+		const anfora = getBody(db, 'puerto_anfora')!;
+		const desdeAnfora = marketStations(db, systemOf(db, anfora.id)).map((una) => una.name);
+		expect(desdeAnfora).toContain('Puerto Ánfora');
+		expect(desdeAnfora).not.toContain('Muelle Largo');
 	});
 });
 

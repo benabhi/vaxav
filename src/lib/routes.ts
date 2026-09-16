@@ -31,5 +31,15 @@ export const CORPORATION_ROUTE = '/corporacion';
  */
 export const OPTIONS_ROUTE = '/opciones';
 
+/**
+ * Donde termina un piloto sancionado.
+ *
+ * Tiene pantalla propia y no es un error del ingreso porque hay que decirle tres
+ * cosas —qué tiene, por qué y hasta cuándo— y porque la sanción puede caerle con
+ * la sesión ya abierta: sin un lugar a donde mandarlo, el juego lo rebotaría a
+ * una pantalla de ingreso que no explica nada.
+ */
+export const SUSPENDED_ROUTE = '/suspendido';
+
 /** A dónde va el piloto apenas entra. */
 export const HOME_ROUTE = PILOT_ROUTE;

@@ -31,6 +31,7 @@ import {
 	GOVERNMENTS,
 	STATION_SERVICES
 } from '$lib/game/universe';
+import { SANCTION_KINDS } from '$lib/sanctions';
 
 /** Ahora, en segundos desde la época. */
 const NOW = sql`(unixepoch())`;
@@ -1164,6 +1165,69 @@ export const asteroidSurvey = sqliteTable(
  * se les pueden cambiar los permisos: el día que el catálogo crezca, el
  * administrador tiene que poder recibir las llaves nuevas.
  */
+/**
+ * Una sanción sobre una cuenta: un aviso, una suspensión o un baneo.
+ *
+ * **Es una tabla y no dos columnas en el piloto**, y la razón es la pregunta que
+ * se hace siempre al moderar: «¿ya lo habíamos suspendido antes?». Con dos
+ * columnas, el estado actual pisa al anterior y esa pregunta sólo se puede
+ * contestar recorriendo el registro de eventos a mano.
+ *
+ * El registro guarda **el hecho** —quién sancionó a quién y cuándo— y esto guarda
+ * **el estado**: cuáles siguen puestas, cuál vence cuándo, cuál se levantó. Es el
+ * mismo reparto que con los roles de un piloto, y por la misma razón.
+ *
+ * Una cuenta puede tener varias vigentes a la vez y eso es correcto: un aviso no
+ * impide nada, así que convive con una suspensión. Cuál le cierra la puerta lo
+ * decide `blockingSanction`, que es una función pura.
+ */
+export const sanction = sqliteTable(
+	'sanction',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+
+		kind: text('kind', { enum: SANCTION_KINDS }).notNull(),
+
+		/**
+		 * Por qué.
+		 *
+		 * Obligatorio, y no por burocracia: es lo primero que reclama quien la
+		 * recibe, y lo primero que busca quien la revisa seis meses después.
+		 */
+		reason: text('reason').notNull(),
+
+		/**
+		 * Hasta cuándo, o nulo si no vence.
+		 *
+		 * Sólo la suspensión lo lleva. Una suspensión sin fecha sería un baneo con
+		 * otro nombre, y un baneo con fecha sería una suspensión; la regla la hace
+		 * cumplir `sanctionProblem`.
+		 */
+		until: integer('until', { mode: 'timestamp' }),
+
+		/**
+		 * Quién la puso, **sin clave foránea**.
+		 *
+		 * Igual que en el registro de eventos: el administrador que sancionó puede
+		 * darse de baja después, y su firma tiene que seguir ahí. El nombre se
+		 * guarda al lado por lo mismo.
+		 */
+		issuedBy: integer('issued_by'),
+		issuedByName: text('issued_by_name').notNull().default(''),
+
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW),
+
+		/** Cuándo se la levantó a mano, y quién. Nulo mientras siga puesta. */
+		liftedAt: integer('lifted_at', { mode: 'timestamp' }),
+		liftedBy: integer('lifted_by'),
+		liftedByName: text('lifted_by_name').notNull().default('')
+	},
+	(table) => [index('sanction_pilot_idx').on(table.pilotId)]
+);
+
 export const role = sqliteTable(
 	'role',
 	{
@@ -1299,6 +1363,7 @@ export type Corporation = typeof corporation.$inferSelect;
 export type Station = typeof station.$inferSelect;
 export type StationService = typeof stationService.$inferSelect;
 export type Gate = typeof gate.$inferSelect;
+export type Sanction = typeof sanction.$inferSelect;
 export type Agent = typeof agent.$inferSelect;
 export type Ship = typeof ship.$inferSelect;
 export type FittedModule = typeof fittedModule.$inferSelect;

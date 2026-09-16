@@ -193,6 +193,59 @@ describe('borrar un sistema', () => {
 	});
 
 	/*
+	 * Las claves foráneas están activas y `body.parent_id` apunta a otro cuerpo:
+	 * borrar un planeta antes que su luna revienta la restricción a mitad de la
+	 * transacción. El orden en que salen de la consulta no es el del árbol.
+	 */
+	it('se lleva un árbol de varios niveles sin romper las foráneas', () => {
+		const db = seededDb();
+		const { system, star } = createSystem(db, borrador(db), null);
+
+		const planeta = createBody(
+			db,
+			system.id,
+			{
+				name: 'Vela I',
+				kind: 'planet',
+				parentId: star.id,
+				orbitDistance: 40,
+				description: '',
+				explored: true
+			},
+			null
+		);
+		const luna = createBody(
+			db,
+			system.id,
+			{
+				name: 'Vela I-a',
+				kind: 'moon',
+				parentId: planeta.id,
+				orbitDistance: 3,
+				description: '',
+				explored: true
+			},
+			null
+		);
+		createBody(
+			db,
+			system.id,
+			{
+				name: 'Muelle Hondo',
+				kind: 'station',
+				parentId: luna.id,
+				orbitDistance: 1,
+				description: '',
+				explored: true
+			},
+			null
+		);
+
+		expect(() => deleteSystem(db, system.id, null)).not.toThrow();
+		expect(bodiesOf(db, system.id)).toHaveLength(0);
+	});
+
+	/*
 	 * Borrar el sistema donde está parado alguien lo dejaría apuntando a una fila
 	 * que no existe, y no hay pantalla desde donde sacarlo de ahí.
 	 */

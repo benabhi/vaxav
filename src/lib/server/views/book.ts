@@ -26,7 +26,7 @@ import { bodyDistance } from '../services/universe';
 import { activeShip } from '../services/ships';
 import { priceHistory } from '../services/trades';
 import { aliveNow } from '../services/orders';
-import { marketStations } from './market';
+import { marketStations, systemOf } from './market';
 import { getItem } from '$lib/game/items';
 import { thousands } from '$lib/format';
 import type { LibroMercado, OrdenMercado } from '$lib/tipos';
@@ -93,7 +93,9 @@ function playerRow(
 export function buildBookView(db: Db, row: Pilot, itemCode: string): LibroMercado {
 	const item = getItem(itemCode);
 	const desk = deskFor(db, row);
-	const estaciones = marketStations(db);
+	// Sólo las del sistema donde está parado: una orden de otro sistema es un
+	// trato que nadie puede tomar mientras no exista el salto.
+	const estaciones = marketStations(db, systemOf(db, row.locationId));
 	const porId = new Map(estaciones.map((estacion) => [estacion.stationId, estacion]));
 
 	/** Cuán lejos está cada estación del piloto, calculado una vez por estación. */

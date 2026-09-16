@@ -16,7 +16,7 @@
 	llegar; acá, de qué cuelga y qué lo retiene.
 -->
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { submitting } from '$lib/forms.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import GateRose from '$lib/components/admin/GateRose.svelte';
 	import SelectField from '$lib/components/admin/SelectField.svelte';
@@ -38,6 +38,15 @@
 
 	let { data, form }: PageProps = $props();
 
+	/**
+	 * Un solo control de envío para toda la pantalla.
+	 *
+	 * Compartido a propósito: son formularios que escriben sobre la misma fila,
+	 * y dos envíos en paralelo pueden pisarse. Mientras uno viaja, los demás
+	 * botones se apagan.
+	 */
+	const envio = submitting();
+
 	let sistema = $derived(data.constructor);
 	let opciones = $derived(sistema.options);
 
@@ -55,8 +64,14 @@
 		if (elegido !== null && !sistema.bodies.some((uno) => uno.id === elegido)) elegido = null;
 	});
 
-	/** Qué formulario está abierto en la columna derecha. */
-	let modo = $state<'ficha' | 'agregar' | 'sistema'>('ficha');
+	/**
+	 * Qué formulario está abierto en la columna derecha.
+	 *
+	 * `raiz` es el alta de otra estrella: un sistema binario tiene dos soles y cada
+	 * uno cuelga lo suyo. Va aparte de `agregar` porque lo nuevo no orbita nada, y
+	 * mezclarlas obligaría a un «de qué cuelga: de nada» que no se entiende.
+	 */
+	let modo = $state<'ficha' | 'agregar' | 'raiz' | 'sistema'>('ficha');
 
 	/** Lo que el formulario de alta tiene cargado. */
 	let nuevoTipo = $state('planet');
@@ -71,8 +86,8 @@
 	/** De qué cuerpo colgaría lo nuevo: de lo elegido, o de la estrella. */
 	let padre = $derived(cuerpo ?? sistema.bodies[0] ?? null);
 
-	/** Qué puede colgar de ahí. Si no puede nada, no hay nada que ofrecer. */
-	let admitidos = $derived(padre?.accepts ?? []);
+	/** Qué puede colgar de ahí. En la raíz, lo que se planta sin orbitar nada. */
+	let admitidos = $derived(modo === 'raiz' ? sistema.rootKinds : (padre?.accepts ?? []));
 
 	// El tipo elegido tiene que ser uno de los que el padre admite: al cambiar de
 	// fila, el que estaba puesto puede dejar de tener sentido.
@@ -94,15 +109,17 @@
 	 * que un planeta con un cinturón y dos lunas propone `-c` para la tercera.
 	 */
 	let sugerido = $derived.by(() => {
-		if (!padre) return '';
+		const enRaiz = modo === 'raiz';
+		if (!enRaiz && !padre) return '';
 
 		const hermanos = sistema.bodies.filter(
-			(uno) => uno.parentId === padre.id && uno.kind === nuevoTipo
+			(uno) =>
+				uno.kind === nuevoTipo && (enRaiz ? uno.parentId === null : uno.parentId === padre?.id)
 		).length;
 
 		return suggestedBodyName(nuevoTipo as BodyKind, {
 			systemName: sistema.name,
-			parentName: padre.name,
+			parentName: enRaiz ? undefined : padre?.name,
 			siblings: hermanos,
 			bearingName: sistema.bearings.find((uno) => uno.value === nuevoRumbo)?.label
 		});
@@ -323,18 +340,35 @@
 				{/each}
 			</div>
 
-			<HudButton
-				variant="primary"
-				class="mt-3 shrink-0"
-				disabled={admitidos.length === 0}
-				onclick={() => {
-					modo = 'agregar';
-					nombreTocado = false;
-				}}
-			>
-				<Icon name="check" weight="bold" size="0.75rem" />
-				{padre && padre.id === elegido ? `Colgar de ${padre.name}` : 'Agregar un cuerpo'}
-			</HudButton>
+			<div class="mt-3 flex shrink-0 flex-wrap items-center gap-2">
+				<HudButton
+					variant="primary"
+					disabled={(padre?.accepts ?? []).length === 0}
+					onclick={() => {
+						modo = 'agregar';
+						nombreTocado = false;
+					}}
+				>
+					<Icon name="check" weight="bold" size="0.75rem" />
+					{padre && padre.id === elegido ? `Colgar de ${padre.name}` : 'Agregar un cuerpo'}
+				</HudButton>
+
+				<!--
+					Otra estrella, en la raíz. Un sistema binario tiene dos soles y de cada
+					uno cuelga lo suyo; el árbol ya sabía dibujar varias raíces desde el
+					principio, lo que faltaba era poder crearlas.
+				-->
+				<HudButton
+					onclick={() => {
+						modo = 'raiz';
+						nuevoTipo = 'star';
+						nombreTocado = false;
+					}}
+				>
+					<Icon name="sun" weight="bold" size="0.75rem" />
+					Otra estrella
+				</HudButton>
+			</div>
 		</TitledPanel>
 	</div>
 
@@ -343,15 +377,22 @@
 		<TitledPanel
 			title={modo === 'sistema'
 				? 'Datos del sistema'
-				: modo === 'agregar'
-					? 'Agregar un cuerpo'
-					: (cuerpo?.name ?? 'Nada elegido')}
+				: modo === 'raiz'
+					? 'Agregar una estrella'
+					: modo === 'agregar'
+						? 'Agregar un cuerpo'
+						: (cuerpo?.name ?? 'Nada elegido')}
 			detail={modo === 'ficha' && cuerpo ? cuerpo.kindLabel : ''}
 			class="flex min-h-0 w-full flex-col md:h-full"
 		>
 			<div class="min-h-0 w-full grow overflow-y-auto pr-1">
 				{#if modo === 'sistema'}
-					<form method="POST" action="?/sistema" use:enhance class="flex w-full flex-col gap-5">
+					<form
+						method="POST"
+						action="?/sistema"
+						use:envio.enhance
+						class="flex w-full flex-col gap-5"
+					>
 						<TextField label="Nombre" name="name" value={sistema.name} required />
 						<SelectField
 							label="Constelación"
@@ -424,14 +465,24 @@
 							<TextField label="Z" name="z" type="number" value={String(sistema.z)} />
 						</div>
 
-						<HudButton type="submit" variant="primary">Guardar</HudButton>
+						<HudButton type="submit" busy={envio.busy} variant="primary">Guardar</HudButton>
 					</form>
-				{:else if modo === 'agregar' && padre}
-					<form method="POST" action="?/cuerpo" use:enhance class="flex w-full flex-col gap-5">
-						<input type="hidden" name="parentId" value={padre.id} />
+				{:else if (modo === 'agregar' && padre) || modo === 'raiz'}
+					<form
+						method="POST"
+						action="?/cuerpo"
+						use:envio.enhance
+						class="flex w-full flex-col gap-5"
+					>
+						<input type="hidden" name="parentId" value={modo === 'raiz' ? 0 : (padre?.id ?? 0)} />
 
 						<p class="text-1 text-text-muted">
-							Va a orbitar <span class="text-accent-bright">{padre.name}</span>.
+							{#if modo === 'raiz'}
+								Va en la raíz del sistema, sin orbitar nada. De ella pueden colgar planetas,
+								cinturones, estaciones y puertas.
+							{:else}
+								Va a orbitar <span class="text-accent-bright">{padre?.name}</span>.
+							{/if}
 						</p>
 
 						<SelectField label="Qué es" name="kind" options={admitidos} bind:value={nuevoTipo} />
@@ -485,6 +536,7 @@
 						<div class="flex items-center gap-3">
 							<HudButton
 								type="submit"
+								busy={envio.busy}
 								variant="primary"
 								disabled={nuevoTipo === 'gate' && libres.length === 0}
 							>
@@ -495,7 +547,12 @@
 					</form>
 				{:else if cuerpo}
 					<div class="flex w-full flex-col gap-5">
-						<form method="POST" action="?/editar" use:enhance class="flex w-full flex-col gap-4">
+						<form
+							method="POST"
+							action="?/editar"
+							use:envio.enhance
+							class="flex w-full flex-col gap-4"
+						>
 							<input type="hidden" name="bodyId" value={cuerpo.id} />
 							<input type="hidden" name="kind" value={cuerpo.kind} />
 							<input type="hidden" name="parentId" value={cuerpo.parentId ?? 0} />
@@ -527,7 +584,7 @@
 								value={cuerpo.explored ? 'si' : 'no'}
 							/>
 
-							<HudButton type="submit" variant="primary">Guardar</HudButton>
+							<HudButton type="submit" busy={envio.busy} variant="primary">Guardar</HudButton>
 						</form>
 
 						<!-- La estación: quién la opera y qué módulos tiene. -->
@@ -535,7 +592,7 @@
 							<form
 								method="POST"
 								action="?/estacion"
-								use:enhance
+								use:envio.enhance
 								class="flex w-full flex-col gap-4 border-t border-border-soft pt-5"
 							>
 								<input type="hidden" name="bodyId" value={cuerpo.id} />
@@ -564,7 +621,9 @@
 									</div>
 								</div>
 
-								<HudButton type="submit" variant="primary">Guardar la estación</HudButton>
+								<HudButton type="submit" busy={envio.busy} variant="primary"
+									>Guardar la estación</HudButton
+								>
 							</form>
 						{/if}
 
@@ -573,7 +632,7 @@
 							<form
 								method="POST"
 								action="?/minerales"
-								use:enhance
+								use:envio.enhance
 								class="flex w-full flex-col gap-3 border-t border-border-soft pt-5"
 							>
 								<input type="hidden" name="bodyId" value={cuerpo.id} />
@@ -617,7 +676,9 @@
 									Tope y reposición por hora. Cambiar el tope no rellena lo que ya se minó.
 								</p>
 
-								<HudButton type="submit" variant="primary">Guardar los minerales</HudButton>
+								<HudButton type="submit" busy={envio.busy} variant="primary"
+									>Guardar los minerales</HudButton
+								>
 							</form>
 						{/if}
 
@@ -626,9 +687,14 @@
 							{#if cuerpo.blockers.length > 0}
 								<p class="text-1 text-text-muted">{cuerpo.blockers.join(' ')}</p>
 							{/if}
-							<form method="POST" action="?/borrar" use:enhance>
+							<form method="POST" action="?/borrar" use:envio.enhance>
 								<input type="hidden" name="bodyId" value={cuerpo.id} />
-								<HudButton type="submit" variant="danger" disabled={cuerpo.blockers.length > 0}>
+								<HudButton
+									type="submit"
+									busy={envio.busy}
+									variant="danger"
+									disabled={cuerpo.blockers.length > 0}
+								>
 									<Icon name="warning" weight="bold" size="0.75rem" />
 									Borrar {cuerpo.name}
 								</HudButton>
@@ -701,9 +767,11 @@
 							</span>
 							<span class="font-mono text-[0.72rem] text-data">{puerta.jumpDistance} al</span>
 						</span>
-						<form method="POST" action="?/desconectar" use:enhance class="ml-auto">
+						<form method="POST" action="?/desconectar" use:envio.enhance class="ml-auto">
 							<input type="hidden" name="gateId" value={puerta.gateId} />
-							<HudButton type="submit" size="1" variant="ghost">Desconectar</HudButton>
+							<HudButton type="submit" busy={envio.busy} size="1" variant="ghost"
+								>Desconectar</HudButton
+							>
 						</form>
 					{:else}
 						<span class="text-1 text-warning">No lleva a ninguna parte todavía.</span>
@@ -713,7 +781,7 @@
 								<form
 									method="POST"
 									action="?/conectar"
-									use:enhance
+									use:envio.enhance
 									class="flex flex-wrap items-center gap-2"
 								>
 									<input type="hidden" name="gateId" value={puerta.gateId} />
@@ -735,7 +803,7 @@
 										class="h-[1.75rem] w-[4.5rem] border border-border-soft bg-field px-2
 											font-mono text-[0.72rem] text-text-strong focus:border-accent focus:outline-none"
 									/>
-									<HudButton type="submit" size="1">Unir</HudButton>
+									<HudButton type="submit" busy={envio.busy} size="1">Unir</HudButton>
 								</form>
 							{/if}
 							<HudButton size="1" variant="primary" onclick={() => (vecinoDe = puerta.gateId)}>
@@ -755,7 +823,7 @@
 	unidas. Es el gesto que uno quiere al armar una galaxia.
 -->
 <Modal open={vecinoDe !== null} title="Crear el sistema del otro lado" icon="planet" size="lg">
-	<form method="POST" action="?/vecino" use:enhance class="flex w-full flex-col gap-5">
+	<form method="POST" action="?/vecino" use:envio.enhance class="flex w-full flex-col gap-5">
 		<input type="hidden" name="gateId" value={vecinoDe ?? 0} />
 
 		<BodyText>
@@ -809,13 +877,13 @@
 
 		<div class="flex items-center justify-end gap-3">
 			<HudButton variant="ghost" onclick={() => (vecinoDe = null)}>Cancelar</HudButton>
-			<HudButton type="submit" variant="primary">Crear y unir</HudButton>
+			<HudButton type="submit" busy={envio.busy} variant="primary">Crear y unir</HudButton>
 		</div>
 	</form>
 </Modal>
 
 <Modal bind:open={borrarSistema} title="Borrar {sistema.name}" icon="warning">
-	<form method="POST" action="?/eliminar" use:enhance class="flex w-full flex-col gap-5">
+	<form method="POST" action="?/eliminar" use:envio.enhance class="flex w-full flex-col gap-5">
 		<Panel class="w-full border-danger bg-danger-wash">
 			<BodyText>
 				Se va el sistema entero, con todos sus cuerpos, sus estaciones y sus puertas. No se puede
@@ -823,16 +891,20 @@
 			</BodyText>
 		</Panel>
 
-		<TextField
-			label="Escribí {sistema.name} para confirmar"
-			name="confirm"
-			autocomplete="off"
-			required
-		/>
+		<!--
+			El nombre va resaltado y fuera de la etiqueta: lo que hay que escribir es
+			el dato, y en una etiqueta de una línea se pierde entre el resto de la
+			frase justo cuando importa leerlo bien.
+		-->
+		<p class="text-2 text-text-body">
+			Escribí <span class="font-display font-bold text-accent-bright">{sistema.name}</span> para confirmar.
+		</p>
+
+		<TextField label="Nombre del sistema" name="confirm" autocomplete="off" required />
 
 		<div class="flex items-center justify-end gap-3">
 			<HudButton variant="ghost" onclick={() => (borrarSistema = false)}>Cancelar</HudButton>
-			<HudButton type="submit" variant="danger">Borrar para siempre</HudButton>
+			<HudButton type="submit" busy={envio.busy} variant="danger">Borrar para siempre</HudButton>
 		</div>
 	</form>
 </Modal>

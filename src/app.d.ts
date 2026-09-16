@@ -1,5 +1,5 @@
 import type { ActionReport } from '$lib/server/services/actions';
-import type { Pilot } from '$lib/server/db/schema';
+import type { Pilot, Sanction } from '$lib/server/db/schema';
 
 declare global {
 	namespace App {
@@ -18,6 +18,12 @@ declare global {
 			 * Vacío si no hay sesión: **no hay permisos implícitos**.
 			 */
 			permissions: ReadonlySet<string>;
+			/**
+			 * La sanción que le cierra la puerta ahora mismo, o `null` si puede
+			 * entrar. La resuelve el hook para que el rebote no dependa de qué
+			 * pantalla haya pedido.
+			 */
+			sanction: Sanction | null;
 		}
 	}
 }

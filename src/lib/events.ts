@@ -150,6 +150,36 @@ export const EVENT_KINDS: readonly EventKind[] = [
 	),
 
 	define(
+		'account.sanctioned',
+		'accounts',
+		'Sanción puesta',
+		'grave',
+		(payload) =>
+			`${texto(payload, 'callsign')} recibió un ${texto(payload, 'sanction').toLowerCase()}: ${texto(payload, 'reason')}.`
+	),
+	define(
+		'account.lifted',
+		'accounts',
+		'Sanción levantada',
+		'notable',
+		(payload) =>
+			`A ${texto(payload, 'callsign')} le levantaron el ${texto(payload, 'sanction').toLowerCase()}.`
+	),
+	define(
+		'account.edited',
+		'accounts',
+		'Cuenta editada',
+		'notable',
+		(payload) => `Se cambió ${texto(payload, 'field')} de ${texto(payload, 'callsign')}.`
+	),
+	define('account.credited', 'accounts', 'Ajuste de créditos', 'grave', (payload) => {
+		const monto = payload.amount;
+		const cifra = typeof monto === 'number' ? monto : 0;
+		const verbo = cifra >= 0 ? 'Se le acreditaron' : 'Se le debitaron';
+		return `${verbo} ${Math.abs(cifra)} cr a ${texto(payload, 'callsign')}: ${texto(payload, 'reason')}.`;
+	}),
+
+	define(
 		'role.created',
 		'roles',
 		'Rol creado',

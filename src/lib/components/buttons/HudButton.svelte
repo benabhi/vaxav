@@ -9,6 +9,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
+	import Icon from '../Icon.svelte';
 	import {
 		BUTTON_BASE,
 		BUTTON_SIZES,
@@ -21,6 +22,17 @@
 		children: Snippet;
 		variant?: ButtonVariant;
 		size?: ButtonSize;
+		/**
+		 * Si está trabajando.
+		 *
+		 * Se apaga y muestra el aro girando. **No es sólo cortesía**: sin señal,
+		 * quien apretó no sabe si el clic entró y vuelve a apretar, y dos envíos en
+		 * camino pueden pisarse contra la misma fila.
+		 *
+		 * Reemplaza al ícono que traiga el botón en vez de sumarse: el aro ocupa su
+		 * lugar, así que el texto no se corre ni el botón cambia de ancho.
+		 */
+		busy?: boolean;
 		class?: string;
 	}
 
@@ -28,6 +40,8 @@
 		children,
 		variant = 'outline',
 		size = '2',
+		busy = false,
+		disabled = false,
 		class: extra = '',
 		type = 'button',
 		...rest
@@ -36,8 +50,13 @@
 
 <button
 	{type}
+	disabled={disabled || busy}
+	aria-busy={busy || undefined}
 	class="{BUTTON_BASE} {BUTTON_SIZES[size]} {BUTTON_VARIANTS[variant]} {extra}"
 	{...rest}
 >
+	{#if busy}
+		<Icon name="circle-notch" weight="bold" size="0.8rem" class="animate-spin" />
+	{/if}
 	{@render children()}
 </button>

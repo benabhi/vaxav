@@ -40,6 +40,7 @@ import {
 import { STATION_SERVICES, type StationServiceKind } from '$lib/game/universe';
 import { isOre } from '$lib/game/items';
 import { ADMIN_ROUTE } from '$lib/admin';
+import { setFlash } from '$lib/server/flash';
 import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -295,7 +296,7 @@ export const actions: Actions = {
 	},
 
 	/** Borra el sistema entero y vuelve al listado. */
-	eliminar: async ({ request, locals, params }) => {
+	eliminar: async ({ request, locals, params, cookies }) => {
 		const datos = await request.formData();
 		const abierto = buildConstructor(db, params.sistema);
 		if (!abierto) error(404, 'No existe ese sistema.');
@@ -314,6 +315,9 @@ export const actions: Actions = {
 			throw problema;
 		}
 
+		// El aviso viaja en una cookie de un solo uso: la URL queda limpia, así que
+		// recargar el listado no vuelve a anunciar un borrado viejo.
+		setFlash(cookies, `Se borró el sistema ${abierto.name} y todo lo que tenía.`);
 		redirect(303, `${ADMIN_ROUTE}/universo`);
 	}
 };

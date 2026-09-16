@@ -1121,6 +1121,8 @@ export interface Constructor {
 	readonly y: number;
 	readonly z: number;
 	readonly bodies: readonly FilaConstruccion[];
+	/** Qué se puede plantar en la raíz: hoy, otra estrella. */
+	readonly rootKinds: readonly OpcionConstructor[];
 	readonly gates: readonly FilaPuerta[];
 	/** Los ocho rumbos, diciendo cuál está ocupado. */
 	readonly bearings: readonly { value: string; label: string; angle: number; taken: boolean }[];
@@ -1128,4 +1130,92 @@ export interface Constructor {
 	readonly loose: readonly { gateId: number; label: string }[];
 	readonly blockers: readonly string[];
 	readonly options: OpcionesConstructor;
+}
+
+// --- Administración de cuentas ----------------------------------------------
+
+/** Un piloto en el listado del cuartel. */
+export interface FilaPiloto {
+	readonly id: number;
+	readonly callsign: string;
+	readonly email: string;
+	readonly faction: string;
+	readonly profession: string;
+	readonly credits: string;
+	readonly location: string;
+	/** Milisegundos desde la época, en UTC. */
+	readonly createdAt: number;
+	/** Cuántas sanciones tiene puestas. Cero es lo normal. */
+	readonly sanctions: number;
+	/** Si ahora mismo no puede entrar, y por qué clase de sanción. */
+	readonly blocked: string;
+	/** Los roles que lleva, ya con su nombre. */
+	readonly roles: readonly string[];
+}
+
+/** El listado de pilotos, con lo que hace falta para buscar en él. */
+export interface Pilotos {
+	readonly rows: readonly FilaPiloto[];
+	readonly total: number;
+	readonly page: number;
+	readonly pages: number;
+	/** Con qué se está filtrando: el texto buscado y el estado. */
+	readonly search: string;
+	readonly state: string;
+	readonly blocked: number;
+}
+
+/** Una sanción en el historial de un piloto. */
+export interface FilaSancion {
+	readonly id: number;
+	readonly kind: string;
+	readonly kindLabel: string;
+	readonly reason: string;
+	readonly issuedBy: string;
+	/** Milisegundos desde la época. */
+	readonly at: number;
+	readonly until: number | null;
+	readonly liftedAt: number | null;
+	readonly liftedBy: string;
+	/** Si pesa ahora mismo. */
+	readonly active: boolean;
+	/** Si además le cierra la puerta. Un aviso está activo y no bloquea. */
+	readonly blocks: boolean;
+}
+
+/** Un rol, con si este piloto lo lleva. */
+export interface FilaRolPiloto {
+	readonly id: number;
+	readonly code: string;
+	readonly name: string;
+	readonly description: string;
+	readonly held: boolean;
+	/** Quién se lo dio, si lo lleva. */
+	readonly grantedBy: string;
+}
+
+/** La ficha de un piloto, como la ve quien administra. */
+export interface FichaPiloto {
+	readonly id: number;
+	readonly callsign: string;
+	readonly email: string;
+	readonly faction: string;
+	readonly factionCode: string;
+	readonly profession: string;
+	readonly credits: string;
+	readonly creditsRaw: number;
+	readonly location: string;
+	readonly locationId: number;
+	readonly system: string;
+	readonly createdAt: number;
+	/** El mensaje de por qué no puede entrar, o vacío. */
+	readonly blockedMessage: string;
+	readonly sanctions: readonly FilaSancion[];
+	readonly roles: readonly FilaRolPiloto[];
+	/** Qué impide darlo de baja. Vacío quiere decir que se puede. */
+	readonly blockers: readonly string[];
+	/** Los cuerpos a los que se lo puede mover, agrupados por sistema. */
+	readonly bodies: readonly OpcionConstructor[];
+	/** Las clases de sanción que se le pueden poner. */
+	readonly sanctionKinds: readonly OpcionConstructor[];
 }

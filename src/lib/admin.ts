@@ -43,6 +43,13 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
 		tabs: [{ route: ADMIN_ROUTE, label: 'Cuartel' }]
 	},
 	{
+		code: 'pilots',
+		label: 'Pilotos',
+		icon: 'identification-badge',
+		permission: 'pilots.read',
+		tabs: [{ route: `${ADMIN_ROUTE}/pilotos`, label: 'Pilotos' }]
+	},
+	{
 		code: 'universe',
 		label: 'Universo',
 		icon: 'planet',

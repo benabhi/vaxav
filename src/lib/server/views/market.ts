@@ -102,11 +102,27 @@ export interface MarketStation {
  * **Hace falta el módulo Mercado**: una estación sin mostrador no aparece en
  * ningún libro y nadie puede publicar ahí.
  *
- * Hoy la galaxia tiene una sola región, así que el alcance todavía no recorta
- * nada. La consulta ya está escrita para filtrar por región, de modo que cuando
- * haya varias sólo hay que agregarle el `where` y nada más se entera.
+ * **Y hace falta estar en el mismo sistema.** Mientras no exista el salto entre
+ * sistemas, una orden de otro sistema es un trato que nadie puede tomar; y la
+ * distancia entre dos cuerpos de sistemas distintos no existe, así que mostrarla
+ * no era sólo inútil: reventaba la pantalla con un 500 apenas hubo un segundo
+ * sistema. El día que se pueda saltar, el alcance se ensancha acá y nada más se
+ * entera.
  */
-export function marketStations(db: Db): readonly MarketStation[] {
+/**
+ * En qué sistema está parado el piloto.
+ *
+ * Lo necesitan los tres constructores del mercado para recortar el alcance, y
+ * vive acá para que ninguno tenga que acordarse de hacerlo. Devuelve `undefined`
+ * si el cuerpo no existe, que es lo mismo que decir «no recortes»: es preferible
+ * mostrar de más que dejar la pantalla en blanco por un dato roto.
+ */
+export function systemOf(db: Db, bodyId: number | null): number | undefined {
+	if (bodyId === null) return undefined;
+	return db.select().from(body).where(eq(body.id, bodyId)).get()?.systemId;
+}
+
+export function marketStations(db: Db, systemId?: number): readonly MarketStation[] {
 	// El cuerpo que la estación orbita sale de una segunda vuelta sobre la misma
 	// tabla: los cuerpos son un árbol, y el padre de una estación es el planeta,
 	// la luna o el cinturón donde está amarrada.
@@ -130,7 +146,11 @@ export function marketStations(db: Db): readonly MarketStation[] {
 		.innerJoin(system, eq(system.id, body.systemId))
 		.innerJoin(constellation, eq(constellation.id, system.constellationId))
 		.innerJoin(region, eq(region.id, constellation.regionId))
-		.where(eq(stationService.service, 'market'))
+		.where(
+			systemId === undefined
+				? eq(stationService.service, 'market')
+				: and(eq(stationService.service, 'market'), eq(body.systemId, systemId))
+		)
 		.all()
 		.map((fila) => ({
 			stationId: fila.stationId,
@@ -492,7 +512,7 @@ function freeCargo(db: Db, row: Pilot): number {
  * y con cincuenta órdenes eso deja de ser una lista y pasa a ser un trabajo.
  */
 export function buildOrdersView(db: Db, row: Pilot, kind: OrderKind): MisOrdenes {
-	const estaciones = marketStations(db);
+	const estaciones = marketStations(db, systemOf(db, row.locationId));
 	const todas = buildOwnOrders(db, row, estaciones);
 	const mias = todas.filter((orden) => orden.kind === kind);
 
@@ -558,7 +578,7 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 	const lugar = placeOf(db, row);
 	const desk = deskFor(db, row);
 	const ahora = situation(db, row);
-	const estaciones = marketStations(db);
+	const estaciones = marketStations(db, systemOf(db, row.locationId));
 	const resumen = summarize(
 		db,
 		estaciones.map((estacion) => estacion.stationId)

@@ -12,13 +12,14 @@
 	enciende cuando no lo es.
 -->
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { submitting } from '$lib/forms.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import SelectField from '$lib/components/admin/SelectField.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
+	import SuccessCallout from '$lib/components/forms/SuccessCallout.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import CardTitle from '$lib/components/typography/CardTitle.svelte';
@@ -30,6 +31,15 @@
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
+
+	/**
+	 * Un solo control de envío para toda la pantalla.
+	 *
+	 * Compartido a propósito: son formularios que escriben sobre la misma fila,
+	 * y dos envíos en paralelo pueden pisarse. Mientras uno viaja, los demás
+	 * botones se apagan.
+	 */
+	const envio = submitting();
 
 	let universo = $derived(data.universo);
 	let opciones = $derived(universo.options);
@@ -82,6 +92,13 @@
 		Crear sistema
 	</HudButton>
 </div>
+
+<!--
+	Que algo se borró hay que decirlo **en la pantalla a la que se vuelve**. Sin
+	esto, el sistema desaparece de la lista y quien lo borró no sabe si pasó por
+	haberlo apretado o porque estaba mirando mal.
+-->
+<SuccessCallout message={data.aviso} />
 
 <div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
 	<div class="flex flex-col items-start gap-1">
@@ -236,10 +253,17 @@
 			</div>
 
 			{#if nuevaConstelacion}
-				<form method="POST" action="?/constelacion" use:enhance class="flex w-full items-end gap-3">
+				<form
+					method="POST"
+					action="?/constelacion"
+					use:envio.enhance
+					class="flex w-full items-end gap-3"
+				>
 					<SelectField label="En la región" name="regionId" options={opciones.regions} />
 					<TextField label="Nombre" name="name" placeholder="Cadena Rota" required />
-					<HudButton type="submit" variant="primary" class="mb-[0.1rem] shrink-0">Crear</HudButton>
+					<HudButton type="submit" busy={envio.busy} variant="primary" class="mb-[0.1rem] shrink-0"
+						>Crear</HudButton
+					>
 				</form>
 
 				<div class="flex w-full items-end gap-3">
@@ -250,9 +274,19 @@
 				</div>
 
 				{#if nuevaRegion}
-					<form method="POST" action="?/region" use:enhance class="flex w-full items-end gap-3">
+					<form
+						method="POST"
+						action="?/region"
+						use:envio.enhance
+						class="flex w-full items-end gap-3"
+					>
 						<TextField label="Región nueva" name="name" placeholder="Borde de Hierro" required />
-						<HudButton type="submit" variant="primary" class="mb-[0.1rem] shrink-0">
+						<HudButton
+							type="submit"
+							busy={envio.busy}
+							variant="primary"
+							class="mb-[0.1rem] shrink-0"
+						>
 							Crear
 						</HudButton>
 					</form>
@@ -264,7 +298,7 @@
 			method="POST"
 			action="?/sistema"
 			id="sistema"
-			use:enhance
+			use:envio.enhance
 			class="flex w-full flex-col gap-5"
 		>
 			<TextField
@@ -354,7 +388,7 @@
 
 			<div class="flex w-full items-center justify-end gap-3">
 				<HudButton variant="ghost" onclick={() => (abierto = false)}>Cancelar</HudButton>
-				<HudButton type="submit" variant="primary">Crear el sistema</HudButton>
+				<HudButton type="submit" busy={envio.busy} variant="primary">Crear el sistema</HudButton>
 			</div>
 		</form>
 	</div>

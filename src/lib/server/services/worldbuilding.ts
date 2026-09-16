@@ -411,7 +411,11 @@ export function deleteSystem(db: Db, systemId: number, actorId: number | null): 
 	const cuerpos = db.select().from(body).where(eq(body.systemId, systemId)).all();
 
 	db.transaction((tx) => {
-		for (const fila of cuerpos) borrarCuerpo(tx, fila);
+		// **De las hojas a la raíz.** Las claves foráneas están activas y
+		// `body.parent_id` apunta a otro cuerpo: borrar un planeta antes que su luna
+		// revienta la restricción a mitad de la transacción. El orden en que salen
+		// de la consulta no es el orden del árbol, así que hay que imponerlo.
+		for (const fila of deepestFirst(cuerpos)) borrarCuerpo(tx, fila);
 		tx.delete(system).where(eq(system.id, systemId)).run();
 
 		record(tx, {
@@ -601,6 +605,31 @@ export function bodyBlockers(db: Db, bodyId: number): readonly string[] {
 	if (apuntan > 0) motivos.push('Hay una puerta que le apunta.');
 
 	return motivos;
+}
+
+/**
+ * Los cuerpos ordenados de los más profundos a los más superficiales.
+ *
+ * Es el orden en que hay que borrarlos: un hijo antes que su padre. Se calcula
+ * contando ancestros y no recorriendo el árbol, que es más corto y aguanta un
+ * plano incompleto —un cuerpo cuyo padre ya no está cuenta como raíz y sale
+ * primero, en vez de colgar el recorrido—.
+ */
+function deepestFirst(cuerpos: readonly Body[]): readonly Body[] {
+	const porId = new Map(cuerpos.map((fila) => [fila.id, fila]));
+
+	function profundidad(fila: Body): number {
+		let nivel = 0;
+		let actual: Body | undefined = fila;
+		// La cota es por las dudas: un ciclo que ya existiera colgaría el conteo.
+		while (actual?.parentId != null && nivel < 100) {
+			actual = porId.get(actual.parentId);
+			nivel++;
+		}
+		return nivel;
+	}
+
+	return [...cuerpos].sort((a, b) => profundidad(b) - profundidad(a));
 }
 
 /** Borra un cuerpo con lo que cuelga de él **en la base**, no en el árbol. */

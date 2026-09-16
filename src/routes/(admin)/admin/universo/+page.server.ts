@@ -12,6 +12,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { buildUniverso } from '$lib/server/views/worldbuilding';
+import { takeFlash } from '$lib/server/flash';
 import {
 	BuilderError,
 	createConstellation,
@@ -23,8 +24,13 @@ import { GOVERNMENTS, type Government } from '$lib/game/universe';
 import { ADMIN_ROUTE } from '$lib/admin';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = () => {
-	return { universo: buildUniverso(db) };
+export const load: PageServerLoad = ({ cookies }) => {
+	return {
+		universo: buildUniverso(db),
+		// El aviso de lo que se acaba de hacer, si se acaba de hacer algo. Leerlo lo
+		// consume, así que aparece exactamente una vez.
+		aviso: takeFlash(cookies)
+	};
 };
 
 /** Un entero del formulario, o cero si vino cualquier cosa. */

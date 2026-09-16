@@ -99,6 +99,13 @@
       "when": 1789562299865,
       "tag": "0013_absent_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1789565838585,
+      "tag": "0014_high_scorpion",
+      "breakpoints": true
     }
   ]
 }

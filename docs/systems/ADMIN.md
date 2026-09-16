@@ -1,9 +1,10 @@
 # Roles, permisos y el cuartel general
 
 > **Implementado en parte.** Existen los roles, el catálogo de permisos, el
-> guardia del área, el registro de eventos con su pantalla, y el **constructor de
-> sistemas**. **Todavía no hay pantalla para administrar roles**: el rol de
-> administrador lo reparte la siembra.
+> guardia del área, el registro de eventos con su pantalla, el **constructor de
+> sistemas** y la **administración de cuentas** con sus sanciones. Los roles se
+> reparten desde la ficha de un piloto; **todavía no hay pantalla para crearlos ni
+> para cambiarles los permisos**.
 >
 > Ver también: [arquitectura](ARCHITECTURE.md) · [interfaz](INTERFACE.md) ·
 > [el universo](UNIVERSE.md)
@@ -185,6 +186,8 @@ forma de que un hecho y su registro no puedan separarse. Hoy escriben
 
 ```
 /admin                      Cuartel general — tus roles, tus llaves y lo último que pasó
+/admin/pilotos              Las cuentas, con búsqueda y filtro por estado
+/admin/pilotos/<id>         La ficha: identidad, créditos, sanciones y roles
 /admin/universo             Los sistemas que hay, y el alta de uno nuevo
 /admin/universo/<sistema>   El constructor: árbol, formulario y salidas
 /admin/eventos              Registro — la traza de actividad y la tabla con filtros
@@ -241,6 +244,76 @@ Una trampa que ya mordió: pedir **una lista vacía de tipos** —lo que pasa al
 abrir una categoría que todavía no registra nada— quiere decir «ninguno», no
 «todos». Confundirlas mostraba el registro entero justo cuando se esperaba verlo
 vacío.
+
+## Administración de cuentas
+
+`/admin/pilotos` lista y busca; `/admin/pilotos/<id>` es la ficha. Pide
+`pilots.read` para mirar, `pilots.edit` para tocar, `pilots.delete` para dar de
+baja y `roles.edit` para repartir roles — cuatro llaves distintas porque son
+cuatro cosas distintas, y cada acción comprueba la suya.
+
+La búsqueda mira **distintivo y correo**: es lo que uno tiene a mano cuando llega
+un reclamo, y no siempre viene con el mismo de los dos.
+
+### Lo que se puede tocar, y qué cambia
+
+| Qué        | Efecto adicional                                          |
+| ---------- | --------------------------------------------------------- |
+| Distintivo | Le cierra las sesiones: se entera al volver a entrar      |
+| Correo     | —                                                         |
+| Contraseña | **Sin pedir la anterior**, y le cierra todas las sesiones |
+| Ubicación  | No le cancela la orden en curso                           |
+| Créditos   | Un **asiento del libro mayor**, con su motivo             |
+| Roles      | Ver «Los roles», más arriba                               |
+
+La diferencia de fondo con lo que hace el propio piloto en Opciones: allá cada
+operación pide la contraseña, porque es lo único que separa un clic mal dado de
+perder años de juego. Acá el que opera no es el dueño y no puede demostrarlo, así
+que lo que autoriza es el permiso y lo que lo hace revisable es el registro:
+**no hay forma de tocar una cuenta ajena sin que quede escrito quién fue**.
+
+Los créditos merecen su nota: **no se escribe el saldo**. Un ajuste llama a
+`wallet.ts` como cualquier movimiento del juego, así que la auditoría del libro
+sigue cuadrando. Tocar `pilot.credits` a mano rompería la única garantía que tiene
+la economía.
+
+## Sanciones
+
+Son tres y se distinguen por **lo que hacen**, no por lo graves que suenan:
+
+| Sanción    | Cierra la puerta | Vence | Para qué                                   |
+| ---------- | ---------------- | ----- | ------------------------------------------ |
+| Aviso      | no               | no    | Queda escrito. El piloto lo ve             |
+| Suspensión | sí               | sí    | No puede entrar hasta la fecha. Vence sola |
+| Baneo      | sí               | no    | No puede entrar. Hay que levantarlo a mano |
+
+Una suspensión sin fecha sería un baneo con otro nombre, y un baneo con fecha
+sería una suspensión: por eso la fecha es obligatoria en una y está prohibida en
+el otro.
+
+**Es una tabla con historial y no dos columnas en el piloto.** La pregunta que se
+hace siempre al moderar es «¿ya lo habíamos suspendido antes?», y con dos columnas
+el estado actual pisa al anterior. El registro de eventos guarda **el hecho**;
+esta tabla guarda **el estado**, que es el mismo reparto que con los roles.
+
+Las reglas:
+
+- **Toda sanción lleva motivo**, y no se edita ni se borra. Se **levanta**, y el
+  levantamiento queda escrito con su fecha y su firma. Una cuenta que parece
+  limpia es una cuenta cuya historia nadie va a encontrar.
+- **Sancionar cierra la puerta en el acto**: las sesiones abiertas se cierran. Un
+  baneo que recién surte efecto en el próximo ingreso es un baneo que el baneado
+  decide cuándo empieza.
+- **Nadie se sanciona a sí mismo, ni al último administrador.** Lo primero es un
+  accidente caro; lo segundo deja el juego sin cuartel.
+- Con varias vigentes gana **la que termina más tarde**, y un baneo gana siempre.
+  Es lo que evita que levantar una suspensión vieja abra la puerta que un baneo
+  nuevo había cerrado.
+
+El piloto sancionado no va a una pantalla de error: va a `/suspendido`, que le
+dice **qué tiene, por qué y hasta cuándo**. Lo que no le dice es quién se la puso
+—eso queda en el registro— porque nombrarlo sólo abre una discusión que esa
+pantalla no puede resolver.
 
 ## El constructor de sistemas
 
@@ -306,7 +379,6 @@ baja la cuenta y volver a sembrar.
 
 ## Lo que falta
 
-- La pantalla para **administrar roles**: crearlos, cambiarles los permisos y
-  asignárselos a un piloto. Hoy el rol de administrador lo reparte sólo la
-  siembra.
-- La **ficha de piloto** desde administración, y las estadísticas.
+- La pantalla para **crear roles** y cambiarles los permisos. Asignárselos a un
+  piloto ya se puede, desde su ficha.
+- Las **estadísticas** del juego.

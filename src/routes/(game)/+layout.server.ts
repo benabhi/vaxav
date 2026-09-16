@@ -31,13 +31,18 @@ import { buildPilotView } from '$lib/server/views/pilot';
 import { actionIcon, actionLabel } from '$lib/format';
 import { canEnterAdmin } from '$lib/admin';
 import { LOG_TAB, moduleForRoute, tabForRoute } from '$lib/navigation';
-import { LOGIN_ROUTE } from '$lib/routes';
+import { LOGIN_ROUTE, SUSPENDED_ROUTE } from '$lib/routes';
 import type { AccionEnCurso, Informe } from '$lib/tipos';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const pilot = locals.pilot;
 	if (!pilot) redirect(303, LOGIN_ROUTE);
+
+	// Una sanción que cierra la puerta la cierra **acá**, en el layout del grupo,
+	// por lo mismo que el guardia de sesión: agregar una pantalla no debería
+	// obligar a acordarse de protegerla.
+	if (locals.sanction) redirect(303, SUSPENDED_ROUTE);
 
 	const pending = currentAction(db, pilot.id);
 	const action: AccionEnCurso | null = pending

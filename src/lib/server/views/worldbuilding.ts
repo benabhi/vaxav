@@ -136,7 +136,6 @@ export function buildOptions(db: Db): OpcionesConstructor {
 
 		ores: ORE_LIST.map((ore) => ({ value: ore.code, label: ore.name })),
 
-		// La estrella no está: se crea con el sistema y no se agrega a mano.
 		bodyKinds: (['planet', 'moon', 'belt', 'station', 'gate'] as const).map((kind) => ({
 			value: kind,
 			label: bodyKindLabel(kind)
@@ -148,6 +147,15 @@ export function buildOptions(db: Db): OpcionesConstructor {
 function accepts(kind: BodyKind): readonly OpcionConstructor[] {
 	return BODY_CHILDREN[kind].map((hijo) => ({ value: hijo, label: bodyKindLabel(hijo) }));
 }
+
+/**
+ * Qué se puede plantar en la **raíz** del sistema.
+ *
+ * Sólo una estrella, y de ahí que sea una lista de uno: un sistema binario tiene
+ * dos soles y cada uno cuelga lo suyo, que es la razón por la que el árbol se
+ * dibujó desde el principio aguantando varias raíces. Lo demás orbita algo.
+ */
+const ROOT_KINDS: readonly OpcionConstructor[] = [{ value: 'star', label: bodyKindLabel('star') }];
 
 /** El listado de sistemas, con lo que hace falta para elegir cuál abrir. */
 export function buildUniverso(db: Db): Universo {
@@ -398,6 +406,7 @@ export function buildConstructor(db: Db, code: string): Constructor | null {
 		y: fila.y,
 		z: fila.z,
 		bodies,
+		rootKinds: ROOT_KINDS,
 		gates,
 		bearings: GATE_BEARINGS.map((bearing) => ({
 			value: bearing,

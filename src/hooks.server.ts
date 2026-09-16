@@ -37,6 +37,7 @@ import { resolveIfDue } from '$lib/server/services/actions';
 import { sweepExpired } from '$lib/server/services/orders';
 import { pilotForToken } from '$lib/server/services/sessions';
 import { permissionsOf } from '$lib/server/services/roles';
+import { blockedBy } from '$lib/server/services/moderation';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get(SESSION_COOKIE) ?? '';
@@ -50,6 +51,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// cuartel y también cada pantalla que decide si dibuja un botón, así que
 	// resolverlas en cada `load` sería la misma consulta repetida.
 	event.locals.permissions = found ? permissionsOf(db, found.id) : new Set();
+
+	// Y si tiene la puerta cerrada. Se resuelve acá y no en el layout del juego
+	// porque una suspensión puede caer con la sesión ya abierta: el piloto tiene
+	// que rebotar en el pedido siguiente, no en el próximo ingreso.
+	event.locals.sanction = found ? blockedBy(db, found.id) : null;
 
 	if (found) {
 		// Primero lo vencido y después lo resuelto: una orden que caducó puede
