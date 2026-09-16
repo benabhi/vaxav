@@ -279,7 +279,16 @@ export interface FilaRanura {
 	readonly badge: string;
 	readonly filled: boolean;
 	readonly selected: boolean;
-	/** Posición en el anillo, en porcentaje del cuadro. */
+	/** La clase de la ranura: el nodo la dice por su tamaño. */
+	readonly size: number;
+	/**
+	 * Dónde cae en el anillo: el ángulo desde arriba y la posición en porcentaje.
+	 *
+	 * El ángulo viaja además de la posición porque la pantalla lo necesita para
+	 * decidir **hacia dónde abrir** el panel de la ranura: hacia afuera del
+	 * círculo, que es el único lado donde no tapa ni la nave ni las otras.
+	 */
+	readonly angle: number;
 	readonly left: string;
 	readonly top: string;
 }

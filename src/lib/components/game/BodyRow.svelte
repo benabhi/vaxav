@@ -2,8 +2,13 @@
 	Un cuerpo del sistema, colgado de su padre por un codo.
 
 	Los conectores dicen quién cuelga de quién mejor que la sangría sola: la línea
-	baja por la columna del padre, atraviesa a todos sus hijos y se corta en el
-	último, así que la rama se sigue con el ojo sin contar espacios.
+	**sale de abajo del ícono del padre**, atraviesa a todos sus hijos y se corta
+	en el último, así que la rama se sigue con el ojo sin contar espacios.
+
+	Que salga de abajo y no de un costado importa sobre todo en la raíz. Un cuerpo
+	de profundidad cero no tiene codo que lo ate a nada, así que una línea que le
+	naciera al lado se vería como una raya suelta en vez de como una rama. Y son
+	varios: un sistema binario tiene dos estrellas, y cada una cuelga lo suyo.
 
 	**Se dibuja con cajas de un píxel y no con caracteres**, para que el brazo del
 	codo llegue exactamente al centro de la casilla del ícono. Las medidas de más
@@ -31,26 +36,38 @@
 	}
 
 	let { body, expanded, onToggle, actions, hereMarker }: Props = $props();
+
+	/**
+	 * Las medidas del canal de guías, en rem. Un píxel de más desalinea el árbol
+	 * entero, así que van con nombre y en un solo lugar.
+	 *
+	 * `INDENT` es cuánto se corre cada nivel. Vale más que el ancho de media
+	 * casilla a propósito: las verticales tienen que caer **bajo el centro del
+	 * ícono del padre**, así que el hijo necesita arrancar a la derecha de ese
+	 * punto para que el brazo del codo tenga dónde cruzar.
+	 */
+	const INDENT = 2;
+	/** El ancho de la casilla del ícono, y su medio: ahí va la vertical. */
+	const ICON = 2.25;
+	const HALF = ICON / 2;
+	/** A qué altura está el centro de la casilla: el aire de arriba más medio alto. */
+	const ARM = 1.725;
+	/** Dónde termina la casilla, que es de donde arranca la bajada a los hijos. */
+	const HEAD = 2.85;
 </script>
 
 <!--
-	Ancho de una columna del árbol. Angosto a propósito: las verticales juntas es
-	lo que hace que un árbol se lea como un árbol.
+	Un trazo vertical del árbol, ubicado por su borde izquierdo.
 
-	El aire de arriba y de abajo **no va en la fila sino en su contenido**: las
-	columnas tienen que llegar al borde para que la línea de una fila toque la de
-	la siguiente. Con el relleno en la fila, cada línea se cortaba antes del borde
-	y el árbol quedaba en pedacitos.
-
-	`CONNECTOR_CENTER` (1.725rem) es a qué altura está el centro de la casilla del
-	ícono —el aire de arriba más media casilla—, que es donde tiene que llegar el
-	brazo del codo. `HEAD_HEIGHT` (2.85rem) es donde termina esa primera línea,
-	que es de donde arranca la bajada al primer hijo.
+	El aire de arriba y de abajo **no va en la fila sino en su contenido**: los
+	trazos tienen que llegar al borde para que la línea de una fila toque la de la
+	siguiente. Con el relleno en la fila, cada línea se cortaba antes del borde y
+	el árbol quedaba en pedacitos.
 -->
-{#snippet vertical(top: string, height: string)}
+{#snippet vertical(left: number, top: number, height: string)}
 	<span
-		class="absolute left-1/2 w-0 border-l border-l-border-soft"
-		style="top: {top}; height: {height}"
+		class="absolute w-0 border-l border-l-border-soft"
+		style="left: {left}rem; top: {top}rem; height: {height}"
 	></span>
 {/snippet}
 
@@ -73,46 +90,42 @@
 	id={body.isHere ? 'vaxav-aqui' : undefined}
 	onclick={() => onToggle(body.code)}
 >
-	<div class="flex w-full items-start gap-0">
+	<div class="relative flex w-full items-start gap-0">
 		<!--
-			La columna de un ancestro: su línea vertical, si todavía sigue bajando.
-			Cuando ese ancestro ya no tiene más hijos por debajo, la columna va vacía.
-			Eso es lo que hace legible al árbol: las líneas que quedan dibujadas son
-			exactamente las ramas que siguen abiertas.
-		-->
-		{#each body.rails as continues, index (index)}
-			<span class="relative w-[1rem] shrink-0 self-stretch">
-				{#if continues}{@render vertical('0', '100%')}{/if}
-			</span>
-		{/each}
+			El canal de las guías: la sangría del cuerpo y las líneas de sus ancestros.
 
-		<!--
-			El codo que ata la fila a su padre: `├─`, o `└─` si es el último. Ocupa la
-			columna del padre, así que su tramo vertical cae justo debajo de la flecha
-			de plegar del padre y la rama se ve continua.
+			**Las verticales caen debajo del ícono del padre, no a su costado.** Antes
+			vivían en columnas propias a la izquierda de las casillas, así que la línea
+			que bajaba hacia los hijos salía del borde del cuadrado en vez de salir de
+			abajo: se veía como una raya al lado del ícono y no como una rama que nace
+			de él. Poniendo el paso de sangría en dos rem y las líneas a un rem y
+			cuarto —el medio de la casilla—, cada vertical arranca exactamente bajo el
+			centro del ícono del que cuelga.
 		-->
-		{#if body.depth > 0}
-			<span class="relative w-[1rem] shrink-0 self-stretch">
-				{@render vertical('0', body.isLast ? '1.725rem' : '100%')}
-				<!--
-					El brazo cruza también la columna del tallo, para llegar hasta el
-					ícono: uno que se corta antes deja la fila flotando.
-				-->
+		<span class="relative shrink-0 self-stretch" style="width: {body.depth * INDENT}rem">
+			<!--
+				Una línea por ancestro que todavía tiene ramas abiertas. Vienen justas
+				—una marca por columna, de la raíz al abuelo— y la del padre directo no
+				está entre ellas: ésa la dibuja el codo, que además sabe si cortarse.
+			-->
+			{#each body.rails as continues, index (index)}
+				{#if continues}
+					{@render vertical(index * INDENT + HALF, 0, '100%')}
+				{/if}
+			{/each}
+
+			<!--
+				El codo que ata la fila a su padre. Su tramo vertical baja por la columna
+				del padre —que es la de abajo de su ícono— y se corta en el brazo si esta
+				fila es la última de la rama.
+			-->
+			{#if body.depth > 0}
+				{@render vertical((body.depth - 1) * INDENT + HALF, 0, body.isLast ? `${ARM}rem` : '100%')}
 				<span
-					class="absolute left-1/2 h-0 border-t border-t-border-soft"
-					style="top: 1.725rem; width: calc(50% + 1rem)"
+					class="absolute h-0 border-t border-t-border-soft"
+					style="left: {(body.depth - 1) * INDENT + HALF}rem; top: {ARM}rem;
+						width: {INDENT - HALF}rem"
 				></span>
-			</span>
-		{/if}
-
-		<!--
-			La columna propia del cuerpo: por acá baja la línea hacia sus hijos. Va
-			vacía y sin nada encima; la flecha de plegar está al lado del nombre para
-			no cruzarle el trazo justo donde tiene que verse continuo.
-		-->
-		<span class="relative w-[1rem] shrink-0 self-stretch">
-			{#if body.hasChildren && expanded}
-				{@render vertical('2.85rem', 'calc(100% - 2.85rem)')}
 			{/if}
 		</span>
 
@@ -121,19 +134,29 @@
 			íconos flotan y el árbol se lee como un párrafo. Donde está el piloto se
 			llena de naranja, que es como el juego marca lo elegido en todas partes.
 			El margen de arriba lo pone ella, porque la fila no puede tener relleno.
+
+			De abajo de esta casilla —y centrada en ella— sale la línea hacia los
+			hijos, que es lo que hace que la rama se vea nacer del cuerpo y no de un
+			costado.
 		-->
-		<span
-			class="mt-[0.6rem] flex h-[2.25rem] w-[2.25rem] shrink-0 items-center justify-center
-				{body.isHere
-				? 'border border-transparent bg-accent shadow-glow'
-				: 'border border-border-soft bg-surface'}"
-		>
-			<Icon
-				name={body.icon}
-				weight={body.isHere ? 'fill' : 'duotone'}
-				size="1.15rem"
-				class={body.isHere ? 'text-on-accent' : 'text-accent'}
-			/>
+		<span class="relative shrink-0 self-stretch" style="width: {ICON}rem">
+			<span
+				class="mt-[0.6rem] flex h-[2.25rem] w-[2.25rem] items-center justify-center
+					{body.isHere
+					? 'border border-transparent bg-accent shadow-glow'
+					: 'border border-border-soft bg-surface'}"
+			>
+				<Icon
+					name={body.icon}
+					weight={body.isHere ? 'fill' : 'duotone'}
+					size="1.15rem"
+					class={body.isHere ? 'text-on-accent' : 'text-accent'}
+				/>
+			</span>
+
+			{#if body.hasChildren && expanded}
+				{@render vertical(HALF, HEAD, `calc(100% - ${HEAD}rem)`)}
+			{/if}
 		</span>
 
 		<!--

@@ -14,18 +14,18 @@
 	que saber antes de mirar precios es cuánto se tiene.
 -->
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
+	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import SkillMeter from '$lib/components/meters/SkillMeter.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
-	import { thousands } from '$lib/format';
+	import { roman, thousands } from '$lib/format';
 	import type { FilaArbol } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
@@ -313,21 +313,45 @@
 									Al máximo
 								</span>
 							{:else}
-								<form method="POST" action="?/invertir" use:enhance>
-									<input type="hidden" name="habilidad" value={skill.code} />
-									<button
-										type="submit"
-										disabled={!skill.canInvest}
-										class="flex items-center gap-2 border px-[0.7rem] py-[0.3rem] font-display
-											text-[0.68rem] font-semibold tracking-label uppercase transition-[background-color,color]
-											{skill.canInvest
-											? 'cursor-pointer border-data bg-transparent text-data hover:bg-data hover:text-on-accent'
-											: 'cursor-not-allowed border-border-soft bg-transparent text-text-muted opacity-60'}"
-									>
-										<Icon name="lightning" weight="fill" size="0.65rem" />
-										Subir a nivel {skill.nextLevel} · {thousands(skill.cost)} XP
-									</button>
-								</form>
+								<!--
+									Confirma antes de gastar. **La experiencia no se devuelve**: subir
+									un nivel vacía un pozo que costó horas de juego llenar, y no hay
+									forma de deshacerlo. Es el mismo diálogo que pide una orden de la
+									nave, y por la misma razón: lo que compromete algo que no vuelve
+									no puede irse en un clic mal dado.
+								-->
+								<ConfirmAction
+									formAction="?/invertir"
+									title="Subir {skill.name} a nivel {skill.nextLevel}"
+									icon="lightning"
+									confirmLabel="Subir de nivel"
+									disabled={!skill.canInvest}
+									readings={[
+										{ label: 'Nivel', value: `${skill.levelLabel} → ${roman(skill.nextLevel)}` },
+										{ label: 'Cuesta', value: `${thousands(skill.cost)} XP` },
+										{ label: 'Del pozo de', value: skill.familyName }
+									]}
+									note="La experiencia invertida no se puede recuperar."
+								>
+									{#snippet trigger(abrir)}
+										<button
+											type="button"
+											onclick={abrir}
+											disabled={!skill.canInvest}
+											class="flex items-center gap-2 border px-[0.7rem] py-[0.3rem] font-display
+												text-[0.68rem] font-semibold tracking-label uppercase transition-[background-color,color]
+												{skill.canInvest
+												? 'cursor-pointer border-data bg-transparent text-data hover:bg-data hover:text-on-accent'
+												: 'cursor-not-allowed border-border-soft bg-transparent text-text-muted opacity-60'}"
+										>
+											<Icon name="lightning" weight="fill" size="0.65rem" />
+											Subir a nivel {skill.nextLevel} · {thousands(skill.cost)} XP
+										</button>
+									{/snippet}
+									{#snippet fields()}
+										<input type="hidden" name="habilidad" value={skill.code} />
+									{/snippet}
+								</ConfirmAction>
 								{#if skill.blocked}
 									<span class="text-1 text-text-muted">{skill.blocked}</span>
 								{:else}

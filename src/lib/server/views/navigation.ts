@@ -233,10 +233,11 @@ const SIN_CAMPO: CampoRocas = {
  * marca por ancestro, que dice si la línea de ese ancestro sigue bajando. Es la
  * forma barata de dibujar un árbol con una lista plana.
  *
- * La columna `k` es la de los codos de los nodos de profundidad `k+1`, así que
- * la marca que va ahí es la del ancestro de profundidad `k+1`: de ahí el
- * corrimiento de uno. Se descarta la primera, la de la estrella, que no tiene
- * hermanos ni columna donde caer.
+ * La columna `k` es la del cuerpo de profundidad `k`, y lo que hay que saber ahí
+ * no es si **ese** cuerpo tiene hermanos sino si su hijo en este camino es el
+ * último: la vertical baja mientras le queden hijos por dibujar. Ese dato es el
+ * del nivel de abajo, y de ahí el corrimiento de uno. Se descarta la primera
+ * marca, que no le corresponde a ninguna columna.
  *
  * De paso, cada fila que no sea la del piloto lleva **su distancia desde donde
  * está el piloto** y cuánto tardaría llegar. La distancia al cuerpo que se
