@@ -35,22 +35,10 @@ export interface RingPosition {
 }
 
 /**
- * El hueco que separa dos categorías en el anillo, en grados.
- *
- * Es lo que convierte un collar de cuentas iguales en **arcos que se pueden
- * señalar con el dedo**: sin el corte, un casco de tres anclajes y uno de uno se
- * ven igual —un círculo con nodos— porque todos los puntos pesan lo mismo. Con
- * él, el tamaño de cada arco es la firma del casco: la nave de guerra tiene un
- * arco de armas gordo y la de carga uno de bodegas.
- */
-export const RING_GAP_DEGREES = 12;
-
-/**
  * Un punto del anillo, en grados desde arriba.
  *
  * Se guarda el ángulo además de la posición porque la pantalla lo necesita para
- * decidir **hacia dónde abrir** el panel de una ranura: hacia afuera del
- * círculo, que es el único lado donde no tapa ni la nave ni las otras ranuras.
+ * decidir dónde cae cada ranura sin volver a hacer la trigonometría.
  */
 function pointAt(angleDegrees: number): RingPosition {
 	const radianes = ((angleDegrees - 90) * Math.PI) / 180;
@@ -62,44 +50,51 @@ function pointAt(angleDegrees: number): RingPosition {
 }
 
 /**
- * Reparte las ranuras alrededor del anillo, **un arco por categoría**.
+ * Reparte las ranuras alrededor del anillo, **dejando un lugar vacío entre
+ * categorías**.
  *
- * Cada categoría se lleva una porción del círculo proporcional a cuántas
- * ranuras tiene, y entre una y otra queda un hueco. Así el anillo deja de ser
- * un reparto parejo donde todo pesa igual y pasa a tener forma propia según el
- * casco, que es lo que un dibujo tiene que hacer para no ser un adorno.
+ * Todas las ranuras caen sobre la misma grilla pareja, y el corte entre una
+ * categoría y la siguiente es un lugar de esa grilla que queda sin ocupar. Eso
+ * da las dos cosas a la vez: un círculo regular, donde ningún tramo se ve
+ * apelotonado ni desierto, y **arcos que se pueden señalar con el dedo**, cuyo
+ * tamaño es la firma del casco — la nave de guerra muestra un arco de armas
+ * gordo y la de carga uno de bodegas.
+ *
+ * Repartir el círculo en proporción a cada categoría, que fue el primer intento,
+ * no sirve: las categorías chicas terminan todas juntas de un lado con huecos
+ * enormes entre ellas, y los siete internos esenciales —que son siempre siete en
+ * todos los cascos— se apelotonan del otro. El anillo queda visiblemente
+ * desbalanceado aunque las cuentas cierren.
  *
  * El cero apunta arriba y no a la derecha: un anillo que arranca de costado se
- * lee torcido.
- *
- * Con una sola categoría no hay nada que separar y se reparte parejo, que es lo
- * que hacía antes: el hueco existiría igual pero no diría nada.
+ * lee torcido, y **la primera ranura va en las doce**, que es donde el ojo
+ * empieza.
  */
 export function ringPositions(counts: readonly number[]): readonly RingPosition[] {
 	const grupos = counts.filter((cuantas) => cuantas > 0);
 	const total = grupos.reduce((suma, cuantas) => suma + cuantas, 0);
 	if (total === 0) return [];
 
-	// Sin cortes, o con tan pocas ranuras que los huecos se comerían el círculo.
+	// Con una sola categoría no hay nada que separar: el hueco existiría igual
+	// pero no diría nada, y se comería un lugar del círculo por nada.
 	if (grupos.length < 2) {
 		return Array.from({ length: total }, (_, puesto) => pointAt((puesto * 360) / total));
 	}
 
-	const huecos = grupos.length * RING_GAP_DEGREES;
-	const util = 360 - huecos;
+	// Un lugar por ranura, más uno por cada corte.
+	const lugares = total + grupos.length;
+	const paso = 360 / lugares;
 
 	const posiciones: RingPosition[] = [];
-	let cursor = RING_GAP_DEGREES / 2;
+	let lugar = 0;
 
 	for (const cuantas of grupos) {
-		const arco = (util * cuantas) / total;
-		// Los nodos se reparten **dentro** del arco, con medio paso de aire en cada
-		// punta: pegarlos al borde haría que dos categorías vecinas parecieran una.
-		const paso = arco / cuantas;
 		for (let puesto = 0; puesto < cuantas; puesto++) {
-			posiciones.push(pointAt(cursor + paso * (puesto + 0.5)));
+			posiciones.push(pointAt(lugar * paso));
+			lugar++;
 		}
-		cursor += arco + RING_GAP_DEGREES;
+		// El corte: se saltea un lugar y ahí queda el hueco.
+		lugar++;
 	}
 
 	return posiciones;

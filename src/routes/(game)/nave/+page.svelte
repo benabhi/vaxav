@@ -790,7 +790,7 @@
 	selector que le colgara iba a tapar algo o a correr el dibujo. Separando figura
 	de banco de trabajo, no hay nada que acomodar: la fila se abre donde está.
 -->
-<div class="flex w-full flex-col items-start gap-5 lg:flex-row lg:items-start">
+<div class="flex w-full flex-col items-start gap-5 lg:flex-row lg:items-stretch">
 	<!--
 		El emblema. Grande, quieto y sin nada encima: es lo que hace que esta
 		pantalla se reconozca antes de leer una palabra, y lo único del juego que se
@@ -829,8 +829,24 @@
 	<!--
 		El banco de trabajo. Cada ranura se abre en su lugar y muestra qué le entra;
 		lo único que se mueve es lo que está debajo de esa fila.
+
+		**Se desplaza por dentro** en pantalla grande, y ésa es la última pieza que
+		faltaba. Tres columnas que comparten el borde de arriba y no el de abajo se
+		leen como algo a medio terminar, y encima ésta crecía al abrir una ranura:
+		la página entera se estiraba y las otras dos quedaban cortas. Acotada, las
+		tres miden lo mismo siempre —el alto lo fijan el anillo y la hoja, que no
+		cambian— y abrir una ranura no mueve el alto de nada.
+
+		El techo va atado a la ventana y no a un número fijo, porque lo que se quiere
+		es que **la herramienta entre en la pantalla**: doce rem son el encabezado
+		—barra, título y ficha del casco— y el resto es banco. El `min-h-0` es lo que
+		lo hace posible: sin él, un hijo de flex no se deja achicar por debajo de su
+		contenido y el desplazamiento nunca aparece.
 	-->
-	<div class="flex w-full min-w-0 flex-[1_1_0] flex-col gap-3">
+	<div
+		class="flex w-full min-w-0 flex-[1_1_0] flex-col gap-3 lg:max-h-[calc(100dvh-12rem)]
+			lg:min-h-0 lg:overflow-y-auto"
+	>
 		<SlotList {groups} onChoose={chooseSlot} detail={equipamiento} />
 
 		{#if !hasSelection}
@@ -848,12 +864,11 @@
 	<!--
 		La hoja de rendimiento: en qué se convirtió la nave que se armó.
 
-		**Se queda pegada arriba** en pantalla grande: es la respuesta a todo lo que
-		se hace del otro lado, y perderla de vista al bajar es perder el motivo por el
-		que uno estaba mirando. En pantalla chica no se pega, porque ahí no hay dos
-		columnas que mirar a la vez.
+		Ya no hace falta que se pegue arriba: ahora la página no crece al trabajar
+		—el banco se desplaza por dentro—, así que la hoja está siempre a la vista
+		sin trucos.
 	-->
-	<div class="flex w-full flex-col gap-4 lg:sticky lg:top-4 lg:w-[19rem] lg:shrink-0">
+	<div class="flex w-full flex-col gap-4 lg:w-[19rem] lg:shrink-0">
 		<!--
 			Que lo que se está mirando es una simulación y no la nave. Sin esto, las
 			cifras cambian solas al pasar el dedo por la lista y uno no sabe si ya montó
