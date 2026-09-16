@@ -93,6 +93,55 @@ confundirlas:
 Separarlas evita el vicio de las facciones temáticas, donde elegir "los mineros"
 es a la vez elegir una historia y una planilla de bonos.
 
+## La cadena
+
+**Ninguna mecánica entra sola.** Toda característica nueva arrastra una cadena, y
+pensarla entera antes de empezar es lo que separa un sistema de un atributo
+suelto.
+
+El salto entre sistemas sirve de ejemplo porque tiene todos los eslabones:
+
+| Eslabón        | En el salto                                  |
+| -------------- | -------------------------------------------- |
+| **El verbo**   | Cruzar una puerta                            |
+| **El insumo**  | Helio-3, que se consume                      |
+| **La fuente**  | Hielo lunar, que hay que minar y refinar     |
+| **El aparato** | Motor de salto y tanque, que se montan       |
+| **La llave**   | Astrogación y Eficiencia de combustible      |
+| **La fábrica** | Los materiales con que se construye el motor |
+| **El lugar**   | La estación que refina, vende y repara       |
+
+Un eslabón que falta no rompe nada de entrada: deja un **huérfano**, y los
+huérfanos son exactamente el diagnóstico con el que arrancó este proyecto. Un
+insumo sin fuente es una cifra que se compra y nada más. Un aparato sin llave es
+un módulo que no pide nada, como los cuarenta y siete del catálogo original. Una
+llave sin aparato es una habilidad que no mueve ningún número, como trece de las
+veintitrés. Un verbo sin insumo es un atributo que sólo se dibuja, como diecinueve
+de los veinticinco de la nave.
+
+Dicho al revés, que es como se usa: **antes de agregar algo, escribir su cadena y
+mirar dónde están los huecos.**
+
+### No hace falta cerrarla de una vez
+
+La regla no es «no entra hasta estar completa», que sería no entregar nunca. Es
+**saber dónde están los huecos y que cada uno tenga fecha**, no olvido. El
+combustible puede empezar comprándose en la estación y recién después salir del
+hielo; lo que no puede es que nadie sepa que esa fuente falta.
+
+Y hay una consecuencia de orden: **el insumo entra con el verbo que lo gasta, no
+antes**. Agregar helio-3 sin la puerta que lo consume es fabricar un huérfano a
+propósito.
+
+### Cada eslabón reusa lo que ya existe
+
+La cadena se alarga rápido, así que cada eslabón tiene que apoyarse en maquinaria
+que ya esté: el combustible es un ítem como cualquier otro, se compra por el
+mercado que ya existe, se refina en la refinería que ya existe y se gasta con la
+misma constante con la que la ficha de la nave calcula la autonomía. Un eslabón
+que inventa su propio sistema paralelo multiplica el costo de todos los que
+vengan después.
+
 ## Identidad visual
 
 **La interfaz imita la de Elite Dangerous lo más fielmente posible**: naranja

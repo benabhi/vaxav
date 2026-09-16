@@ -55,16 +55,17 @@ export const MAX_SKILL_LEVEL = 5;
  * Cuántas décimas tiene una unidad. Las magnitudes que necesitan fracción se
  * guardan multiplicadas por esto.
  */
-export const TENTHS = 10;
 
 export const SECONDS_PER_HOUR = 3600;
 
 /**
- * Cuántas toneladas de nave gasta una unidad de combustible por salto. Es el
- * número que hace que cargar la bodega hasta el tope también acorte la
- * autonomía, y no sólo la velocidad.
+ * Cuántas toneladas de nave gasta una unidad de combustible por salto.
+ *
+ * Se vuelve a exportar desde acá porque el equipamiento la usaba primero, pero
+ * **vive con el salto**, que es de donde sale la regla.
  */
-export const MASS_PER_FUEL_UNIT = 40;
+export { MASS_PER_FUEL_UNIT, TENTHS } from './jumps';
+import { TENTHS, jumpsWithFuel } from './jumps';
 
 /** Los niveles de habilidad de un piloto, por código. */
 export type SkillLevels = Readonly<Record<string, number>>;
@@ -407,7 +408,10 @@ export function buildReadout(
 		fuel,
 		// Cuántos saltos podés dar no es un atributo: es combustible sobre consumo,
 		// y el consumo de un salto es proporcional a la masa.
-		jumps: floorDiv(fuel, Math.max(1, floorDiv(mass, MASS_PER_FUEL_UNIT))),
+		// La misma función que usa el salto de verdad: si se calcularan aparte, la
+		// ficha podría decir «te quedan tres saltos» y la nave quedarse sin
+		// combustible en el segundo.
+		jumps: jumpsWithFuel(fuel, mass),
 		cargo,
 		sensorRange,
 		signature: Math.max(1, signature),

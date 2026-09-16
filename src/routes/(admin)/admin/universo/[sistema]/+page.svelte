@@ -259,7 +259,7 @@
 	<div class="flex w-full min-w-0 flex-1 flex-col md:h-full">
 		<TitledPanel
 			title="Cuerpos"
-			detail={sistema.bodies.length === 1 ? '1 cuerpo' : `${sistema.bodies.length} cuerpos`}
+			detail="distancia a lo que orbitan"
 			class="flex min-h-0 w-full flex-col md:h-full"
 		>
 			<div class="min-h-0 w-full grow overflow-y-auto">
@@ -329,10 +329,19 @@
 									cuatro rem y medio al nombre en una columna de veintiséis. El tipo
 									se lee igual al abrir la ficha.
 								-->
+								<!--
+									El número es la **distancia a lo que orbita**, que es el dato
+									guardado. Lleva su unidad porque un número pelado acá se confunde
+									con la distancia que muestra el juego, que se mide desde donde está
+									parado el piloto y es otra cosa.
+								-->
 								<span
-									class="ml-auto w-[3rem] shrink-0 text-right font-mono text-[0.7rem] text-data"
+									class="ml-auto w-[4.5rem] shrink-0 text-right font-mono text-[0.7rem] text-data"
+									title="Distancia a {fila.parentId === null
+										? 'la raíz del sistema'
+										: 'lo que orbita'}"
 								>
-									{fila.orbitDistance > 0 ? fila.orbitDistance : ''}
+									{fila.orbitDistance > 0 ? `${fila.orbitDistance} ud` : ''}
 								</span>
 							</div>
 						</TreeBranch>

@@ -3,6 +3,12 @@
 Juego web multijugador idle y textual: un piloto espacial y su nave. La visión y
 la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas.
 
+**Ninguna mecánica entra sola.** Toda característica arrastra una cadena —verbo,
+insumo, fuente, aparato, llave, fábrica y lugar— y lo que no se cierra queda como
+huérfano: un atributo que sólo se dibuja, una habilidad que no mueve nada, un
+módulo que no pide nada. No hace falta cerrarla de una vez, pero sí saber dónde
+están los huecos. Ver «La cadena» en `docs/DESIGN.md`.
+
 ## Entorno
 
 Proyecto SvelteKit plano, **sin Docker**. Hace falta **Node 22.12+, 24 o 26**: la
