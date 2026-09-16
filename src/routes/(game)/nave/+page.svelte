@@ -420,9 +420,14 @@
 			<span class="font-mono text-[0.88rem] {row.over ? 'text-danger' : 'text-data'}">
 				{row.value}
 			</span>
-			{#if row.unit}
-				<span class="w-[2.2rem] shrink-0 text-1 text-text-muted">{row.unit}</span>
-			{/if}
+			<!--
+				La caja de la unidad se dibuja **siempre**, tenga unidad o no. Si sólo
+				existiera cuando hay algo que escribir, las filas sin unidad —saltos,
+				combustible, firma— se correrían a la derecha para ocupar ese lugar y las
+				cifras dejarían de caer en una columna, que es justamente lo que hace que
+				esto se lea como un tablero.
+			-->
+			<span class="w-[2.2rem] shrink-0 text-1 text-text-muted">{row.unit ?? ''}</span>
 		</div>
 		{#if row.percent !== undefined}
 			<ProgressBar
