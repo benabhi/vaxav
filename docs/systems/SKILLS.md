@@ -263,6 +263,23 @@ Un piloto no arranca en cero: la **profesión** que elige al crearse le da un
 puñado de habilidades ya entrenadas, que es lo que le permite hacer algo desde el
 primer minuto. Ver [profesiones](PROFESSIONS.md).
 
+### Qué capas se dibujan
+
+La figura tiene **dos**: lo invertido en naranja y lo que espera en el pozo,
+punteado en cian. Juntas son la razón de que la figura valga la pena —la distancia
+entre las dos líneas **es** la decisión pendiente—, pero no en todos lados se está
+haciendo esa pregunta.
+
+- **En la credencial va una sola: lo invertido.** Chica y al lado de otros datos,
+  dos figuras encimadas piden una leyenda y un segundo de lectura para contestar
+  algo que ahí nadie preguntó. Ahí alcanza con quién es el piloto hoy.
+- **Agrandada van las dos, con un interruptor** para ver una, la otra o ambas.
+  Los botones van arriba del dibujo: con una sola capa la leyenda desaparece, y
+  abajo el botón recién apretado se corre bajo el dedo.
+
+Y **la leyenda sólo aparece con las dos capas**: una que explica lo único que hay
+en pantalla no desambigua nada, ocupa un renglón para repetir lo que ya se ve.
+
 ## El IPP
 
 El **Índice de Pericia del Piloto**: un solo número para saber qué tan lejos llegó

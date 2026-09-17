@@ -231,10 +231,6 @@ la siguiente:
   tránsito. Y la de tránsito tiene que **variar según a dónde se va**: un salto a
   otro sistema, un viaje a un cinturón y uno a una estación no son el mismo viaje
   y hoy se cuentan igual.
-- **El hexágono del piloto muestra sólo lo invertido.** El pozo sin gastar es
-  otra pregunta y hoy se dibujan las dos capas siempre; agrandado, un interruptor
-  para ver invertido, pozo o los dos. Y en la ficha va un poco más grande y
-  despegado del título.
 
 ## Lo que se decide en el camino
 

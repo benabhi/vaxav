@@ -32,6 +32,8 @@
 	import Identicon from './Identicon.svelte';
 	import PortraitPicker from './PortraitPicker.svelte';
 	import SkillHexagon from './SkillHexagon.svelte';
+	import HudButton from '../buttons/HudButton.svelte';
+	import type { CapasHexagono } from './SkillHexagon.svelte';
 	import { factionCrest } from '$lib/format';
 	import { PORTRAIT_ASPECT } from '$lib/game/portraits';
 	import type { PilotoConectado } from '$lib/tipos';
@@ -60,6 +62,20 @@
 	}
 
 	let { pilot, serial }: Props = $props();
+
+	/** Las tres vistas del hexágono, en el orden en que se piensan. */
+	const CAPAS: readonly { value: CapasHexagono; label: string }[] = [
+		{ value: 'invested', label: 'Invertido' },
+		{ value: 'pool', label: 'En el pozo' },
+		{ value: 'both', label: 'Los dos' }
+	];
+
+	/**
+	 * Qué capas muestra la ventana. Arranca con las dos, que es la vista completa
+	 * y la razón por la que la figura vale la pena: la distancia entre las líneas
+	 * es la decisión pendiente.
+	 */
+	let capas = $state<CapasHexagono>('both');
 
 	let intensidad = $derived(INTENSIDAD[Math.min(pilot.rating.step, INTENSIDAD.length - 1)]);
 
@@ -379,7 +395,7 @@
 				</button>
 			</div>
 			<div class="w-full max-w-[17rem]">
-				<SkillHexagon families={pilot.families} />
+				<SkillHexagon families={pilot.families} layers="invested" />
 			</div>
 		</div>
 	</div>
@@ -395,8 +411,31 @@
 -->
 <Modal bind:open={ampliado} title="Habilidades" detail={pilot.callsign} icon="atom" size="lg">
 	<div class="flex w-full flex-col items-start gap-5 lg:flex-row">
-		<div class="w-full min-w-0 flex-[1_1_0]">
-			<SkillHexagon families={pilot.families} />
+		<div class="flex w-full min-w-0 flex-[1_1_0] flex-col items-center gap-3">
+			<!--
+				Acá sí se eligen las capas. La credencial muestra una sola porque ahí la
+				pregunta es quién sos hoy; agrandado hay lugar para la otra mitad —en qué
+				te podés convertir— y para compararlas, que es de lo que se trata la
+				figura doble.
+
+				**Van arriba y no abajo.** Con una sola capa la leyenda del hexágono
+				desaparece, y con los botones debajo el que acabás de apretar se corre
+				bajo el dedo justo al apretarlo.
+			-->
+			<div class="flex flex-wrap items-center justify-center gap-2">
+				{#each CAPAS as opcion (opcion.value)}
+					<HudButton
+						size="1"
+						variant={capas === opcion.value ? 'primary' : 'outline'}
+						aria-pressed={capas === opcion.value}
+						onclick={() => (capas = opcion.value)}
+					>
+						{opcion.label}
+					</HudButton>
+				{/each}
+			</div>
+
+			<SkillHexagon families={pilot.families} layers={capas} />
 		</div>
 		<div class="w-full min-w-0 flex-[1_1_0]">
 			<FamilyXpPanel families={pilot.families} />
