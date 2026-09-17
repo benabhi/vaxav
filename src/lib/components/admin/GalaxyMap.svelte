@@ -228,71 +228,6 @@
 					ctx.globalAlpha = 1;
 				}
 			}
-
-			// El nombre del territorio, en su centro, y **sólo de lejos**: es el rótulo
-			// que contesta «dónde estoy en la galaxia», que es la pregunta que uno se
-			// hace cuando no distingue los sistemas.
-			if (camara.scale <= TERRITORY_LABEL_UNTIL) {
-				const centros: Record<
-					string,
-					{ x: number; y: number; n: number; color: string; label: string }
-				> = {};
-				for (const nodo of map.systems) {
-					const punto = puntos.get(nodo.code);
-					if (!punto || !seVe(nodo.code)) continue;
-					const clave = territory.key(nodo);
-					const junta = (centros[clave] ??= {
-						x: 0,
-						y: 0,
-						n: 0,
-						color: territory.color(nodo),
-						label: territory.label(nodo)
-					});
-					junta.x += punto.x;
-					junta.y += punto.y;
-					junta.n++;
-				}
-
-				// **El que choca no se dibuja.** Dos territorios cuyos centros caen cerca
-				// —y con seis en un racimo pasa— apilan sus nombres uno encima del otro y
-				// no se lee ninguno de los dos. Se dibujan de mayor a menor, así que el
-				// que se queda afuera es siempre el más chico, que es el que menos falta
-				// hace nombrar.
-				// **Con halo detrás.** El rótulo va en el color de su territorio, que es
-				// un tono claro sobre un fondo casi negro con un relleno translúcido
-				// encima: sin un contorno del color del fondo, el texto se funde con lo
-				// que tiene atrás y justo el nombre —que es lo que se vino a leer de
-				// lejos— es lo que no se lee.
-				ctx.font = '700 14px ui-monospace, monospace';
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'middle';
-				ctx.lineJoin = 'round';
-
-				const puestos: { x: number; y: number; ancho: number }[] = [];
-				for (const junta of Object.values(centros).sort((a, b) => b.n - a.n)) {
-					if (!junta.label) continue;
-					const donde = toScreen({ x: junta.x / junta.n, y: junta.y / junta.n }, camara, viewport);
-					const texto = junta.label.toUpperCase();
-					const ancho = ctx.measureText(texto).width;
-
-					const choca = puestos.some(
-						(otro) =>
-							Math.abs(otro.x - donde.x) < (otro.ancho + ancho) / 2 + 8 &&
-							Math.abs(otro.y - donde.y) < 16
-					);
-					if (choca) continue;
-
-					ctx.strokeStyle = fondo;
-					ctx.lineWidth = 4;
-					ctx.globalAlpha = 0.85;
-					ctx.strokeText(texto, donde.x, donde.y);
-
-					ctx.fillStyle = junta.color;
-					ctx.globalAlpha = 1;
-					ctx.fillText(texto, donde.x, donde.y);
-					puestos.push({ x: donde.x, y: donde.y, ancho });
-				}
-			}
 		}
 
 		// --- Las puertas primero: las casillas se dibujan encima ------------------
@@ -438,6 +373,95 @@
 				ctx.textBaseline = 'top';
 				ctx.fillStyle = elegido ? strong : muted;
 				ctx.fillText(nodo.name.toUpperCase(), donde.x, donde.y + radio + 7);
+			}
+		}
+
+		// --- Y los nombres de los territorios, al final -------------------------
+		//
+		// **Después de todo lo demás, a propósito.** Antes se dibujaban con el relleno
+		// del territorio, que es lo primero que va al lienzo: las líneas de las
+		// puertas, los hexágonos y los nombres de los sistemas les pasaban por encima
+		// y el rótulo quedaba abajo, tapado a medias. En un lienzo el orden de dibujo
+		// **es** la profundidad, y el nombre de la región tiene que estar arriba de
+		// todo o no se lee.
+		if (territory) {
+			// El nombre del territorio, en su centro, y **sólo de lejos**: es el rótulo
+			// que contesta «dónde estoy en la galaxia», que es la pregunta que uno se
+			// hace cuando no distingue los sistemas.
+			if (camara.scale <= TERRITORY_LABEL_UNTIL) {
+				const centros: Record<
+					string,
+					{ x: number; y: number; n: number; color: string; label: string }
+				> = {};
+				for (const nodo of map.systems) {
+					const punto = puntos.get(nodo.code);
+					if (!punto || !seVe(nodo.code)) continue;
+					const clave = territory.key(nodo);
+					const junta = (centros[clave] ??= {
+						x: 0,
+						y: 0,
+						n: 0,
+						color: territory.color(nodo),
+						label: territory.label(nodo)
+					});
+					junta.x += punto.x;
+					junta.y += punto.y;
+					junta.n++;
+				}
+
+				// **El que choca no se dibuja.** Dos territorios cuyos centros caen cerca
+				// —y con seis en un racimo pasa— apilan sus nombres uno encima del otro y
+				// no se lee ninguno de los dos. Se dibujan de mayor a menor, así que el
+				// que se queda afuera es siempre el más chico, que es el que menos falta
+				// hace nombrar.
+				// **Con su recuadro detrás**, y no un halo. El rótulo va en el color de su
+				// territorio —un tono claro— sobre un fondo casi negro con un relleno
+				// translúcido y un montón de líneas encima: un contorno alcanzaba para
+				// despegarlo del fondo pero no de las puertas que le cruzan por atrás. Un
+				// recuadro opaco corta con todo eso de una vez, y de paso le da la
+				// apariencia de etiqueta de instrumento que tiene el resto del HUD.
+				ctx.font = '700 14px ui-monospace, monospace';
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.lineJoin = 'round';
+
+				const puestos: { x: number; y: number; ancho: number }[] = [];
+				for (const junta of Object.values(centros).sort((a, b) => b.n - a.n)) {
+					if (!junta.label) continue;
+					const donde = toScreen({ x: junta.x / junta.n, y: junta.y / junta.n }, camara, viewport);
+					const texto = junta.label.toUpperCase();
+					const ancho = ctx.measureText(texto).width;
+
+					const choca = puestos.some(
+						(otro) =>
+							Math.abs(otro.x - donde.x) < (otro.ancho + ancho) / 2 + 8 &&
+							Math.abs(otro.y - donde.y) < 16
+					);
+					if (choca) continue;
+
+					const alto = 17;
+					const aire = 7;
+					const caja = {
+						x: donde.x - ancho / 2 - aire,
+						y: donde.y - alto / 2,
+						w: ancho + aire * 2,
+						h: alto
+					};
+
+					ctx.fillStyle = fondo;
+					ctx.globalAlpha = 0.82;
+					ctx.fillRect(caja.x, caja.y, caja.w, caja.h);
+
+					ctx.strokeStyle = junta.color;
+					ctx.globalAlpha = 0.5;
+					ctx.lineWidth = 1;
+					ctx.strokeRect(caja.x + 0.5, caja.y + 0.5, caja.w - 1, caja.h - 1);
+
+					ctx.fillStyle = junta.color;
+					ctx.globalAlpha = 1;
+					ctx.fillText(texto, donde.x, donde.y);
+					puestos.push({ x: donde.x, y: donde.y, ancho });
+				}
 			}
 		}
 	}

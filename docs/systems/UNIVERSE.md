@@ -456,6 +456,12 @@ turnan, porque de lejos la pregunta es «dónde estoy en la galaxia» y de cerca
 sistema es cada punto». Y el que chocaría con otro no se dibuja —se ordenan de
 mayor a menor, así que el que queda afuera es el más chico—.
 
+Va **con su recuadro y dibujado al final**. Las dos cosas por el mismo motivo: en
+un lienzo el orden de dibujo **es** la profundidad, y un rótulo pintado junto con
+el relleno del territorio queda debajo de las puertas, los hexágonos y los nombres
+de los sistemas. El recuadro opaco lo despega de todo eso de una vez, que un
+contorno solo no lograba.
+
 Para que esto sirva, **un territorio tiene que ser contiguo**: una región es un
 continente, no un archipiélago. El sembrador de prueba lo garantiza haciendo que
 cada constelación crezca colgándose de los suyos.
