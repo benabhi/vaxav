@@ -45,14 +45,19 @@ lugar y aparece en los tres.
 | ----------- | ---------------------------------------------- |
 | Piloto      | Información · Habilidades · Bitácora           |
 | Nave        | Ficha · Bodega                                 |
-| Navegación  | Ubicación · Sistema                            |
+| Navegación  | Ubicación · Sistema · Galaxia                  |
 | Mercado     | Mercado · Órdenes de venta · Órdenes de compra |
 | Propiedades | Propiedades                                    |
 | Billetera   | Billetera                                      |
 | Opciones    | Cuenta                                         |
 
 Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
-pantallas: la galaxia llega con el segundo sistema.
+pantallas.
+
+Las tres de Navegación son **tres acercamientos de lo mismo**, del más cerca al
+más lejos: el cuerpo donde estás parado, el sistema que lo contiene y la galaxia
+que contiene al sistema. Ése es el orden, y por eso Galaxia va última: nadie abre
+el mapa de la galaxia para saber si puede atracar.
 
 ### Qué va al Neocom y qué es una sala
 
@@ -332,19 +337,19 @@ Con ochenta componentes, «fijarse si ya existe» no pasa solo: hay que pregunta
 pieza por pieza, y para eso hace falta saber qué hay. Esta tabla es el mapa, por
 carpeta; los archivos están en `src/lib/components/`.
 
-| Carpeta       | Para qué                                          | Lo que más se usa                                                                              |
-| ------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                         |
-| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                             |
-| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                         |
-| `forms/`      | Campos y avisos de formulario                     | `TextField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`                      |
-| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                        |
-| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `PilotCredential`, `FittingRig`, `SkillHexagon`, `ModuleGrid` |
-| `admin/`      | Sólo del cuartel                                  | `GalaxyMap`, `GateRose`, `EventTrace`, `SelectField`                                           |
-| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                         |
-| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                              |
-| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                                |
-| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                        |
+| Carpeta       | Para qué                                          | Lo que más se usa                                                                            |
+| ------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                       |
+| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                           |
+| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                       |
+| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`     |
+| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                      |
+| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `PilotCredential`, `FittingRig` |
+| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                        |
+| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                       |
+| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                            |
+| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                              |
+| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                      |
 
 Tres que conviene conocer antes de escribir una pantalla nueva, porque son las
 que más se reinventan sin querer:
@@ -355,6 +360,33 @@ que más se reinventan sin querer:
   cartel con sus lecturas y la procedencia del verbo.
 - **`Panel` y `TitledPanel`** — el recuadro del HUD. Una pantalla que dibuja su
   propio borde naranja está reimplementando uno de estos dos.
+
+**Y una advertencia sobre `admin/`:** que algo haya nacido en el cuartel no lo
+vuelve del cuartel. `SelectField` era un campo de formulario con otra dirección, y
+`GalaxyMap` terminó siendo la pestaña Galaxia del juego. Cuando una pieza de esa
+carpeta le sirve a una pantalla del juego, **se muda**; envolverla o copiarla es
+quedarse con dos.
+
+### El mapa de la galaxia y su marco
+
+Son dos piezas y conviene no confundirlas:
+
+- **`GalaxyMap`** es el lienzo: la grilla, las líneas, la cámara y el clic. No sabe
+  qué hay alrededor.
+- **`GalaxyStage`** es el marco: acomoda el lienzo, los filtros, la ficha del
+  costado y la leyenda, y resuelve el botón de agrandar —panel arriba, pantalla
+  completa encima de todo—.
+
+Las piezas de adentro entran como snippets, así que el marco no sabe qué son: el
+constructor filtra por gobierno y ofrece abrir el sistema, el piloto filtra por
+servicios y ofrece viajar. Lo que **no** cambia es dónde va cada una, y ésa es
+justo la parte que no conviene escribir dos veces: dos marcos se separan solos, y
+un botón de agrandar que en una pantalla deja la ficha adentro y en la otra afuera
+es una interfaz que hay que volver a aprender.
+
+La cámara vive en **la pantalla** y no en el marco ni en el mapa: agrandar dibuja
+la otra versión y eso vuelve a montar el lienzo, así que con la vista adentro cada
+expansión volvería al encuadre inicial.
 
 ### La credencial, y el retrato del piloto
 

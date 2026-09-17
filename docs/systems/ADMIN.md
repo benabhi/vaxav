@@ -327,6 +327,13 @@ está en [universo](UNIVERSE.md#el-mapa); lo que hace falta saber acá es que
 contesta preguntas de conjunto —ramales sueltos, puertas sin terminar, pasos
 cerrados— que sistema por sistema no se ven.
 
+**El mapa y su marco son compartidos con la cabina.** `views/galaxy.ts` arma la
+galaxia para las dos pantallas y `GalaxyStage` pone alrededor lo mismo en las dos
+—los filtros, la ficha, la leyenda, y el mismo botón de agrandar—, así que lo que
+cambia es qué piezas entran, no dónde va cada una. Lo que el cuartel ve de más es
+la deuda de obra: las puertas sin conectar y los sistemas a la deriva, que al
+piloto no se le muestran porque no son contenido sino trabajo pendiente.
+
 **Los filtros valen para los dos.** El mismo recorte apaga sistemas en el mapa y
 quita filas de la lista: buscador, facción, región y gobierno, más un criterio
 para pintar el mapa. Viajan en la URL, como en todo listado del proyecto, así que
