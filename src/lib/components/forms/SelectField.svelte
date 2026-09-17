@@ -72,7 +72,7 @@
 		id={name}
 		{name}
 		class="text-base {CONTROL_HEIGHTS[size]} w-full cursor-pointer appearance-none border
-			border-border-soft bg-field px-[11px] font-body leading-none text-text-strong
+			border-border-soft bg-field px-[0.7rem] font-body leading-none text-text-strong
 			shadow-[inset_0_0_0_1px_rgb(255_251_237/0.235)] transition-[border-color,box-shadow]
 			hover:border-border focus:border-accent focus:shadow-glow focus:outline-none"
 		{...rest}

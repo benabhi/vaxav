@@ -293,6 +293,61 @@ html {
 	scroll-behavior: smooth;
 }
 
+/* --- La escala del HUD ------------------------------------------------------
+ *
+ * Toda la interfaz está medida en `rem` —la escala de texto, la de espaciado, el
+ * ancho del Neocom y el de la columna de contenido—, así que mover la medida de
+ * la raíz agranda el HUD entero de una pieza, sin tocar una sola pantalla.
+ *
+ * Hace falta porque el diseño está pensado a la medida de un portátil, y en un
+ * monitor grande la misma pantalla queda diminuta: el jugador termina poniéndole
+ * zoom al navegador. Esto es ese zoom, pero puesto por el proyecto y sólo donde
+ * sobra ancho.
+ *
+ * Va en porcentaje y no en píxeles **a propósito**: el porcentaje se cuenta sobre
+ * la medida que el jugador dejó configurada en su navegador, así que quien la
+ * subió para poder leer no la pierde.
+ *
+ * Los puntos de corte no se mueven con esto —una media query mide siempre contra
+ * la raíz inicial, nunca contra la que se deja acá—, y está bien: el reparto de
+ * la pantalla lo sigue decidiendo el ancho real y lo único que cambia es el
+ * tamaño de lo que hay adentro. Pero obliga a una cuenta: agrandada la raíz, el
+ * ancho que le queda al contenido —el ancho de la ventana dividido la escala—
+ * tiene que seguir por encima de `lg`, que con 80rem es el corte más ancho que
+ * usa el juego. Si cayera por debajo, la pantalla pediría el reparto de
+ * escritorio con el lugar de una tableta. Cada escalón de acá abajo cumple esa
+ * cuenta con margen, y es lo que hay que recalcular antes de agregar uno.
+ */
+
+html {
+	font-size: 100%;
+}
+
+/* 1600px: la primera medida donde el HUD ya nada en ancho. Quedan 88rem. */
+@media (min-width: 100rem) {
+	html {
+		font-size: 112.5%; /* 18px */
+	}
+}
+
+/*
+ * 1792px y no 1920: un monitor de 1920 con la barra de desplazamiento a la vista
+ * deja una ventana de 1905, y con el corte puesto justo en 1920 la pantalla más
+ * común del juego se quedaría sin escalar por quince píxeles. Quedan 92rem.
+ */
+@media (min-width: 112rem) {
+	html {
+		font-size: 130%; /* 20.8px */
+	}
+}
+
+/* 2400px: 1440p y los 4K con el escalado del sistema puesto. Quedan 106rem. */
+@media (min-width: 150rem) {
+	html {
+		font-size: 150%; /* 24px */
+	}
+}
+
 /*
  * El vacío detrás del casco: casi negro con una brasa naranja arriba y un resto
  * de azul abajo, que es de donde sale el color del logotipo.

@@ -164,6 +164,40 @@ pasa en el bolsillo tanto como en el escritorio.
 - En pantallas chicas se esconde lo prescindible antes que apretarlo: en la barra
   de estado, primero se va el reloj y quedan la ubicación y los créditos.
 
+### Y lo que sobra en un monitor grande
+
+El mismo eje, del otro lado. La interfaz está pensada a la medida de un portátil y
+en un monitor de 1920 o más queda diminuta: el jugador termina poniéndole zoom al
+navegador. **Ese zoom lo pone el proyecto**, en `src/app.css`, subiendo la medida
+de la raíz por escalones —112,5 % desde 1600 px, 130 % desde 1792 y 150 % desde
+2400—.
+
+Funciona porque **todo el sistema de diseño está en `rem`**: la escala de texto, la
+de espaciado, el ancho del Neocom y el de la columna de contenido. Mover la raíz
+los agranda a todos de una pieza, sin tocar una sola pantalla. Y va en porcentaje,
+que se cuenta sobre la medida configurada en el navegador, así que quien la subió
+para poder leer no la pierde.
+
+Antes de mover un escalón hay que saber tres cosas:
+
+- **Los puntos de corte no se mueven con la raíz.** Una media query mide siempre
+  contra la raíz inicial, así que el reparto de la pantalla lo sigue decidiendo el
+  ancho real y lo único que cambia es el tamaño de lo de adentro.
+- Por eso hay una cuenta que cumplir: el ancho de la ventana **dividido la escala**
+  tiene que quedar por encima de `lg` —80 rem, el corte más ancho que usa el
+  juego—. Si cayera por debajo, la pantalla pediría el reparto de escritorio con el
+  lugar de una tableta.
+- El escalón grande está en **1792 px y no en 1920** porque un monitor de 1920 con
+  la barra de desplazamiento a la vista deja una ventana de 1905.
+
+Y la contracara: **una medida en píxeles no acompaña**. Las líneas finas del HUD
+—los bordes de uno a tres píxeles— está bien que se queden donde están, porque
+agrandadas salen borrosas; un cuerpo de letra o un espaciado en píxeles, no: se
+queda chico mientras todo lo que lo rodea crece. El caso difícil es el **lienzo**,
+que dibuja en píxeles por definición: el mapa de la galaxia guarda su tamaño ya
+dividido por la escala y se la devuelve a la transformación, así que sus radios,
+sus grosores y sus rótulos quedan escritos en las mismas unidades que el CSS.
+
 ### Lo que todavía no entra en un teléfono
 
 Dos cosas quedan sin resolver, y son la misma: hay anchos fijos que no se pueden
