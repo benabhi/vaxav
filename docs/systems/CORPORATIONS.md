@@ -104,15 +104,31 @@ compra y vende.
 **Va a ser una zona de varias pestañas** —miembros, roles y permisos, bienes,
 contratos—, y están las dos que hoy tienen algo detrás:
 
-| Pestaña      | Qué contesta                                                        |
-| ------------ | ------------------------------------------------------------------- |
-| **Ficha**    | Quién es, qué rubro tiene, qué estaciones opera y dónde tiene gente |
-| **Miembros** | Quiénes son los otros, por antigüedad                               |
+| Pestaña      | Qué contesta                                                         |
+| ------------ | -------------------------------------------------------------------- |
+| **Ficha**    | Quién es, qué rubro tiene, qué estaciones opera y dónde tiene gente  |
+| **Miembros** | Quiénes son los otros: buscar, filtrar por oficio, ordenar y paginar |
 
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
-cartel es una puerta cerrada con el nombre puesto. Del listado de miembros se
-muestra **lo público** —cómo se llama cada uno, a qué se dedica y desde cuándo
-vuela—: dónde está parado ahora no, porque un listado de miembros no es un radar.
+cartel es una puerta cerrada con el nombre puesto.
+
+Del listado de miembros se muestra **lo público** —cómo se llama cada uno, a qué se
+dedica y desde cuándo vuela—: dónde está parado ahora no, porque un listado de
+miembros no es un radar.
+
+Y nace con **recorte, orden y paginado**, como todo listado del proyecto, en vez de
+esperar a que haga falta: la lista de una corporación grande sin filtros es una
+lista que no se usa. Se busca por distintivo y se filtra por oficio, que es la
+pregunta que va a importar cuando se armen operaciones —hacen falta tres mineros y
+un escolta, y eso no se contesta leyendo mil nombres—. El desplegable ofrece
+**sólo los oficios que hay adentro**: uno que ofrece seis opciones de las que cinco
+no encuentran nada hace perder el tiempo cinco veces de cada seis.
+
+El orden de entrada es por **antigüedad**, que es como una corporación se cuenta a
+sí misma. Como la fecha se guarda al segundo, los que empatan conservan el orden de
+alta —el que entró primero tiene el identificador más bajo— y no se reacomodan
+alfabéticamente, que sería mentir sobre quién estaba antes. La mecánica compartida
+está en [arquitectura](ARCHITECTURE.md#toda-lista-larga-se-recorta-igual).
 
 ## El sello: la cara de cada una
 

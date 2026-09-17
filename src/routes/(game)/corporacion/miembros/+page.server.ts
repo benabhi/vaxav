@@ -7,11 +7,11 @@
 
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { buildMiembros } from '$lib/server/views/members';
+import { buildMiembros, readMembersQuery } from '$lib/server/views/members';
 import { LOGIN_ROUTE } from '$lib/routes';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.pilot) redirect(303, LOGIN_ROUTE);
-	return { miembros: buildMiembros(db, locals.pilot) };
+	return { miembros: buildMiembros(db, locals.pilot, readMembersQuery(url.searchParams)) };
 };
