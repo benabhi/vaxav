@@ -443,12 +443,18 @@ Lo que el trazo codifica:
 
 | Se ve                              | Quiere decir                                         |
 | ---------------------------------- | ---------------------------------------------------- |
+| Línea cian con marcas corriendo    | El **tramo que estás cruzando** ahora mismo          |
 | Línea llena                        | Una puerta que sigue la grilla                       |
 | Línea gruesa, naranja claro        | Una **salida del sistema elegido**                   |
-| Línea punteada, en cian            | Un **atajo**: sus puntas no son vecinas              |
+| Línea punteada, en blanco          | Un **atajo**: sus puntas no son vecinas              |
 | Línea roja con un tajo al medio    | El **paso está cerrado**                             |
 | Un brazo corto amarillo            | Una **puerta sin conectar**, saliendo hacia su rumbo |
 | Un anillo rojo alrededor del punto | El sistema **no llega** hasta la semilla             |
+
+El primero es el único que se mueve, y es a propósito: en el mapa el color dice
+**cuál** y el movimiento dice **cuándo**. Nada más en el lienzo corre, así que la
+marquesina no tiene con qué confundirse —y por eso el atajo, que antes era cian
+punteado, pasó al blanco: el cian quedó para vos, dónde estás y adónde vas—.
 
 Los tres últimos son trabajo a medio hacer que sólo se ve mirando el conjunto: el
 contador de arriba dice **cuántos** hay, el mapa dice **dónde**.

@@ -253,7 +253,7 @@
 		{ label: 'Podés cruzarla', color: 'var(--color-accent)' },
 		{ label: 'Salida del elegido', color: 'var(--color-accent-bright)' },
 		{ label: 'Otra conexión', color: 'var(--color-accent-dim)' },
-		{ label: 'Atajo', color: 'var(--color-data)' },
+		{ label: 'Atajo', color: 'var(--color-text-strong)' },
 		{ label: 'Paso cerrado', color: 'var(--color-danger)' }
 	];
 

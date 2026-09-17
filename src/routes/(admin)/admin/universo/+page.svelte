@@ -477,7 +477,7 @@
 	const LEYENDA = [
 		{ label: 'Salida del elegido', color: 'var(--color-accent-bright)' },
 		{ label: 'Conexión', color: 'var(--color-accent-dim)' },
-		{ label: 'Atajo', color: 'var(--color-data)' },
+		{ label: 'Atajo', color: 'var(--color-text-strong)' },
 		{ label: 'Paso cerrado', color: 'var(--color-danger)' },
 		{ label: 'Puerta sin conectar', color: 'var(--color-warning)' }
 	];
@@ -879,7 +879,7 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 									<span class="text-[0.6rem] tracking-label text-danger uppercase">Cerrada</span>
 								{/if}
 								{#if salida.shortcut}
-									<span class="text-[0.6rem] tracking-label text-data uppercase">Atajo</span>
+									<span class="text-[0.6rem] tracking-label text-text-strong uppercase">Atajo</span>
 								{/if}
 							</div>
 						{/each}
