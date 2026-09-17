@@ -90,6 +90,29 @@ Que la cantidad de pilotos sea real importa: es lo que convierte la elección en
 una decisión informada —sumarse a la mayoría o al bando flaco— en vez de un
 sorteo entre tres textos.
 
+## El color de cada una
+
+| Facción          | Color |           |
+| ---------------- | ----- | --------- |
+| **El Dominio**   | Rojo  | `#e0483a` |
+| **La Concordia** | Azul  | `#4f9dee` |
+| **El Pacto**     | Verde | `#57c96a` |
+
+**Es identidad, no decoración, y no cambia nunca.** Una facción que se dibuja de
+un color en el mapa de la galaxia y de otro en la ficha del piloto es una que hay
+que volver a aprender en cada pantalla.
+
+Por eso el color es un dato del catálogo —`src/lib/game/factions.ts`— y no algo
+que se genere a partir del nombre, como sí pasa con las regiones: las regiones son
+muchas y las crea quien construye, las facciones son tres y son el juego.
+
+Va como literal y no como variable del tema porque `game/` no conoce el CSS: son
+reglas puras que corren de los dos lados. Los tonos están elegidos para convivir
+con el naranja del HUD sin pelearse con él.
+
+**El espacio libre no es una facción**, así que no tiene color: se dibuja con el
+gris de lo que no tiene dueño.
+
 ## Las tres
 
 ### El Dominio — _imperio · aristocracia_

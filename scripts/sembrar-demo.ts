@@ -50,6 +50,7 @@ import {
 	type Government
 } from '../src/lib/game/universe';
 import { neighbourOf, type Hex } from '../src/lib/game/galaxy';
+import { bearingLabel } from '../src/lib/format';
 import { oppositeBearing } from '../src/lib/game/universe';
 
 const url = process.env.DATABASE_URL;
@@ -476,7 +477,18 @@ for (const faccion of PLAN) {
 	}
 
 	// --- Los veinte sistemas --------------------------------------------------
+	// **Cada constelación se llena antes de empezar la siguiente**, y cada sistema
+	// nuevo se cuelga de uno de la suya. Antes la constelación salía del orden de
+	// plantado y el padre se elegía en todo el racimo: el treinta por ciento de las
+	// veces el sistema aterrizaba lejos de sus hermanos y el territorio salía en
+	// parches sueltos. Una región es un continente, no un archipiélago.
+	const cupo = Math.ceil(faccion.systems.length / constelaciones.length);
+	const porConstelacion: Record<number, number[]> = {};
+
 	for (const [indice, nombre] of faccion.systems.entries()) {
+		const cual = Math.min(constelaciones.length - 1, Math.floor(indice / cupo));
+		const miConstelacion = constelaciones[cual];
+		porConstelacion[cual] ??= [];
 		// **Lo que ya estaba también cuenta como plantado.** Saltearlo del todo lo
 		// dejaba fuera de la lista de enganche, y el siguiente se quedaba sin nada
 		// de dónde colgar. Una siembra a medias tiene que poder continuarse.
@@ -498,7 +510,7 @@ for (const faccion of PLAN) {
 			db,
 			{
 				name: nombre,
-				constellationId: unoDe(constelaciones),
+				constellationId: miConstelacion,
 				government,
 				security: entre(min, max),
 				controllingFaction: faccion.code,
@@ -581,22 +593,31 @@ for (const faccion of PLAN) {
 		// El primero de cada facción se engancha a la anterior —así la galaxia queda
 		// de una pieza y se puede caminar de punta a punta— y el resto crece sobre
 		// los suyos.
-		const candidatos = indice === 0 ? anteriorFaccion : plantados[faccion.code];
-
-		// **Setenta por ciento sobre lo último plantado, treinta sobre cualquiera.**
-		// Es lo que evita el panal: creciendo siempre desde uno al azar sale una
-		// mancha redonda, y siempre desde el último sale una víbora. Mezclando salen
-		// ramas largas con brotes, que es como se ve un mapa de galaxia.
+		// **De quién se cuelga, en orden de preferencia.** Primero los de su propia
+		// constelación, que es lo que la vuelve un continente y no un archipiélago;
+		// después cualquiera de la facción, para cuando la constelación está rodeada;
+		// y el primero de todos se engancha a la facción anterior, así la galaxia
+		// queda de una pieza y se puede caminar de punta a punta.
 		//
-		// **Y se prueba candidato por candidato hasta encontrar uno con lugar.** Con
-		// seis vecinos por casilla, el frente de crecimiento se satura enseguida:
-		// rendirse al primero que no tiene libre dejaba veintitrés sistemas flotando
-		// encimados en el origen, que es exactamente lo que el mapa marca en rojo.
-		const cerca = candidatos.slice(-6);
-		const orden =
+		// Dentro de la propia constelación, setenta por ciento sobre lo último
+		// plantado y treinta sobre cualquiera: siempre desde el último sale una
+		// víbora, siempre al azar sale una mancha redonda, y mezclando salen ramas
+		// con brotes.
+		//
+		// **Se prueba candidato por candidato hasta encontrar uno con lugar.** Con
+		// seis vecinos por casilla el frente se satura enseguida, y rendirse al
+		// primero que no tiene libre dejaba racimos enteros flotando en el origen.
+		const hermanos = porConstelacion[cual];
+		const cerca = hermanos.slice(-6);
+		const propios =
 			dado() < 0.7 && cerca.length > 0
-				? [...mezclar(cerca), ...mezclar(candidatos)]
-				: mezclar(candidatos);
+				? [...mezclar(cerca), ...mezclar(hermanos)]
+				: mezclar(hermanos);
+
+		const orden =
+			indice === 0
+				? mezclar(anteriorFaccion)
+				: [...propios, ...mezclar(plantados[faccion.code]), ...mezclar(anteriorFaccion)];
 
 		const tomadas = ocupadas();
 		let enganchado = false;
@@ -608,7 +629,7 @@ for (const faccion of PLAN) {
 				db,
 				fuente,
 				{
-					name: `Puerta a ${nombre}`,
+					name: `Puerta ${bearingLabel(rumbo)}`,
 					kind: 'gate',
 					parentId: estrellaDe(fuente),
 					orbitDistance: entre(300, 800),
@@ -622,7 +643,7 @@ for (const faccion of PLAN) {
 				db,
 				system.id,
 				{
-					name: `Puerta a ${db.select().from(systemTable).where(eq(systemTable.id, fuente)).get()!.name}`,
+					name: `Puerta ${bearingLabel(oppositeBearing(rumbo))}`,
 					kind: 'gate',
 					parentId: star.id,
 					orbitDistance: entre(300, 800),
@@ -647,6 +668,7 @@ for (const faccion of PLAN) {
 		}
 
 		plantados[faccion.code].push(system.id);
+		porConstelacion[cual].push(system.id);
 	}
 
 	anteriorFaccion = plantados[faccion.code];
@@ -677,7 +699,7 @@ for (let i = 0; i < 9 && todos.length > 4; i++) {
 			db,
 			uno,
 			{
-				name: `Atajo ${i + 1}`,
+				name: `Puerta ${bearingLabel(rumboUno)}`,
 				kind: 'gate',
 				parentId: estrellaDe(uno),
 				orbitDistance: entre(300, 900),
@@ -691,7 +713,7 @@ for (let i = 0; i < 9 && todos.length > 4; i++) {
 			db,
 			otro,
 			{
-				name: `Atajo ${i + 1} · vuelta`,
+				name: `Puerta ${bearingLabel(rumboOtro)}`,
 				kind: 'gate',
 				parentId: estrellaDe(otro),
 				orbitDistance: entre(300, 900),
@@ -736,7 +758,7 @@ for (let i = 0; i < 4; i++) {
 			db,
 			donde,
 			{
-				name: `Puerta sin terminar ${i + 1}`,
+				name: `Puerta ${bearingLabel(rumbo)}`,
 				kind: 'gate',
 				parentId: estrellaDe(donde),
 				orbitDistance: entre(300, 900),

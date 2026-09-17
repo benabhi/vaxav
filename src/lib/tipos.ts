@@ -1270,12 +1270,21 @@ export interface ConsultaUniverso {
 	readonly search: string;
 	readonly faction: string;
 	readonly region: string;
+	readonly constellation: string;
 	readonly government: string;
 	readonly sort: string;
 	readonly dir: 'asc' | 'desc';
 	readonly page: number;
 	/** Por qué criterio pinta el mapa. */
 	readonly paint: string;
+	/**
+	 * Qué territorio dibuja el mapa por debajo: `region`, `constelacion` o nada.
+	 *
+	 * Va en la consulta y no en el navegador porque es parte de **cómo se está
+	 * mirando** la galaxia, igual que el pintado: un mapa que alguien comparte
+	 * tiene que llegar del otro lado como lo estaba viendo.
+	 */
+	readonly territory: string;
 }
 
 /**

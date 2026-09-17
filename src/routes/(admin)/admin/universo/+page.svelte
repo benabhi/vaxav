@@ -36,6 +36,7 @@
 	import { ADMIN_ROUTE } from '$lib/admin';
 	import { FREE_SPACE } from '$lib/admin';
 	import { bearingLabel } from '$lib/format';
+	import { getFaction } from '$lib/game/factions';
 	import { oppositeBearing, type GateBearing } from '$lib/game/universe';
 	import type { NodoGalaxia } from '$lib/tipos';
 	import type { PageProps } from './$types';
@@ -121,6 +122,54 @@
 		}))
 	]);
 
+	/**
+	 * Las constelaciones, con el nombre como valor y su región como grupo.
+	 *
+	 * Agrupadas porque con quince, un desplegable plano no dice en qué parte de la
+	 * galaxia cae cada una: es la misma decisión que ya tomaba el alta de sistema.
+	 * Salen de los sistemas que hay y no del catálogo, así que una constelación
+	 * vacía no aparece como filtro que no encuentra nada.
+	 */
+	let opcionesConstelacion = $derived([
+		{ value: '', label: 'Todas' },
+		...universo.map.systems
+			.map((uno) => ({ value: uno.constellation, label: uno.constellation, group: uno.region }))
+			.filter(
+				(una, i, todas) => una.value && todas.findIndex((otra) => otra.value === una.value) === i
+			)
+			.sort((a, b) => a.group.localeCompare(b.group, 'es') || a.label.localeCompare(b.label, 'es'))
+	]);
+
+	/** Qué territorio dibuja el mapa por debajo de todo. */
+	const TERRITORIOS = [
+		{ value: '', label: 'Ninguno' },
+		{ value: 'region', label: 'Regiones' },
+		{ value: 'constelacion', label: 'Constelaciones' }
+	];
+
+	/**
+	 * El territorio que el mapa dibuja: cómo se agrupan las casillas, de qué color
+	 * y cómo se llama la mancha.
+	 *
+	 * Las tres cosas van juntas o no va ninguna, que es por qué el mapa las recibe
+	 * en un objeto: dibujar una frontera sin saber qué separa no significa nada.
+	 */
+	let territorio = $derived(
+		consulta.territory === 'region'
+			? {
+					key: (nodo: NodoGalaxia) => nodo.region,
+					color: (nodo: NodoGalaxia) => tono(nodo.region),
+					label: (nodo: NodoGalaxia) => nodo.region
+				}
+			: consulta.territory === 'constelacion'
+				? {
+						key: (nodo: NodoGalaxia) => nodo.constellation,
+						color: (nodo: NodoGalaxia) => tono(nodo.constellation),
+						label: (nodo: NodoGalaxia) => nodo.constellation
+					}
+				: undefined
+	);
+
 	let opcionesGobierno = $derived([
 		{ value: '', label: 'Todos' },
 		...universo.options.governments.map((una) => ({ value: una.value, label: una.label }))
@@ -148,8 +197,10 @@
 			consulta.search ||
 			consulta.faction ||
 			consulta.region ||
+			consulta.constellation ||
 			consulta.government ||
 			consulta.paint ||
+			consulta.territory ||
 			consulta.page > 1 ||
 			consulta.sort !== 'nombre' ||
 			consulta.dir !== 'asc'
@@ -207,19 +258,38 @@
 	 * Agregar un criterio nuevo es agregar una entrada acá y una opción en el
 	 * select: por eso es una tabla y no un `if`.
 	 */
-	const PALETA = ['#ff7a1a', '#4fd2ee', '#5bd46b', '#ffc14d', '#ff4a3d', '#b48ce8', '#e88ca8'];
+	/**
+	 * El color de una categoría, generado a partir de su nombre.
+	 *
+	 * **Sin paleta y sin techo.** Antes eran siete colores fijos y la octava región
+	 * repetía uno: con quince constelaciones eso son dos manchas del mismo color
+	 * pegadas, que es peor que no pintar. El tono sale del nombre, así que hay
+	 * trescientos sesenta y no hay nada que configurar cuando alguien crea una
+	 * región nueva.
+	 *
+	 * **El mismo nombre da siempre el mismo color**, en cada carga y en cada
+	 * máquina, que es lo que deja comparar el mapa de hoy con el de ayer. Se
+	 * multiplica por el ángulo áureo para que nombres parecidos no caigan en tonos
+	 * parecidos: sin eso, «Pleamar» y «Peñascales» salían casi iguales.
+	 *
+	 * La saturación y el brillo son fijos y salen de la paleta del HUD: lo que varía
+	 * es el tono, así que ninguno desentona con el naranja del juego.
+	 */
+	const ANGULO_AUREO = 137.508;
 
-	/** El mismo valor recibe el mismo color en cada carga, que es lo que hace que el
-	 * mapa se pueda comparar consigo mismo de un día al otro. */
 	function tono(clave: string): string {
 		if (!clave) return 'var(--color-text-muted)';
 		let suma = 0;
 		for (const letra of clave) suma = (suma * 31 + letra.charCodeAt(0)) % 100000;
-		return PALETA[suma % PALETA.length];
+		return `hsl(${Math.round((suma * ANGULO_AUREO) % 360)} 68% 62%)`;
 	}
 
 	const CRITERIOS: Record<string, (nodo: NodoGalaxia) => string> = {
-		faccion: (nodo) => tono(nodo.faction),
+		// **El color de una facción es suyo y está en el catálogo**, no se genera:
+		// rojo el Dominio, azul la Concordia y verde el Pacto, en todo el juego. El
+		// espacio libre no es una facción, así que se queda con el gris de lo que no
+		// tiene dueño.
+		faccion: (nodo) => (nodo.faction ? getFaction(nodo.faction).color : 'var(--color-text-muted)'),
 		region: (nodo) => tono(nodo.region),
 		gobierno: (nodo) => tono(nodo.government),
 		// La seguridad no es una categoría sino una escala, así que va con los colores
@@ -314,6 +384,31 @@
 	let mapa = $state<GalaxyMap>();
 	let panel = $state<HTMLDivElement>();
 
+	/**
+	 * El mapa a pantalla casi completa.
+	 *
+	 * **Es la misma instancia, con otro envoltorio.** Dibujar un segundo mapa en un
+	 * diálogo aparte perdería la cámara: al agrandar volverías al encuadre inicial
+	 * en vez de seguir mirando lo que estabas mirando. Lo único que cambia son las
+	 * clases del contenedor.
+	 */
+	let agrandado = $state(false);
+
+	/** Los filtros se pliegan cuando el mapa es la pantalla: ahí el lugar es del mapa. */
+	let filtrosAbiertos = $state(true);
+
+	function alternarAgrandado() {
+		agrandado = !agrandado;
+		// Plegados de entrada al agrandar, abiertos al volver: agrandar es para
+		// mirar el mapa, y la barra de filtros ocupa el alto de dos sistemas.
+		filtrosAbiertos = !agrandado;
+	}
+
+	/** Escape cierra, como todo lo que tapa la pantalla en este juego. */
+	function alTeclear(evento: KeyboardEvent) {
+		if (evento.key === 'Escape' && agrandado) alternarAgrandado();
+	}
+
 	let elegidoNodo = $derived(universo.map.systems.find((uno) => uno.code === elegido) ?? null);
 	/** Los nombres de los sistemas, para leer un enlace sin volver a buscarlo. */
 	let nombres = $derived(new Map(universo.map.systems.map((uno) => [uno.code, uno.name])));
@@ -368,6 +463,8 @@
 	<Label>{titulo}</Label>
 	<span class="text-1 text-text-body">{valor}</span>
 {/snippet}
+
+<svelte:window onkeydown={alTeclear} />
 
 <svelte:head><title>Universo · Cuartel general · Vaxav</title></svelte:head>
 
@@ -443,109 +540,198 @@
 		Es un formulario `GET`: los filtros viajan en la URL, así que un recorte se
 		puede compartir, se vuelve con el botón de atrás y se recarga sin perderlo.
 	-->
-	<form
-		method="GET"
-		onsubmit={alEnviar}
-		class="flex w-full flex-wrap items-end gap-3 border border-border-soft bg-surface
-			px-[0.9rem] py-[0.7rem]"
-	>
-		<div class="w-full min-w-0 xs:w-[12rem]">
-			<TextField
-				label="Buscar"
-				name="buscar"
-				size="1"
-				value={consulta.search}
-				placeholder="Nombre"
-			/>
-		</div>
+	<!--
+		Los filtros, arriba del mapa y de la tabla porque valen para los dos: el mismo
+		recorte apaga sistemas en el mapa y quita filas de la lista. Dos filtros
+		separados serían dos pantallas que no se hablan.
 
-		<div class="w-full min-w-0 xs:w-[10rem]">
-			<SelectField
-				label="Facción"
-				name="faccion"
-				size="1"
-				onchange={alCambiar}
-				value={consulta.faction}
-				options={opcionesFaccion}
-			/>
-		</div>
+		Es un formulario `GET`: los filtros viajan en la URL, así que un recorte se
+		puede compartir, se vuelve con el botón de atrás y se recarga sin perderlo.
 
-		<div class="w-full min-w-0 xs:w-[10rem]">
-			<SelectField
-				label="Región"
-				name="region"
-				size="1"
-				onchange={alCambiar}
-				value={consulta.region}
-				options={opcionesRegion}
-			/>
-		</div>
-
-		<div class="w-full min-w-0 xs:w-[10rem]">
-			<SelectField
-				label="Gobierno"
-				name="gobierno"
-				size="1"
-				onchange={alCambiar}
-				value={consulta.government}
-				options={opcionesGobierno}
-			/>
-		</div>
-
-		<!--
-			De que color pinta el mapa. Va con los filtros y no adentro del mapa porque
-			es la misma clase de decision: que recorte de la galaxia estoy mirando.
-		-->
-		<div class="w-full min-w-0 xs:w-[10rem]">
-			<SelectField
-				label="Pintar por"
-				name="pintar"
-				size="1"
-				onchange={alCambiar}
-				value={consulta.paint}
-				options={PINTAR}
-			/>
-		</div>
-
-		<!-- El orden viaja en la URL: sin esto, filtrar lo perderia. -->
-		<input type="hidden" name="orden" value={consulta.sort} />
-		<input type="hidden" name="dir" value={consulta.dir} />
-
-		<HudButton type="submit" size="1" variant="primary">
-			<Icon name="magnifying-glass" weight="bold" size="0.7rem" />
-			Filtrar
+		**Dos filas, y siempre dos.** Con siete controles, dejar que envuelvan solos
+		manda los botones a una tercera fila o los deja colgando al final de la
+		segunda según cuánto mida la pantalla. Separar los campos de las acciones con
+		una línea los deja siempre en el mismo lugar, que es lo que hace que se
+		encuentren sin mirar.
+	-->
+	<!--
+		Plegable, y plegada de entrada cuando el mapa está agrandado: ahí el lugar es
+		del mapa, y dos filas de campos se comen el alto de dos sistemas.
+	-->
+	<div class="flex w-full items-center gap-2 {agrandado ? 'order-first' : 'hidden'}">
+		<HudButton
+			type="button"
+			size="1"
+			variant="ghost"
+			onclick={() => (filtrosAbiertos = !filtrosAbiertos)}
+		>
+			<Icon name={filtrosAbiertos ? 'caret-up' : 'caret-down'} weight="bold" size="0.7rem" />
+			Filtros
 		</HudButton>
-
-		<!--
-			Quitar el recorte, de un toque. Con contorno y no fantasma: es lo que uno
-			busca cuando se perdió, y un enlace apagado al lado de un botón encendido
-			no se encuentra. Sólo está cuando hay algo que quitar.
-		-->
 		{#if hayFiltro}
 			<HudLink href="?" size="1" variant="outline">
 				<Icon name="x" weight="bold" size="0.7rem" />
-				Quitar filtros
+				Quitar
 			</HudLink>
-			<span class="font-mono text-[0.72rem] text-text-muted">
+		{/if}
+		<div class="grow"></div>
+		<span class="font-mono text-[0.72rem] text-text-muted">
+			{universo.found} de {universo.total}
+		</span>
+	</div>
+
+	<form
+		method="GET"
+		onsubmit={alEnviar}
+		class="w-full flex-col gap-3 border border-border-soft bg-surface px-[0.9rem] py-[0.7rem]
+			{filtrosAbiertos ? 'flex' : 'hidden'}"
+	>
+		<div class="flex w-full flex-wrap items-end gap-3">
+			<div class="w-full min-w-0 xs:w-[11rem]">
+				<TextField
+					label="Buscar"
+					name="buscar"
+					size="1"
+					value={consulta.search}
+					placeholder="Nombre"
+				/>
+			</div>
+
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Facción"
+					name="faccion"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.faction}
+					options={opcionesFaccion}
+				/>
+			</div>
+
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Región"
+					name="region"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.region}
+					options={opcionesRegion}
+				/>
+			</div>
+
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Constelación"
+					name="constelacion"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.constellation}
+					options={opcionesConstelacion}
+				/>
+			</div>
+
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Gobierno"
+					name="gobierno"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.government}
+					options={opcionesGobierno}
+				/>
+			</div>
+		</div>
+
+		<div class="flex w-full flex-wrap items-end gap-3 border-t border-border-soft/60 pt-[0.6rem]">
+			<!--
+				Cómo se mira el mapa, no qué se muestra: el color de los puntos y la
+				mancha de abajo. Van con los filtros porque son la misma clase de
+				decisión —qué recorte de la galaxia estoy viendo— pero en la fila de las
+				acciones, separadas de lo que quita sistemas de la lista.
+			-->
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Pintar por"
+					name="pintar"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.paint}
+					options={PINTAR}
+				/>
+			</div>
+
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Territorios"
+					name="territorio"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.territory}
+					options={TERRITORIOS}
+				/>
+			</div>
+
+			<!-- El orden viaja en la URL: sin esto, filtrar lo perdería. -->
+			<input type="hidden" name="orden" value={consulta.sort} />
+			<input type="hidden" name="dir" value={consulta.dir} />
+
+			<HudButton type="submit" size="1" variant="primary">
+				<Icon name="magnifying-glass" weight="bold" size="0.7rem" />
+				Filtrar
+			</HudButton>
+
+			<!--
+				Quitar el recorte, de un toque. Con contorno y no fantasma: es lo que uno
+				busca cuando se perdió, y un enlace apagado al lado de un botón encendido
+				no se encuentra. Sólo está cuando hay algo que quitar.
+			-->
+			{#if hayFiltro}
+				<HudLink href="?" size="1" variant="outline">
+					<Icon name="x" weight="bold" size="0.7rem" />
+					Quitar filtros
+				</HudLink>
+			{/if}
+
+			<div class="grow"></div>
+
+			<span class="font-mono text-[0.72rem] whitespace-nowrap text-text-muted">
 				{#if cuantosFiltros > 0}
 					{universo.found} de {universo.total}
 				{:else}
 					{universo.total} sistemas
 				{/if}
 			</span>
-		{/if}
+		</div>
 	</form>
 
-	<div bind:this={panel} class="w-full scroll-mt-4">
-		<TitledPanel title="Mapa de la galaxia" detail={detalleMapa} class="w-full">
-			<div class="flex w-full flex-col items-start gap-[1.25rem] lg:h-[28rem] lg:flex-row">
-				<div class="flex h-[26rem] w-full min-w-0 flex-col gap-2 lg:h-full lg:flex-[3_1_0]">
+	<div
+		bind:this={panel}
+		class={agrandado
+			? 'fixed inset-[0.75rem] z-40 flex flex-col overflow-auto bg-background p-[0.75rem]'
+			: 'w-full scroll-mt-4'}
+	>
+		<TitledPanel
+			title="Mapa de la galaxia"
+			detail={detalleMapa}
+			class="w-full {agrandado ? 'flex grow flex-col' : ''}"
+		>
+			<div
+				class="flex w-full flex-col items-start gap-[1.25rem] lg:flex-row
+					{agrandado ? 'grow' : 'lg:h-[28rem]'}"
+			>
+				<div
+					class="flex w-full min-w-0 flex-col gap-2 lg:flex-[3_1_0]
+						{agrandado ? 'h-full min-h-[24rem]' : 'h-[26rem] lg:h-full'}"
+				>
 					<GalaxyMap
 						bind:this={mapa}
 						map={universo.map}
 						selected={elegido}
 						visible={visibles}
 						paint={pintar}
+						territory={territorio}
+						expanded={agrandado}
+						onToggleExpand={alternarAgrandado}
 						onSelect={(code) => (elegido = elegido === code ? '' : code)}
 					/>
 

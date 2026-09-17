@@ -404,6 +404,46 @@ Se dibuja en Canvas 2D **sin biblioteca**, como todas las figuras del juego, y
 **sin bucle de cuadros**: se redibuja cuando algo cambia. Ésta es una pestaña que
 va a quedar abierta horas.
 
+#### Los territorios
+
+El mapa puede pintar por debajo la **región** o la **constelación** de cada
+sistema, y es un interruptor porque no siempre se está mirando eso.
+
+Se dibuja con relleno muy tenue y **borde sólo en la frontera**: un lado se traza
+cuando la casilla vecina es de otro dueño, que es la definición de frontera.
+Contornear cada casilla convierte el mapa en un panal y se pierde la forma del
+territorio, que es justo lo que se vino a ver.
+
+El nombre del territorio va en su centro y **sólo de lejos**: los dos rótulos se
+turnan, porque de lejos la pregunta es «dónde estoy en la galaxia» y de cerca «qué
+sistema es cada punto». Y el que chocaría con otro no se dibuja —se ordenan de
+mayor a menor, así que el que queda afuera es el más chico—.
+
+Para que esto sirva, **un territorio tiene que ser contiguo**: una región es un
+continente, no un archipiélago. El sembrador de prueba lo garantiza haciendo que
+cada constelación crezca colgándose de los suyos.
+
+#### Los colores
+
+Dos reglas distintas, a propósito:
+
+- **La facción tiene su color en el catálogo** —rojo el Dominio, azul la
+  Concordia, verde el Pacto— porque son tres y son identidad del juego. Ver
+  [facciones](FACTIONS.md#el-color-de-cada-una).
+- **La región y la constelación lo generan de su nombre.** Son muchas y las crea
+  quien construye: el tono sale de un hash multiplicado por el ángulo áureo, así
+  que el mismo nombre da siempre el mismo color, hay trescientos sesenta
+  disponibles y nombres parecidos no caen en tonos parecidos.
+
+#### Agrandado
+
+El mapa tiene un botón en su esquina que lo lleva a pantalla casi completa, y se
+sale con él o con Escape. **Es la misma instancia con otro envoltorio**, no un
+segundo mapa en un diálogo: dibujar otro perdería la cámara y al agrandar
+volverías al encuadre inicial en vez de seguir mirando lo que estabas mirando.
+Agrandado, los filtros se pliegan solos —ahí el lugar es del mapa— y se despliegan
+con su botón.
+
 ## Cómo se agrega contenido
 
 Hay **dos puertas de entrada**, y desde que existe el constructor la que manda es

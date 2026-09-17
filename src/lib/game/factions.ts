@@ -26,6 +26,19 @@ export interface Faction {
 	readonly archetype: string;
 	readonly government: string;
 	readonly motto: string;
+	/**
+	 * El color con que se la dibuja, en todo el juego.
+	 *
+	 * **Es identidad, no decoración**, y por eso es un dato del catálogo y no algo
+	 * que se genere: rojo el Dominio, azul la Concordia y verde el Pacto, siempre y
+	 * en todas partes. Una facción que cambia de color según la pantalla es una que
+	 * hay que volver a aprender en cada una.
+	 *
+	 * Va como literal y no como variable del tema porque `game/` no conoce el CSS:
+	 * son reglas puras que corren de los dos lados. Los tonos están elegidos para
+	 * convivir con el naranja del HUD sin pelearse con él.
+	 */
+	readonly color: string;
 	readonly description: string;
 	readonly startingSystem: string;
 	readonly startingStation: string;
@@ -39,6 +52,7 @@ const CATALOG = [
 		archetype: 'Imperio',
 		government: 'Aristocracia',
 		motto: 'El orden se hereda',
+		color: '#e0483a',
 		description:
 			'El poder más viejo del sector, y el que más se nota que lo es. ' +
 			'Linaje, protocolo y una idea muy clara de quiénes mandan. Elegante ' +
@@ -53,6 +67,7 @@ const CATALOG = [
 		archetype: 'Federación',
 		government: 'Democracia corporativa',
 		motto: 'Todo se vota',
+		color: '#4f9dee',
 		description:
 			'La más grande y la más lenta. Democracia de corporaciones, con ' +
 			'elecciones reales, lobbies reales y una flota enorme. Todo se puede ' +
@@ -67,6 +82,7 @@ const CATALOG = [
 		archetype: 'Alianza',
 		government: 'Coalición',
 		motto: 'Lo acordado se cumple',
+		color: '#57c96a',
 		description:
 			'Sistemas independientes que se juntaron para no ser tragados por ' +
 			'los otros dos. Sin capital y sin flota digna de ese nombre: lo que ' +

@@ -202,6 +202,7 @@ const SYSTEM_FILTERS: readonly ((fila: FilaSistema, query: ConsultaUniverso) => 
 			? fila.controllingFactionCode === ''
 			: fila.controllingFactionCode === query.faction),
 	(fila, query) => !query.region || fila.region === query.region,
+	(fila, query) => !query.constellation || fila.constellation === query.constellation,
 	(fila, query) => !query.government || fila.governmentCode === query.government
 ];
 
@@ -221,6 +222,9 @@ export const SYSTEMS_PER_PAGE = 25;
 /** Por qué se puede pintar el mapa. Otra tabla que crece con una fila. */
 export const MAP_PAINTS = ['faccion', 'region', 'seguridad', 'gobierno'] as const;
 
+/** Qué territorio puede dibujar el mapa por debajo de todo. */
+export const MAP_TERRITORIES = ['region', 'constelacion'] as const;
+
 /**
  * Lee la consulta de la URL, con todo validado contra los catálogos.
  *
@@ -230,16 +234,21 @@ export const MAP_PAINTS = ['faccion', 'region', 'seguridad', 'gobierno'] as cons
 export function readUniverseQuery(params: URLSearchParams): ConsultaUniverso {
 	const sort = params.get('orden') ?? '';
 	const paint = params.get('pintar') ?? '';
+	const territorio = params.get('territorio') ?? '';
 
 	return {
 		search: (params.get('buscar') ?? '').trim().slice(0, 60),
 		faction: params.get('faccion') ?? '',
 		region: params.get('region') ?? '',
+		constellation: params.get('constelacion') ?? '',
 		government: params.get('gobierno') ?? '',
 		sort: sort in SYSTEM_SORTS ? sort : 'nombre',
 		dir: params.get('dir') === 'desc' ? 'desc' : 'asc',
 		page: Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1),
-		paint: MAP_PAINTS.includes(paint as (typeof MAP_PAINTS)[number]) ? paint : ''
+		paint: MAP_PAINTS.includes(paint as (typeof MAP_PAINTS)[number]) ? paint : '',
+		territory: MAP_TERRITORIES.includes(territorio as (typeof MAP_TERRITORIES)[number])
+			? territorio
+			: ''
 	};
 }
 
