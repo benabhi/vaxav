@@ -1,31 +1,29 @@
 <!--
-	Una fila de solapas adentro de un panel.
+	Un selector de secciones adentro de un panel.
 
-	**No es la barra de pestañas del módulo**, aunque hable el mismo idioma: aquélla
-	navega —cada pestaña es una URL, y el servidor decide qué carga— y ésta reparte
-	lo que la pantalla ya tiene en la mano. Son dos comportamientos distintos, así
-	que son dos piezas; compartir una obligaría a darle un segundo modo, que es
-	justamente lo que CLAUDE.md dice que no se hace.
+	**No es la barra de pestañas del módulo, y no tiene que parecerlo.** Aquélla
+	navega —cada pestaña es una URL y el servidor decide qué carga— y ésta reparte
+	lo que la pantalla ya tiene en la mano. Son dos cosas distintas, y dibujarlas
+	igual le enseña al jugador que son la misma: apretás una y esperás que cambie
+	la pantalla entera.
+
+	Así que se dibuja como **un selector de instrumento** y no como una fila de
+	pestañas: un recuadro con sus segmentos separados por filos finos, el elegido
+	teñido apenas y con una barra encendida **arriba**. La barra va arriba a
+	propósito: la del módulo va abajo, y el lado del filo alcanza para que no se
+	confundan ni de reojo. Y nada se rellena de naranja sólido, que es lo que hace
+	una pestaña abierta.
 
 	Que sea estado de navegador y no de servidor es la regla del proyecto: cambiar
-	de solapa no cambia la partida, así que no cuesta una ida y vuelta.
+	de sección no cambia la partida, así que no cuesta una ida y vuelta.
 
-	Sigue la regla de «lo seleccionado se llena»: la activa va rellena de naranja
-	con el texto casi negro, como en Elite. Y lleva su cuenta al lado cuando la
-	tiene, porque una solapa que dice **cuántos hay** ahorra abrirla para saber que
-	está vacía.
-
-	En pantalla angosta la fila se desliza en vez de partirse en dos renglones,
-	igual que la del módulo: una columna fina con tres solapas apiladas deja de
-	parecer una fila de solapas.
-
-	**El interletrado es más cerrado que el del HUD**, y es la única licencia que se
-	toma. El de los rótulos está pensado para títulos que tienen toda la fila; acá
-	son tres palabras en una columna que mide un tercio de la pantalla, y con el
-	abierto la tercera se salía de la caja.
+	Lleva su cuenta al lado cuando la tiene, porque un segmento que dice **cuántos
+	hay** ahorra abrirlo para descubrir que está vacío. Y en pantalla angosta la
+	fila se desliza en vez de partirse en dos renglones: una columna fina con tres
+	segmentos apilados deja de parecer un selector.
 -->
 <script lang="ts">
-	/** Una solapa: su código, cómo se llama y cuántos hay adentro. */
+	/** Una sección: su código, cómo se llama y cuántos hay adentro. */
 	export interface Solapa {
 		readonly code: string;
 		readonly label: string;
@@ -42,26 +40,34 @@
 	let { tabs, active = $bindable('') }: Props = $props();
 </script>
 
-<div class="tab-bar w-full border-b border-border-soft">
-	<div class="flex w-max min-w-full items-center gap-1">
-		{#each tabs as solapa (solapa.code)}
+<div class="tab-bar w-full border border-border-soft bg-well">
+	<div class="flex w-max min-w-full items-stretch">
+		{#each tabs as seccion (seccion.code)}
 			<button
 				type="button"
-				onclick={() => (active = solapa.code)}
-				class="flex h-[1.8rem] shrink-0 cursor-pointer items-center gap-[0.35rem] border-0
-					px-[0.5rem] font-display text-[0.62rem] font-semibold tracking-[0.12em] whitespace-nowrap
-					uppercase transition-[background-color,color]
-					{solapa.code === active
-					? 'bg-accent text-on-accent'
-					: 'bg-transparent text-accent-dim hover:bg-surface-hover hover:text-accent-bright'}"
+				onclick={() => (active = seccion.code)}
+				class="relative flex shrink-0 cursor-pointer items-center gap-[0.35rem] border-0
+					border-r border-r-border-soft/60 px-[0.6rem] py-[0.4rem] font-display text-[0.62rem]
+					font-semibold tracking-[0.12em] whitespace-nowrap uppercase transition-[background-color,color]
+					last:border-r-0
+					{seccion.code === active
+					? 'bg-surface-strong text-accent-bright'
+					: 'bg-transparent text-text-muted hover:bg-surface-hover hover:text-accent-bright'}"
 			>
-				{solapa.label}
-				{#if solapa.detail}
+				<!--
+					El filo encendido del segmento elegido. Va absoluto para que no empuje el
+					texto medio píxel al cambiar de sección.
+				-->
+				{#if seccion.code === active}
+					<span class="absolute inset-x-0 top-0 h-[2px] bg-accent shadow-glow"></span>
+				{/if}
+				{seccion.label}
+				{#if seccion.detail}
 					<span
 						class="font-mono text-[0.58rem] normal-case
-							{solapa.code === active ? 'text-on-accent/70' : 'text-text-muted'}"
+							{seccion.code === active ? 'text-data' : 'text-text-muted'}"
 					>
-						{solapa.detail}
+						{seccion.detail}
 					</span>
 				{/if}
 			</button>

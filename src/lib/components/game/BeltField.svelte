@@ -17,7 +17,10 @@
 	  escáner.
 
 	Cada roca tiene **su propia silueta**, sacada de su número: un cinturón donde
-	todas las piedras son el mismo círculo no se parece a un cinturón. No es azar
+	todas las piedras son el mismo círculo no se parece a un cinturón. Y la que
+	tenés escaneada muestra además **sus caras y un cráter**, que no es adorno: el
+	relieve de adentro es la diferencia entre una piedra conocida y un bulto en el
+	radar. No es azar
 	de dibujo —el mismo número da siempre la misma piedra—, así que la roca que
 	mirabas sigue estando donde estaba después de escanearla.
 
@@ -35,10 +38,17 @@
 	let { asteroids }: Props = $props();
 
 	/** El radio de la roca más grande y el de la más exprimida. */
-	const RADIO_MAX = 17;
+	const RADIO_MAX = 18.5;
 	const RADIO_MIN = 5;
-	/** Cuántos lados tiene una piedra. Pocos: de cerca son cantos, no una pelota. */
-	const LADOS = 7;
+	/**
+	 * Cuántos cantos tiene una piedra.
+	 *
+	 * Nueve y no siete: con pocos, el contorno se lee como un polígono —un
+	 * heptágono torcido— y no como una roca. Con muchos más, se redondea y vuelve a
+	 * ser un círculo. Nueve, con los largos bien desparejos, es donde deja de
+	 * parecer una figura geométrica.
+	 */
+	const CANTOS = 9;
 
 	/**
 	 * Un número estable entre 0 y 1, sacado del identificador de la roca.
@@ -54,15 +64,54 @@
 		return x - Math.floor(x);
 	}
 
-	/** La silueta de una roca: un polígono de lados desparejos. */
-	function silueta(id: number, radio: number): string {
-		return Array.from({ length: LADOS }, (_, i) => {
-			// Cada canto se corre un poco hacia adentro o hacia afuera, y el ángulo
-			// también: sin las dos cosas salen siete heptágonos iguales y girados.
-			const angulo = ((i + dado(id, i) * 0.55) / LADOS) * Math.PI * 2;
-			const largo = radio * (0.62 + dado(id, i + 20) * 0.38);
-			return `${(Math.cos(angulo) * largo).toFixed(1)},${(Math.sin(angulo) * largo).toFixed(1)}`;
-		}).join(' ');
+	/**
+	 * Los cantos de una roca, ya en coordenadas.
+	 *
+	 * Cada uno se corre hacia adentro o hacia afuera **y** se adelanta o se atrasa
+	 * en el ángulo: sin las dos cosas salen nueve enea·gonos iguales y girados. Y
+	 * la piedra entera arranca con su propio giro, para que dos del mismo tamaño no
+	 * se vean calcadas.
+	 */
+	function cantos(id: number, radio: number): { x: number; y: number }[] {
+		const giro = dado(id, 7) * Math.PI * 2;
+		return Array.from({ length: CANTOS }, (_, i) => {
+			const angulo = giro + ((i + dado(id, i) * 0.6) / CANTOS) * Math.PI * 2;
+			const largo = radio * (0.55 + dado(id, i + 20) * 0.45);
+			return { x: Math.cos(angulo) * largo, y: Math.sin(angulo) * largo };
+		});
+	}
+
+	/** El contorno, listo para el atributo. */
+	function contorno(puntos: { x: number; y: number }[]): string {
+		return puntos.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+	}
+
+	/**
+	 * Las aristas de adentro: dos cuerdas entre cantos que no son vecinos.
+	 *
+	 * Es lo que convierte un contorno en **una piedra con caras**. Y no es adorno:
+	 * sólo las tienen las rocas con lectura, así que el detalle de adentro **es** la
+	 * diferencia entre lo que conocés y lo que es un bulto en el radar. Una roca
+	 * sin escanear se queda con la silueta pelada, que es literalmente lo que el
+	 * juego dice de ella.
+	 */
+	function aristas(id: number, puntos: { x: number; y: number }[]) {
+		return [0, 1].map((n) => {
+			const desde = Math.floor(dado(id, 30 + n) * CANTOS);
+			const hasta = (desde + 3 + Math.floor(dado(id, 40 + n) * 3)) % CANTOS;
+			return { a: puntos[desde], b: puntos[hasta] };
+		});
+	}
+
+	/** Y un cráter, que es lo que termina de sacarle la cara de polígono. */
+	function crater(id: number, radio: number) {
+		const angulo = dado(id, 51) * Math.PI * 2;
+		const lejos = radio * (0.18 + dado(id, 52) * 0.3);
+		return {
+			cx: Math.cos(angulo) * lejos,
+			cy: Math.sin(angulo) * lejos,
+			r: radio * (0.12 + dado(id, 53) * 0.13)
+		};
 	}
 
 	/**
@@ -82,11 +131,15 @@
 			// Y sin lectura no se sabe cuánto tiene, así que se dibuja entera: suponerla
 			// vacía sería contar algo que el piloto no sabe.
 			const cuanto = roca.identified && roca.share > 0 ? roca.share / 100 : 1;
+			const radio = RADIO_MIN + (RADIO_MAX - RADIO_MIN) * Math.sqrt(cuanto);
+			const puntos = cantos(roca.id, radio);
 			return {
 				id: roca.id,
 				x: paso * (i + 1) + (dado(roca.id, 1) - 0.5) * paso * 0.5,
-				y: 28 + dado(roca.id, 2) * 44,
-				radio: RADIO_MIN + (RADIO_MAX - RADIO_MIN) * Math.sqrt(cuanto),
+				y: 26 + dado(roca.id, 2) * 48,
+				contorno: contorno(puntos),
+				aristas: aristas(roca.id, puntos),
+				crater: crater(roca.id, radio),
 				identificada: roca.identified,
 				vieja: roca.stale
 			};
@@ -94,7 +147,7 @@
 	);
 </script>
 
-<div class="relative h-[7.5rem] w-full overflow-hidden">
+<div class="relative h-[8.5rem] w-full overflow-hidden">
 	<!--
 		Sin rol ni texto: la lista de abajo dice el nombre, lo que queda y lo que
 		vale de cada una, que es la regla de toda figura del juego.
@@ -137,15 +190,43 @@
 			class="absolute -translate-x-1/2 -translate-y-1/2"
 			style="left: {piedra.x}%; top: {piedra.y}%"
 		>
-			<svg viewBox="-20 -20 40 40" width="46" height="46" aria-hidden="true">
+			<svg viewBox="-20 -20 40 40" width="54" height="54" aria-hidden="true">
 				<polygon
-					points={silueta(piedra.id, piedra.radio)}
+					points={piedra.contorno}
 					fill={piedra.identificada ? 'var(--color-surface-strong)' : 'var(--color-dead)'}
 					stroke={piedra.identificada ? 'var(--color-accent)' : 'var(--color-dead-dash)'}
-					stroke-width={piedra.identificada ? 1.4 : 1}
+					stroke-width={piedra.identificada ? 1.3 : 0.9}
 					stroke-dasharray={piedra.vieja ? '2 1.5' : 'none'}
 					stroke-linejoin="round"
 				/>
+
+				<!--
+					El relieve, sólo en lo que tenés escaneado: las caras y un cráter. Es
+					lo que separa una piedra conocida de un bulto en el radar, y de paso lo
+					que hace que el contorno deje de leerse como un polígono.
+				-->
+				{#if piedra.identificada}
+					{#each piedra.aristas as arista, n (n)}
+						<line
+							x1={arista.a.x}
+							y1={arista.a.y}
+							x2={arista.b.x}
+							y2={arista.b.y}
+							stroke="var(--color-accent-dim)"
+							stroke-width="0.7"
+							opacity="0.75"
+						/>
+					{/each}
+					<circle
+						cx={piedra.crater.cx}
+						cy={piedra.crater.cy}
+						r={piedra.crater.r}
+						fill="none"
+						stroke="var(--color-accent-dim)"
+						stroke-width="0.7"
+						opacity="0.75"
+					/>
+				{/if}
 			</svg>
 		</span>
 	{/each}
