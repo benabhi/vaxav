@@ -19,6 +19,7 @@
 	busque lo que pidió.
 -->
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page as pagina } from '$app/state';
 	import Icon from '../Icon.svelte';
 	import TitledPanel from '../cards/TitledPanel.svelte';
@@ -116,8 +117,22 @@
 		>
 			<HudTable columns={columnas} minWidth="30rem">
 				{#each bandeja.rows as fila (fila.id)}
+					<!--
+						**La fila entera abre el mensaje**, no sólo el asunto. Con el enlace
+						puesto nada más en el asunto, apretar el nombre de quién escribió —o
+						la fecha, o el espacio de al lado— no hacía nada, y en una bandeja uno
+						apunta a la fila, no a cuatro palabras de ella. Es el mismo trato que
+						las filas del mercado.
+
+						El asunto sigue siendo un enlace de verdad igual: es lo que hace que se
+						llegue con el teclado y que se pueda abrir en otra pestaña. Cuando el
+						click viene de ahí, la fila no se mete.
+					-->
 					<tr
-						class="border-b border-border-soft/40 last:border-0
+						onclick={(evento) => {
+							if (!(evento.target as HTMLElement).closest('a')) goto(enlace(fila.id));
+						}}
+						class="cursor-pointer border-b border-border-soft/40 transition-colors last:border-0
 							{fila.open ? 'bg-surface-strong' : 'hover:bg-surface-hover'}"
 					>
 						<td class="py-2">
