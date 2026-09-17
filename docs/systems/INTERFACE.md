@@ -326,6 +326,36 @@ Cosas que nacieron en una pantalla y terminaron siendo del juego entero. Van ac�
 porque la próxima pantalla que las necesite tiene que encontrarlas, no
 reinventarlas.
 
+### El inventario
+
+Con ochenta componentes, «fijarse si ya existe» no pasa solo: hay que preguntarlo
+pieza por pieza, y para eso hace falta saber qué hay. Esta tabla es el mapa, por
+carpeta; los archivos están en `src/lib/components/`.
+
+| Carpeta       | Para qué                                          | Lo que más se usa                                                                              |
+| ------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                         |
+| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                             |
+| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                         |
+| `forms/`      | Campos y avisos de formulario                     | `TextField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`                                    |
+| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                        |
+| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `PilotCredential`, `FittingRig`, `SkillHexagon`, `ModuleGrid` |
+| `admin/`      | Sólo del cuartel                                  | `GalaxyMap`, `GateRose`, `EventTrace`, `SelectField`                                           |
+| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                         |
+| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                              |
+| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                                |
+| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                        |
+
+Tres que conviene conocer antes de escribir una pantalla nueva, porque son las
+que más se reinventan sin querer:
+
+- **`HudTable`** — toda lista del juego. Las columnas son un dato: de una sola
+  declaración salen los anchos, los encabezados y cuáles ordenan.
+- **`ConfirmAction`** — toda acción que compromete tiempo o gasta algo. Trae el
+  cartel con sus lecturas y la procedencia del verbo.
+- **`Panel` y `TitledPanel`** — el recuadro del HUD. Una pantalla que dibuja su
+  propio borde naranja está reimplementando uno de estos dos.
+
 ### La credencial, y el retrato del piloto
 
 La pantalla de Información es **una credencial**, y es la figura de esa pantalla

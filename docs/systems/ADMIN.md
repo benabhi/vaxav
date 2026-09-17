@@ -188,7 +188,7 @@ forma de que un hecho y su registro no puedan separarse. Hoy escriben
 /admin                      Cuartel general — tus roles, tus llaves y lo último que pasó
 /admin/pilotos              Las cuentas, con búsqueda y filtro por estado
 /admin/pilotos/<id>         La ficha: identidad, créditos, sanciones y roles
-/admin/universo             Los sistemas que hay, y el alta de uno nuevo
+/admin/universo             El mapa de la galaxia, el listado con filtros, y el alta
 /admin/universo/<sistema>   El constructor: árbol, formulario y salidas
 /admin/eventos              Registro — la traza de actividad y la tabla con filtros
 ```
@@ -315,10 +315,38 @@ dice **qué tiene, por qué y hasta cuándo**. Lo que no le dice es quién se la
 —eso queda en el registro— porque nombrarlo sólo abre una discusión que esa
 pantalla no puede resolver.
 
+## El mapa y el listado
+
+`/admin/universo` tiene **las dos vistas de la galaxia, y conviven**: el mapa
+arriba y la tabla abajo. Para «llevame a Omega» una lista ordenable es más rápida
+que buscar un punto; para «¿dónde quedó el agujero de mi galaxia?» sólo sirve el
+mapa. Ninguna reemplaza a la otra.
+
+**El mapa es la figura de la pantalla.** Cómo se dibuja y qué codifica cada trazo
+está en [universo](UNIVERSE.md#el-mapa); lo que hace falta saber acá es que
+contesta preguntas de conjunto —ramales sueltos, puertas sin terminar, pasos
+cerrados— que sistema por sistema no se ven.
+
+**Los filtros valen para los dos.** El mismo recorte apaga sistemas en el mapa y
+quita filas de la lista: buscador, facción, región y gobierno, más un criterio
+para pintar el mapa. Viajan en la URL, como en todo listado del proyecto, así que
+un recorte se comparte y sobrevive al botón de atrás. Y **el mapa recibe la
+galaxia entera igual**: uno que sólo dibuja lo filtrado pierde la forma del
+conjunto, que es justamente lo que la tabla no da.
+
+La tabla ordena por columna y pagina de a veinticinco, con `HudTable`. La mira de
+cada fila lleva la cámara hasta ese sistema y se le acerca: es el puente que hace
+que las dos vistas sean una.
+
+Agregar un filtro nuevo es agregar una entrada a la tabla de filtros de
+`views/worldbuilding.ts` y un control en la pantalla. Agregar una columna
+ordenable es agregar una fila a `SYSTEM_SORTS`; una columna que no esté ahí no se
+ofrece como ordenable, así que es imposible prometer un orden que el servidor no
+sabe hacer.
+
 ## El constructor de sistemas
 
-`/admin/universo` lista lo que hay; `/admin/universo/<sistema>` es donde se
-construye. Pide `universe.read` para mirar y `universe.edit` para tocar —el
+`/admin/universo/<sistema>` es donde se construye. Pide `universe.read` para mirar y `universe.edit` para tocar —el
 guardia del área sólo comprueba la primera, así que la segunda se comprueba en
 cada acción—, y borrar pide además `universe.delete`.
 

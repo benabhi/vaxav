@@ -366,7 +366,13 @@
 			px-[0.9rem] py-[0.7rem]"
 	>
 		<div class="w-full min-w-0 xs:w-[12rem]">
-			<TextField label="Buscar" name="buscar" value={consulta.search} placeholder="Nombre" />
+			<TextField
+				label="Buscar"
+				name="buscar"
+				size="1"
+				value={consulta.search}
+				placeholder="Nombre"
+			/>
 		</div>
 
 		<div class="w-full min-w-0 xs:w-[10rem]">

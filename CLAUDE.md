@@ -12,6 +12,17 @@ escribirla.
   algo que sirva. **Reutilizar o extender antes que duplicar.**
 - Si un bloque visual aparece por segunda vez, deja de ser código de página: se
   extrae a `src/lib/components/` con un nombre claro y props explícitas.
+- **La segunda copia es el momento, y no es una sugerencia.** A la segunda,
+  extraer cuesta veinte minutos; a la sexta cuesta migrar cinco pantallas y
+  perseguir las diferencias visuales que aparecen en cada una. Ya pasó: el
+  esqueleto de las tablas —el contenedor que se desplaza, el ancho mínimo, el
+  encabezado pegado, el relleno de las puntas— se copió seis veces antes de que
+  alguien escribiera `HudTable`.
+- **Antes de escribir una pantalla, listar las piezas que va a necesitar** y
+  buscar cada una. Con ochenta componentes, «fijarse si ya existe» no pasa solo:
+  hay que preguntarlo pieza por pieza. El inventario está en
+  [interfaz](docs/systems/INTERFACE.md#piezas-que-se-repiten).
+
 - Las páginas de `src/routes/` componen, no maquetan: arman la pantalla a partir
   de componentes, sin resolver detalles de estilo por su cuenta.
 - **Los componentes de interfaz son siempre propios.** Nada de librerías de
@@ -22,6 +33,28 @@ escribirla.
 - Lo mismo aplica fuera de la interfaz: reglas del juego en `src/lib/game/`,
   acceso a datos en `src/lib/server/services/`. Nada de lógica de juego copiada
   dentro de un `load` o de un form action.
+
+### Y cuándo **no** extraer
+
+La regla de arriba tiene una mitad contraria que importa igual, porque abstraer
+de más cuesta tanto como abstraer de menos:
+
+- **Dos cosas que se parecen pero se comportan distinto no son la misma cosa.**
+  Se extrae la forma, nunca el comportamiento. El caso testigo es el catálogo del
+  mercado: por fuera es la misma tabla que las otras cinco, pero ordena del lado
+  del navegador con botones y estado propio en vez de con enlaces en la URL.
+  Quedó afuera de `HudTable` a propósito.
+- **Si compartir obliga a darle al componente un segundo modo, son dos
+  componentes.** Un `if` que elige entre dos comportamientos adentro de una pieza
+  compartida es dos piezas peleando por un archivo, y el que llegue después va a
+  tener que entender las dos para tocar una.
+- **Una sola aparición no se extrae.** Sacar a un componente algo que se usa una
+  vez no ahorra nada y esconde el código adonde nadie lo va a buscar. Vale la
+  excepción cuando la pieza es **cara de probar** en su lugar —una cuenta de
+  cámara, una grilla de hexágonos— y sacarla la vuelve testeable: ahí lo que se
+  gana no es reúso, es poder verificarla.
+- **YAGNI antes que la simetría.** Un componente con seis props de los que cinco
+  tienen un solo uso no es reutilizable: es la misma pantalla con más pasos.
 
 ## 2. Homogeneidad visual
 
@@ -71,6 +104,7 @@ Las que ya existen:
 | Nave                 | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo |
 | Navegación · Sistema | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                       |
 | Piloto               | El hexágono de ramas      | A qué se dedicó, y en qué está por convertirse                |
+| Universo (cuartel)   | El mapa de la galaxia     | La forma del conjunto: dónde está el agujero y qué no llega   |
 
 Las reglas que las hacen funcionar:
 
