@@ -481,6 +481,9 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 	const segundos = tenths !== null && alcance > 0 ? jumpSeconds(tenths, alcance) : 0;
 
 	return {
+		bearing: puerta.bearing,
+		bearingLabel: bearingLabel(puerta.bearing),
+		closed: puerta.closed,
 		destination: suSistema?.name ?? '',
 		arrival: gemela?.name ?? '',
 		distance: tenths === null ? '' : lightYears(tenths),

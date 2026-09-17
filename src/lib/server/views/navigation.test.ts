@@ -229,6 +229,28 @@ describe('la ficha del lugar', () => {
 	});
 });
 
+describe('la puerta, para el dibujo', () => {
+	// El rumbo es **la identidad de una puerta** —la Noreste no es la Sur— y hasta
+	// que hubo figura vivía solamente adentro del nombre. El dibujo lo necesita
+	// como valor, y el tajo del paso cerrado necesita un sí o un no: una frase en
+	// `blocked` no se puede dibujar.
+	it('dice por qué lado se sale y si el paso está cerrado', async () => {
+		const db = seededDb();
+		const { salida } = conSalida(db);
+		const piloto = moverPiloto(db, await crearPiloto(db), salida.body.code);
+
+		const abierta = buildLocationView(db, piloto).gate!;
+
+		expect(abierta.bearing).toBe('n');
+		expect(abierta.bearingLabel).toBe('Norte');
+		expect(abierta.closed).toBe(false);
+
+		setGateClosed(db, salida.gate.id, true, null);
+
+		expect(buildLocationView(db, piloto).gate!.closed).toBe(true);
+	});
+});
+
 describe('de dónde sale cada verbo del cinturón', () => {
 	it('nombra el módulo que lo habilita y las habilidades que lo mejoran', async () => {
 		const db = seededDb();

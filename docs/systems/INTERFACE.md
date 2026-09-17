@@ -229,6 +229,38 @@ La respuesta es no fingir que sí. Mientras la nave está en camino:
 Es la misma idea que el indicador, un nivel más abajo: el título de la pantalla
 deja de ser dónde estás y pasa a ser **adónde vas**.
 
+### La pantalla parado en una puerta
+
+Una puerta era, hasta acá, un panel de texto con cuatro cifras: lo único que la
+distinguía de una luna era lo que decían las palabras. **Un lugar al que se viaja
+tiene que verse distinto de los demás**, o el módulo entero se siente como una
+sola pantalla con el contenido cambiado.
+
+La figura es **el aro de salto**, y lo que dibuja no es adorno:
+
+| Se ve                                    | Quiere decir                                     |
+| ---------------------------------------- | ------------------------------------------------ |
+| El radio encendido sale por un lado      | El **rumbo**: seis lados, seis dibujos distintos |
+| Adentro, un túnel que se aclara al fondo | Lleva a alguna parte, y se puede cruzar          |
+| Todo el aro apagado                      | Lleva, pero **esta nave no llega**               |
+| El radio se corta antes del borde        | Un **muñón**: nadie la conectó del otro lado     |
+| Un tajo rojo al medio                    | El **paso está cerrado**                         |
+
+La casilla es un hexágono y el aro es un círculo, y no al revés. El hexágono es
+literal —la galaxia es una grilla de tapa plana y los seis rumbos son sus seis
+lados—, así que lo que se ve ahí es el mismo reparto que el mapa. Es la pregunta
+de al lado de la que contesta la roseta del cuartel, que mira un sistema **desde
+afuera**: cuántas salidas tiene. Ésta mira **una salida desde adentro**.
+
+Y se dibuja **radial**, de frente, mientras que la del viaje se dibuja lateral, de
+izquierda a derecha. Es a propósito: viajando hay un trayecto y parado hay una
+cosa enfrente. Dos pantallas del mismo módulo que se dibujan igual son dos
+pantallas que el jugador no distingue.
+
+**El dibujo no lleva ni una palabra**, ni siquiera el nombre del rumbo: se probó
+con el rótulo puesto sobre su propio radio y tapaba justo el muñón que tenía que
+dejar ver. La palabra va en la lista de al lado, que es donde va siempre.
+
 ### El chat
 
 > **Sin construir.** Hubo una ventana con líneas inventadas y se sacó: una maqueta

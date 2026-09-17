@@ -216,7 +216,7 @@
 							size="1"
 							disabled={!canTravel}
 							onclick={abrir}
-							class="w-[4.5rem] {canTravel ? '' : 'cursor-not-allowed opacity-45'}"
+							class="w-[4.5rem]"
 						>
 							<Icon name="rocket-launch" weight="bold" size="0.75rem" />
 							<span class="overflow-hidden text-[0.7rem] text-ellipsis whitespace-nowrap">

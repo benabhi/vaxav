@@ -68,9 +68,21 @@ export const FIELD_BASE =
 	'transition-[border-color,box-shadow] placeholder:text-text-muted ' +
 	'hover:border-border focus:border-accent focus:shadow-glow focus:outline-none';
 
-/** Lo que comparten todos: la voz del HUD y el movimiento del sistema. */
+/**
+ * Lo que comparten todos: la voz del HUD y el movimiento del sistema.
+ *
+ * **Y cómo se ve uno apagado**, que hasta acá no se veía: la base cambiaba el
+ * cursor y nada más, así que un botón deshabilitado se dibujaba **idéntico a uno
+ * que anda** y cada pantalla que se daba cuenta lo apagaba a mano. Estaba escrito
+ * tres veces con el mismo valor, y en las que no se dieron cuenta —el Saltar de
+ * una puerta cerrada, sin ir más lejos— el botón invitaba a apretarlo. Un
+ * control apagado tiene que verse apagado sin que nadie se acuerde.
+ *
+ * El halo se va con él: en este HUD el halo es lo encendido, y un botón muerto
+ * que igual brilla es la contradicción más cara de todas.
+ */
 export const BUTTON_BASE =
 	'inline-flex items-center justify-center gap-2 font-display font-semibold ' +
 	'tracking-label uppercase cursor-pointer whitespace-nowrap ' +
 	'transition-[background-color,color,border-color,box-shadow] ' +
-	'disabled:cursor-not-allowed';
+	'disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none';

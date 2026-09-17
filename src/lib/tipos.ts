@@ -6,6 +6,7 @@
  */
 
 import type { IconName } from '$lib/icons';
+import type { GateBearing } from '$lib/game/universe';
 
 /**
  * La orden que el piloto tiene en curso.
@@ -437,8 +438,24 @@ export interface PuntaTramo {
  * un juego de naves.
  */
 export interface SalidaPuerta {
+	/**
+	 * Por qué lado del hexágono se sale, y cómo se llama ese lado.
+	 *
+	 * **Es la identidad de la puerta**: la Noreste no es la Sur, y hasta que el
+	 * dibujo lo mostró eso vivía solamente en el nombre. Viaja el valor y su
+	 * rótulo porque la figura necesita el ángulo y la lista de al lado la palabra.
+	 */
+	readonly bearing: GateBearing;
+	readonly bearingLabel: string;
 	/** El sistema del otro lado, o vacío si todavía no lleva a ninguna parte. */
 	readonly destination: string;
+	/**
+	 * Si el paso está cerrado.
+	 *
+	 * Va aparte de `blocked` —que ya lo dice con palabras— porque el dibujo no
+	 * puede leer una frase: necesita saber si cruza el tajo o no.
+	 */
+	readonly closed: boolean;
 	/** La puerta gemela, que es donde se aparece. */
 	readonly arrival: string;
 	/** La distancia, ya escrita: `1,4 al`. */

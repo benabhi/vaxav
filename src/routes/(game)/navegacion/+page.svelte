@@ -14,6 +14,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
+	import GateRing from '$lib/components/game/GateRing.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
@@ -260,113 +261,147 @@
 			>
 				<div class="flex w-full flex-col gap-4">
 					<!--
+						La figura y su lista: el aro a la izquierda y lo que cuesta cruzarlo a
+						la derecha. Apiladas en un teléfono —con el dibujo arriba, que es lo
+						que dice de un vistazo dónde estás parado— y lado a lado recién
+						cuando hay ancho, como todas las figuras del juego.
+					-->
+					<div class="flex w-full flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-6">
+						<div class="flex w-full justify-center lg:w-auto lg:shrink-0">
+							<GateRing
+								bearing={place.gate.bearing}
+								destination={place.gate.destination}
+								closed={place.gate.closed}
+								reachable={place.gate.blocked === ''}
+							/>
+						</div>
+
+						<div class="flex w-full min-w-0 flex-col gap-4">
+							<!--
 						La ambientación de la puerta, acá adentro y no en una ficha aparte: en
 						una puerta no hay nada más que contar del lugar, y lo que importa es el
 						salto que sigue.
 					-->
-					<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
-					{#if place.description}
-						<div class="flex w-full items-start gap-[0.9rem]">
-							<Icon
-								name={place.icon}
-								weight="thin"
-								size="2.25rem"
-								class="shrink-0 text-accent-dim"
-							/>
-							<BodyText>{place.description}</BodyText>
-						</div>
-					{/if}
+							<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
+							{#if place.description}
+								<div class="flex w-full items-start gap-[0.9rem]">
+									<Icon
+										name={place.icon}
+										weight="thin"
+										size="2.25rem"
+										class="shrink-0 text-accent-dim"
+									/>
+									<BodyText>{place.description}</BodyText>
+								</div>
+							{/if}
 
-					{#if place.gate.destination}
-						<div class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4">
-							<Icon name="arrow-circle-right" weight="duotone" size="1.3rem" class="text-accent" />
-							<div class="flex min-w-0 flex-col gap-[0.1rem]">
-								<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
-								<Label>llegás a {place.gate.arrival}</Label>
-							</div>
-						</div>
+							{#if place.gate.destination}
+								<div
+									class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4"
+								>
+									<Icon
+										name="arrow-circle-right"
+										weight="duotone"
+										size="1.3rem"
+										class="text-accent"
+									/>
+									<div class="flex min-w-0 flex-col gap-[0.1rem]">
+										<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
+										<Label>llegás a {place.gate.arrival}</Label>
+									</div>
+								</div>
 
-						<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
-							<div class="flex flex-col items-start gap-1">
-								<Label>Distancia</Label>
-								<span class="font-mono text-[0.85rem] text-data">{place.gate.distance}</span>
-							</div>
-							<div class="flex flex-col items-start gap-1">
-								<Label>Alcance</Label>
-								<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
-							</div>
-							<div class="flex flex-col items-start gap-1">
-								<Label>Duración</Label>
-								<span class="font-mono text-[0.85rem] text-accent-bright">
-									{place.gate.duration}
-								</span>
-							</div>
-							<div class="flex flex-col items-start gap-1">
-								<Label>Combustible</Label>
-								<!--
+								<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
+									<div class="flex flex-col items-start gap-1">
+										<Label>Rumbo</Label>
+										<span class="text-[0.85rem] text-text-body">{place.gate.bearingLabel}</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Distancia</Label>
+										<span class="font-mono text-[0.85rem] text-data">{place.gate.distance}</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Alcance</Label>
+										<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Duración</Label>
+										<span class="font-mono text-[0.85rem] text-accent-bright">
+											{place.gate.duration}
+										</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Combustible</Label>
+										<!--
 									Lo que cuesta sobre lo que hay: la resta es la pregunta, y
 									hacerla de memoria entre dos pantallas es lo que hace que un
 									juego se sienta incómodo.
 								-->
-								<span
-									class="font-mono text-[0.85rem] {place.gate.fuel > place.gate.fuelInTank
-										? 'text-danger'
-										: 'text-data'}"
-								>
-									{place.gate.fuel} de {place.gate.fuelInTank} u
-								</span>
-							</div>
-						</div>
-					{:else}
-						<BodyText>
-							Esta puerta todavía no lleva a ninguna parte. Alguien la plantó y nadie la conectó del
-							otro lado.
-						</BodyText>
-					{/if}
+										<span
+											class="font-mono text-[0.85rem] {place.gate.fuel > place.gate.fuelInTank
+												? 'text-danger'
+												: 'text-data'}"
+										>
+											{place.gate.fuel} de {place.gate.fuelInTank} u
+										</span>
+									</div>
+								</div>
+							{:else}
+								<BodyText>
+									Esta puerta todavía no lleva a ninguna parte. Alguien la plantó y nadie la conectó
+									del otro lado.
+								</BodyText>
+							{/if}
+							<!--
+								El motivo, salvo cuando ya lo dijo el párrafo de arriba: una puerta sin
+								conectar lo explica mejor y con más palabras, y repetirlo en rojo dos
+								renglones más abajo es decir dos veces lo mismo.
+							-->
+							{#if place.gate.blocked && place.gate.destination}
+								<p class="text-2 text-danger">{place.gate.blocked}</p>
+							{/if}
 
-					{#if place.gate.blocked}
-						<p class="text-2 text-danger">{place.gate.blocked}</p>
-					{/if}
-
-					<!--
+							<!--
 						Con confirmación, como toda orden: un salto compromete tiempo real y
 						además **gasta combustible que no vuelve**. El diálogo repite lo que
 						cuesta en vez de preguntar a secas, porque un aviso que sólo pregunta
 						se aprende a apretar sin leer.
 					-->
-					<ConfirmAction
-						formAction="?/saltar"
-						title="Saltar a {place.gate.destination}"
-						icon="arrow-circle-right"
-						confirmLabel="Saltar"
-						disabled={Boolean(place.gate.blocked)}
-						readings={[
-							{ label: 'Llegás a', value: place.gate.arrival },
-							{ label: 'Distancia', value: place.gate.distance },
-							{ label: 'Duración', value: place.gate.duration },
-							{
-								label: 'Combustible',
-								value: `${place.gate.fuel} de ${place.gate.fuelInTank} u`
-							}
-						]}
-						note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
-						source={place.gate.source}
-					>
-						{#snippet trigger(abrir)}
-							<ActionSource source={place.gate!.source}>
-								<HudButton
-									type="button"
-									variant="primary"
-									disabled={Boolean(place.gate?.blocked)}
-									onclick={abrir}
-								>
-									<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
-									Saltar
-								</HudButton>
-							</ActionSource>
-						{/snippet}
-						{#snippet fields()}{/snippet}
-					</ConfirmAction>
+							<ConfirmAction
+								formAction="?/saltar"
+								title="Saltar a {place.gate.destination}"
+								icon="arrow-circle-right"
+								confirmLabel="Saltar"
+								disabled={Boolean(place.gate.blocked)}
+								readings={[
+									{ label: 'Llegás a', value: place.gate.arrival },
+									{ label: 'Distancia', value: place.gate.distance },
+									{ label: 'Duración', value: place.gate.duration },
+									{
+										label: 'Combustible',
+										value: `${place.gate.fuel} de ${place.gate.fuelInTank} u`
+									}
+								]}
+								note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
+								source={place.gate.source}
+							>
+								{#snippet trigger(abrir)}
+									<ActionSource source={place.gate!.source}>
+										<HudButton
+											type="button"
+											variant="primary"
+											disabled={Boolean(place.gate?.blocked)}
+											onclick={abrir}
+										>
+											<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
+											Saltar
+										</HudButton>
+									</ActionSource>
+								{/snippet}
+								{#snippet fields()}{/snippet}
+							</ConfirmAction>
+						</div>
+					</div>
 				</div>
 			</TitledPanel>
 		</div>
