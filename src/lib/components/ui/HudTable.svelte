@@ -22,6 +22,9 @@
 	import type { Snippet } from 'svelte';
 	import Icon from '../Icon.svelte';
 
+	/** Desde qué ancho de pantalla aparece una columna. */
+	export type Corte = 'md' | 'lg';
+
 	/** Una columna de la tabla: cómo se llama, cuánto mide y si ordena. */
 	export interface Columna {
 		readonly label: string;
@@ -38,21 +41,34 @@
 		/** Clases del encabezado y de sus celdas: alineación, sobre todo. */
 		readonly class?: string;
 		/**
-		 * Si la columna se esconde en pantalla chica y aparece a partir de `md`.
+		 * A partir de qué ancho aparece la columna. Sin esto, está siempre.
 		 *
-		 * Es una bandera y no una clase porque **esconder una columna no se escribe
+		 * Es un corte y no una clase porque **esconder una columna no se escribe
 		 * igual en los dos lugares**: la celda es `table-cell` y la columna del
 		 * `colgroup` es `table-column`. Pasar la misma clase a los dos —que es lo
 		 * natural de hacer— deja la tabla sin anchos y el texto de una columna
-		 * encima del de la de al lado.
+		 * encima del de la de al lado. Ya pasó una vez.
+		 *
+		 * Las clases van escritas enteras más abajo y no armadas por pedazos: Tailwind
+		 * lee el código fuente, y una clase que sólo existe concatenada no se genera.
 		 */
-		readonly wide?: boolean;
+		readonly from?: Corte;
 	}
 
 	interface Props {
 		columns: readonly Columna[];
 		/** Ancho mínimo antes de que la tabla se desplace adentro de su caja. */
 		minWidth?: string;
+		/**
+		 * Si el encabezado queda pegado arriba al desplazarse.
+		 *
+		 * Encendido por omisión, que es lo que quiere una lista larga. Se apaga en las
+		 * tablas cortas que viven dentro de un panel: ahí no hay desplazamiento del
+		 * que despegarse y el fondo opaco del encabezado se nota contra el panel.
+		 */
+		sticky?: boolean;
+		/** Encabezado más bajo, para las tablas que van adentro de un panel. */
+		dense?: boolean;
 		/** Por qué columna se está ordenando, y en qué sentido. */
 		sort?: string;
 		dir?: 'asc' | 'desc';
@@ -66,12 +82,30 @@
 	let {
 		columns,
 		minWidth = '40rem',
+		sticky = true,
+		dense = false,
 		sort = '',
 		dir = 'asc',
 		sortHref,
 		children,
 		class: extra = ''
 	}: Props = $props();
+
+	/**
+	 * Cómo se esconde una columna y cómo se esconde su celda.
+	 *
+	 * Escritas enteras a propósito: Tailwind lee el código fuente y una clase que
+	 * sólo existe armada por pedazos —`hidden ${corte}:table-column`— no se genera,
+	 * y la columna queda visible sin que nada falle.
+	 */
+	const COLUMNA_DESDE: Record<Corte, string> = {
+		md: 'hidden md:table-column',
+		lg: 'hidden lg:table-column'
+	};
+	const CELDA_DESDE: Record<Corte, string> = {
+		md: 'hidden md:table-cell',
+		lg: 'hidden lg:table-cell'
+	};
 </script>
 
 <!--
@@ -87,7 +121,7 @@
 		<colgroup>
 			{#each columns as columna, indice (indice)}
 				<col
-					class={columna.wide ? 'hidden md:table-column' : ''}
+					class={columna.from ? COLUMNA_DESDE[columna.from] : ''}
 					style={columna.width ? `width: ${columna.width}` : ''}
 				/>
 			{/each}
@@ -95,12 +129,13 @@
 
 		<!-- Pegado arriba: en una lista larga, saber qué columna se está mirando
 		     importa más cuanto más lejos se llegó. -->
-		<thead class="sticky top-0 z-10 bg-well">
+		<thead class={sticky ? 'sticky top-0 z-10 bg-well' : ''}>
 			<tr class="border-b border-border-soft">
 				{#each columns as columna, indice (indice)}
 					<th
-						class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
-							{columna.wide ? 'hidden md:table-cell' : ''} {columna.class ?? ''}"
+						class="pr-3 font-display text-1 tracking-label text-accent-dim uppercase
+							{dense ? 'py-1' : 'py-2'} {columna.from ? CELDA_DESDE[columna.from] : ''}
+							{columna.class ?? ''}"
 					>
 						{#if columna.key && sortHref}
 							<a

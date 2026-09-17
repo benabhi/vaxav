@@ -28,6 +28,7 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
 	import type { PageProps } from './$types';
+	import HudTable, { type Columna } from '$lib/components/ui/HudTable.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -48,6 +49,20 @@
 			hour12: false
 		});
 	}
+
+	/** Las columnas del libro. */
+	const COLUMNAS: Columna[] = [
+		// Los anchos van declarados: las tres columnas de cifras tienen que caer siempre
+		// en el mismo lugar para que se las pueda recorrer de un vistazo, y con anchos
+		// automáticos se corren según qué diga el renglón más largo.
+		{ label: 'Fecha', width: '7.5rem' },
+		{ label: 'Concepto', width: '11rem' },
+		{ label: 'Detalle', from: 'md' },
+		{ label: 'Lugar', width: '9rem', from: 'lg' },
+		{ label: 'Ingreso', width: '7rem', class: 'text-right' },
+		{ label: 'Egreso', width: '7rem', class: 'text-right' },
+		{ label: 'Saldo', width: '7.5rem', class: 'text-right' }
+	];
 </script>
 
 <svelte:head><title>Billetera · Vaxav</title></svelte:head>
@@ -103,88 +118,53 @@
 				: `${billetera.total} asientos`}
 		class="w-full"
 	>
-		<div class="w-full overflow-x-auto">
-			<table
-				class="w-full min-w-[38rem] table-fixed border-collapse text-left
-					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-			>
-				<!--
-					Los anchos van declarados: las tres columnas de cifras tienen que caer
-					siempre en el mismo lugar para que se las pueda recorrer de un vistazo,
-					y con anchos automáticos se corren según qué diga el renglón más largo.
-				-->
-				<colgroup>
-					<col class="w-[7.5rem]" />
-					<col class="w-[11rem]" />
-					<col class="hidden md:table-column" />
-					<col class="hidden lg:table-column lg:w-[9rem]" />
-					<col class="w-[7rem]" />
-					<col class="w-[7rem]" />
-					<col class="w-[7.5rem]" />
-				</colgroup>
-				<thead class="sticky top-0 z-10 bg-well">
-					<tr class="border-b border-border-soft">
-						{#each [{ label: 'Fecha', class: '' }, { label: 'Concepto', class: '' }, { label: 'Detalle', class: 'hidden md:table-cell' }, { label: 'Lugar', class: 'hidden lg:table-cell' }, { label: 'Ingreso', class: 'text-right' }, { label: 'Egreso', class: 'text-right' }, { label: 'Saldo', class: 'text-right' }] as columna (columna.label)}
-							<th
-								class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
-									{columna.class}"
+		<HudTable columns={COLUMNAS} minWidth="38rem">
+			{#each billetera.entries as asiento (asiento.id)}
+				<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
+					<td class="py-[0.45rem] pr-3 font-mono text-[0.72rem] whitespace-nowrap text-text-muted">
+						{fecha(asiento.at)}
+					</td>
+					<td class="py-[0.45rem] pr-3">
+						<div class="flex min-w-0 items-center gap-2">
+							<Icon
+								name={asiento.icon}
+								weight="duotone"
+								size="0.9rem"
+								class="shrink-0 {asiento.incoming ? 'text-data' : 'text-accent'}"
+							/>
+							<span
+								class="truncate font-display text-[0.76rem] font-bold tracking-display
+										text-text-strong uppercase"
 							>
-								{columna.label}
-							</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each billetera.entries as asiento (asiento.id)}
-						<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
-							<td
-								class="py-[0.45rem] pr-3 font-mono text-[0.72rem] whitespace-nowrap text-text-muted"
-							>
-								{fecha(asiento.at)}
-							</td>
-							<td class="py-[0.45rem] pr-3">
-								<div class="flex min-w-0 items-center gap-2">
-									<Icon
-										name={asiento.icon}
-										weight="duotone"
-										size="0.9rem"
-										class="shrink-0 {asiento.incoming ? 'text-data' : 'text-accent'}"
-									/>
-									<span
-										class="truncate font-display text-[0.76rem] font-bold tracking-display
-											text-text-strong uppercase"
-									>
-										{asiento.kindLabel}
-									</span>
-								</div>
-							</td>
-							<td class="hidden py-[0.45rem] pr-3 text-1 text-text-body md:table-cell">
-								<span class="line-clamp-2">{asiento.memo}</span>
-							</td>
-							<td
-								class="hidden py-[0.45rem] pr-3 text-2 whitespace-nowrap text-text-muted lg:table-cell"
-							>
-								{asiento.place || '—'}
-							</td>
+								{asiento.kindLabel}
+							</span>
+						</div>
+					</td>
+					<td class="hidden py-[0.45rem] pr-3 text-1 text-text-body md:table-cell">
+						<span class="line-clamp-2">{asiento.memo}</span>
+					</td>
+					<td
+						class="hidden py-[0.45rem] pr-3 text-2 whitespace-nowrap text-text-muted lg:table-cell"
+					>
+						{asiento.place || '—'}
+					</td>
 
-							<!--
-								Ingreso y egreso en columnas separadas, y sólo una llena por
-								renglón: con un único importe con signo hay que leer el signo de
-								cada fila para contestar "¿en qué se me fue la plata?".
-							-->
-							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.8rem] text-data">
-								{asiento.incoming ? asiento.amount : ''}
-							</td>
-							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.8rem] text-accent-bright">
-								{asiento.incoming ? '' : asiento.amount}
-							</td>
-							<td class="py-[0.45rem] text-right font-mono text-[0.8rem] text-text-body">
-								{asiento.balanceAfter}
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+					<!--
+							Ingreso y egreso en columnas separadas, y sólo una llena por
+							renglón: con un único importe con signo hay que leer el signo de
+							cada fila para contestar "¿en qué se me fue la plata?".
+						-->
+					<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.8rem] text-data">
+						{asiento.incoming ? asiento.amount : ''}
+					</td>
+					<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.8rem] text-accent-bright">
+						{asiento.incoming ? '' : asiento.amount}
+					</td>
+					<td class="py-[0.45rem] text-right font-mono text-[0.8rem] text-text-body">
+						{asiento.balanceAfter}
+					</td>
+				</tr>
+			{/each}
+		</HudTable>
 	</TitledPanel>
 {/if}

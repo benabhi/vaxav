@@ -28,6 +28,7 @@
 	import Label from '$lib/components/typography/Label.svelte';
 	import Paginator from '$lib/components/ui/Paginator.svelte';
 	import type { PageProps } from './$types';
+	import HudTable, { type Columna } from '$lib/components/ui/HudTable.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -91,6 +92,18 @@
 		const [ano, mes, dia] = day.split('-');
 		return `${dia}/${mes}/${ano}`;
 	}
+
+	/** Las columnas del registro. */
+	const COLUMNAS: Columna[] = [
+		// Los anchos van declarados: la fecha y el actor tienen que caer siempre en el
+		// mismo lugar para poder recorrerlos de un vistazo, y con anchos automáticos se
+		// corren según qué diga el renglón más largo.
+		{ label: 'Fecha', width: '7.5rem' },
+		// 12rem es lo que mide «Cambio de contraseña», que es el título más largo.
+		{ label: 'Qué', width: '12rem' },
+		{ label: 'Detalle' },
+		{ label: 'Quién', width: '9rem', from: 'md' }
+	];
 </script>
 
 <svelte:head><title>Registro · Cuartel general · Vaxav</title></svelte:head>
@@ -190,94 +203,61 @@
 		detail={registro.total === 1 ? '1 evento' : `${registro.total} eventos`}
 		class="w-full"
 	>
-		<div class="w-full overflow-x-auto">
-			<table
-				class="w-full min-w-[40rem] table-fixed border-collapse text-left
-					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-			>
-				<!--
-					Los anchos van declarados: la fecha y el actor tienen que caer siempre
-					en el mismo lugar para poder recorrerlos de un vistazo, y con anchos
-					automáticos se corren según qué diga el renglón más largo.
-				-->
-				<colgroup>
-					<col class="w-[7.5rem]" />
-					<!-- 12rem es lo que mide "Cambio de contraseña", que es el título más largo. -->
-					<col class="w-[12rem]" />
-					<col />
-					<col class="hidden md:table-column md:w-[9rem]" />
-				</colgroup>
-				<thead class="sticky top-0 z-10 bg-well">
-					<tr class="border-b border-border-soft">
-						{#each [{ label: 'Fecha', class: '' }, { label: 'Qué', class: '' }, { label: 'Detalle', class: '' }, { label: 'Quién', class: 'hidden md:table-cell' }] as columna (columna.label)}
-							<th
-								class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
-									{columna.class}"
+		<HudTable columns={COLUMNAS} minWidth="40rem">
+			{#each registro.rows as evento (evento.id)}
+				<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
+					<td class="py-[0.45rem] pr-3 font-mono text-[0.72rem] whitespace-nowrap text-text-muted">
+						{fecha(evento.at)}
+					</td>
+					<td class="py-[0.45rem] pr-3">
+						<div class="flex min-w-0 items-center gap-2">
+							<Icon
+								name={evento.icon}
+								weight="duotone"
+								size="0.9rem"
+								class="shrink-0 {TONE_COLOR[evento.tone]}"
+							/>
+							<span
+								class="truncate font-display text-[0.76rem] font-bold tracking-display
+										text-text-strong uppercase"
 							>
-								{columna.label}
-							</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each registro.rows as evento (evento.id)}
-						<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
-							<td
-								class="py-[0.45rem] pr-3 font-mono text-[0.72rem] whitespace-nowrap text-text-muted"
-							>
-								{fecha(evento.at)}
-							</td>
-							<td class="py-[0.45rem] pr-3">
-								<div class="flex min-w-0 items-center gap-2">
-									<Icon
-										name={evento.icon}
-										weight="duotone"
-										size="0.9rem"
-										class="shrink-0 {TONE_COLOR[evento.tone]}"
-									/>
-									<span
-										class="truncate font-display text-[0.76rem] font-bold tracking-display
-											text-text-strong uppercase"
-									>
-										{evento.label}
-									</span>
-								</div>
-							</td>
-							<td class="py-[0.45rem] pr-3 text-1 text-text-body">
-								<span class="line-clamp-2">{evento.text}</span>
-								<!--
-									En pantalla angosta la columna "Quién" no está, y quién lo hizo
-									es justo lo que no se puede perder en un registro. Baja acá.
-								-->
-								<span class="mt-[0.15rem] block font-mono text-[0.65rem] text-text-muted md:hidden">
-									{evento.actor || 'el sistema'}
-								</span>
-							</td>
-							<!--
-								El nombre es un enlace que filtra por él. En un registro, la
-								pregunta que sigue a "¿quién hizo esto?" es casi siempre "¿y qué
-								más hizo?", y tenerla a un click evita armar la URL a mano.
+								{evento.label}
+							</span>
+						</div>
+					</td>
+					<td class="py-[0.45rem] pr-3 text-1 text-text-body">
+						<span class="line-clamp-2">{evento.text}</span>
+						<!--
+								En pantalla angosta la columna "Quién" no está, y quién lo hizo
+								es justo lo que no se puede perder en un registro. Baja acá.
 							-->
-							<td
-								class="hidden py-[0.45rem] pr-3 font-mono text-[0.75rem] whitespace-nowrap md:table-cell"
+						<span class="mt-[0.15rem] block font-mono text-[0.65rem] text-text-muted md:hidden">
+							{evento.actor || 'el sistema'}
+						</span>
+					</td>
+					<!--
+							El nombre es un enlace que filtra por él. En un registro, la
+							pregunta que sigue a "¿quién hizo esto?" es casi siempre "¿y qué
+							más hizo?", y tenerla a un click evita armar la URL a mano.
+						-->
+					<td
+						class="hidden py-[0.45rem] pr-3 font-mono text-[0.75rem] whitespace-nowrap md:table-cell"
+					>
+						{#if evento.actorId}
+							<a
+								href={enlace({ actor: evento.actorId })}
+								title="Ver todo lo que hizo {evento.actor || 'este piloto'}"
+								class="text-text-body no-underline hover:text-accent-bright hover:underline"
 							>
-								{#if evento.actorId}
-									<a
-										href={enlace({ actor: evento.actorId })}
-										title="Ver todo lo que hizo {evento.actor || 'este piloto'}"
-										class="text-text-body no-underline hover:text-accent-bright hover:underline"
-									>
-										{evento.actor || `#${evento.actorId}`}
-									</a>
-								{:else}
-									<span class="text-text-muted italic">el sistema</span>
-								{/if}
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+								{evento.actor || `#${evento.actorId}`}
+							</a>
+						{:else}
+							<span class="text-text-muted italic">el sistema</span>
+						{/if}
+					</td>
+				</tr>
+			{/each}
+		</HudTable>
 
 		<Paginator
 			page={registro.page}

@@ -15,6 +15,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import type { OrdenPropia } from '$lib/tipos';
+	import HudTable, { type Columna } from '../ui/HudTable.svelte';
 
 	interface Props {
 		orders: readonly OrdenPropia[];
@@ -38,88 +39,66 @@
 		if (horas < 48) return `en ${horas} h`;
 		return `en ${Math.floor(horas / 24)} d`;
 	}
+
+	/** Las columnas de las órdenes propias. */
+	const COLUMNAS: Columna[] = [
+		{ label: 'Ítem', width: '34%' },
+		{ label: 'Quedan', width: '12%', class: 'text-right' },
+		{ label: 'Precio', width: '14%', class: 'text-right' },
+		{ label: 'Dónde', width: '20%' },
+		{ label: 'Vence', width: '12%' },
+		{ label: '', width: '8%', class: 'text-right' }
+	];
 </script>
 
-<div class="w-full overflow-x-auto">
-	<table
-		class="w-full min-w-[34rem] table-fixed border-collapse text-left
-			[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-	>
-		<!--
-			En porcentajes y no en `rem`: esta tabla ocupa el ancho del panel, que es
-			el de la pantalla, y con medidas fijas el ítem se quedaba con todo lo que
-			sobraba y las otras cinco columnas terminaban amontonadas contra el borde.
-		-->
-		<colgroup>
-			<col class="w-[34%]" />
-			<col class="w-[12%]" />
-			<col class="w-[14%]" />
-			<col class="w-[20%]" />
-			<col class="w-[12%]" />
-			<col class="w-[8%]" />
-		</colgroup>
-		<thead>
-			<tr class="border-b border-border-soft">
-				{#each [{ label: 'Ítem', right: false }, { label: 'Quedan', right: true }, { label: 'Precio', right: true }, { label: 'Dónde', right: false }, { label: 'Vence', right: false }, { label: '', right: true }] as columna (columna.label)}
-					<th
-						class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
-							{columna.right ? 'text-right' : ''}"
-					>
-						{columna.label}
-					</th>
-				{/each}
-			</tr>
-		</thead>
-		<tbody>
-			{#each orders as orden (orden.id)}
-				<tr class="border-b border-border-soft/40 last:border-0">
-					<td class="py-[0.45rem] pr-3">
-						<div class="flex min-w-0 flex-wrap items-center gap-2">
-							<span class="truncate text-2 text-text-strong">{orden.name}</span>
-							{#if orden.pending}
-								<!--
-									Todavía no está en el libro. Decirlo es lo que evita que el piloto
-									la busque ahí y crea que se perdió.
-								-->
-								<span
-									class="border border-border-soft px-[0.3rem] font-display text-[0.55rem]
-										tracking-label text-text-muted uppercase"
-								>
-									Acordando
-								</span>
-							{/if}
-						</div>
-					</td>
-					<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-text-body">
-						{orden.quantity} / {orden.initialQuantity}
-					</td>
-					<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-accent-bright">
-						{orden.price} CR
-					</td>
-					<td class="truncate py-[0.45rem] pr-3 text-2 text-text-body">{orden.stationName}</td>
-					<td class="py-[0.45rem] pr-3 font-mono text-[0.72rem] text-text-muted">
-						{cuando(orden.expiresAt)}
-					</td>
-					<td class="py-[0.45rem] text-right">
-						<form
-							method="POST"
-							action="?/cancelar"
-							use:enhance={() =>
-								async ({ update }) => {
-									await update();
-									await invalidateAll();
-								}}
+<HudTable columns={COLUMNAS} minWidth="34rem" sticky={false}>
+	{#each orders as orden (orden.id)}
+		<tr class="border-b border-border-soft/40 last:border-0">
+			<td class="py-[0.45rem] pr-3">
+				<div class="flex min-w-0 flex-wrap items-center gap-2">
+					<span class="truncate text-2 text-text-strong">{orden.name}</span>
+					{#if orden.pending}
+						<!--
+								Todavía no está en el libro. Decirlo es lo que evita que el piloto
+								la busque ahí y crea que se perdió.
+							-->
+						<span
+							class="border border-border-soft px-[0.3rem] font-display text-[0.55rem]
+									tracking-label text-text-muted uppercase"
 						>
-							<input type="hidden" name="orden" value={orden.id} />
-							<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
-						</form>
-					</td>
-				</tr>
-			{:else}
-				<tr>
-					<td colspan="6" class="py-4 text-center text-1 text-text-muted">{empty}</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
-</div>
+							Acordando
+						</span>
+					{/if}
+				</div>
+			</td>
+			<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-text-body">
+				{orden.quantity} / {orden.initialQuantity}
+			</td>
+			<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-accent-bright">
+				{orden.price} CR
+			</td>
+			<td class="truncate py-[0.45rem] pr-3 text-2 text-text-body">{orden.stationName}</td>
+			<td class="py-[0.45rem] pr-3 font-mono text-[0.72rem] text-text-muted">
+				{cuando(orden.expiresAt)}
+			</td>
+			<td class="py-[0.45rem] text-right">
+				<form
+					method="POST"
+					action="?/cancelar"
+					use:enhance={() =>
+						async ({ update }) => {
+							await update();
+							await invalidateAll();
+						}}
+				>
+					<input type="hidden" name="orden" value={orden.id} />
+					<HudButton type="submit" size="1" variant="ghost">Cancelar</HudButton>
+				</form>
+			</td>
+		</tr>
+	{:else}
+		<tr>
+			<td colspan="6" class="py-4 text-center text-1 text-text-muted">{empty}</td>
+		</tr>
+	{/each}
+</HudTable>

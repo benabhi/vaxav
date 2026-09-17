@@ -22,6 +22,7 @@
 	import Paginator from '$lib/components/ui/Paginator.svelte';
 	import { ADMIN_ROUTE } from '$lib/admin';
 	import type { PageProps } from './$types';
+	import HudTable, { type Columna } from '$lib/components/ui/HudTable.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -66,6 +67,16 @@
 			year: '2-digit'
 		});
 	}
+
+	/** Las columnas del padrón. */
+	const COLUMNAS: Columna[] = [
+		{ label: 'Piloto', width: '12rem' },
+		{ label: 'Correo', width: '13rem', from: 'lg' },
+		{ label: 'Facción', width: '9rem' },
+		{ label: 'Dónde está', width: '10rem', from: 'md' },
+		{ label: 'Créditos', width: '8rem', class: 'text-right' },
+		{ label: 'Estado', width: '7rem', class: 'text-right' }
+	];
 </script>
 
 <svelte:head><title>Pilotos · Cuartel general · Vaxav</title></svelte:head>
@@ -149,96 +160,69 @@
 		detail={pilotos.total === 1 ? '1 piloto' : `${pilotos.total} pilotos`}
 		class="w-full"
 	>
-		<div class="w-full overflow-x-auto">
-			<table
-				class="w-full min-w-[48rem] table-fixed border-collapse text-left
-					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-			>
-				<colgroup>
-					<col class="w-[12rem]" />
-					<col class="hidden lg:table-column lg:w-[13rem]" />
-					<col class="w-[9rem]" />
-					<col class="hidden md:table-column md:w-[10rem]" />
-					<col class="w-[8rem]" />
-					<col class="w-[7rem]" />
-				</colgroup>
-				<thead class="sticky top-0 z-10 bg-well">
-					<tr class="border-b border-border-soft">
-						{#each [{ label: 'Piloto', class: '' }, { label: 'Correo', class: 'hidden lg:table-cell' }, { label: 'Facción', class: '' }, { label: 'Dónde está', class: 'hidden md:table-cell' }, { label: 'Créditos', class: 'text-right' }, { label: 'Estado', class: 'text-right' }] as columna (columna.label)}
-							<th
-								class="py-2 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
-									{columna.class}"
-							>
-								{columna.label}
-							</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each pilotos.rows as fila (fila.id)}
-						<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
-							<td class="py-[0.45rem] pr-3">
-								<a
-									href="{ADMIN_ROUTE}/pilotos/{fila.id}"
-									class="flex min-w-0 flex-col gap-[0.1rem] no-underline"
+		<HudTable columns={COLUMNAS} minWidth="48rem">
+			{#each pilotos.rows as fila (fila.id)}
+				<tr class="border-b border-border-soft/40 last:border-0 hover:bg-surface-hover">
+					<td class="py-[0.45rem] pr-3">
+						<a
+							href="{ADMIN_ROUTE}/pilotos/{fila.id}"
+							class="flex min-w-0 flex-col gap-[0.1rem] no-underline"
+						>
+							<span class="flex min-w-0 items-center gap-2">
+								<span
+									class="truncate font-display text-[0.8rem] font-bold tracking-display
+											text-text-strong uppercase hover:text-accent-bright"
 								>
-									<span class="flex min-w-0 items-center gap-2">
-										<span
-											class="truncate font-display text-[0.8rem] font-bold tracking-display
-												text-text-strong uppercase hover:text-accent-bright"
-										>
-											{fila.callsign}
-										</span>
-										{#if fila.roles.length > 0}
-											<span class="flex shrink-0" title={fila.roles.join(' · ')}>
-												<Icon
-													name="shield-chevron"
-													weight="fill"
-													size="0.7rem"
-													class="text-accent-dim"
-												/>
-											</span>
-										{/if}
+									{fila.callsign}
+								</span>
+								{#if fila.roles.length > 0}
+									<span class="flex shrink-0" title={fila.roles.join(' · ')}>
+										<Icon
+											name="shield-chevron"
+											weight="fill"
+											size="0.7rem"
+											class="text-accent-dim"
+										/>
 									</span>
-									<span class="font-mono text-[0.62rem] text-text-muted">
-										{fila.profession} · desde {fecha(fila.createdAt)}
-									</span>
-								</a>
-							</td>
-							<td class="hidden py-[0.45rem] pr-3 text-1 text-text-muted lg:table-cell">
-								<span class="truncate">{fila.email}</span>
-							</td>
-							<td class="py-[0.45rem] pr-3 text-1 text-text-body">{fila.faction}</td>
-							<td class="hidden py-[0.45rem] pr-3 text-1 text-text-muted md:table-cell">
-								<span class="truncate">{fila.location}</span>
-							</td>
-							<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-data">
-								{fila.credits}
-							</td>
-							<td class="py-[0.45rem] text-right">
-								{#if fila.blocked}
-									<span
-										class="inline-flex items-center gap-1 border border-danger px-[0.35rem]
-											py-[0.1rem] text-danger"
-									>
-										<Icon name="warning" weight="fill" size="0.6rem" />
-										<span class="font-display text-[0.6rem] tracking-label uppercase">
-											{fila.blocked}
-										</span>
-									</span>
-								{:else if fila.sanctions > 0}
-									<span class="font-mono text-[0.7rem] text-warning">
-										{fila.sanctions} sanción{fila.sanctions === 1 ? '' : 'es'}
-									</span>
-								{:else}
-									<span class="font-mono text-[0.7rem] text-text-muted">—</span>
 								{/if}
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+							</span>
+							<span class="font-mono text-[0.62rem] text-text-muted">
+								{fila.profession} · desde {fecha(fila.createdAt)}
+							</span>
+						</a>
+					</td>
+					<td class="hidden py-[0.45rem] pr-3 text-1 text-text-muted lg:table-cell">
+						<span class="truncate">{fila.email}</span>
+					</td>
+					<td class="py-[0.45rem] pr-3 text-1 text-text-body">{fila.faction}</td>
+					<td class="hidden py-[0.45rem] pr-3 text-1 text-text-muted md:table-cell">
+						<span class="truncate">{fila.location}</span>
+					</td>
+					<td class="py-[0.45rem] pr-3 text-right font-mono text-[0.78rem] text-data">
+						{fila.credits}
+					</td>
+					<td class="py-[0.45rem] text-right">
+						{#if fila.blocked}
+							<span
+								class="inline-flex items-center gap-1 border border-danger px-[0.35rem]
+										py-[0.1rem] text-danger"
+							>
+								<Icon name="warning" weight="fill" size="0.6rem" />
+								<span class="font-display text-[0.6rem] tracking-label uppercase">
+									{fila.blocked}
+								</span>
+							</span>
+						{:else if fila.sanctions > 0}
+							<span class="font-mono text-[0.7rem] text-warning">
+								{fila.sanctions} sanción{fila.sanctions === 1 ? '' : 'es'}
+							</span>
+						{:else}
+							<span class="font-mono text-[0.7rem] text-text-muted">—</span>
+						{/if}
+					</td>
+				</tr>
+			{/each}
+		</HudTable>
 
 		<Paginator
 			page={pilotos.page}

@@ -37,6 +37,7 @@
 	import { tenths, thousands } from '$lib/format';
 	import type { FilaMercado, LibroMercado, LugarOrden, OrdenMercado } from '$lib/tipos';
 	import type { PageProps } from './$types';
+	import HudTable, { type Columna } from '$lib/components/ui/HudTable.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -327,6 +328,24 @@
 	let comision = $derived(
 		Math.max(1, Math.round((price * publishUnits * market.brokerPermille) / 1000))
 	);
+
+	/**
+	 * Las columnas de las ofertas.
+	 *
+	 * Es una función y no una constante porque dos de los rótulos cambian con el
+	 * lado del libro: lo que en la compra «te cobran», en la venta «te pagan». Y
+	 * recibe el lado por parámetro porque quien la llama es un snippet, que tiene el
+	 * suyo propio y no el del módulo.
+	 */
+	function columnasDeOfertas(lado: 'sell' | 'buy'): Columna[] {
+		return [
+			{ label: lado === 'sell' ? 'Te cobran' : 'Te pagan', width: '7rem', class: 'text-right' },
+			{ label: 'Cantidad', width: '6rem', class: 'text-right' },
+			{ label: 'Dónde' },
+			{ label: 'Saltos', width: '5rem', class: 'text-right' },
+			{ label: lado === 'sell' ? 'Vende' : 'Compra', width: '6rem', class: 'text-right' }
+		];
+	}
 </script>
 
 <svelte:head><title>Mercado · Vaxav</title></svelte:head>
@@ -671,69 +690,43 @@
 			</span>
 		</div>
 
-		<div class="w-full overflow-x-auto">
-			<table
-				class="w-full min-w-[34rem] table-fixed border-collapse text-left
-					[&_:is(th,td):first-child]:pl-2 [&_:is(th,td):last-child]:pr-2"
-			>
-				<colgroup>
-					<col class="w-[7rem]" />
-					<col class="w-[6rem]" />
-					<col />
-					<col class="w-[5rem]" />
-					<col class="w-[6rem]" />
-				</colgroup>
-				<thead>
-					<tr class="border-b border-border-soft">
-						{#each [{ label: lado === 'sell' ? 'Te cobran' : 'Te pagan', right: true }, { label: 'Cantidad', right: true }, { label: 'Dónde', right: false }, { label: 'Saltos', right: true }, { label: lado === 'sell' ? 'Vende' : 'Compra', right: true }] as columna (columna.label)}
-							<th
-								class="py-1 pr-3 font-display text-1 tracking-label text-accent-dim uppercase
-									{columna.right ? 'text-right' : ''}"
-							>
-								{columna.label}
-							</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each ordenes as fila (fila.id ?? `estacion-${fila.stationId}`)}
-						<tr
-							onclick={() => viewing && !fila.mine && abrir(viewing, lado, fila)}
-							class="border-b border-border-soft/40 transition-colors {fila.mine
-								? 'cursor-default'
-								: 'cursor-pointer hover:bg-surface-hover'}"
-						>
-							<td
-								class="py-[0.4rem] pr-3 text-right font-mono text-[0.78rem]
-									{lado === 'sell' ? 'text-accent-bright' : 'text-data'}"
-							>
-								{fila.priceLabel}
-							</td>
-							<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.75rem] text-text-body">
-								{fila.quantityLabel}
-							</td>
-							<td class="py-[0.4rem] pr-3 text-2 text-text-body">
-								{@render dondeEsta(fila.place)}
-							</td>
-							<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.72rem] text-text-muted">
-								{fila.distanceLabel}
-							</td>
-							<td class="py-[0.4rem] text-right font-mono text-[0.72rem] text-text-muted">
-								<!--
-									Quién está del otro lado. Que la orden sea propia se dice, y se
-									deja de poder apretar: comprarse a uno mismo no es una operación.
-								-->
-								{fila.mine ? 'vos' : fila.npc ? 'la estación' : 'un piloto'}
-							</td>
-						</tr>
-					{:else}
-						<tr>
-							<td colspan="5" class="py-4 text-center text-1 text-text-muted">{vacio}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+		<HudTable columns={columnasDeOfertas(lado)} minWidth="34rem" sticky={false} dense>
+			{#each ordenes as fila (fila.id ?? `estacion-${fila.stationId}`)}
+				<tr
+					onclick={() => viewing && !fila.mine && abrir(viewing, lado, fila)}
+					class="border-b border-border-soft/40 transition-colors {fila.mine
+						? 'cursor-default'
+						: 'cursor-pointer hover:bg-surface-hover'}"
+				>
+					<td
+						class="py-[0.4rem] pr-3 text-right font-mono text-[0.78rem]
+								{lado === 'sell' ? 'text-accent-bright' : 'text-data'}"
+					>
+						{fila.priceLabel}
+					</td>
+					<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.75rem] text-text-body">
+						{fila.quantityLabel}
+					</td>
+					<td class="py-[0.4rem] pr-3 text-2 text-text-body">
+						{@render dondeEsta(fila.place)}
+					</td>
+					<td class="py-[0.4rem] pr-3 text-right font-mono text-[0.72rem] text-text-muted">
+						{fila.distanceLabel}
+					</td>
+					<td class="py-[0.4rem] text-right font-mono text-[0.72rem] text-text-muted">
+						<!--
+								Quién está del otro lado. Que la orden sea propia se dice, y se
+								deja de poder apretar: comprarse a uno mismo no es una operación.
+							-->
+						{fila.mine ? 'vos' : fila.npc ? 'la estación' : 'un piloto'}
+					</td>
+				</tr>
+			{:else}
+				<tr>
+					<td colspan="5" class="py-4 text-center text-1 text-text-muted">{vacio}</td>
+				</tr>
+			{/each}
+		</HudTable>
 	</div>
 {/snippet}
 

@@ -203,7 +203,7 @@
 	/** Las columnas del listado, con la misma clave de orden que usa el servidor. */
 	const COLUMNAS: Columna[] = [
 		{ key: 'nombre', label: 'Sistema', width: '12rem' },
-		{ key: 'donde', label: 'Dónde', width: '12rem', wide: true },
+		{ key: 'donde', label: 'Dónde', width: '12rem', from: 'md' },
 		{ key: 'gobierno', label: 'Gobierno', width: '9rem' },
 		{ key: 'seguridad', label: 'Seguridad', width: '7rem', class: 'text-right' },
 		{ key: 'controla', label: 'Controla', width: '10rem' },
