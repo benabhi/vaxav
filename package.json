@@ -18,7 +18,8 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
-		"db:seed": "tsx --env-file=.env scripts/sembrar.ts"
+		"db:seed": "tsx --env-file=.env scripts/sembrar.ts",
+		"db:seed:demo": "tsx --env-file=.env scripts/sembrar-demo.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

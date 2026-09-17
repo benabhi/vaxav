@@ -344,6 +344,28 @@ ordenable es agregar una fila a `SYSTEM_SORTS`; una columna que no esté ahí no
 ofrece como ordenable, así que es imposible prometer un orden que el servidor no
 sabe hacer.
 
+### Una galaxia de prueba
+
+Con dos sistemas no se puede contestar si el mapa se lee, si los filtros sirven
+de algo o si la grilla de hexágonos parece una galaxia o un panal. Para eso está
+`npm run db:seed:demo`: siembra **sesenta sistemas**, veinte por facción, en seis
+regiones y quince constelaciones, con su capital declarada, unas cuantas estrellas
+dobles, atajos, pasos cerrados y puertas sin terminar.
+
+Tres cosas que la hacen servir para lo que sirve:
+
+- **Es contenido de prueba, no el universo.** Es aditiva e idempotente por
+  nombre: no toca Ánfora, ni los pilotos, ni lo que ya estaba. Para sacarla,
+  `npm run db:seed:demo -- --limpiar`, que borra sólo lo suyo y se niega si hay
+  un piloto parado adentro.
+- **Sale siempre igual.** El azar tiene semilla fija, porque una galaxia distinta
+  en cada corrida no sirve para comparar un cambio de dibujo con el de ayer.
+- **No sale cuadrada.** Cada sistema se cuelga siete de cada diez veces de lo
+  último plantado y tres de cualquiera: siempre de lo último da una víbora,
+  siempre al azar da una mancha redonda, y mezclando salen ramas largas con
+  brotes. Cuando la casilla elegida no tiene lugar se prueba con otro sistema
+  hasta encontrarlo, que es lo que impide que un racimo entero quede flotando.
+
 ## El constructor de sistemas
 
 `/admin/universo/<sistema>` es donde se construye. Pide `universe.read` para mirar y `universe.edit` para tocar —el

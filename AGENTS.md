@@ -35,17 +35,18 @@ npm run dev
 Queda en `http://localhost:5173`. La base es SQLite, vive en `data/` y está fuera
 de git.
 
-|                              |                                          |
-| ---------------------------- | ---------------------------------------- |
-| `npm run dev`                | El servidor de desarrollo                |
-| `npm run check`              | Tipos, con `svelte-check`                |
-| `npm run lint`               | Formato y reglas                         |
-| `npm run format`             | Arregla el formato                       |
-| `npm run test:unit -- --run` | Los tests de unidad                      |
-| `npm run test:e2e`           | El humo de rutas, con su propia base     |
-| `npm run db:generate`        | Una migración nueva a partir del esquema |
-| `npm run db:migrate`         | Aplica las migraciones pendientes        |
-| `npm run db:seed`            | Carga el universo. Idempotente           |
+|                              |                                                         |
+| ---------------------------- | ------------------------------------------------------- |
+| `npm run dev`                | El servidor de desarrollo                               |
+| `npm run check`              | Tipos, con `svelte-check`                               |
+| `npm run lint`               | Formato y reglas                                        |
+| `npm run format`             | Arregla el formato                                      |
+| `npm run test:unit -- --run` | Los tests de unidad                                     |
+| `npm run test:e2e`           | El humo de rutas, con su propia base                    |
+| `npm run db:generate`        | Una migración nueva a partir del esquema                |
+| `npm run db:migrate`         | Aplica las migraciones pendientes                       |
+| `npm run db:seed`            | Carga el universo. Idempotente                          |
+| `npm run db:seed:demo`       | Sesenta sistemas de prueba, para mirar el mapa a escala |
 
 ## Flujo de trabajo
 

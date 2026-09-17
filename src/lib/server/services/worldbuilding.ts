@@ -87,7 +87,9 @@ export function constellationsIn(db: Db, regionId?: number): readonly Constellat
 	const filas = regionId
 		? consulta.where(eq(constellation.regionId, regionId)).all()
 		: consulta.all();
-	return [...filas].sort((a, b) => a.name.localeCompare(b.name));
+	// Por región y después por nombre: el desplegable las agrupa por región, y con
+	// el orden alfabético puro las regiones salían intercaladas.
+	return [...filas].sort((a, b) => a.regionId - b.regionId || a.name.localeCompare(b.name, 'es'));
 }
 
 /** Crea una región. El código sale del nombre. */

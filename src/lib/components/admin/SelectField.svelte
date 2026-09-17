@@ -37,16 +37,26 @@
 		...rest
 	}: Props = $props();
 
-	/** Las opciones repartidas por grupo, respetando el orden en que llegaron. */
+	/**
+	 * Las opciones repartidas por grupo, en el orden en que apareció cada grupo.
+	 *
+	 * **Junta todo lo del mismo grupo, aunque venga salteado.** Antes sólo unía lo
+	 * que llegaba pegado, y alcanzaba porque había una sola región: con seis, el
+	 * catálogo viene ordenado por nombre de constelación y las regiones se
+	 * intercalan, así que la misma aparecía tres veces. Dos grupos con el mismo
+	 * nombre son dos claves repetidas, y una lista con claves repetidas **no se
+	 * dibuja**: se llevaba puesta la pantalla entera.
+	 */
 	let grupos = $derived.by(() => {
-		const salida: { name: string; options: OpcionConstructor[] }[] = [];
+		// Un objeto y no un `Map`: es una tabla efímera que se arma y se tira en la
+		// misma vuelta, no estado reactivo. `Object.keys` conserva el orden de
+		// inserción para claves de texto, que es justo lo que hace falta acá.
+		const porNombre: Record<string, OpcionConstructor[]> = {};
 		for (const opcion of options) {
 			const nombre = opcion.group ?? '';
-			const ultimo = salida.at(-1);
-			if (ultimo && ultimo.name === nombre) ultimo.options.push(opcion);
-			else salida.push({ name: nombre, options: [opcion] });
+			(porNombre[nombre] ??= []).push(opcion);
 		}
-		return salida;
+		return Object.entries(porNombre).map(([name, opciones]) => ({ name, options: opciones }));
 	});
 
 	let agrupado = $derived(grupos.some((uno) => uno.name !== ''));

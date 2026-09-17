@@ -178,6 +178,33 @@
 
 	let pintar = $derived(consulta.paint ? CRITERIOS[consulta.paint] : undefined);
 
+	/**
+	 * Qué significa cada color cuando el mapa está pintado.
+	 *
+	 * **El canal que pinta tiene que tener leyenda**, o el mapa codifica algo que
+	 * hay que adivinar. Sale de los sistemas que hay y no de una lista escrita al
+	 * lado: así nombra exactamente las facciones y regiones que existen, y una
+	 * región nueva aparece sola el día que alguien la cree.
+	 */
+	let leyendaPintura = $derived.by(() => {
+		const pinta = pintar;
+		if (!pinta) return [];
+
+		const vistos: Record<string, string> = {};
+		for (const nodo of universo.map.systems) {
+			const etiqueta =
+				consulta.paint === 'faccion'
+					? nodo.factionName
+					: consulta.paint === 'region'
+						? nodo.region
+						: consulta.paint === 'gobierno'
+							? nodo.government
+							: nodo.securityLevel;
+			if (etiqueta && !(etiqueta in vistos)) vistos[etiqueta] = pinta(nodo);
+		}
+		return Object.entries(vistos).map(([label, color]) => ({ label, color }));
+	});
+
 	/** La URL con un parámetro cambiado, conservando todo lo demás. */
 	function conParametro(cambios: Record<string, string>): string {
 		// Una copia efímera que se lee y se tira en la misma línea: no es estado, así
@@ -448,6 +475,27 @@
 						paint={pintar}
 						onSelect={(code) => (elegido = elegido === code ? '' : code)}
 					/>
+
+					{#if leyendaPintura.length > 0}
+						<!--
+						Qué dice el color, cuando el mapa está pintado. Va arriba de la del
+						trazo porque es la que cambia: la del trazo es siempre la misma y se
+						aprende una sola vez.
+					-->
+						<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+							{#each leyendaPintura as entrada (entrada.label)}
+								<span class="flex items-center gap-[0.4rem]">
+									<span
+										class="inline-block h-[0.55rem] w-[0.55rem] shrink-0 rounded-full"
+										style="background: {entrada.color}"
+									></span>
+									<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
+										{entrada.label}
+									</span>
+								</span>
+							{/each}
+						</div>
+					{/if}
 
 					<!--
 					La leyenda. Un mapa que codifica cinco cosas en el trazo y no dice
