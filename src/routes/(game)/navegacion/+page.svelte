@@ -288,8 +288,26 @@
 				class="w-full"
 			>
 				<div class="flex w-full flex-col gap-4">
+					<!--
+						La ambientación de la puerta, acá adentro y no en una ficha aparte: en
+						una puerta no hay nada más que contar del lugar, y lo que importa es el
+						salto que sigue.
+					-->
+					<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
+					{#if place.description}
+						<div class="flex w-full items-start gap-[0.9rem]">
+							<Icon
+								name={place.icon}
+								weight="thin"
+								size="2.25rem"
+								class="shrink-0 text-accent-dim"
+							/>
+							<BodyText>{place.description}</BodyText>
+						</div>
+					{/if}
+
 					{#if place.gate.destination}
-						<div class="flex w-full flex-wrap items-center gap-3">
+						<div class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4">
 							<Icon name="arrow-circle-right" weight="duotone" size="1.3rem" class="text-accent" />
 							<div class="flex min-w-0 flex-col gap-[0.1rem]">
 								<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
@@ -592,8 +610,13 @@
 		**En tránsito no se dibuja.** No hay lugar del que dar ficha, así que sus
 		cinco lecturas salen vacías y el panel queda diciendo «Órbita a: nada,
 		Distancia: nada». El tramo de arriba ya cuenta todo lo que hay para contar.
+
+		**En una puerta tampoco.** Una puerta no es un lugar donde se hace algo: es
+		el salto que sigue, y eso lo cuenta entero el panel de al lado. Describirla
+		como a cualquier cuerpo —tipo, órbita, distancia al sol— es contestar una
+		pregunta que nadie hizo mientras se tapa la que sí.
 	-->
-	{#if !place.inTransit}
+	{#if !place.inTransit && !place.gate}
 		<div class="w-full min-w-0 flex-[1_1_0]">
 			<div class="flex w-full min-w-0 flex-col gap-4">
 				<TitledPanel title="Ficha del lugar" class="w-full">

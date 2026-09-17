@@ -643,6 +643,12 @@ Qué cambia, y por qué:
   Se gana el lugar el día que haya mercados por sistema o servicios que valgan un
   viaje, que es cuando va a haber algo que ordenar.
 
+**Parado en una puerta, la pantalla es el salto.** No se dibuja la ficha del
+lugar: una puerta no es un sitio donde se hace algo, y describirla como a
+cualquier cuerpo —tipo, órbita, distancia al sol— contesta una pregunta que nadie
+hizo mientras tapa la que sí. Lo que hay es adónde lleva, cuánto tarda, cuánto
+cuesta y el botón de cruzar.
+
 **Desde el mapa no se salta.** Cruzar una puerta exige estar parado en ella, así
 que lo que el mapa ofrece es **viajar hasta la puerta** —una orden que ya existe—
 y el salto sigue ocurriendo en Ubicación. Cada salida dice las dos mitades de lo

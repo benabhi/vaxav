@@ -213,13 +213,9 @@ la siguiente:
   entre origen y destino animada y de otro color; es la base de lo que va a
   necesitar el autopiloto para mostrar un recorrido de varios saltos. Y en el
   árbol del sistema, el cuerpo de destino destacado mientras se va hacia él.
-- **La ubicación, cuando es una puerta y cuando es un viaje.** Parada en una
-  puerta, la pantalla la describe como a cualquier cuerpo —tipo, órbita,
-  distancia— y eso no es lo que se está mirando: lo que importa es el salto que
-  sigue, así que la ficha tiene que armarse alrededor del tramo, como la de
-  tránsito. Y la de tránsito tiene que **variar según a dónde se va**: un salto a
-  otro sistema, un viaje a un cinturón y uno a una estación no son el mismo viaje
-  y hoy se cuentan igual.
+- **La ficha de tránsito tiene que variar según a dónde se va.** Hoy cuenta igual
+  un salto a otro sistema, un viaje a un cinturón y uno a una estación, y no son
+  el mismo viaje.
 
 ## Lo que se decide en el camino
 

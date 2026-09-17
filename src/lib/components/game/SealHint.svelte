@@ -1,9 +1,9 @@
 <!--
 	El «?» que explica de dónde salió un sello.
 
-	**Un dibujo que aparece solo y no se puede tocar necesita decir de dónde vino.**
-	Sin esto, el jugador se queda buscando dónde cambiar el suyo y no entiende por
-	qué la corporación de al lado tiene otro emblema sin que nadie lo haya dibujado.
+	**Dice qué es, no cómo se hace.** Al jugador no le sirve saber que sale de un
+	dado sembrado con el nombre; le sirve saber que la silueta significa algo, que
+	es lo único del dibujo que tiene que poder leer.
 
 	Va en la esquina del recuadro que ocupa el sello, chiquito y apagado hasta que
 	se lo señala: es una aclaración, no un control. Por eso el texto es uno solo
@@ -41,9 +41,8 @@
 		<FloatingPanel class="flex max-w-[20rem] flex-col gap-1 p-3">
 			<span class="font-display text-1 tracking-label text-accent-dim uppercase"> Identicon </span>
 			<BodyText>
-				Un emblema que la máquina calcula a partir del nombre: mismo nombre, mismo emblema, siempre
-				y en cualquier pantalla. No lo dibujó nadie y no se puede cambiar. La silueta dice de qué se
-				trata: un hexágono es una corporación, un disco un piloto y un triángulo un agente.
+				El emblema propio de cada cosa del sector. La silueta dice de qué se trata: un hexágono es
+				una corporación, un disco un piloto y un triángulo un agente.
 			</BodyText>
 		</FloatingPanel>
 	</Popover>
