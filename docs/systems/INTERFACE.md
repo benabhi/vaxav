@@ -371,8 +371,8 @@ quedarse con dos.
 ### El sello, que le da cara a lo que no tiene
 
 `Identicon` dibuja un emblema calculado a partir de un nombre. Existe porque hay
-cosas que necesitan cara y nadie va a dibujarles una: treinta y siete
-corporaciones hoy, cientos mañana, y un piloto que todavía no subió foto.
+cosas que necesitan cara y nadie va a dibujarles una: cuarenta corporaciones
+hoy, cientos mañana, y un piloto que todavía no subió foto.
 
 Lo que hay que saber para usarlo: **la familia decide la silueta entera**
 —`corporacion` es un panal hexagonal, `piloto` un disco de casillas cuadradas— y
