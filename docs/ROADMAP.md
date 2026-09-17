@@ -204,6 +204,31 @@ sistema que se agregue —cargas, drones, fabricación, combate— trae las suya
 El detalle fino de todo esto se decide **cuando el circuito esté cerrado**.
 Afinarlo antes sería balancear una economía que todavía no existe.
 
+### Anotado y sin hacer
+
+Cosas decididas que no entraron todavía, para que no se pierdan entre una etapa y
+la siguiente:
+
+- **Que se vea que una corporación es del mundo.** Hoy nada distingue a una NPC
+  de una de jugadores, y cuando existan las segundas la confusión va a ser
+  inmediata. El lugar natural es la ficha, junto al rubro.
+- **Los agentes, en su propia pestaña y con tabla paginada.** Son NPC y no
+  miembros: tienen nivel, clase de misión, estación y si te atienden, que no se
+  parece en nada a las columnas de un piloto. Ver «El módulo Corporación» en
+  [corporaciones](systems/CORPORATIONS.md).
+- **Toda lista de la ficha tiene que aguantar mil filas.** Las estaciones están
+  hoy en un panel al costado, que sirve con cuatro y se rompe con cuarenta: el
+  panel pasa a mostrar las primeras y a llevar a la tabla completa, con el recorte
+  compartido que ya usa el resto del proyecto.
+- **La ruta, dibujada mientras se viaja.** En el mapa de la galaxia, la línea
+  entre origen y destino animada y de otro color; es la base de lo que va a
+  necesitar el autopiloto para mostrar un recorrido de varios saltos. Y en el
+  árbol del sistema, el cuerpo de destino destacado mientras se va hacia él.
+- **El hexágono del piloto muestra sólo lo invertido.** El pozo sin gastar es
+  otra pregunta y hoy se dibujan las dos capas siempre; agrandado, un interruptor
+  para ver invertido, pozo o los dos. Y en la ficha va un poco más grande y
+  despegado del título.
+
 ## Lo que se decide en el camino
 
 | Pregunta                                          | Se necesita en |
