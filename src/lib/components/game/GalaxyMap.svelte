@@ -392,6 +392,11 @@
 			// cruzando, ése es el único pasaje del mapa que está pasando algo, y se
 			// dibuja en cian —el color de lo que todavía no terminó— con lo ya
 			// recorrido encima.
+			//
+			// **Y con halo.** El cian solo no alcanza: los atajos ya son cian punteado,
+			// y dos líneas del mismo color queriendo decir cosas distintas es una que no
+			// dice ninguna. En este HUD el halo marca lo encendido, y eso es lo que lo
+			// separa de un pasaje que está ahí desde siempre.
 			const enCurso = esLaRuta(enlace);
 
 			ctx.setLineDash(enCurso || enlace.shortcut || (mia && motivo) ? [6, 5] : []);
@@ -411,7 +416,7 @@
 									? data
 									: accentDim;
 			ctx.globalAlpha = enCurso
-				? 0.7
+				? 0.85
 				: apagado
 					? 0.25
 					: enlace.closed
@@ -420,7 +425,12 @@
 							? 0.5
 							: 1;
 			ctx.lineWidth = enCurso ? 2.5 : mia && !motivo ? 2.5 : suya ? 2 : enlace.shortcut ? 1 : 1.5;
+			if (enCurso) {
+				ctx.shadowColor = data;
+				ctx.shadowBlur = 10;
+			}
 			ctx.stroke();
+			ctx.shadowBlur = 0;
 			ctx.setLineDash([]);
 			ctx.globalAlpha = 1;
 
@@ -434,6 +444,9 @@
 					y: origen.y + (destino.y - origen.y) * recorrido
 				};
 
+				ctx.shadowColor = data;
+				ctx.shadowBlur = 12;
+
 				ctx.beginPath();
 				ctx.moveTo(origen.x, origen.y);
 				ctx.lineTo(punta.x, punta.y);
@@ -445,6 +458,8 @@
 				ctx.arc(punta.x, punta.y, 3.2, 0, Math.PI * 2);
 				ctx.fillStyle = data;
 				ctx.fill();
+
+				ctx.shadowBlur = 0;
 			}
 
 			// **La barra del paso cerrado.** Una línea más fina o más apagada no
