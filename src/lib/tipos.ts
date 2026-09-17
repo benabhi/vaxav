@@ -1640,6 +1640,16 @@ export interface Galaxia {
 	 * acción del juego dice qué la habilita y por qué no se puede.
 	 */
 	readonly travelSource: Procedencia;
+	/**
+	 * Y de dónde sale **saltar**, para el único control del mapa que no viaja.
+	 *
+	 * Cuando ya estás parado en la puerta, lo que falta es cruzarla, y eso se hace
+	 * desde Ubicación. El mapa no da esa orden pero sí ofrece el camino hasta ella,
+	 * así que tiene que saber **por qué no se puede** —con una orden en curso,
+	 * Ubicación muestra el viaje y no la puerta— o mandaría a una pantalla que no
+	 * tiene el botón que promete.
+	 */
+	readonly jumpSource: Procedencia;
 }
 
 /** Una salida del sistema donde está el piloto, vista desde el mapa. */

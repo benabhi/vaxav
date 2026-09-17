@@ -639,4 +639,21 @@ describe('la pestaña Galaxia', () => {
 		expect(vista.travelSource.verb).toBe('Viajar');
 		expect(vista.travelSource.modules.map((uno) => uno.requirement)).toEqual(['Propulsores']);
 	});
+
+	// El mapa también ofrece **saltar**, para cuando ya estás parado en la puerta.
+	// No da la orden —manda a Ubicación— pero con una orden en curso aquella
+	// pantalla muestra el viaje y no la puerta, así que el camino no lleva a ninguna
+	// parte: el control tiene que apagarse **acá** y decir por qué.
+	it('con una orden en curso el mapa apaga el salto y dice el motivo', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const libre = buildGalaxia(db, piloto);
+		expect(libre.jumpSource.verb).toBe('Saltar');
+		expect(libre.jumpSource.blockers).toEqual([]);
+
+		startTravel(db, piloto, getBody(db, 'muelle_de_los_anillos')!);
+
+		expect(buildGalaxia(db, piloto).jumpSource.blockers).toContain('Ya hay una orden en curso.');
+	});
 });

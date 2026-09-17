@@ -1032,6 +1032,11 @@ export function buildGalaxia(
 
 	const pasan = map.systems.filter((nodo) => GALAXY_FILTERS.every((cumple) => cumple(nodo, query)));
 
+	// Una sola lectura de la situación para los dos verbos: los dos preguntan lo
+	// mismo y consultarla por separado sería pedirle a la base tres veces lo que ya
+	// contestó.
+	const ahora = situation(db, row);
+
 	return {
 		map,
 		pilot,
@@ -1054,7 +1059,26 @@ export function buildGalaxia(
 			[{ grant: 'thrust', label: 'Propulsores' }],
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(shipReadout(db, row)?.speed ?? 0)} ud/h` }],
-			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
+			ahora.orderBlocked ? [ahora.orderBlocked] : []
+		),
+		// Y la de **saltar**, para cuando ya estás parado en la puerta. Desde acá no
+		// se cruza —el mapa manda a Ubicación, que es la pantalla del lugar— pero
+		// con una orden en curso aquella pantalla muestra el viaje y no la puerta:
+		// el camino no lleva a ninguna parte y hay que decirlo acá.
+		jumpSource: fuenteDeVerbo(
+			db,
+			row,
+			'Saltar',
+			[
+				{ grant: 'jumpPower', label: 'Motor de salto' },
+				{ grant: 'fuel', label: 'Tanque' }
+			],
+			'jump_range',
+			[{ label: 'Alcance', value: lightYears(shipReadout(db, row)?.jumpRange ?? 0) }],
+			// La orden en curso primero: con la nave en camino da igual que falte
+			// combustible, y «ya hay una orden» es lo que hay que leer para saber qué
+			// hacer. Es el mismo criterio que el del cinturón.
+			[ahora.orderBlocked, exits.find((una) => una.standingThere)?.blocked ?? ''].filter(Boolean)
 		)
 	};
 }
