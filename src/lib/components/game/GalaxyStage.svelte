@@ -185,7 +185,14 @@
 				</HudButton>
 
 				{#if cardOpen}
-					<div class="pointer-events-auto flex min-h-0 w-full flex-1 *:h-full">
+					<!--
+						**El fondo opaco lo pone el marco, no la ficha.** Adentro de la página la
+						ficha es un panel más y su tinte translúcido está bien ahí; acá flota
+						sobre el lienzo, y a través de un cinco por ciento de naranja se leen las
+						líneas del mapa por encima del texto. Lo que está adelante tiene que
+						tapar, y quien sabe que esto está adelante es el marco.
+					-->
+					<div class="pointer-events-auto flex min-h-0 w-full flex-1 bg-overlay *:h-full">
 						{@render card()}
 					</div>
 				{/if}
