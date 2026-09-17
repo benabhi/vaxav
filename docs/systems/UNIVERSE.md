@@ -633,6 +633,12 @@ Qué cambia, y por qué:
   **pintan**, y la diferencia no es un descuido —pintadas dibujan el terreno y se
   leen sin saber cómo se llaman; filtrar por ellas pide conocer el nombre de
   antemano—.
+- **Y por corporación**, que es la otra pregunta que el mapa puede contestar:
+  dónde tiene puestos una. No la hace el que está mirando el mapa —nadie abre la
+  galaxia pensando en una corporación—, la trae el botón «ver en el mapa» de la
+  pestaña Corporación, que es donde la pregunta ya está hecha. El desplegable
+  ofrece **sólo las que operan algo**: una que no tiene dónde aparecer apagaría la
+  galaxia entera para no mostrar nada.
 - **Sin tabla de sistemas.** Hoy sería una lista de nombres sin nada que decidir.
   Se gana el lugar el día que haya mercados por sistema o servicios que valgan un
   viaje, que es cuando va a haber algo que ordenar.

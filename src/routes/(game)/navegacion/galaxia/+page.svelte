@@ -128,6 +128,16 @@
 			.sort((a, b) => a.label.localeCompare(b.label, 'es'))
 	]);
 
+	/**
+	 * Sólo las que operan algún puesto, y ya ordenadas por nombre desde el
+	 * servidor: el mapa no puede decir nada de una corporación que no tiene dónde
+	 * aparecer.
+	 */
+	let opcionesCorporacion = $derived([
+		{ value: '', label: 'Todas' },
+		...galaxia.map.corporations.map((una) => ({ value: una.code, label: una.name }))
+	]);
+
 	let opcionesRegion = $derived([
 		{ value: '', label: 'Todas' },
 		...[...new Set(galaxia.map.systems.map((uno) => uno.region))]
@@ -254,6 +264,7 @@
 			consulta.region ||
 			consulta.security ||
 			consulta.service ||
+			consulta.corporation ||
 			consulta.paint ||
 			consulta.territory
 		)
@@ -266,7 +277,8 @@
 			consulta.faction,
 			consulta.region,
 			consulta.security,
-			consulta.service
+			consulta.service,
+			consulta.corporation
 		].filter(Boolean).length
 	);
 
@@ -477,6 +489,23 @@
 				onchange={alCambiar}
 				value={consulta.service}
 				options={OPCIONES_SERVICIO}
+			/>
+		</div>
+
+		<!--
+			Dónde tiene puestos una corporación. Lo enciende el botón «ver en el mapa»
+			de la pestaña Corporación, y está acá para poder verlo puesto y sacarlo:
+			un recorte que llega por la URL y no tiene control es un mapa al que le
+			faltan sistemas sin que nada diga por qué.
+		-->
+		<div class="w-full min-w-0 xs:w-[9.5rem]">
+			<SelectField
+				label="Corporación"
+				name="corporacion"
+				size="1"
+				onchange={alCambiar}
+				value={consulta.corporation}
+				options={opcionesCorporacion}
 			/>
 		</div>
 	</div>
