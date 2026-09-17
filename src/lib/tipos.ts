@@ -225,6 +225,65 @@ export interface Miembros {
 	readonly professions: readonly OpcionConstructor[];
 }
 
+/** Un agente de la corporación, tal como lo lista su pestaña. */
+export interface FilaAgenteCorporacion {
+	readonly code: string;
+	readonly name: string;
+	/** Qué clase de misiones reparte, en palabras y en ícono. */
+	readonly kind: string;
+	readonly kindCode: string;
+	readonly kindIcon: IconName;
+	/** El nivel en romanos para leer, y en número para ordenar. */
+	readonly level: string;
+	readonly levelValue: number;
+	readonly station: string;
+	readonly system: string;
+	/** Si este piloto tiene reputación suficiente para que lo atienda. */
+	readonly open: boolean;
+	/** Qué le falta, cuando no. */
+	readonly requirement: string;
+}
+
+/** Lo que se pidió del listado de agentes. */
+export interface ConsultaAgentes {
+	readonly search: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+	/** La clase de misión, o vacío. */
+	readonly kind: string;
+	/** Si se muestran sólo los que ya atienden a este piloto. */
+	readonly onlyOpen: boolean;
+}
+
+/**
+ * La pestaña Agentes: quiénes reparten trabajo en nombre de la corporación.
+ *
+ * Nace con recorte, orden y paginado como todo listado del proyecto: una
+ * corporación grande puede tener un agente por estación, y eso crece por su
+ * cuenta mucho después de que la ficha dejó de crecer.
+ */
+export interface AgentesCorporacion {
+	readonly belongs: boolean;
+	readonly name: string;
+	/** Cuántos son en total, ya escrito. No cambia al filtrar. */
+	readonly count: string;
+	readonly agents: readonly FilaAgenteCorporacion[];
+	readonly query: ConsultaAgentes;
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+	/** Cuántos te atienden hoy, para decirlo al lado del filtro. */
+	readonly open: number;
+	/**
+	 * Las clases de misión que hay adentro, para el desplegable.
+	 *
+	 * Sólo las que alguien reparte: ofrecer las cinco cuando la corporación sólo
+	 * tiene mineros hace perder el tiempo cuatro veces de cada cinco.
+	 */
+	readonly kinds: readonly OpcionConstructor[];
+}
+
 /** Lo que se pidió del listado de miembros. */
 export interface ConsultaMiembros {
 	readonly search: string;

@@ -119,6 +119,12 @@ export const MODULES: readonly Module[] = [
 				route: '/corporacion/reputacion',
 				label: 'Reputación'
 			},
+			// Los agentes antes que los miembros: a la corporación se le pide trabajo
+			// más seguido que compañía.
+			{
+				route: '/corporacion/agentes',
+				label: 'Agentes'
+			},
 			{
 				route: '/corporacion/miembros',
 				label: 'Miembros'

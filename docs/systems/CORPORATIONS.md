@@ -128,16 +128,31 @@ Entrada propia en el Neocom, después de Navegación y antes del Mercado: primer
 piloto, su nave y dónde está; después a quién le rinde cuentas; recién ahí lo que
 compra y vende.
 
-**Va a ser una zona de varias pestañas** —miembros, roles y permisos, bienes,
-contratos—, y están las dos que hoy tienen algo detrás:
+**Va a ser una zona de varias pestañas** —roles y permisos, bienes, contratos—, y
+están las cuatro que hoy tienen algo detrás:
 
-| Pestaña      | Qué contesta                                                         |
-| ------------ | -------------------------------------------------------------------- |
-| **Ficha**    | Quién es, qué rubro tiene, qué estaciones opera y dónde tiene gente  |
-| **Miembros** | Quiénes son los otros: buscar, filtrar por oficio, ordenar y paginar |
+| Pestaña        | Qué contesta                                                            |
+| -------------- | ----------------------------------------------------------------------- |
+| **Ficha**      | Qué es, de qué clase, qué estaciones opera y qué piensa de vos          |
+| **Reputación** | Dónde estás en su escalera, qué abre el próximo escalón y cómo llegaste |
+| **Agentes**    | A quién le podés pedir trabajo, y qué le falta al que todavía no        |
+| **Miembros**   | Quiénes son los otros                                                   |
 
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
 cartel es una puerta cerrada con el nombre puesto.
+
+**Los agentes van aparte de los miembros** aunque los dos listen gente. Las
+preguntas son distintas —«¿a quién le pido trabajo?» contra «¿quién más vuela
+acá?»—, las columnas no se parecen —nivel, clase de misión, estación y si te
+atiende contra oficio y antigüedad— y los filtros tampoco. Un interruptor adentro
+de una sola tabla sería dos tablas peleando por un archivo. Y hay una razón más
+fuerte: **la pestaña de agentes es donde la reputación se cobra**, así que su
+vecina natural es Reputación y no Miembros.
+
+Los que todavía no atienden **salen igual, apagados y con lo que les falta**,
+mismo criterio que la ficha del lugar. Y hay un recorte de «sólo los que
+atienden», que es la única pregunta que importa antes de salir a buscar trabajo
+cuando la lista se hace larga.
 
 La ficha dice además **de qué clase es**: NPC o de jugadores, con un «?» al lado
 que explica la diferencia —«NPC» es una palabra de afuera del juego y la ficha no

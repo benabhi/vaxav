@@ -209,10 +209,6 @@ Afinarlo antes sería balancear una economía que todavía no existe.
 Cosas decididas que no entraron todavía, para que no se pierdan entre una etapa y
 la siguiente:
 
-- **Los agentes, en su propia pestaña y con tabla paginada.** Son NPC y no
-  miembros: tienen nivel, clase de misión, estación y si te atienden, que no se
-  parece en nada a las columnas de un piloto. Ver «El módulo Corporación» en
-  [corporaciones](systems/CORPORATIONS.md).
 - **Toda lista de la ficha tiene que aguantar mil filas.** Las estaciones están
   hoy en un panel al costado, que sirve con cuatro y se rompe con cuarenta: el
   panel pasa a mostrar las primeras y a llevar a la tabla completa, con el recorte
