@@ -2,19 +2,22 @@
  * Las corporaciones del mundo: quién opera las cosas y quién reparte trabajo.
  *
  * **Archivo propio, como facciones, oficios y habilidades.** Es un catálogo de
- * contenido y va a seguir creciendo: hoy son treinta y siete, mañana van a ser
+ * contenido y va a seguir creciendo: hoy son cuarenta, mañana van a ser
  * doscientas, y mezclarlas con las reglas del universo convierte ese archivo en
  * un depósito. Acá viven para poder leerse de corrido y para que la data inicial
  * que se genere más adelante salga de un lugar que no se mueve.
  *
- * **Once por facción y cuatro sin bandera.** Con tres o cuatro, elegir a cuál
+ * **Doce por facción y cuatro sin bandera.** Con tres o cuatro, elegir a cuál
  * alistarse no sería elegir; con esta cantidad, el sector empieza a tener adentro
  * gente que no se lleva bien entre sí.
  *
- * Cada una declara **un rubro**, y los once de cada facción cubren los seis. Eso
- * no es prolijidad: el rubro es lo que va a decidir qué contratos publica y qué
- * compra, así que una facción a la que le falte un rubro sería una facción donde
- * media profesión no encuentra trabajo.
+ * Cada una declara **un rubro**, y los doce de cada facción cubren los seis **de
+ * a dos**. Eso no es prolijidad: el rubro es lo que va a decidir qué contratos
+ * publica y qué compra, así que una facción a la que le falte un rubro sería una
+ * facción donde media profesión no encuentra trabajo, y con uno solo por rubro
+ * elegir sería aceptar al único que hace lo que uno quiere hacer. Que sean doce y
+ * no once también le da a la pantalla del alta una grilla pareja, sin una última
+ * fila coja.
  *
  * **La mayoría no opera ninguna estación**, y está bien: una corporación puede
  * existir sólo como gente. La Vigilia Ánfora es una capitana sentada en Puerto
@@ -155,6 +158,15 @@ export const CORPORATIONS: readonly CorporationBlueprint[] = [
 			'Mueve carga con escolta y sello. Cuesta el doble que cualquier otra y ' +
 			'llega, que en este sector no es poco.'
 	},
+	{
+		code: 'acarreos_ivarre',
+		name: 'Acarreos Ivarre',
+		kind: 'logistics',
+		faction: 'dominion',
+		description:
+			'Casa menor que acarrea para las mayores, de a poco y entre puestos del ' +
+			'Dominio. Cobra barato porque el pago de verdad es que la dejen figurar.'
+	},
 
 	// --- La Concordia: todo se vota, y por eso todo tarda ----------------------
 	{
@@ -239,6 +251,15 @@ export const CORPORATIONS: readonly CorporationBlueprint[] = [
 		description:
 			'Es la flota, pero contesta a un comité. Llega cuando el comité termina ' +
 			'de discutir si corresponde llegar.'
+	},
+	{
+		code: 'mutual_del_casco',
+		name: 'Mutual del Casco',
+		kind: 'security',
+		faction: 'concord',
+		description:
+			'Seguro de casco que paga escolta en vez de indemnización: sale más ' +
+			'barato llegar que reponer. Cubre al que está al día, y sólo a ése.'
 	},
 	{
 		code: 'rutas_unidas',
@@ -358,6 +379,15 @@ export const CORPORATIONS: readonly CorporationBlueprint[] = [
 		description:
 			'Lleva carga y mensajes entre comunas que no tienen línea regular. ' +
 			'Tarda lo que tarda y nunca abrió un contenedor ajeno.'
+	},
+	{
+		code: 'remolques_comunales',
+		name: 'Remolques Comunales',
+		kind: 'logistics',
+		faction: 'pact',
+		description:
+			'Los remolcadores viejos de las comunas, alquilados por viaje y con ' +
+			'tripulación. Cobran por lo que pesa y no por lo que vale.'
 	},
 
 	// --- Sin bandera: y con eso alcanza para tener clientes --------------------

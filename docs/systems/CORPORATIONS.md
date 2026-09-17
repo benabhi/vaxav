@@ -52,16 +52,23 @@ se dedica cada una y, más adelante, qué ofrece y qué contratos publica.
 
 ## El conjunto inicial
 
-**Once por facción y cuatro sin bandera**, treinta y siete en total. Con tres o
-cuatro, elegir a cuál alistarse no sería elegir; con esta cantidad, el sector
-empieza a tener adentro gente que no se lleva bien entre sí.
+**Doce por facción y cuatro sin bandera**, cuarenta en total. Con tres o cuatro,
+elegir a cuál alistarse no sería elegir; con esta cantidad, el sector empieza a
+tener adentro gente que no se lleva bien entre sí.
 
-Y **los once de cada facción cubren los seis rubros**. Eso no es prolijidad: el
-rubro va a decidir qué contratos publica y qué compra cada una, así que una
-facción a la que le falte un rubro es una facción donde media profesión no
-encuentra trabajo. Un test lo verifica, junto con el mínimo por facción.
+Y **los doce de cada facción cubren los seis rubros, de a dos**. Eso no es
+prolijidad: el rubro va a decidir qué contratos publica y qué compra cada una, así
+que una facción a la que le falte un rubro es una facción donde media profesión no
+encuentra trabajo, y con una sola por rubro elegir sería aceptar la única que hace
+lo que uno quiere hacer.
 
-Las seis que operan una estación, que son la minoría:
+Que sean **doce y no once** es además lo único que se ve desde afuera: el alta las
+reparte en una grilla de dos columnas en tableta y tres en monitor, y once dejaban
+la última fila coja. Un test verifica las tres cosas —el mínimo por facción, que
+las tres ofrezcan la misma cantidad y que esa cantidad llene filas enteras—, que
+es lo que mantiene parejo el catálogo cuando crezca.
+
+Las cinco que operan una estación, que son la minoría:
 
 | Corporación       | Rubro     | Responde a   | Opera                 |
 | ----------------- | --------- | ------------ | --------------------- |
@@ -71,12 +78,12 @@ Las seis que operan una estación, que son la minoría:
 | Comuna Talo       | Minería   | El Pacto     | Hábitat Talo          |
 | Libre Amarre      | Logística | _ninguna_    | Amarre Franco         |
 
-Las otras treinta y dos **no operan ninguna**, y está bien: una corporación puede
+Las otras treinta y cinco **no operan ninguna**, y está bien: una corporación puede
 existir sólo como gente.
 
 Son contenido, no reglas, y viven en **su propio archivo**,
 `src/lib/game/corporations.ts`, como las facciones y los oficios. Estaban adentro
-del plano del universo y se mudaron cuando pasaron de seis a treinta y siete: un
+del plano del universo y se mudaron cuando pasaron de seis a cuarenta: un
 catálogo que va a llegar a doscientas convierte en depósito al archivo que lo
 aloje. La siembra los carga desde ahí, y la data inicial que se genere más adelante
 va a salir del mismo lugar.
@@ -132,7 +139,7 @@ está en [arquitectura](ARCHITECTURE.md#toda-lista-larga-se-recorta-igual).
 
 ## El sello: la cara de cada una
 
-Ninguna corporación queda sin emblema, y nadie tuvo que dibujar treinta y siete:
+Ninguna corporación queda sin emblema, y nadie tuvo que dibujar cuarenta:
 **el sello se calcula a partir del nombre**. Mismo nombre, mismo sello, en
 cualquier máquina y para siempre; no se guarda en ninguna tabla porque no hay nada
 que guardar.

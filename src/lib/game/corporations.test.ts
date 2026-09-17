@@ -13,6 +13,12 @@ import {
 /** Lo mínimo por facción para que elegir a cuál alistarse sea elegir. */
 const MINIMO_POR_FACCION = 10;
 
+/**
+ * En cuántas columnas las reparte la pantalla del alta: dos en una tableta, tres
+ * de ahí para arriba.
+ */
+const COLUMNAS_DEL_ALTA = [2, 3];
+
 describe('el catálogo de corporaciones', () => {
 	it('no repite códigos ni nombres', () => {
 		expect(new Set(CORPORATIONS.map((una) => una.code)).size).toBe(CORPORATIONS.length);
@@ -29,6 +35,24 @@ describe('el catálogo de corporaciones', () => {
 				corporationsOf(faccion.code).length,
 				`${faccion.name} tiene menos de ${MINIMO_POR_FACCION}`
 			).toBeGreaterThanOrEqual(MINIMO_POR_FACCION);
+		}
+	});
+
+	/*
+	 * Y **la misma cantidad cada una, en filas enteras**.
+	 *
+	 * Esto se ve: el alta las reparte en una grilla, y una facción con una de más
+	 * deja la última fila coja mientras que una con una de menos ofrece menos donde
+	 * elegir que sus vecinas —dos cosas que el que se está alistando lee como que
+	 * una facción está menos terminada que la otra—. Que el catálogo crezca es
+	 * esperable; que crezca parejo y de a filas, obligatorio.
+	 */
+	it('ofrece la misma cantidad por facción, y en filas enteras', () => {
+		const cuentas = FACTION_LIST.map((faccion) => corporationsOf(faccion.code).length);
+		expect(new Set(cuentas).size, `no ofrecen lo mismo: ${cuentas.join(', ')}`).toBe(1);
+
+		for (const columnas of COLUMNAS_DEL_ALTA) {
+			expect(cuentas[0] % columnas, `${cuentas[0]} deja coja la fila de ${columnas}`).toBe(0);
 		}
 	});
 

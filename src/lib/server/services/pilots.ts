@@ -514,6 +514,13 @@ export interface SeedPilot {
 	readonly password: string;
 	readonly profession: string;
 	readonly faction: string;
+	/**
+	 * En cuál se alistan. El alta hace elegir una y estos dos no son la excepción:
+	 * un piloto de siembra sin corporación deja la pestaña Corporación mostrando
+	 * «Independiente», que es un estado legítimo del juego pero el que menos
+	 * enseña —ni estaciones, ni agentes, ni los otros miembros—.
+	 */
+	readonly corporation: string;
 	readonly credits: number;
 }
 
@@ -527,6 +534,10 @@ export const SEED_PILOTS: readonly SeedPilot[] = [
 		password: '31860933',
 		profession: 'miner',
 		faction: 'dominion',
+		// La casa que opera Puerto Ánfora, que es justo donde empieza parado: su
+		// corporación y su estación de partida son la misma, como le pasa a
+		// cualquiera que se aliste en el mundo del Dominio.
+		corporation: 'casa_verlan',
 		credits: SEED_CREDITS
 	},
 	// De otra facción a propósito: con las dos cuentas en la misma, nada de lo
@@ -538,6 +549,10 @@ export const SEED_PILOTS: readonly SeedPilot[] = [
 		password: 'vaxav-desarrollo',
 		profession: 'miner',
 		faction: 'concord',
+		// Del otro lado y de otro rubro a propósito: una extractora con más agentes
+		// que puestos, contra una casa de comercio con más puestos que agentes. Las
+		// dos formas que puede tomar la pantalla se miran sin cambiar de cuenta.
+		corporation: 'extractora_anillo',
 		credits: SEED_CREDITS
 	}
 ];
@@ -564,7 +579,8 @@ export async function ensureSeedPilots(db: Db): Promise<number> {
 			spec.email,
 			spec.password,
 			spec.profession,
-			spec.faction
+			spec.faction,
+			spec.corporation
 		);
 		credit(db, creado.id, spec.credits, { kind: 'adjustment', memo: 'Fondo de prueba' });
 		creados++;
