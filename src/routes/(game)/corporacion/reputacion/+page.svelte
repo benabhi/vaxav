@@ -177,8 +177,8 @@
 				dice de qué se va a llenar, no sólo que está vacía.
 			-->
 			<p class="w-full pt-3 text-1 text-text-muted">
-				Todavía no pasó nada entre ustedes. Acá va a quedar cada misión que termines para ellos, con
-				lo que sumó y el número que dejó.
+				Todavía no pasó nada entre ustedes. Acá queda cada movimiento, con lo que sumó y el número
+				que dejó.
 			</p>
 		{/if}
 

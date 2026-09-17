@@ -198,7 +198,7 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 		// Del catálogo y no de una columna: las del mundo son exactamente las que
 		// están ahí. El día que se puedan fundar, las de jugadores no van a estar y
 		// la cuenta sigue dando sin migrar nada.
-		origin: getCorporation(suya.code) ? 'Del mundo' : 'De jugadores',
+		origin: getCorporation(suya.code) ? 'NPC' : 'De jugadores',
 		faction: bandera?.name ?? 'Sin bandera',
 		factionCode: suya.faction,
 		description: suya.description,

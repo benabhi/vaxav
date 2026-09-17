@@ -23,6 +23,8 @@
 	import CorporationChoice from '$lib/components/game/CorporationChoice.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
+	import Popover from '$lib/components/ui/Popover.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
 	import SuccessCallout from '$lib/components/forms/SuccessCallout.svelte';
 	import SegmentBar from '$lib/components/meters/SegmentBar.svelte';
@@ -122,7 +124,33 @@
 							</span>
 
 							<Label>Clase</Label>
-							<span class="text-1 text-text-body">{corp.origin}</span>
+							<!--
+								El «?» va pegado al valor y no al rótulo: lo que hay que explicar es
+								«NPC», que es una palabra de afuera del juego, y no la palabra «clase».
+							-->
+							<span class="flex items-center gap-[0.35rem] text-1 text-text-body">
+								{corp.origin}
+								<Popover label="Qué quiere decir NPC">
+									{#snippet trigger()}
+										<Icon
+											name="question"
+											weight="bold"
+											size="0.65rem"
+											class="text-text-muted transition-colors hover:text-accent-bright"
+										/>
+									{/snippet}
+									<FloatingPanel class="flex max-w-[20rem] flex-col gap-1 p-3">
+										<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+											NPC o de jugadores
+										</span>
+										<BodyText>
+											Las corporaciones NPC son parte del mundo: están desde siempre, operan las
+											estaciones y reparten trabajo. Las de jugadores las funda y las maneja gente
+											como vos, con sus propios roles, su billetera y sus bienes.
+										</BodyText>
+									</FloatingPanel>
+								</Popover>
+							</span>
 
 							<Label>Responde a</Label>
 							<span class="text-1 text-text-body">{corp.faction}</span>

@@ -139,7 +139,9 @@ contratos—, y están las dos que hoy tienen algo detrás:
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
 cartel es una puerta cerrada con el nombre puesto.
 
-La ficha dice además **de qué clase es**: del mundo o de jugadores. Hoy son todas
+La ficha dice además **de qué clase es**: NPC o de jugadores, con un «?» al lado
+que explica la diferencia —«NPC» es una palabra de afuera del juego y la ficha no
+puede dar por sabido lo que significa acá adentro—. Hoy son todas
 del mundo y el rótulo dice siempre lo mismo, y va igual: el día que se puedan
 fundar, el que mire una ficha tiene que poder saber de cuál de las dos es **sin
 haberlo aprendido antes**, y una distinción que aparece recién cuando ya hay con
