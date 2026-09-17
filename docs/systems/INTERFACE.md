@@ -229,6 +229,42 @@ La respuesta es no fingir que sí. Mientras la nave está en camino:
 Es la misma idea que el indicador, un nivel más abajo: el título de la pantalla
 deja de ser dónde estás y pasa a ser **adónde vas**.
 
+### Mensajes
+
+**El módulo volvió al Neocom después de haber estado afuera.** Estuvo declarado
+como pantalla cartel hasta que se sacaron las trece que anunciaban una fase
+futura, con un motivo que sigue vigente: una entrada de menú que lleva a una
+puerta cerrada con el nombre puesto es peor que no ofrecer nada. Vuelve ahora
+porque ahora hay algo detrás, que es la condición que aquel commit dejó escrita.
+
+No es un chat. Vaxav es un juego de esperar: el otro no va a estar mirando la
+pantalla cuando vos escribís, así que lo que hace falta es algo que quede
+guardado hasta que lo abra. Un mensaje **no pide estar cerca**: llega a donde
+esté el otro. Lo que sí pide estar en el mismo lugar es enterarse de que el otro
+existe, y de eso se ocupa la lista de pilotos de una estación.
+
+Dos pestañas —Recibidos y Enviados— que son **la misma lista mirada desde el
+otro lado**, y una sola fila en la base detrás de las dos: un mensaje enviado y
+uno recibido son el mismo hecho, y guardarlo dos veces es la manera segura de que
+un día digan cosas distintas.
+
+El que está abierto va **al lado de la lista y no en otra ruta**: el proyecto
+tiene dos niveles de navegación y nunca un tercero, y cuando un módulo necesita
+más profundidad se resuelve con el diseño de la pantalla. Cuál está abierto viaja
+en la URL, como todo recorte del juego. En pantalla chica el abierto va arriba:
+el jugador acaba de tocar una fila para leerlo, y hacerlo aparecer debajo de una
+tabla de quince es pedirle que busque lo que pidió.
+
+**Escribir es una acción y no un lugar**, así que vive en una ventana y no en una
+tercera pestaña que sólo se visita para eso. La ventana se abre sola cuando la
+URL trae destinatario —es como llega el jugador desde la lista de una estación— y
+cuando el envío vuelve con un motivo, o el motivo aparecería sobre un formulario
+cerrado y el jugador perdería lo que escribió sin saber por qué.
+
+El aviso del Neocom tiene una vuelta propia: **abrir la bandeja no marca nada**,
+marca abrir un mensaje. Así que la pestaña sigue avisando mientras quede uno sin
+abrir, aunque el jugador ya esté parado ahí.
+
 ### La pantalla parado en una puerta
 
 Una puerta era, hasta acá, un panel de texto con cuatro cifras: lo único que la

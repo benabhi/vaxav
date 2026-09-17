@@ -46,6 +46,10 @@ La única que no agrega un verbo. Va primera porque las siguientes tocan los mis
 archivos.
 
 - ~~Fuera las pantallas cartel y la maqueta del chat.~~
+- ~~**Mensajes, de vuelta en el Neocom.** La entrada se había sacado por llevar a
+  una puerta cerrada; vuelve con el sistema detrás: mandar por distintivo, las
+  dos bandejas sobre una sola fila, el abierto al lado de la lista y el aviso de
+  los que no abriste.~~
 - ~~Resolver una acción pasa a ser un despachador por clase.~~
 - ~~El sistema sale de dónde está el piloto, no de una constante.~~
 - ~~Ofrecer sólo la profesión que tiene algo que hacer.~~

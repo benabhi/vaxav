@@ -686,6 +686,66 @@ export interface Sistema {
 	readonly travelSource: Procedencia;
 }
 
+/** Cuál de las dos bandejas se está mirando. */
+export type Buzon = 'recibidos' | 'enviados';
+
+/** Una fila de una bandeja: lo que alcanza para decidir si abrirla o no. */
+export interface FilaMensaje {
+	readonly id: number;
+	readonly subject: string;
+	/** El otro: quién lo mandó, o a quién se lo mandaste. */
+	readonly counterpart: string;
+	/** Milisegundos desde la época, en UTC. */
+	readonly at: number;
+	/**
+	 * Si todavía no lo abriste.
+	 *
+	 * **Sólo puede ser cierto en Recibidos**: `readAt` dice cuándo lo abrió quien
+	 * lo recibió, así que del otro lado hablaría del otro y no de vos.
+	 */
+	readonly unread: boolean;
+	/** Si es el que está abierto al lado. */
+	readonly open: boolean;
+}
+
+/** El mensaje abierto, al lado de la lista. */
+export interface MensajeAbierto {
+	readonly id: number;
+	readonly subject: string;
+	readonly from: string;
+	readonly to: string;
+	readonly body: string;
+	readonly at: number;
+	/** Si lo mandaste vos. */
+	readonly mine: boolean;
+	/** Y si lo mandaste vos, si el otro ya lo abrió. */
+	readonly seen: boolean;
+}
+
+/**
+ * Una bandeja entera: la lista, lo abierto y por dónde va la paginación.
+ *
+ * Recibidos y enviados comparten esta forma porque **son la misma lista mirada
+ * desde el otro lado**. Lo que cambia viaja adentro —de qué lado está el otro,
+ * qué decir cuando no hay nada— en vez de partir la pantalla en dos.
+ */
+export interface Bandeja {
+	readonly box: Buzon;
+	/** La ruta de esta bandeja, para armar los enlaces. */
+	readonly base: string;
+	/** Cómo se llama la columna del otro: «De» o «Para». */
+	readonly counterpartLabel: string;
+	/** Qué decir cuando no hay nada, que no es lo mismo en las dos. */
+	readonly empty: string;
+	readonly rows: readonly FilaMensaje[];
+	readonly open: MensajeAbierto | null;
+	readonly page: number;
+	readonly pages: number;
+	readonly total: number;
+	/** Cuántos sin abrir, que es el mismo número que enciende el Neocom. */
+	readonly unread: number;
+}
+
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */
 export interface FilaRanura {
 	readonly index: number;

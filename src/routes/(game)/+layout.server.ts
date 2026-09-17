@@ -25,12 +25,13 @@ import { pilotLog } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { currentAction } from '$lib/server/services/actions';
 import { unreadCount } from '$lib/server/services/log';
+import { unreadMessages } from '$lib/server/services/messages';
 import { getBodyById } from '$lib/server/services/universe';
 import { buildInforme } from '$lib/server/views/log';
 import { buildPilotView } from '$lib/server/views/pilot';
 import { actionIcon, actionLabel } from '$lib/format';
 import { canEnterAdmin } from '$lib/admin';
-import { LOG_TAB, moduleForRoute, tabForRoute } from '$lib/navigation';
+import { LOG_TAB, MESSAGES_TAB, moduleForRoute, tabForRoute } from '$lib/navigation';
 import { LOGIN_ROUTE, SUSPENDED_ROUTE } from '$lib/routes';
 import type { AccionEnCurso, Informe } from '$lib/tipos';
 import type { LayoutServerLoad } from './$types';
@@ -70,14 +71,21 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		: undefined;
 	const notice: Informe | null = fila ? buildInforme(db, fila) : null;
 
-	// Las rutas que tienen algo sin leer. Hoy sólo la bitácora avisa; el día que
-	// las misiones o los mensajes también lo hagan, se suman acá.
+	// Las rutas que tienen algo sin leer. Son dos: la bitácora y los mensajes, y el
+	// día que las misiones también avisen se suman a la misma lista.
 	//
 	// Estando parado en la pantalla que avisa, no avisa: el `load` de la página es
 	// el que marca leído y corre en paralelo con éste, así que sin esta condición
 	// el Neocom seguiría titilando justo en el render en que el jugador ya entró.
-	const enLaPantalla = url.pathname === LOG_TAB;
-	const notices = !enLaPantalla && unreadCount(db, pilot.id) > 0 ? [LOG_TAB] : [];
+	//
+	// Los mensajes tienen una vuelta más: **abrir la bandeja no los marca leídos**,
+	// los marca abrir uno. Así que ahí la condición no es estar en la pantalla sino
+	// estar abriendo un mensaje, que es lo único que baja el número.
+	const abriendo = url.pathname === MESSAGES_TAB && url.searchParams.has('m');
+	const notices = [
+		...(url.pathname !== LOG_TAB && unreadCount(db, pilot.id) > 0 ? [LOG_TAB] : []),
+		...(!abriendo && unreadMessages(db, pilot.id) > 0 ? [MESSAGES_TAB] : [])
+	];
 
 	const module = moduleForRoute(url.pathname);
 	const tab = tabForRoute(url.pathname);
