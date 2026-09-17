@@ -53,6 +53,7 @@ import {
 } from '$lib/game/universe';
 import { buildGalaxyMap } from './galaxy';
 import { FREE_SPACE } from '$lib/filters';
+import { paginate, sift, type Ordenes } from './listing';
 import { FACTION_LIST } from '$lib/game/factions';
 import { ORE_LIST } from '$lib/game/items';
 import {
@@ -171,7 +172,7 @@ const ROOT_KINDS: readonly OpcionConstructor[] = [{ value: 'star', label: bodyKi
  * una columna que no está en esta tabla no aparece como ordenable: no hay forma
  * de que el encabezado prometa un orden que el servidor no sabe hacer.
  */
-export const SYSTEM_SORTS: Readonly<Record<string, (fila: FilaSistema) => string | number>> = {
+export const SYSTEM_SORTS: Ordenes<FilaSistema> = {
 	nombre: (fila) => fila.name.toLocaleLowerCase('es'),
 	donde: (fila) => `${fila.region} ${fila.constellation}`.toLocaleLowerCase('es'),
 	gobierno: (fila) => fila.government.toLocaleLowerCase('es'),
@@ -353,23 +354,15 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 	// Los que pasan todos los filtros. El mapa recibe la galaxia entera igual: lo
 	// que el filtro hace es apagar el resto, no borrarlo, porque un mapa que sólo
 	// dibuja lo filtrado pierde la forma del conjunto.
-	const pasan = filas.filter((fila) => SYSTEM_FILTERS.every((cumple) => cumple(fila, query)));
-
-	const clave = SYSTEM_SORTS[query.sort] ?? SYSTEM_SORTS.nombre;
-	const vuelta = query.dir === 'desc' ? -1 : 1;
-	const ordenadas = [...pasan].sort((a, b) => {
-		const izquierda = clave(a);
-		const derecha = clave(b);
-		if (izquierda === derecha) return a.name.localeCompare(b.name, 'es');
-		return (izquierda > derecha ? 1 : -1) * vuelta;
-	});
-
-	const paginas = Math.max(1, Math.ceil(ordenadas.length / SYSTEMS_PER_PAGE));
-	const pagina = Math.min(query.page, paginas);
-	const desde = (pagina - 1) * SYSTEMS_PER_PAGE;
+	const pasan = sift(filas, query, SYSTEM_FILTERS);
+	// El desempate es el nombre, que es único: dos sistemas con el mismo gobierno
+	// no pueden salir en cualquier orden entre dos cargas.
+	const listado = paginate(pasan, query, SYSTEM_SORTS, SYSTEMS_PER_PAGE, (a, b) =>
+		a.name.localeCompare(b.name, 'es')
+	);
 
 	return {
-		systems: ordenadas.slice(desde, desde + SYSTEMS_PER_PAGE),
+		systems: listado.rows,
 		options: buildOptions(db),
 		totalBodies: cuerpos.length,
 		totalGates: puertas.length,
@@ -377,10 +370,10 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 		map,
 		taxonomy: buildTaxonomia(db, filas),
 		matches: pasan.map((fila) => fila.code),
-		query: { ...query, page: pagina },
+		query: { ...query, page: listado.page },
 		total: filas.length,
-		found: pasan.length,
-		pages: paginas
+		found: listado.found,
+		pages: listado.pages
 	};
 }
 
