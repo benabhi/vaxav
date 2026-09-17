@@ -114,10 +114,7 @@ export const actions: Actions = {
 					controllingFaction: String(datos.get('controllingFaction') ?? ''),
 					capitalOf:
 						datos.get('capital') === 'on' ? String(datos.get('controllingFaction') ?? '') : '',
-					description: String(datos.get('description') ?? ''),
-					x: entero(datos.get('x')),
-					y: entero(datos.get('y')),
-					z: entero(datos.get('z'))
+					description: String(datos.get('description') ?? '')
 				},
 				locals.pilot?.id ?? null
 			);

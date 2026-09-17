@@ -297,24 +297,73 @@ decide que de acá se sale hacia el norte, y después —a veces mucho después,
 cuando el sistema del otro lado exista— se dice adónde va. Una puerta sin destino
 es una obra en curso, no un error.
 
-### La roseta
+### La roseta, y la grilla de hexágonos
 
-Cada puerta guarda por **qué lado del sistema sale**, de una roseta de ocho: `n`,
-`ne`, `e`, `se`, `s`, `sw`, `w`, `nw`. La base garantiza **un rumbo por sistema**
-con un índice único.
+Cada puerta guarda por **qué lado del sistema sale**, de una roseta de seis: `n`,
+`ne`, `se`, `s`, `sw`, `nw`. La base garantiza **un rumbo por sistema** con un
+índice único, así que un sistema tiene seis salidas como mucho.
 
-Existe para el **mapa de la galaxia**, que va a dibujarse como el de X4: cada
-sistema una casilla y sus salidas apuntando hacia afuera. Sin un rumbo, dos
-puertas del mismo sistema no tienen dónde ponerse y el mapa se arma solo, mal.
+**Seis porque la galaxia es una grilla de hexágonos**, y un hexágono tiene seis
+vecinos. Es la decisión de la que cuelga todo el mapa:
 
-Ocho y no cuatro porque un sistema bisagra puede tener seis vecinos; ocho y no
-grados porque lo que hace falta es que no se pisen: dos puertas a 12° y 13° son un
-choque, dos en `n` y `ne` no lo son nunca.
+- En una cuadrícula con diagonales, cuatro de los ocho vecinos quedan a 1,41
+  veces la distancia de los otros cuatro. Dos puertas iguales se dibujarían a
+  distancias distintas, y el mapa mentiría sobre lo que cuesta un salto.
+- En un hexágono, **los seis vecinos están exactamente a la misma distancia**, que
+  es justo lo que un rumbo promete.
+
+El hexágono es de **tapa plana**, así que los vecinos están arriba, abajo y en las
+cuatro diagonales: no hay este ni oeste, porque a los costados de uno de ésos hay
+un vértice y no una casilla.
+
+Rumbos y no grados, además, porque lo que hace falta es que no se pisen: dos
+puertas a 12° y 13° son un choque, dos en `n` y `ne` no lo son nunca.
+
+### Dónde cae cada sistema
+
+Las tres coordenadas de un sistema —`x`, `y`, `z`— son **coordenadas cúbicas de
+hexágono**: tres enteros que suman cero. No es una casualidad afortunada que sean
+tres; es la forma clásica de direccionar hexágonos, y la que hace que moverse,
+medir distancias y buscar vecinos sean sumas y restas en vez de casos especiales
+por fila par o impar. La tercera no sobra: es la que sostiene la invariante.
+
+**No se escriben a mano.** El constructor ya no tiene campos para teclearlas,
+porque una posición tecleada contradice los rumbos de sus propias puertas, que es
+lo único que hace legible al mapa. La posición la decide el grafo.
+
+**Y se decide al conectar, un salto por vez.** No hay un acomodado global que
+recorra la galaxia: conectar dos puertas coloca al vecino en la casilla que dice
+el rumbo, y con eso alcanza. Un acomodado global movería sistemas ya puestos —y el
+mapa de todos los jugadores con ellos— cada vez que el constructor toca una
+puerta, y ahí se pierde lo único que un mapa compartido tiene que dar: que «estoy
+al norte de Ánfora» signifique lo mismo mañana.
+
+Las reglas, en orden:
+
+| Situación                                        | Qué pasa                                                                                  |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| El vecino no está en el mapa                     | Se coloca en la casilla del rumbo                                                         |
+| El vecino es un **ramal** que no está en el mapa | Se muda el ramal entero con el mismo desplazamiento, así su geometría interna se conserva |
+| Los dos ya están puestos y cierran               | Nada que hacer: el mapa ya era coherente                                                  |
+| Los dos ya están puestos y **no** cierran        | Es un **atajo**. Se conecta igual y el mapa lo dibuja torcido                             |
+
+Estar en el mapa quiere decir **llegar caminando desde el primer sistema
+sembrado**, que es el origen de la grilla. Tener una puerta conectada no alcanza:
+un ramal armado aparte también las tiene y sigue sin estar en ningún lado.
+
+**Lo que ya tiene casilla no se mueve nunca.** Es la regla que sostiene a todas
+las demás.
+
+### Los atajos
 
 Al conectar dos puertas se propone el **rumbo opuesto** para la gemela —de Ánfora
 se sale al norte, desde el otro lado se vuelve por el sur— pero es una sugerencia:
 una galaxia donde todo cierra en espejo es una grilla, y un mapa interesante tiene
 atajos torcidos.
+
+Un atajo es una puerta cuyas dos puntas **no son vecinas en la grilla**. No es un
+error ni algo que haya que arreglar: es un pasaje que se salta el camino largo, y
+el mapa lo dibuja distinto justamente para que se vea. `isShortcut` los reconoce.
 
 ## Cómo se agrega contenido
 

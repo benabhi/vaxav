@@ -1,16 +1,18 @@
 <!--
 	La roseta de un sistema: por qué lados se sale.
 
-	Ocho puestos repartidos cada 45°, con los ocupados encendidos. Se lee de un
+	Seis puestos repartidos cada 60°, con los ocupados encendidos. Se lee de un
 	vistazo cuántas salidas tiene el sistema y hacia dónde, que es la pregunta con
 	la que uno mira un sistema mientras arma la galaxia. **Y la que todavía no
 	lleva a ninguna parte se marca distinto**, porque es trabajo a medio hacer y un
 	universo sano no tiene ninguna.
 
-	Existe para el mapa que viene: cuando la galaxia se dibuje como en X4 —cada
-	sistema una casilla y sus salidas apuntando hacia afuera—, este mismo rumbo va
-	a decidir por qué borde sale cada línea. Dibujarla ahora es la forma de que el
-	dato se elija mirándolo y no a ciegas.
+	Son seis y no ocho porque la galaxia es una **grilla de hexágonos**: cada
+	sistema una casilla de seis lados, y cada rumbo el borde por el que se sale
+	hacia la vecina. El este y el oeste no existen ahí —a los costados de un
+	hexágono de tapa plana hay un vértice, no una casilla— y la roseta se dibuja
+	con el mismo reparto que usa el mapa, así que lo que se ve acá es literalmente
+	dónde va a salir la línea allá.
 
 	Se dibuja a mano, con cajas y un círculo: el alto sale de `aspect-ratio` y
 	nunca de un valor fijo, o el círculo se vuelve una elipse al achicarse.
@@ -44,7 +46,7 @@
 <!--
 	Mide lo suyo y no el cien por ciento del padre. Con `w-full` dentro de un
 	contenedor que se encoge al contenido, el ancho se define en círculo: el padre
-	espera al hijo y el hijo al padre, la roseta queda en cero y los ocho puestos
+	espera al hijo y el hijo al padre, la roseta queda en cero y los seis puestos
 	—que son absolutos— se amontonan en el origen. Se ve como un ícono suelto y
 	desalineado, que es exactamente lo que pasaba.
 -->

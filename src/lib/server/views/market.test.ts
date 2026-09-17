@@ -125,10 +125,7 @@ describe('el catálogo', () => {
 				security: 70,
 				controllingFaction: 'dominion',
 				capitalOf: '',
-				description: '',
-				x: 10,
-				y: 0,
-				z: 0
+				description: ''
 			},
 			null
 		);

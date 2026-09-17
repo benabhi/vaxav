@@ -20,7 +20,7 @@
  * Corresponde a docs/systems/ADMIN.md y docs/systems/UNIVERSE.md.
  */
 
-import { and, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, eq, isNull, ne } from 'drizzle-orm';
 import {
 	beltDeposit,
 	body,
@@ -55,6 +55,7 @@ import {
 	type Government,
 	type StationServiceKind
 } from '$lib/game/universe';
+import { neighbourOf, sameHex, type Hex } from '$lib/game/galaxy';
 import { getFaction } from '$lib/game/factions';
 
 /** No se pudo construir. El mensaje se le muestra a quien lo intentó. */
@@ -170,9 +171,6 @@ export interface SystemDraft {
 	/** Código de la facción de la que es capital, o vacío. */
 	readonly capitalOf: string;
 	readonly description: string;
-	readonly x: number;
-	readonly y: number;
-	readonly z: number;
 }
 
 /** Que la facción exista, si se declaró alguna. */
@@ -270,10 +268,10 @@ export function createSystem(
 				security: draft.security,
 				controllingFaction: draft.controllingFaction,
 				capitalOf: draft.capitalOf,
-				description: draft.description.trim(),
-				x: draft.x,
-				y: draft.y,
-				z: draft.z
+				description: draft.description.trim()
+				// Sin coordenadas: nace en el origen, que es como se reconoce a un
+				// sistema que todavía no tiene lugar en la grilla. Se lo gana al
+				// conectarle una puerta, no tecleándolo.
 			})
 			.returning()
 			.get();
@@ -335,10 +333,10 @@ export function updateSystem(
 				security: draft.security,
 				controllingFaction: draft.controllingFaction,
 				capitalOf: draft.capitalOf,
-				description: draft.description.trim(),
-				x: draft.x,
-				y: draft.y,
-				z: draft.z
+				description: draft.description.trim()
+				// La posición no se edita acá: es del mapa, no de la ficha. Moverla a
+				// mano rompería la coherencia con los rumbos de sus puertas, que es lo
+				// único que hace legible al mapa.
 			})
 			.where(eq(system.id, systemId))
 			.run();
@@ -794,6 +792,80 @@ export function looseGates(db: Db): readonly { gate: Gate; body: Body; system: S
  * así. Por eso se escriben las dos filas juntas y con la misma distancia de
  * salto: un test verifica que no quede ninguna gemela suelta.
  */
+/** Dónde está un sistema en la grilla de la galaxia. */
+function hexOf(row: System): Hex {
+	return { x: row.x, y: row.y, z: row.z };
+}
+
+/**
+ * Los sistemas atados a éste por puertas conectadas, él incluido.
+ *
+ * Es la **isla**: el pedazo de galaxia al que se llega caminando puertas. Se usa
+ * para mudar de una pieza un ramal recién construido cuando se lo engancha al
+ * mapa, en vez de dejarlo suelto en el origen.
+ *
+ * El recorrido es acotado por construcción —una isla tiene los sistemas que
+ * tiene— y nunca cruza al otro lado, porque las dos puertas que se están por unir
+ * todavía no están conectadas cuando esto corre.
+ */
+function islandOf(db: Db, systemId: number): number[] {
+	const vistos = new Set<number>([systemId]);
+	const pendientes = [systemId];
+
+	while (pendientes.length > 0) {
+		const actual = pendientes.pop()!;
+		const salidas = db.select().from(gate).where(eq(gate.systemId, actual)).all();
+
+		for (const salida of salidas) {
+			if (salida.destinationId === null) continue;
+			const gemela = db.select().from(gate).where(eq(gate.bodyId, salida.destinationId)).get();
+			if (!gemela || vistos.has(gemela.systemId)) continue;
+			vistos.add(gemela.systemId);
+			pendientes.push(gemela.systemId);
+		}
+	}
+
+	return [...vistos];
+}
+
+/**
+ * Los sistemas que ya tienen lugar en el mapa: la isla de la semilla.
+ *
+ * **El primero sembrado es el origen de la grilla**, y alguien tiene que serlo.
+ * Los demás se ganan su casilla al quedar atados a él por puertas.
+ *
+ * Tener una puerta conectada **no alcanza**: un ramal armado aparte también las
+ * tiene y sigue sin estar en ningún lado. Lo que define estar puesto es llegar
+ * caminando desde la semilla, y por eso esto es una consulta de alcance y no una
+ * de la fila. Confundir las dos cosas deja ramales flotando en la casilla cero,
+ * encimados con el sistema inicial.
+ */
+function placedSystems(db: Db, seedId: number): Set<number> {
+	return new Set(seedId === 0 ? [] : islandOf(db, seedId));
+}
+
+/**
+ * Muda una isla entera para que uno de sus sistemas caiga en una casilla.
+ *
+ * Se mueve **todo el ramal con el mismo desplazamiento**, así que las posiciones
+ * relativas de adentro se conservan: si dentro del ramal un sistema estaba al
+ * norte de otro, sigue estándolo. Es la diferencia entre enganchar un pedazo de
+ * galaxia ya armado y tener que rehacerlo.
+ */
+function moveIsland(tx: Db, members: readonly System[], from: Hex, to: Hex): void {
+	const dx = to.x - from.x;
+	const dy = to.y - from.y;
+	const dz = to.z - from.z;
+	if (dx === 0 && dy === 0 && dz === 0) return;
+
+	for (const miembro of members) {
+		tx.update(system)
+			.set({ x: miembro.x + dx, y: miembro.y + dy, z: miembro.z + dz })
+			.where(eq(system.id, miembro.id))
+			.run();
+	}
+}
+
 export function connectGates(
 	db: Db,
 	gateId: number,
@@ -820,7 +892,53 @@ export function connectGates(
 	const cuerpoUna = db.select().from(body).where(eq(body.id, una.bodyId)).get()!;
 	const cuerpoOtra = db.select().from(body).where(eq(body.id, otra.bodyId)).get()!;
 
+	// **La galaxia se acomoda sola, un salto por vez**, y nunca se mueve lo que ya
+	// estaba: la casilla de un sistema puesto es el lenguaje común de todos los que
+	// ya la vieron. Un acomodado global que recorriera el grafo movería medio mapa
+	// cada vez que el constructor toca una puerta.
+	//
+	// Se mira en los dos sentidos porque cualquiera puede ser el que todavía no
+	// tiene lugar: se conecta tanto una puerta nueva a un sistema viejo como al
+	// revés. Si los dos están puestos y no cierran, la puerta se conecta igual y
+	// queda como atajo, que es deseable: una galaxia donde todo cierra en espejo es
+	// una grilla y nada más.
+	const sistemaUna = db.select().from(system).where(eq(system.id, una.systemId)).get()!;
+	const sistemaOtra = db.select().from(system).where(eq(system.id, otra.systemId)).get()!;
+	const semilla = db.select({ id: system.id }).from(system).orderBy(asc(system.id)).get()?.id ?? 0;
+
+	const enElMapa = placedSystems(db, semilla);
+	const puestaUna = enElMapa.has(sistemaUna.id);
+	const puestaOtra = enElMapa.has(sistemaOtra.id);
+
+	/** Trae la isla de un sistema con sus filas, para mudarla de una pieza. */
+	const islaDe = (id: number): System[] =>
+		islandOf(db, id).map((uno) => db.select().from(system).where(eq(system.id, uno)).get()!);
+
+	let mudanza: { members: System[]; from: Hex; to: Hex } | null = null;
+	if (puestaOtra && !puestaUna) {
+		mudanza = {
+			members: islaDe(sistemaUna.id),
+			from: hexOf(sistemaUna),
+			to: neighbourOf(hexOf(sistemaOtra), otra.bearing)
+		};
+	} else if (!puestaOtra) {
+		// Cubre dos casos con la misma cuenta: engancharle un ramal al mapa, y unir
+		// dos sistemas que todavía están los dos afuera.
+		//
+		// El segundo importa más de lo que parece. Su posición absoluta no significa
+		// nada hasta que la isla se enganche, pero **su geometría interna sí**: si no
+		// se arma acá, el ramal entero queda apilado en una sola casilla y la mudanza
+		// que lo engancha traslada el amontonamiento tal cual.
+		mudanza = {
+			members: islaDe(sistemaOtra.id),
+			from: hexOf(sistemaOtra),
+			to: neighbourOf(hexOf(sistemaUna), una.bearing)
+		};
+	}
+
 	db.transaction((tx) => {
+		if (mudanza) moveIsland(tx, mudanza.members, mudanza.from, mudanza.to);
+
 		tx.update(gate)
 			.set({ destinationId: otra.bodyId, jumpDistance })
 			.where(eq(gate.id, una.id))
@@ -837,6 +955,27 @@ export function connectGates(
 			payload: { name: cuerpoUna.name, destination: cuerpoOtra.name, jumpDistance }
 		});
 	});
+}
+
+/**
+ * Si las dos puntas de una puerta son vecinas en la grilla.
+ *
+ * Falso es un **atajo**, no un error: una galaxia donde todo cierra en espejo es
+ * una grilla y nada más. El mapa los dibuja distinto para que se vean, que es
+ * justamente la gracia.
+ */
+export function isShortcut(db: Db, gateId: number): boolean {
+	const fila = db.select().from(gate).where(eq(gate.id, gateId)).get();
+	if (!fila || fila.destinationId === null) return false;
+
+	const gemela = db.select().from(gate).where(eq(gate.bodyId, fila.destinationId)).get();
+	if (!gemela) return false;
+
+	const aqui = db.select().from(system).where(eq(system.id, fila.systemId)).get();
+	const alla = db.select().from(system).where(eq(system.id, gemela.systemId)).get();
+	if (!aqui || !alla) return false;
+
+	return !sameHex(neighbourOf(hexOf(aqui), fila.bearing), hexOf(alla));
 }
 
 /** Las separa, también en los dos sentidos. */
@@ -999,10 +1138,7 @@ export function blankSystem(constellationId: number): SystemDraft {
 		security: suggestedSecurity('corporate', true),
 		controllingFaction: '',
 		capitalOf: '',
-		description: '',
-		x: 0,
-		y: 0,
-		z: 0
+		description: ''
 	};
 }
 

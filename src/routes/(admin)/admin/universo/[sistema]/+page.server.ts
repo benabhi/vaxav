@@ -115,10 +115,7 @@ function sistemaDe(datos: FormData) {
 		security: entero(datos, 'security'),
 		controllingFaction,
 		capitalOf: datos.get('capital') === 'on' ? controllingFaction : '',
-		description: String(datos.get('description') ?? ''),
-		x: entero(datos, 'x'),
-		y: entero(datos, 'y'),
-		z: entero(datos, 'z')
+		description: String(datos.get('description') ?? '')
 	};
 }
 

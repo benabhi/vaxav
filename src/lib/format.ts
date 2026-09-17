@@ -197,11 +197,9 @@ const SERVICE_ICONS: Record<StationServiceKind, IconName> = {
 const BEARINGS: Record<GateBearing, string> = {
 	n: 'Norte',
 	ne: 'Noreste',
-	e: 'Este',
 	se: 'Sureste',
 	s: 'Sur',
 	sw: 'Suroeste',
-	w: 'Oeste',
 	nw: 'Noroeste'
 };
 

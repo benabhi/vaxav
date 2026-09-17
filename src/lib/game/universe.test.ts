@@ -130,12 +130,15 @@ describe('qué cuelga de qué', () => {
 });
 
 describe('la roseta', () => {
-	it('tiene ocho rumbos repartidos cada 45 grados', () => {
-		expect(GATE_BEARINGS).toHaveLength(8);
+	it('tiene seis rumbos repartidos cada 60 grados', () => {
+		// Seis porque la galaxia es una grilla de hexágonos de tapa plana: a los
+		// costados de uno de ésos no hay casilla, hay un vértice. Por eso no existen
+		// el este ni el oeste.
+		expect(GATE_BEARINGS).toHaveLength(6);
 		expect(bearingAngle('n')).toBe(0);
-		expect(bearingAngle('e')).toBe(90);
+		expect(bearingAngle('se')).toBe(120);
 		expect(bearingAngle('s')).toBe(180);
-		expect(bearingAngle('w')).toBe(270);
+		expect(bearingAngle('nw')).toBe(300);
 	});
 
 	it('el opuesto es el de enfrente, y el opuesto del opuesto es uno mismo', () => {
@@ -148,8 +151,8 @@ describe('la roseta', () => {
 
 	it('dice qué lados quedan libres', () => {
 		expect(freeBearings(['n', 's'])).not.toContain('n');
-		expect(freeBearings(['n', 's'])).toHaveLength(6);
-		expect(freeBearings([])).toHaveLength(8);
+		expect(freeBearings(['n', 's'])).toHaveLength(4);
+		expect(freeBearings([])).toHaveLength(6);
 		expect(freeBearings(GATE_BEARINGS)).toHaveLength(0);
 	});
 });

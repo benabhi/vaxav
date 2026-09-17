@@ -2,10 +2,11 @@
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { beltDeposit, body as bodyTable, pilot as pilotTable } from '../db/schema';
+import { beltDeposit, body as bodyTable, pilot as pilotTable, system } from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
 import { eventsPage } from './events';
 import { getBody, systemTree } from './universe';
+import { isValidHex, neighbourOf } from '$lib/game/galaxy';
 import {
 	BuilderError,
 	allRegions,
@@ -21,6 +22,7 @@ import {
 	deleteBody,
 	deleteSystem,
 	disconnectGate,
+	isShortcut,
 	gatesOf,
 	growFromGate,
 	looseGates,
@@ -51,9 +53,6 @@ function borrador(db: Db, cambios: Partial<SystemDraft> = {}): SystemDraft {
 		controllingFaction: 'dominion',
 		capitalOf: '',
 		description: '',
-		x: 10,
-		y: 0,
-		z: 0,
 		...cambios
 	};
 }
@@ -504,7 +503,7 @@ describe('las puertas', () => {
 	it('se unen en los dos sentidos, con la misma distancia', () => {
 		const db = seededDb();
 		const uno = createSystem(db, borrador(db), null);
-		const otro = createSystem(db, borrador(db, { name: 'Ocaso', x: 30 }), null);
+		const otro = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
 
 		const salida = createGate(db, uno.system.id, puerta(uno.star.id), 'n', null);
 		const vuelta = createGate(db, otro.system.id, puerta(otro.star.id, 'Puerta Sur'), 's', null);
@@ -519,6 +518,101 @@ describe('las puertas', () => {
 		expect(orphanGates(db)).toHaveLength(0);
 	});
 
+	it('conectar coloca al vecino en la casilla que dice el rumbo', () => {
+		const db = seededDb();
+		// Se cuelga de Ánfora, que es la semilla de la grilla: un sistema entra al
+		// mapa **atándose a lo que ya está en el mapa**, que es el flujo real del
+		// constructor. Dos sistemas nuevos unidos entre sí forman una isla que
+		// todavía no tiene lugar, y eso es correcto: lo tendrán al engancharla.
+		const anfora = getBody(db, 'anfora_estrella')!;
+		const nuevo = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
+
+		const salida = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Este'), 'ne', null);
+		const vuelta = createGate(db, nuevo.system.id, puerta(nuevo.star.id, 'Puerta Sur'), 'sw', null);
+		connectGates(db, salida.gate.id, vuelta.gate.id, 24, null);
+
+		const puesto = db.select().from(system).where(eq(system.id, nuevo.system.id)).get()!;
+		const semilla = db.select().from(system).where(eq(system.id, anfora.systemId)).get()!;
+
+		expect({ x: puesto.x, y: puesto.y, z: puesto.z }).toEqual(
+			neighbourOf({ x: semilla.x, y: semilla.y, z: semilla.z }, 'ne')
+		);
+		// Y la casilla existe: tres enteros que suman cero.
+		expect(isValidHex({ x: puesto.x, y: puesto.y, z: puesto.z })).toBe(true);
+		expect(isShortcut(db, salida.gate.id)).toBe(false);
+	});
+
+	it('no mueve un sistema que ya tenía lugar: la segunda puerta es un atajo', () => {
+		const db = seededDb();
+		const anfora = getBody(db, 'anfora_estrella')!;
+		const vecino = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
+
+		// Primero se lo coloca al norte.
+		const aNorte = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Norte'), 'n', null);
+		const desdeSur = createGate(
+			db,
+			vecino.system.id,
+			puerta(vecino.star.id, 'Puerta Sur'),
+			's',
+			null
+		);
+		connectGates(db, aNorte.gate.id, desdeSur.gate.id, 10, null);
+		const colocado = db.select().from(system).where(eq(system.id, vecino.system.id)).get()!;
+
+		// Y ahora se los vuelve a unir por un rumbo que no cierra. La puerta se
+		// conecta igual —una galaxia donde todo cierra en espejo es una grilla y nada
+		// más— pero **el sistema no se mueve**: su casilla es el lenguaje común de
+		// todos los que ya la vieron.
+		const atajo = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Sureste'), 'se', null);
+		const vuelta = createGate(
+			db,
+			vecino.system.id,
+			puerta(vecino.star.id, 'Puerta Noroeste'),
+			'nw',
+			null
+		);
+		connectGates(db, atajo.gate.id, vuelta.gate.id, 40, null);
+
+		const despues = db.select().from(system).where(eq(system.id, vecino.system.id)).get()!;
+		expect({ x: despues.x, y: despues.y, z: despues.z }).toEqual({
+			x: colocado.x,
+			y: colocado.y,
+			z: colocado.z
+		});
+		expect(isShortcut(db, atajo.gate.id)).toBe(true);
+		expect(isShortcut(db, aNorte.gate.id)).toBe(false);
+	});
+
+	it('engancha una isla entera sin deshacerla por dentro', () => {
+		const db = seededDb();
+		const anfora = getBody(db, 'anfora_estrella')!;
+		const uno = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
+		const dos = createSystem(db, borrador(db, { name: 'Vigía' }), null);
+
+		// Un ramal armado aparte, todavía fuera del mapa.
+		const aDos = createGate(db, uno.system.id, puerta(uno.star.id, 'Puerta Norte'), 'n', null);
+		const desdeDos = createGate(db, dos.system.id, puerta(dos.star.id, 'Puerta Sur'), 's', null);
+		connectGates(db, aDos.gate.id, desdeDos.gate.id, 10, null);
+
+		// Y ahora se engancha a Ánfora por el otro extremo.
+		const aMapa = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Este'), 'ne', null);
+		const desdeUno = createGate(db, uno.system.id, puerta(uno.star.id, 'Puerta Sur'), 'sw', null);
+		connectGates(db, aMapa.gate.id, desdeUno.gate.id, 10, null);
+
+		const semilla = db.select().from(system).where(eq(system.id, anfora.systemId)).get()!;
+		const puestoUno = db.select().from(system).where(eq(system.id, uno.system.id)).get()!;
+		const puestoDos = db.select().from(system).where(eq(system.id, dos.system.id)).get()!;
+
+		// El ramal se mudó entero con el mismo desplazamiento: adentro, lo que estaba
+		// al norte sigue al norte. Rehacer el ramal sería perder el trabajo de armarlo.
+		expect({ x: puestoUno.x, y: puestoUno.y, z: puestoUno.z }).toEqual(
+			neighbourOf({ x: semilla.x, y: semilla.y, z: semilla.z }, 'ne')
+		);
+		expect({ x: puestoDos.x, y: puestoDos.y, z: puestoDos.z }).toEqual(
+			neighbourOf({ x: puestoUno.x, y: puestoUno.y, z: puestoUno.z }, 'n')
+		);
+	});
+
 	it('no se conectan dos del mismo sistema, ni una ya conectada', () => {
 		const db = seededDb();
 		const uno = createSystem(db, borrador(db), null);
@@ -527,7 +621,7 @@ describe('las puertas', () => {
 
 		expect(() => connectGates(db, norte.gate.id, sur.gate.id, 10, null)).toThrow(BuilderError);
 
-		const otro = createSystem(db, borrador(db, { name: 'Ocaso', x: 30 }), null);
+		const otro = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
 		const lejana = createGate(db, otro.system.id, puerta(otro.star.id, 'Puerta Sur'), 's', null);
 		connectGates(db, norte.gate.id, lejana.gate.id, 10, null);
 
@@ -537,7 +631,7 @@ describe('las puertas', () => {
 	it('se separan también en los dos sentidos', () => {
 		const db = seededDb();
 		const uno = createSystem(db, borrador(db), null);
-		const otro = createSystem(db, borrador(db, { name: 'Ocaso', x: 30 }), null);
+		const otro = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
 		const salida = createGate(db, uno.system.id, puerta(uno.star.id), 'n', null);
 		const vuelta = createGate(db, otro.system.id, puerta(otro.star.id, 'Puerta Sur'), 's', null);
 		connectGates(db, salida.gate.id, vuelta.gate.id, 24, null);
@@ -559,13 +653,7 @@ describe('las puertas', () => {
 		const uno = createSystem(db, borrador(db), null);
 		const salida = createGate(db, uno.system.id, puerta(uno.star.id), 'ne', null);
 
-		const vecino = growFromGate(
-			db,
-			salida.gate.id,
-			borrador(db, { name: 'Ocaso', x: 30 }),
-			18,
-			null
-		);
+		const vecino = growFromGate(db, salida.gate.id, borrador(db, { name: 'Ocaso' }), 18, null);
 
 		// La gemela sale por el rumbo opuesto: es lo que hace que el mapa cierre.
 		expect(takenBearings(db, vecino.id)).toEqual(['sw']);

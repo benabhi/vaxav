@@ -884,15 +884,26 @@ export function findBody(code: string): BodyBlueprint | null {
  * con un rumbo, cada sistema tiene ocho lugares donde colgar una salida y el
  * dibujo sale del dato en vez de adivinarse.
  *
- * **Ocho y no cuatro** porque un sistema bisagra puede tener seis vecinos, y
- * ocho y no grados porque lo que hace falta es que no se pisen: dos puertas a
- * 12° y 13° son un choque, dos en `n` y `ne` no lo son nunca. La base lo
- * garantiza con un índice único por sistema y rumbo.
+ * **Seis y no ocho, ni grados.** Seis porque la galaxia se dibuja como una
+ * grilla de hexágonos, y un hexágono tiene seis vecinos: con ocho rumbos había
+ * dos —este y oeste— que no tenían casilla adonde llevar. Y rumbos y no grados
+ * porque lo que hace falta es que no se pisen: dos puertas a 12° y 13° son un
+ * choque, dos en `n` y `ne` no lo son nunca. La base lo garantiza con un índice
+ * único por sistema y rumbo.
+ *
+ * El hexágono es de **tapa plana**, así que los vecinos están arriba, abajo y en
+ * las cuatro diagonales. Por eso sobreviven el norte y el sur y se van el este y
+ * el oeste: en esta grilla, a los costados no hay nadie.
+ *
+ * El orden es el de las agujas del reloj arrancando del norte, y eso no es
+ * cosmético: `oppositeBearing` cuenta media vuelta sobre esta lista y
+ * `bearingAngle` reparte los 360° entre sus elementos. Reordenarla los rompe a
+ * los dos en silencio.
  *
  * Va en la puerta y no en el sistema porque es de la puerta: describe **esta
  * salida**, no el lugar.
  */
-export const GATE_BEARINGS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'] as const;
+export const GATE_BEARINGS = ['n', 'ne', 'se', 's', 'sw', 'nw'] as const;
 export type GateBearing = (typeof GATE_BEARINGS)[number];
 
 /**
@@ -912,7 +923,7 @@ export function oppositeBearing(bearing: GateBearing): GateBearing {
 /**
  * El ángulo de un rumbo, en grados, con el norte arriba y girando como el reloj.
  *
- * Lo usa el dibujo: la roseta reparte los ocho rumbos cada 45°, así que la
+ * Lo usa el dibujo: la roseta reparte los seis rumbos cada 60°, así que la
  * posición de una salida en el borde de una casilla sale de una multiplicación y
  * no de una tabla de coordenadas que haya que mantener.
  */

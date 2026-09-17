@@ -380,11 +380,7 @@
 
 			<TextField label="Descripción" name="description" placeholder="Opcional" />
 
-			<div class="grid w-full grid-cols-3 gap-3">
-				<TextField label="X" name="x" type="number" value="0" />
-				<TextField label="Y" name="y" type="number" value="0" />
-				<TextField label="Z" name="z" type="number" value="0" />
-			</div>
+			<div class="grid w-full grid-cols-3 gap-3"></div>
 
 			<div class="flex w-full items-center justify-end gap-3">
 				<HudButton variant="ghost" onclick={() => (abierto = false)}>Cancelar</HudButton>

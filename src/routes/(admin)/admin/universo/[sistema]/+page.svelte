@@ -468,11 +468,7 @@
 
 						<TextField label="Descripción" name="description" value={sistema.description} />
 
-						<div class="grid w-full grid-cols-3 gap-3">
-							<TextField label="X" name="x" type="number" value={String(sistema.x)} />
-							<TextField label="Y" name="y" type="number" value={String(sistema.y)} />
-							<TextField label="Z" name="z" type="number" value={String(sistema.z)} />
-						</div>
+						<div class="grid w-full grid-cols-3 gap-3"></div>
 
 						<HudButton type="submit" busy={envio.busy} variant="primary">Guardar</HudButton>
 					</form>
@@ -878,11 +874,7 @@
 			/>
 		</div>
 
-		<div class="grid w-full grid-cols-3 gap-3">
-			<TextField label="X" name="x" type="number" value={String(sistema.x + 10)} />
-			<TextField label="Y" name="y" type="number" value={String(sistema.y)} />
-			<TextField label="Z" name="z" type="number" value={String(sistema.z)} />
-		</div>
+		<div class="grid w-full grid-cols-3 gap-3"></div>
 
 		<div class="flex items-center justify-end gap-3">
 			<HudButton variant="ghost" onclick={() => (vecinoDe = null)}>Cancelar</HudButton>

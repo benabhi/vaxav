@@ -136,7 +136,10 @@ eso no empuja para atrás a las etapas que siguen.
 - La pantalla para administrar roles: crearlos, cambiarles permisos y
   asignárselos.
 - La ficha de piloto desde administración, y las estadísticas.
-- El mapa de la galaxia, dibujado con los rumbos que ya guardan las puertas.
+- El mapa de la galaxia. La grilla de hexágonos ya está: cada sistema tiene su
+  casilla y se la gana al conectar una puerta. Falta dibujarla —en lienzo, con
+  zoom y filtros— primero en el cuartel, que es donde hace falta para ver
+  callejones sin salida y ramales sueltos, y después en el juego.
 
 El orden no es caprichoso: el registro va **primero** porque es lo que hace
 auditables a todas las herramientas que vengan después. Una que crea entidades sin
