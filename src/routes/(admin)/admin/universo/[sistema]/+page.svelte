@@ -771,13 +771,42 @@
 								{puerta.destinationSystem} · {puerta.destination}
 							</span>
 							<span class="font-mono text-[0.72rem] text-data">{puerta.jumpDistance} al</span>
+							{#if puerta.closed}
+								<span
+									class="border border-danger px-[0.4rem] py-[0.05rem] font-display text-[0.6rem]
+										font-bold tracking-label whitespace-nowrap text-danger uppercase"
+								>
+									Paso cerrado
+								</span>
+							{/if}
 						</span>
-						<form method="POST" action="?/desconectar" use:envio.enhance class="ml-auto">
-							<input type="hidden" name="gateId" value={puerta.gateId} />
-							<HudButton type="submit" busy={envio.busy} size="1" variant="ghost"
-								>Desconectar</HudButton
-							>
-						</form>
+
+						<div class="ml-auto flex flex-wrap items-center gap-2">
+							<!--
+								Cerrar no es desconectar: la puerta se queda donde está, sigue
+								llevando adonde llevaba, y no se cruza. Es lo que permite aislar un
+								sistema sin borrarle las salidas ni moverle la casilla a nadie.
+							-->
+							<form method="POST" action="?/cerrar" use:envio.enhance>
+								<input type="hidden" name="gateId" value={puerta.gateId} />
+								<input type="hidden" name="closed" value={puerta.closed ? '0' : '1'} />
+								<HudButton type="submit" busy={envio.busy} size="1" variant="ghost">
+									<Icon
+										name={puerta.closed ? 'arrow-circle-right' : 'x'}
+										weight="bold"
+										size="0.7rem"
+									/>
+									{puerta.closed ? 'Reabrir paso' : 'Cerrar paso'}
+								</HudButton>
+							</form>
+
+							<form method="POST" action="?/desconectar" use:envio.enhance>
+								<input type="hidden" name="gateId" value={puerta.gateId} />
+								<HudButton type="submit" busy={envio.busy} size="1" variant="ghost">
+									Desconectar
+								</HudButton>
+							</form>
+						</div>
 					{:else}
 						<span class="text-1 text-warning">No lleva a ninguna parte todavía.</span>
 

@@ -365,6 +365,45 @@ Un atajo es una puerta cuyas dos puntas **no son vecinas en la grilla**. No es u
 error ni algo que haya que arreglar: es un pasaje que se salta el camino largo, y
 el mapa lo dibuja distinto justamente para que se vea. `isShortcut` los reconoce.
 
+### El paso cerrado
+
+Una puerta puede **cerrarse**: existe, sigue llevando adonde llevaba, y no se
+cruza. No es lo mismo que no estar conectada —eso es obra a medio hacer— sino una
+decisión: es lo que hace falta para **aislar un sistema** sin borrarle las salidas
+ni moverle la casilla a nadie. Una cuarentena, un bloqueo de facción, un evento
+del mundo.
+
+Se guarda en **las dos puntas**, porque una puerta cerrada de un lado está cerrada
+y punto: leer sólo la punta de acá dejaría entrar a quien viene de la otra, que es
+el peor modo de fallar —parece que anda hasta que alguien lo prueba al revés—.
+
+El motivo sale antes que el alcance y el combustible: una puerta cerrada no se
+cruza con mejor nave ni con más tanque, y decir «te falta alcance» sería mandar al
+jugador a gastar en algo que no lo va a dejar pasar igual.
+
+### El mapa
+
+La galaxia se dibuja en `/admin/universo`, sobre un lienzo, y es **la figura de
+esa pantalla**. Contesta lo que ninguna tabla contesta: la forma del conjunto,
+dónde quedó el agujero, qué ramal no llega a ninguna parte.
+
+Lo que el trazo codifica:
+
+| Se ve                              | Quiere decir                                         |
+| ---------------------------------- | ---------------------------------------------------- |
+| Línea llena                        | Una puerta que sigue la grilla                       |
+| Línea punteada, en cian            | Un **atajo**: sus puntas no son vecinas              |
+| Línea roja con un tajo al medio    | El **paso está cerrado**                             |
+| Un brazo corto amarillo            | Una **puerta sin conectar**, saliendo hacia su rumbo |
+| Un anillo rojo alrededor del punto | El sistema **no llega** hasta la semilla             |
+
+Los tres últimos son trabajo a medio hacer que sólo se ve mirando el conjunto: el
+contador de arriba dice **cuántos** hay, el mapa dice **dónde**.
+
+Se dibuja en Canvas 2D **sin biblioteca**, como todas las figuras del juego, y
+**sin bucle de cuadros**: se redibuja cuando algo cambia. Ésta es una pestaña que
+va a quedar abierta horas.
+
 ## Cómo se agrega contenido
 
 Hay **dos puertas de entrada**, y desde que existe el constructor la que manda es

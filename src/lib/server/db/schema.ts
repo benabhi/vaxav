@@ -398,7 +398,21 @@ export const gate = sqliteTable(
 		destinationId: integer('destination_id').references((): AnySQLiteColumn => body.id),
 
 		/** Cuánto hay que saltar, en décimas de año luz. Entero, como todo. */
-		jumpDistance: integer('jump_distance').notNull().default(0)
+		jumpDistance: integer('jump_distance').notNull().default(0),
+
+		/**
+		 * Si está cerrada: existe, lleva a algún lado, y **no se puede cruzar**.
+		 *
+		 * Es distinto de no estar conectada. Una puerta sin destino es obra a medio
+		 * hacer; una cerrada es una decisión: sirve para **aislar un sistema** sin
+		 * borrarle las salidas ni tocar el mapa, que es lo que haría falta para una
+		 * cuarentena, un bloqueo de facción o un evento del mundo.
+		 *
+		 * Se guarda en las dos puntas porque una puerta cerrada de un lado está
+		 * cerrada, y punto: leer sólo la punta de acá dejaría entrar a quien viene
+		 * de la otra.
+		 */
+		closed: integer('closed', { mode: 'boolean' }).notNull().default(false)
 	},
 	(table) => [
 		uniqueIndex('gate_body_idx').on(table.bodyId),

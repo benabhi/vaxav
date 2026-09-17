@@ -1,0 +1,1 @@
+ALTER TABLE `gate` ADD `closed` integer DEFAULT false NOT NULL;

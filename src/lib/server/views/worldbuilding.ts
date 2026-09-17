@@ -26,7 +26,8 @@ import {
 	station,
 	stationService,
 	system,
-	type Body
+	type Body,
+	type System
 } from '../db/schema';
 import type { Db } from '../db/types';
 import { railsFor } from '$lib/tree';
@@ -44,12 +45,15 @@ import {
 	SECURITY_BANDS,
 	SERVICE_ORDER,
 	bearingAngle,
+	freeBearings,
 	securityBand,
 	securityLevel,
 	type BodyKind,
 	type GateBearing,
 	type Government
 } from '$lib/game/universe';
+import { ORIGIN, hexDistance, neighbourOf, sameHex } from '$lib/game/galaxy';
+import { lightYears } from '$lib/game/jumps';
 import { FACTION_LIST } from '$lib/game/factions';
 import { ORE_LIST } from '$lib/game/items';
 import {
@@ -62,6 +66,9 @@ import {
 } from '$lib/format';
 import type {
 	Constructor,
+	EnlaceGalaxia,
+	MapaGalaxia,
+	NodoGalaxia,
 	FilaConstruccion,
 	FilaMineral,
 	FilaPuerta,
@@ -158,6 +165,112 @@ function accepts(kind: BodyKind): readonly OpcionConstructor[] {
 const ROOT_KINDS: readonly OpcionConstructor[] = [{ value: 'star', label: bodyKindLabel('star') }];
 
 /** El listado de sistemas, con lo que hace falta para elegir cuál abrir. */
+/**
+ * La galaxia puesta en la grilla, lista para dibujar.
+ *
+ * **Se arma en el servidor y no en el navegador.** Lo que el lienzo recibe son
+ * casillas y líneas, no filas de la base: el dibujo no tiene que saber qué es una
+ * puerta gemela ni cómo se reconoce un ramal suelto. Es la misma división que
+ * usan todas las vistas del proyecto, y acá pesa más que en ninguna porque el
+ * mapa es la pantalla más cara de la administración.
+ *
+ * Todo sale de **dos consultas**, no de una por sistema: con cincuenta sistemas
+ * un `N+1` acá son cincuenta idas a la base cada vez que alguien abre el cuartel.
+ */
+function buildMapa(
+	db: Db,
+	sistemas: readonly System[],
+	filas: readonly FilaSistema[]
+): MapaGalaxia {
+	const puertas = db.select().from(gate).all();
+	const porSistema = new Map(sistemas.map((uno) => [uno.id, uno]));
+	const porCuerpo = new Map(puertas.map((una) => [una.bodyId, una]));
+	const datos = new Map(filas.map((una) => [una.code, una]));
+
+	// Qué sistemas llegan caminando hasta la semilla. Un ramal armado aparte tiene
+	// casilla pero no tiene lugar: su posición no significa nada hasta engancharlo.
+	const semilla = [...sistemas].sort((a, b) => a.id - b.id)[0];
+	const enElMapa = new Set<number>();
+	if (semilla) {
+		const pendientes = [semilla.id];
+		enElMapa.add(semilla.id);
+		while (pendientes.length > 0) {
+			const actual = pendientes.pop()!;
+			for (const salida of puertas.filter((una) => una.systemId === actual)) {
+				if (salida.destinationId === null) continue;
+				const gemela = porCuerpo.get(salida.destinationId);
+				if (!gemela || enElMapa.has(gemela.systemId)) continue;
+				enElMapa.add(gemela.systemId);
+				pendientes.push(gemela.systemId);
+			}
+		}
+	}
+
+	const nodos: NodoGalaxia[] = sistemas.map((uno) => {
+		const suyas = puertas.filter((una) => una.systemId === uno.id);
+		const fila = datos.get(uno.code);
+		const tomados = suyas.map((una) => una.bearing);
+
+		return {
+			code: uno.code,
+			name: uno.name,
+			hex: { x: uno.x, y: uno.y, z: uno.z },
+			government: fila?.government ?? '',
+			security: uno.security,
+			securityLevel: fila?.securityLevel ?? '',
+			faction: uno.controllingFaction,
+			factionName: fila?.controlledBy ?? '',
+			region: fila?.region ?? '',
+			constellation: fila?.constellation ?? '',
+			bodies: fila?.bodies ?? 0,
+			stations: fila?.stations ?? 0,
+			gates: suyas.length,
+			looseBearings: suyas.filter((una) => una.destinationId === null).map((una) => una.bearing),
+			free: freeBearings(tomados),
+			adrift: !enElMapa.has(uno.id)
+		};
+	});
+
+	// Una línea por par y no una por puerta: las dos puntas describen el mismo
+	// pasaje, y dibujarlas dos veces engrosaría cada conexión al doble.
+	const vistos = new Set<number>();
+	const enlaces: EnlaceGalaxia[] = [];
+	for (const salida of puertas) {
+		if (salida.destinationId === null || vistos.has(salida.id)) continue;
+		const gemela = porCuerpo.get(salida.destinationId);
+		if (!gemela) continue;
+		vistos.add(salida.id);
+		vistos.add(gemela.id);
+
+		const aqui = porSistema.get(salida.systemId);
+		const alla = porSistema.get(gemela.systemId);
+		if (!aqui || !alla) continue;
+
+		enlaces.push({
+			from: aqui.code,
+			to: alla.code,
+			bearing: salida.bearing,
+			distance: lightYears(salida.jumpDistance),
+			closed: salida.closed,
+			shortcut: !sameHex(neighbourOf({ x: aqui.x, y: aqui.y, z: aqui.z }, salida.bearing), {
+				x: alla.x,
+				y: alla.y,
+				z: alla.z
+			})
+		});
+	}
+
+	// Cuán lejos del centro llega el mapa, para encuadrarlo sin medir en el cliente.
+	const radio = nodos.reduce((mayor, nodo) => Math.max(mayor, hexDistance(ORIGIN, nodo.hex)), 0);
+
+	return {
+		systems: nodos,
+		links: enlaces,
+		radius: radio,
+		adrift: nodos.filter((nodo) => nodo.adrift).length
+	};
+}
+
 export function buildUniverso(db: Db): Universo {
 	const sistemas = db.select().from(system).orderBy(system.name).all();
 	const constelaciones = new Map(
@@ -213,7 +326,8 @@ export function buildUniverso(db: Db): Universo {
 		options: buildOptions(db),
 		totalBodies: cuerpos.length,
 		totalGates: puertas.length,
-		totalLoose: puertas.filter((una) => una.destinationId === null).length
+		totalLoose: puertas.filter((una) => una.destinationId === null).length,
+		map: buildMapa(db, sistemas, filas)
 	};
 }
 
@@ -348,7 +462,8 @@ export function buildConstructor(db: Db, code: string): Constructor | null {
 			angle: bearingAngle(una.bearing),
 			destination: destino?.name ?? '',
 			destinationSystem: destino ? (sistemasPorId.get(destino.systemId)?.name ?? '') : '',
-			jumpDistance: una.jumpDistance
+			jumpDistance: una.jumpDistance,
+			closed: una.closed
 		};
 	}
 

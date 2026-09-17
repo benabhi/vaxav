@@ -1237,6 +1237,89 @@ export interface Universo {
 	readonly totalBodies: number;
 	readonly totalGates: number;
 	readonly totalLoose: number;
+	/** El mapa: los mismos sistemas, puestos en la grilla. */
+	readonly map: MapaGalaxia;
+}
+
+/**
+ * La galaxia lista para dibujar: casillas y las líneas entre ellas.
+ *
+ * **Va entera en una sola carga.** Sin niebla de guerra —como en EVE, el mapa se
+ * conoce y lo que cuesta es llegar— no hay nada que esconder, y una galaxia de
+ * unos cientos de sistemas pesa menos que una pantalla de mercado. El día que no
+ * entre, el recorte natural es por región, no por cercanía.
+ */
+export interface MapaGalaxia {
+	readonly systems: readonly NodoGalaxia[];
+	readonly links: readonly EnlaceGalaxia[];
+	/** Qué tan grande es el mapa, en casillas, para encuadrar el dibujo. */
+	readonly radius: number;
+	/** Cuántos sistemas quedaron fuera del mapa por no llegar a la semilla. */
+	readonly adrift: number;
+}
+
+/** Un sistema en su casilla de la grilla. */
+export interface NodoGalaxia {
+	readonly code: string;
+	readonly name: string;
+	/** La casilla, en coordenadas cúbicas. El dibujo la convierte a píxeles. */
+	readonly hex: { readonly x: number; readonly y: number; readonly z: number };
+	readonly government: string;
+	readonly security: number;
+	readonly securityLevel: string;
+	/** Código de la facción que lo controla, para pintar, y su nombre para leer. */
+	readonly faction: string;
+	readonly factionName: string;
+	readonly region: string;
+	readonly constellation: string;
+	readonly bodies: number;
+	readonly stations: number;
+	/** Cuántas salidas tiene. */
+	readonly gates: number;
+	/**
+	 * Los rumbos con una puerta que no lleva a ninguna parte.
+	 *
+	 * El contador de arriba de la pantalla dice **cuántas** hay; esto dice
+	 * **dónde**, que es lo que hace falta para ir a terminarlas. El mapa las dibuja
+	 * como un muñón saliendo del hexágono.
+	 */
+	readonly looseBearings: readonly string[];
+	/** Los rumbos libres: por dónde se puede seguir construyendo. */
+	readonly free: readonly string[];
+	/**
+	 * Si no llega caminando hasta la semilla.
+	 *
+	 * Un ramal armado aparte tiene casilla pero no tiene lugar: su posición no
+	 * significa nada hasta que se lo enganche. El mapa lo dibuja aparte, porque es
+	 * exactamente la clase de trabajo a medio hacer que sólo se ve mirando el
+	 * conjunto.
+	 */
+	readonly adrift: boolean;
+}
+
+/** Una puerta entre dos sistemas, vista desde el mapa. */
+export interface EnlaceGalaxia {
+	readonly from: string;
+	readonly to: string;
+	/** El rumbo por el que sale de `from`. */
+	readonly bearing: string;
+	/** Distancia de salto en décimas de año luz, ya escrita. */
+	readonly distance: string;
+	/**
+	 * Si el paso está cerrado.
+	 *
+	 * Distinto de no estar conectada: la puerta existe y lleva adonde llevaba, pero
+	 * no se cruza. Sirve para aislar un sistema sin borrarle las salidas ni moverle
+	 * la casilla a nadie.
+	 */
+	readonly closed: boolean;
+	/**
+	 * Si las dos puntas no son vecinas en la grilla.
+	 *
+	 * No es un error: es un pasaje que se saltea el camino largo, y se dibuja
+	 * torcido justamente para que se vea.
+	 */
+	readonly shortcut: boolean;
 }
 
 /** Un mineral de un cinturón, en el constructor. */
@@ -1261,6 +1344,13 @@ export interface FilaPuerta {
 	readonly destination: string;
 	readonly destinationSystem: string;
 	readonly jumpDistance: number;
+	/**
+	 * Si el paso está cerrado.
+	 *
+	 * Distinto de no estar conectada: la puerta existe y lleva adonde llevaba, pero
+	 * no se cruza. Cerrar es una decisión; no estar conectada es obra a medio hacer.
+	 */
+	readonly closed: boolean;
 }
 
 /** Un cuerpo en el árbol del constructor. */

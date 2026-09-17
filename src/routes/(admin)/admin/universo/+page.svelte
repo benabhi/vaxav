@@ -14,7 +14,9 @@
 <script lang="ts">
 	import { submitting } from '$lib/forms.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import GalaxyMap from '$lib/components/admin/GalaxyMap.svelte';
 	import SelectField from '$lib/components/admin/SelectField.svelte';
+	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
@@ -28,6 +30,8 @@
 	import Label from '$lib/components/typography/Label.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { ADMIN_ROUTE } from '$lib/admin';
+	import { bearingLabel } from '$lib/format';
+	import type { GateBearing } from '$lib/game/universe';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -78,7 +82,40 @@
 
 	let nuevaRegion = $state(false);
 	let nuevaConstelacion = $state(false);
+
+	/** El rumbo, escrito. Viene como código del servidor y se lee como palabra. */
+	const rumbo = (code: string) => bearingLabel(code as GateBearing);
+
+	/** El sistema elegido en el mapa, que la barra lateral describe. */
+	let elegido = $state('');
+	let mapa = $state<GalaxyMap>();
+
+	let elegidoNodo = $derived(universo.map.systems.find((uno) => uno.code === elegido) ?? null);
+
+	let detalleMapa = $derived(
+		universo.map.adrift > 0
+			? `${universo.map.adrift} fuera del mapa`
+			: `${universo.map.systems.length} sistemas`
+	);
+
+	/**
+	 * Qué significa cada trazo. Los colores salen de las variables del tema, igual
+	 * que en el lienzo: una leyenda que no pinta lo mismo que el mapa es peor que
+	 * no tener leyenda.
+	 */
+	const LEYENDA = [
+		{ label: 'Conexión', color: 'var(--color-accent-dim)' },
+		{ label: 'Atajo', color: 'var(--color-data)' },
+		{ label: 'Paso cerrado', color: 'var(--color-danger)' },
+		{ label: 'Puerta sin conectar', color: 'var(--color-warning)' }
+	];
 </script>
+
+<!-- Un rótulo y su valor, que la ficha del mapa repite seis veces. -->
+{#snippet lectura(titulo: string, valor: string)}
+	<Label>{titulo}</Label>
+	<span class="text-1 text-text-body">{valor}</span>
+{/snippet}
 
 <svelte:head><title>Universo · Cuartel general · Vaxav</title></svelte:head>
 
@@ -132,6 +169,120 @@
 		</div>
 	</Panel>
 {:else}
+	<!--
+		El mapa: la figura de esta pantalla.
+
+		Contesta lo que ninguna tabla contesta —la forma del conjunto, dónde quedó el
+		agujero, qué ramal no llega a ninguna parte— y por eso convive con la tabla de
+		abajo en vez de reemplazarla. Para «llevame a Omega» una tabla ordenable es
+		más rápida que buscar un punto; para «¿dónde está el hueco de mi galaxia?»
+		sólo sirve el mapa.
+	-->
+	<TitledPanel title="Mapa de la galaxia" detail={detalleMapa} class="w-full">
+		<div class="flex w-full flex-col items-start gap-[1.25rem] lg:h-[28rem] lg:flex-row">
+			<div class="flex h-[26rem] w-full min-w-0 flex-col gap-2 lg:h-full lg:flex-[3_1_0]">
+				<GalaxyMap
+					bind:this={mapa}
+					map={universo.map}
+					selected={elegido}
+					onSelect={(code) => (elegido = elegido === code ? '' : code)}
+				/>
+
+				<!--
+					La leyenda. Un mapa que codifica cinco cosas en el trazo y no dice
+					cuáles es un mapa que hay que adivinar.
+				-->
+				<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+					{#each LEYENDA as entrada (entrada.label)}
+						<span class="flex items-center gap-[0.4rem]">
+							<span
+								class="inline-block h-[2px] w-[1.1rem] shrink-0"
+								style="background: {entrada.color}"
+							></span>
+							<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
+								{entrada.label}
+							</span>
+						</span>
+					{/each}
+					<div class="grow"></div>
+					<HudButton size="1" variant="ghost" onclick={() => mapa?.encuadrar()}>
+						<Icon name="arrows-out" weight="bold" size="0.7rem" />
+						Encuadrar
+					</HudButton>
+				</div>
+			</div>
+
+			<!--
+				La barra lateral y no un globo flotante: lo que va a crecer acá son
+				acciones —ir al constructor, plantar una puerta, cerrar un paso— y un
+				globo con seis botones es un menú disfrazado. Además tapa el mapa justo
+				donde uno está mirando.
+			-->
+			<div class="w-full min-w-0 lg:h-full lg:flex-[1_1_0]">
+				{#if elegidoNodo}
+					<!--
+						Mide lo mismo que el lienzo y desborda hacia adentro. Una ficha que
+						crece con el contenido corre el resto de la pantalla cada vez que se
+						elige un sistema con más salidas que el anterior.
+					-->
+					<div
+						class="flex w-full flex-col gap-3 overflow-y-auto border border-border-soft bg-surface
+							p-[0.9rem] lg:h-full"
+					>
+						<div class="flex flex-col items-start gap-1">
+							<Label>{elegidoNodo.region} · {elegidoNodo.constellation}</Label>
+							<CardTitle>{elegidoNodo.name}</CardTitle>
+						</div>
+
+						{#if elegidoNodo.adrift}
+							<p class="text-1 text-danger">
+								No llega caminando hasta el sistema inicial: su casilla todavía no significa nada.
+								Conectale una puerta a algo que sí esté en el mapa.
+							</p>
+						{/if}
+
+						<div class="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-[0.3rem]">
+							{@render lectura('Gobierno', elegidoNodo.government)}
+							{@render lectura('Seguridad', `${elegidoNodo.securityLevel} ${elegidoNodo.security}`)}
+							{@render lectura('Controla', elegidoNodo.factionName)}
+							{@render lectura(
+								'Casilla',
+								`${elegidoNodo.hex.x} · ${elegidoNodo.hex.y} · ${elegidoNodo.hex.z}`
+							)}
+							{@render lectura(
+								'Contenido',
+								`${elegidoNodo.bodies} cuerpos · ${elegidoNodo.stations} estaciones`
+							)}
+							{@render lectura('Salidas', `${elegidoNodo.gates} de 6`)}
+							{#if elegidoNodo.looseBearings.length > 0}
+								{@render lectura('Sin conectar', elegidoNodo.looseBearings.map(rumbo).join(' · '))}
+							{/if}
+							{#if elegidoNodo.free.length > 0}
+								{@render lectura('Rumbos libres', elegidoNodo.free.map(rumbo).join(' · '))}
+							{/if}
+						</div>
+
+						<HudLink href="{ADMIN_ROUTE}/universo/{elegidoNodo.code}" variant="primary" size="1">
+							<Icon name="wrench" weight="bold" size="0.7rem" />
+							Abrir en el constructor
+						</HudLink>
+					</div>
+				{:else}
+					<div
+						class="flex w-full flex-col gap-2 overflow-y-auto border border-dead-border p-[0.9rem]
+							lg:h-full"
+					>
+						<CardTitle>Nada elegido</CardTitle>
+						<BodyText>
+							Tocá un sistema del mapa para ver su ficha y abrirlo en el constructor. Se arrastra
+							para moverlo y la rueda acerca.
+						</BodyText>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</TitledPanel>
+
 	<TitledPanel
 		title="Sistemas"
 		detail={universo.systems.length === 1 ? '1 sistema' : `${universo.systems.length} sistemas`}

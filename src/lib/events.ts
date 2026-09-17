@@ -270,6 +270,21 @@ export const EVENT_KINDS: readonly EventKind[] = [
 		(payload) => `${texto(payload, 'name')} dejó de llevar a ${texto(payload, 'destination')}.`
 	),
 	define(
+		'gate.closed',
+		'universe',
+		'Puerta cerrada',
+		'grave',
+		(payload) => `Se cerró el paso de ${texto(payload, 'name')} a ${texto(payload, 'destination')}.`
+	),
+	define(
+		'gate.opened',
+		'universe',
+		'Puerta abierta',
+		'notable',
+		(payload) =>
+			`Se reabrió el paso de ${texto(payload, 'name')} a ${texto(payload, 'destination')}.`
+	),
+	define(
 		'region.created',
 		'universe',
 		'Región creada',

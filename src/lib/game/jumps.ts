@@ -146,9 +146,13 @@ export interface JumpShip {
  * vuela, la puerta no lleva a ningún lado—, después el alcance y al final el
  * combustible, que es lo único que se arregla comprando.
  */
-export function jumpProblem(ship: JumpShip, tenths: number | null): string | null {
+export function jumpProblem(ship: JumpShip, tenths: number | null, closed = false): string | null {
 	if (!ship.flyable) return 'La nave no está en condiciones de volar.';
 	if (tenths === null) return 'Esta puerta todavía no lleva a ninguna parte.';
+	// **Antes que el alcance y el combustible.** Una puerta cerrada no se cruza
+	// con mejor nave ni con más tanque, así que decir «te falta alcance» sería
+	// mandar al jugador a gastar en algo que no lo va a dejar pasar igual.
+	if (closed) return 'El paso por esta puerta está cerrado.';
 
 	if (ship.jumpRange <= 0) return 'La nave no tiene motor de salto.';
 	if (tenths > ship.jumpRange) {

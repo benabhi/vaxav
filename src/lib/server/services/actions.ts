@@ -378,7 +378,8 @@ export function startJump(db: Db, row: Pilot): PilotAction {
 			fuel: nave.fuel,
 			flyable: readout.flyable
 		},
-		destino && puerta ? puerta.jumpDistance : null
+		destino && puerta ? puerta.jumpDistance : null,
+		puerta?.closed ?? false
 	);
 	if (problema) throw new ActionError(problema);
 

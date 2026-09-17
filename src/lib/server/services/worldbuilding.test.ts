@@ -28,6 +28,7 @@ import {
 	looseGates,
 	orphanGates,
 	setDeposits,
+	setGateClosed,
 	setStation,
 	starOf,
 	systemBlockers,
@@ -611,6 +612,48 @@ describe('las puertas', () => {
 		expect({ x: puestoDos.x, y: puestoDos.y, z: puestoDos.z }).toEqual(
 			neighbourOf({ x: puestoUno.x, y: puestoUno.y, z: puestoUno.z }, 'n')
 		);
+	});
+
+	it('cerrar el paso no desconecta: la puerta sigue llevando adonde llevaba', () => {
+		const db = seededDb();
+		const anfora = getBody(db, 'anfora_estrella')!;
+		const vecino = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
+		const salida = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Norte'), 'n', null);
+		const vuelta = createGate(
+			db,
+			vecino.system.id,
+			puerta(vecino.star.id, 'Puerta Sur'),
+			's',
+			null
+		);
+		connectGates(db, salida.gate.id, vuelta.gate.id, 10, null);
+
+		setGateClosed(db, salida.gate.id, true, null);
+
+		const [ida] = gatesOf(db, anfora.systemId);
+		const [regreso] = gatesOf(db, vecino.system.id);
+
+		// **Cerrada en las dos puntas.** Guardarlo en una sola dejaría entrar a quien
+		// viene de la otra, que es el peor modo de fallar: parece que anda hasta que
+		// alguien lo prueba al revés.
+		expect(ida.gate.closed).toBe(true);
+		expect(regreso.gate.closed).toBe(true);
+		// Y sigue conectada: cerrar no es desconectar.
+		expect(ida.gate.destinationId).toBe(vuelta.body.id);
+		expect(orphanGates(db)).toHaveLength(0);
+
+		setGateClosed(db, salida.gate.id, false, null);
+		expect(gatesOf(db, vecino.system.id)[0].gate.closed).toBe(false);
+	});
+
+	it('no se cierra el paso de una puerta que no lleva a ninguna parte', () => {
+		const db = seededDb();
+		const anfora = getBody(db, 'anfora_estrella')!;
+		const suelta = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Norte'), 'n', null);
+
+		// No hay paso que cerrar, y decirlo es mejor que dejar una bandera puesta en
+		// algo que no la usa.
+		expect(() => setGateClosed(db, suelta.gate.id, true, null)).toThrow(BuilderError);
 	});
 
 	it('no se conectan dos del mismo sistema, ni una ya conectada', () => {

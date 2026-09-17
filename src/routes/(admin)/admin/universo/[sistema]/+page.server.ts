@@ -22,6 +22,7 @@ import {
 	deleteBody,
 	deleteSystem,
 	disconnectGate,
+	setGateClosed,
 	growFromGate,
 	setDeposits,
 	setStation,
@@ -253,6 +254,27 @@ export const actions: Actions = {
 	},
 
 	/** Las separa. Las dos quedan sueltas, no borradas. */
+	/**
+	 * Cierra o reabre el paso por una puerta.
+	 *
+	 * **No es desconectar.** Desconectar deshace el enlace y deja dos muñones;
+	 * cerrar deja la puerta donde está y no deja pasar. Es lo que hace falta para
+	 * aislar un sistema sin tocarle el mapa a nadie.
+	 */
+	cerrar: async ({ request, locals }) => {
+		const datos = await request.formData();
+
+		return intentar(() => {
+			exigir(locals.permissions);
+			setGateClosed(
+				db,
+				entero(datos, 'gateId'),
+				datos.get('closed') === '1',
+				locals.pilot?.id ?? null
+			);
+		});
+	},
+
 	desconectar: async ({ request, locals }) => {
 		const datos = await request.formData();
 

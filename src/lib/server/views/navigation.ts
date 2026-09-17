@@ -447,7 +447,8 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 			? 'Necesitás una nave para saltar.'
 			: jumpProblem(
 					{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
-					tenths
+					tenths,
+					puerta.closed
 				);
 
 	// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que

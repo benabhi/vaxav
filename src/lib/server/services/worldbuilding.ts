@@ -978,6 +978,50 @@ export function isShortcut(db: Db, gateId: number): boolean {
 	return !sameHex(neighbourOf(hexOf(aqui), fila.bearing), hexOf(alla));
 }
 
+/**
+ * Cierra o reabre el paso por una puerta, en las dos puntas.
+ *
+ * **Cerrar no es desconectar.** Una puerta desconectada es obra a medio hacer y
+ * el mapa la dibuja como un muñón; una cerrada existe, sigue llevando adonde
+ * llevaba y no se puede cruzar. Es lo que hace falta para **aislar un sistema**
+ * sin borrarle las salidas ni moverle la casilla a nadie: una cuarentena, un
+ * bloqueo de facción, un evento del mundo.
+ *
+ * Se escribe en las dos puntas porque una puerta cerrada de un lado está cerrada
+ * y punto. Guardarlo en una sola dejaría entrar a quien viene de la otra, que es
+ * el peor modo de fallar: parece que funciona hasta que alguien lo prueba al
+ * revés.
+ */
+export function setGateClosed(
+	db: Db,
+	gateId: number,
+	closed: boolean,
+	actorId: number | null
+): void {
+	const una = db.select().from(gate).where(eq(gate.id, gateId)).get();
+	if (!una) throw new BuilderError('Esa puerta no existe.');
+	if (una.destinationId === null) {
+		throw new BuilderError('Esa puerta no lleva a ninguna parte: no hay paso que cerrar.');
+	}
+	if (una.closed === closed) return;
+
+	const gemela = db.select().from(gate).where(eq(gate.bodyId, una.destinationId)).get();
+	const cuerpoUna = db.select().from(body).where(eq(body.id, una.bodyId)).get()!;
+	const cuerpoOtra = db.select().from(body).where(eq(body.id, una.destinationId)).get();
+
+	db.transaction((tx) => {
+		tx.update(gate).set({ closed }).where(eq(gate.id, una.id)).run();
+		if (gemela) tx.update(gate).set({ closed }).where(eq(gate.id, gemela.id)).run();
+
+		record(tx, {
+			kind: closed ? 'gate.closed' : 'gate.opened',
+			actorId,
+			subject: { kind: 'gate', id: una.id },
+			payload: { name: cuerpoUna.name, destination: cuerpoOtra?.name ?? '' }
+		});
+	});
+}
+
 /** Las separa, también en los dos sentidos. */
 export function disconnectGate(db: Db, gateId: number, actorId: number | null): void {
 	const una = db.select().from(gate).where(eq(gate.id, gateId)).get();
