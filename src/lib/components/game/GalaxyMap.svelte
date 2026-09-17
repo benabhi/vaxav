@@ -156,9 +156,27 @@
 	 */
 	const CERCA = 1.8;
 
+	/**
+	 * La medida de la que salen los `rem` del sistema de diseño. Dividir por ella
+	 * la del documento da cuánto agrandó el CSS la interfaz.
+	 */
+	const RAIZ_BASE = 16;
+
 	let lienzo = $state<HTMLCanvasElement>();
 	let caja = $state<HTMLDivElement>();
+	/**
+	 * Cuánto mide el lienzo, en **unidades del HUD** y no en píxeles.
+	 *
+	 * El resto de la interfaz está en `rem` y se agranda sola en un monitor grande
+	 * —ver «La escala del HUD» en `app.css`—, pero un lienzo dibuja en píxeles y se
+	 * quedaría chico mientras todo lo que lo rodea crece. Guardar acá la medida ya
+	 * dividida por la escala, y devolvérsela a la transformación, deja los radios,
+	 * los grosores y los cuerpos de letra de más abajo escritos en las mismas
+	 * unidades que el CSS: crecen con él sin tocar ninguno.
+	 */
 	let viewport = $state<Punto>({ x: 0, y: 0 });
+	/** Cuánto agrandó el CSS la interfaz. Es 1 en un portátil. */
+	let escala = $state(1);
 	/**
 	 * La cámara propia, para cuando nadie la sostiene desde afuera.
 	 *
@@ -230,11 +248,14 @@
 		if (!ctx) return;
 
 		// El lienzo se dimensiona en píxeles reales del dispositivo y se escala: sin
-		// esto, en una pantalla densa las líneas de un píxel salen borrosas.
+		// esto, en una pantalla densa las líneas de un píxel salen borrosas. Y con la
+		// misma cuenta entra la escala del HUD, que es lo que hace que en un monitor
+		// grande el mapa se agrande junto con el resto de la interfaz.
 		const dpr = window.devicePixelRatio || 1;
-		canvas.width = viewport.x * dpr;
-		canvas.height = viewport.y * dpr;
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		const pincel = dpr * escala;
+		canvas.width = viewport.x * pincel;
+		canvas.height = viewport.y * pincel;
+		ctx.setTransform(pincel, 0, 0, pincel, 0, 0);
 		ctx.clearRect(0, 0, viewport.x, viewport.y);
 
 		const accent = token('--color-accent');
@@ -604,9 +625,13 @@
 	let movido = $state(false);
 	let ultimo: Punto = { x: 0, y: 0 };
 
+	/** Dónde cayó el puntero dentro del lienzo, en unidades del HUD. */
 	function relativo(evento: MouseEvent): Punto {
 		const rect = lienzo?.getBoundingClientRect();
-		return { x: evento.clientX - (rect?.left ?? 0), y: evento.clientY - (rect?.top ?? 0) };
+		return {
+			x: (evento.clientX - (rect?.left ?? 0)) / escala,
+			y: (evento.clientY - (rect?.top ?? 0)) / escala
+		};
 	}
 
 	function alBajar(evento: MouseEvent) {
@@ -627,7 +652,7 @@
 		// sistema con la mano poco firme no selecciona nada.
 		if (Math.abs(dx) > 2 || Math.abs(dy) > 2) movido = true;
 		ultimo = { x: evento.clientX, y: evento.clientY };
-		mover(pan(camara, dx, dy));
+		mover(pan(camara, dx / escala, dy / escala));
 	}
 
 	function alSoltar(evento: MouseEvent) {
@@ -681,7 +706,12 @@
 	$effect(() => {
 		if (!caja) return;
 		const observador = new ResizeObserver(([entrada]) => {
-			viewport = { x: entrada.contentRect.width, y: entrada.contentRect.height };
+			const raiz = parseFloat(getComputedStyle(document.documentElement).fontSize);
+			escala = raiz / RAIZ_BASE;
+			viewport = {
+				x: entrada.contentRect.width / escala,
+				y: entrada.contentRect.height / escala
+			};
 		});
 		observador.observe(caja);
 		return () => observador.disconnect();
@@ -699,7 +729,7 @@
 	// El dibujo depende de todo esto y de nada más. Leerlos acá es lo que hace que
 	// se redibuje solo cuando alguno cambia, sin bucle de cuadros.
 	$effect(() => {
-		void [camara, viewport, selected, hover, visible, map, paint];
+		void [camara, viewport, escala, selected, hover, visible, map, paint];
 		dibujar();
 	});
 </script>
@@ -762,7 +792,7 @@
 	<canvas
 		bind:this={lienzo}
 		class="block"
-		style="width: {viewport.x}px; height: {viewport.y}px"
+		style="width: {viewport.x * escala}px; height: {viewport.y * escala}px"
 		onmousedown={alBajar}
 		onmousemove={alMover}
 		onmouseup={alSoltar}
