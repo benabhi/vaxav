@@ -159,6 +159,15 @@ export interface Corporacion {
 	/** El rubro, en palabras y en ícono. */
 	readonly kind: string;
 	readonly kindIcon: IconName;
+	/**
+	 * Si la fundó el mundo o la fundaron jugadores, ya escrito.
+	 *
+	 * Hoy son todas del mundo, así que el rótulo dice siempre lo mismo. Va igual:
+	 * el día que existan las de jugadores, el que mire una ficha tiene que poder
+	 * saber de cuál de las dos clases es **sin haberlo aprendido antes**, y una
+	 * distinción que aparece recién cuando hay con qué confundirse llega tarde.
+	 */
+	readonly origin: string;
 	/** A qué facción responde, o vacío. */
 	readonly faction: string;
 	readonly factionCode: string;

@@ -139,6 +139,13 @@ contratos—, y están las dos que hoy tienen algo detrás:
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
 cartel es una puerta cerrada con el nombre puesto.
 
+La ficha dice además **de qué clase es**: del mundo o de jugadores. Hoy son todas
+del mundo y el rótulo dice siempre lo mismo, y va igual: el día que se puedan
+fundar, el que mire una ficha tiene que poder saber de cuál de las dos es **sin
+haberlo aprendido antes**, y una distinción que aparece recién cuando ya hay con
+qué confundirse llega tarde. Sale del catálogo y no de una columna —las del mundo
+son exactamente las que están ahí—, así que no hay nada que migrar.
+
 La ficha termina en **«ver en el mapa»**, que abre la galaxia recortada a los
 sistemas donde la corporación tiene un puesto. Es un botón y no una lista de
 enlaces porque la pregunta no es «¿dónde está este puesto?» sino «¿dónde está

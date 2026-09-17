@@ -121,6 +121,9 @@
 								{corp.kind}
 							</span>
 
+							<Label>Clase</Label>
+							<span class="text-1 text-text-body">{corp.origin}</span>
+
 							<Label>Responde a</Label>
 							<span class="text-1 text-text-body">{corp.faction}</span>
 

@@ -34,7 +34,7 @@ import {
 	roman,
 	serviceLabel
 } from '$lib/format';
-import type { CorporationKind } from '$lib/game/corporations';
+import { getCorporation, type CorporationKind } from '$lib/game/corporations';
 import { REPUTATION_SCALE, TIERS, effectiveMissionLevel, tierForRaw } from '$lib/game/reputation';
 import { pilotStandings } from '../services/reputation';
 import type { Corporacion, EscalonReputacion, ReputacionCorporacion } from '$lib/tipos';
@@ -47,6 +47,7 @@ const INDEPENDIENTE: Corporacion = {
 	code: '',
 	kind: '',
 	kindIcon: 'users',
+	origin: '',
 	faction: '',
 	factionCode: '',
 	description:
@@ -194,6 +195,10 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 		code: suya.code,
 		kind: corporationKindLabel(suya.kind as CorporationKind),
 		kindIcon: corporationKindIcon(suya.kind as CorporationKind),
+		// Del catálogo y no de una columna: las del mundo son exactamente las que
+		// están ahí. El día que se puedan fundar, las de jugadores no van a estar y
+		// la cuenta sigue dando sin migrar nada.
+		origin: getCorporation(suya.code) ? 'Del mundo' : 'De jugadores',
 		faction: bandera?.name ?? 'Sin bandera',
 		factionCode: suya.faction,
 		description: suya.description,
