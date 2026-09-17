@@ -203,7 +203,9 @@ Tres decisiones lo sostienen:
 - **Simétrico**, espejado sobre el eje vertical: es lo que convierte un ruido de
   celdas en algo que parece un escudo.
 - **Una familia por clase de cosa.** La corporación es un panal hexagonal con marco
-  de seis lados; el piloto, un disco de casillas cuadradas y de un solo tono. No se
+  de seis lados; el piloto, un disco de casillas cuadradas y de un solo tono; el
+  agente, un triángulo de casillas triangulares que no gira nunca —girado deja de
+  leerse como triángulo y pasa a ser una mancha con tres puntas—. No se
   confunden ni de reojo, y agregar una familia —alianzas, estaciones— es agregar una
   receta. La familia entra en la semilla, así que una corporación y un piloto que se
   llamen igual tampoco comparten dibujo.

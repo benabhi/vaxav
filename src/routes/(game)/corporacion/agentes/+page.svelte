@@ -15,6 +15,7 @@
 -->
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
+	import Identicon from '$lib/components/game/Identicon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import SelectField from '$lib/components/forms/SelectField.svelte';
@@ -140,7 +141,7 @@
 			variant={consulta.onlyOpen ? 'primary' : 'outline'}
 		>
 			<Icon name={consulta.onlyOpen ? 'check' : 'users-three'} weight="bold" size="0.7rem" />
-			Sólo los que atienden
+			Disponibles
 		</HudLink>
 
 		<!-- Conservan el orden al filtrar: sin esto, buscar lo perdería. -->
@@ -164,7 +165,7 @@
 
 		<div class="grow"></div>
 		<span class="font-mono text-[0.72rem] text-text-muted">
-			{agentes.open} de {agentes.total} te atienden
+			{agentes.open} de {agentes.total} disponibles
 		</span>
 	</form>
 
@@ -183,11 +184,16 @@
 				>
 					<td class="py-2">
 						<span class="flex items-center gap-2">
-							<Icon
-								name="identification-badge"
-								weight={uno.open ? 'fill' : 'bold'}
-								size="0.85rem"
-								class="shrink-0 {uno.open ? 'text-accent' : 'text-text-muted'}"
+							<!--
+								Con su sello, igual que el listado de miembros lleva el del piloto:
+								un nombre entre cincuenta es texto, un nombre con su emblema al lado
+								se encuentra sin leer.
+							-->
+							<Identicon
+								name={uno.name}
+								family="agente"
+								size="1.6rem"
+								class={uno.open ? '' : 'opacity-50 saturate-[0.35]'}
 							/>
 							<span
 								class="truncate font-display text-1 tracking-display text-text-strong uppercase"

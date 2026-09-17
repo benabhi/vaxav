@@ -141,6 +141,13 @@
       "when": 1789677110756,
       "tag": "0019_ambitious_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1789681063881,
+      "tag": "0020_parched_psynapse",
+      "breakpoints": true
     }
   ]
 }

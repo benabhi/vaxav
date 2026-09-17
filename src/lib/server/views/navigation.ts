@@ -10,7 +10,6 @@ import { eq } from 'drizzle-orm';
 import { body, gate, system as systemTable, type Body, type Pilot } from '../db/schema';
 import { railsFor } from '$lib/tree';
 import type { Db } from '../db/types';
-import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
 import { beltDeposits, miningPlan, miningSource } from '../services/mining';
 import { asteroidsAt } from '../services/asteroids';
@@ -141,7 +140,6 @@ export function buildAgentRows(
 			faction: name,
 			kind: missionKindLabel(agent.missionKind),
 			kindIcon: missionKindIcon(agent.missionKind),
-			portrait: portraitFor(agent.code, agent.appearance),
 			level: roman(agent.level),
 			description: agent.description,
 			open: canBeHired(agent.level, faction, suya, deLaBandera),

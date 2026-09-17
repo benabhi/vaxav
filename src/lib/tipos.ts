@@ -337,8 +337,6 @@ export interface FilaAgente {
 	readonly faction: string;
 	readonly kind: string;
 	readonly kindIcon: IconName;
-	/** Ruta de su retrato, o vacía si todavía no hay ninguna imagen. */
-	readonly portrait: string;
 	/** Nivel de las misiones que reparte, en romanos. */
 	readonly level: string;
 	readonly description: string;

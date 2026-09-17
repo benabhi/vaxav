@@ -506,8 +506,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'courier',
 									description:
 										'Sobrina del titular y la que firma los despachos menores. Por ' +
-										'su ventanilla empieza todo el mundo.',
-									appearance: 'f'
+										'su ventanilla empieza todo el mundo.'
 								},
 								{
 									code: 'anillo_enlace_anfora',
@@ -517,8 +516,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'mining',
 									description:
 										'Enlace de la Extractora en el puerto. Compra mineral y manda a ' +
-										'buscar lo que falta, sin pisar los anillos.',
-									appearance: 'f'
+										'buscar lo que falta, sin pisar los anillos.'
 								},
 								{
 									code: 'verlan_contratos',
@@ -528,8 +526,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'trade',
 									description:
 										'Lleva los contratos que no se publican en el tablón. No recibe ' +
-										'a cualquiera.',
-									appearance: 'm'
+										'a cualquiera.'
 								},
 								{
 									code: 'vigilia_patrullas',
@@ -539,8 +536,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'combat',
 									description:
 										'Capitana de la Vigilia. Subcontrata lo que sus patrullas no ' +
-										'llegan a cubrir, que es casi todo el borde del sistema.',
-									appearance: 'f'
+										'llegan a cubrir, que es casi todo el borde del sistema.'
 								}
 							]
 						}
@@ -590,8 +586,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'mining',
 									description:
 										'Capataz de turno. Reparte las cuotas que la cooperativa no ' +
-										'llega a cubrir con su propia gente.',
-									appearance: 'f'
+										'llega a cubrir con su propia gente.'
 								},
 								{
 									code: 'anillo_logistica',
@@ -600,8 +595,7 @@ const ANFORA: SystemBlueprint = {
 									level: 2,
 									missionKind: 'courier',
 									description:
-										'Mueve el mineral del muelle al puerto. Nunca tiene bodegas ' + 'suficientes.',
-									appearance: 'm'
+										'Mueve el mineral del muelle al puerto. Nunca tiene bodegas ' + 'suficientes.'
 								}
 							]
 						}
@@ -658,8 +652,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'courier',
 									description:
 										'Despacha carga sin preguntar de quién es. Atiende a ' +
-										'cualquiera, que es exactamente el negocio.',
-									appearance: 'm'
+										'cualquiera, que es exactamente el negocio.'
 								},
 								{
 									code: 'franco_rutas',
@@ -669,8 +662,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'trade',
 									description:
 										'Nadie sabe su nombre y nadie lo pregunta. Conoce rutas que no ' +
-										'están en ninguna carta.',
-									appearance: 'f'
+										'están en ninguna carta.'
 								}
 							]
 						}
@@ -710,8 +702,7 @@ const ANFORA: SystemBlueprint = {
 									missionKind: 'mining',
 									description:
 										'Vocera de la asamblea esta temporada. Lo que reparte lo ' +
-										'votaron entre todos la noche anterior.',
-									appearance: 'f'
+										'votaron entre todos la noche anterior.'
 								},
 								{
 									code: 'talo_prospeccion',

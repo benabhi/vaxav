@@ -23,7 +23,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import { ACTION_KINDS } from '$lib/game/actions';
 import { CONTAINER_KINDS } from '$lib/game/items';
-import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
+import { MISSION_KINDS } from '$lib/game/agents';
 import { BODY_KINDS, GATE_BEARINGS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
 import { CORPORATION_KINDS } from '$lib/game/corporations';
 import { SANCTION_KINDS } from '$lib/sanctions';
@@ -494,9 +494,7 @@ export const agent = sqliteTable(
 		 */
 		level: integer('level').notNull().default(1),
 		missionKind: text('mission_kind', { enum: MISSION_KINDS }).notNull(),
-		description: text('description').notNull().default(''),
-		/** Con qué fondo de retratos se lo dibuja. Ver static/portraits/LEEME.md. */
-		appearance: text('appearance', { enum: APPEARANCES }).notNull().default('x')
+		description: text('description').notNull().default('')
 	},
 	(table) => [
 		uniqueIndex('agent_code_idx').on(table.code),

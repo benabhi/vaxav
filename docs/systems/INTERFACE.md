@@ -375,7 +375,8 @@ cosas que necesitan cara y nadie va a dibujarles una: cuarenta corporaciones
 hoy, cientos mañana, y un piloto que todavía no subió foto.
 
 Lo que hay que saber para usarlo: **la familia decide la silueta entera**
-—`corporacion` es un panal hexagonal, `piloto` un disco de casillas cuadradas— y
+—`corporacion` es un panal hexagonal, `piloto` un disco de casillas cuadradas y
+`agente` un triángulo— y
 el tamaño es una medida de CSS que vale para el ancho y el alto, así que nunca se
 deforma. El porqué de cada decisión está en
 [corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una).
@@ -468,8 +469,8 @@ Tres decisiones que lo ordenan:
    entra al repositorio y se rehace en cada despliegue. Esto es estado de la
    partida, como la base, y por eso va al lado. El precio es que SvelteKit no lo
    sirve solo; son unas pocas líneas de ruta y a cambio queda claro qué es
-   contenido y qué es partida. Los retratos de los **agentes** son contenido y
-   siguen en `static/portraits/`.
+   contenido y qué es partida. Los **agentes** ya no llevan imagen: su cara es el
+   sello, que se calcula y no se guarda en ningún lado.
 
 El nombre del archivo es el id y nada más: la carpeta ya es el espacio de
 nombres. Que esté atado a la cuenta es lo que hace que subir uno nuevo reemplace

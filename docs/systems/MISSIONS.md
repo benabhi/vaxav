@@ -169,33 +169,19 @@ Y **la pantalla lo dice**: los agentes que no atienden se ven igual, apagados, c
 cuánta reputación hace falta y con quién. Esconder lo que falta sería más prolijo
 y mucho peor: lo que se ve es la escalera que el jugador tiene por delante.
 
-## Los retratos
+## La cara de un agente
 
-Cada agente tiene su hueco de retrato en la ficha. Las imágenes viven en
-`static/portraits/` y **se descubren, no se declaran**: se recorre la carpeta
-entera, subcarpetas incluidas, y lo único que importa es el nombre del archivo.
+Cada agente lleva **su sello**, el mismo emblema calculado que usan las
+corporaciones y los pilotos. Su familia es el **triángulo**, que no se confunde
+con el hexágono de una corporación ni con el disco de un piloto ni de reojo.
 
-- Un archivo que se llama como un agente —`verlan_aduana.webp`— es _su_ retrato,
-  esté guardado donde esté.
-- Todo lo demás va a un **fondo común** que se reparte entre los que no tienen
-  uno propio, de forma estable: el mismo agente saca siempre el mismo retrato.
+Antes eran fotos, y ahí estaba el problema: había dos imágenes para todos los
+agentes del juego, así que las mismas dos caras se repetían estación por estación.
+Conseguir más fotos no era la solución —el catálogo va a crecer a cientos—, sino
+dejar de necesitarlas: el sello sale del nombre, así que **todo agente tiene cara
+propia desde el segundo en que existe**, que era la pregunta de verdad.
 
-Los del fondo se llaman **`<rasgo>-<número>`** —`m-0001`, `f-0002`, `x-` para
-todo lo demás—, y **cada agente declara su rasgo** en el plano, así que el reparto
-respeta la cara que le corresponde. Si todavía no hay retratos de ese rasgo, se
-cae al fondo entero: una cara que no encaja del todo es mejor que un hueco vacío.
-
-El rasgo va en el nombre del archivo y no en una carpeta justamente porque las
-carpetas no cuentan: así sobrevive a cualquier reordenamiento, y un generador
-puede escribir donde le quede cómodo.
-
-Así la carpeta se puede ordenar como convenga y el día que haya un generador de
-retratos alcanza con dejar las imágenes ahí para que aparezcan en el juego, sin
-tocar una línea de código. Las reglas y cómo preparar las imágenes están en
-`assets/portraits/LEEME.md`.
-
-Sin imagen queda una silueta, que dice que ahí falta algo mejor que una foto
-genérica repetida en diez fichas.
+Ver «El sello» en [corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una).
 
 ## Por decidir
 

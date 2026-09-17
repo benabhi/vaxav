@@ -204,8 +204,7 @@ function seedAgents(db: Db, stationId: number, agents: readonly AgentBlueprint[]
 			corporationId: corp.id,
 			level: blueprint.level,
 			missionKind: blueprint.missionKind,
-			description: blueprint.description ?? '',
-			appearance: blueprint.appearance ?? ('x' as const)
+			description: blueprint.description ?? ''
 		};
 		db.insert(agent).values(values).onConflictDoNothing({ target: agent.code }).run();
 	}
