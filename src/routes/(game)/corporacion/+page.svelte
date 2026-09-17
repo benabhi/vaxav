@@ -96,8 +96,8 @@
 			<div class="flex w-full flex-wrap items-center gap-3">
 				<HudButton type="submit" variant="primary" disabled={!elegida}>Alistarme</HudButton>
 				<span class="text-1 text-text-muted">
-					Las del mundo aceptan siempre. Se puede renunciar cuando quieras, y lo que hayas ganado
-					con ellas no se pierde.
+					Las NPC aceptan siempre. Se puede renunciar cuando quieras, y lo que hayas ganado con
+					ellas no se pierde.
 				</span>
 			</div>
 		</form>
