@@ -130,16 +130,40 @@ export interface EstacionCorporacion {
  */
 export interface Miembros {
 	readonly belongs: boolean;
-	readonly name: string;
-	/** Cuántos son, ya escrito. */
+	/** Cuántos son en total, ya escrito. No cambia al filtrar. */
 	readonly count: string;
+	/** La página pedida, ya ordenada y recortada. */
 	readonly members: readonly MiembroCorporacion[];
+	readonly query: ConsultaMiembros;
+	/** Cuántos hay, cuántos pasaron el recorte y en cuántas páginas entran. */
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+	/**
+	 * Los oficios que hay adentro, para el desplegable.
+	 *
+	 * Sólo los que alguien tiene: un filtro que ofrece seis opciones de las que
+	 * cinco no encuentran nada hace perder el tiempo cinco veces de cada seis.
+	 */
+	readonly professions: readonly OpcionConstructor[];
+}
+
+/** Lo que se pidió del listado de miembros. */
+export interface ConsultaMiembros {
+	readonly search: string;
+	/** Código de oficio, o vacío para no filtrar por eso. */
+	readonly profession: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
 }
 
 /** Un piloto de la corporación, con lo que es público de él. */
 export interface MiembroCorporacion {
 	readonly callsign: string;
 	readonly profession: string;
+	/** El código además del rótulo: el rótulo es para leer y el código para filtrar. */
+	readonly professionCode: string;
 	readonly faction: string;
 	/** Desde cuándo vuela, en milisegundos UTC: la fecha la escribe el navegador. */
 	readonly since: number;

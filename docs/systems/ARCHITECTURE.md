@@ -104,6 +104,38 @@ Duraciones base, rendimientos, precios de referencia, costos: en tablas de
 configuración. Ajustar el balance de un juego vivo no puede requerir un
 despliegue, porque el balance se ajusta todas las semanas.
 
+## Toda lista larga se recorta igual
+
+Filtrar, ordenar y paginar aparecía copiado en tres vistas —los sistemas del
+cuartel, el registro de eventos, los miembros de una corporación— con las mismas
+cuatro decisiones repetidas: la tabla de órdenes que el servidor sabe hacer, la
+pila de filtros, el desempate estable y el corte de la página. Con el bloque
+copiado, arreglar el redondeo de la última página significaba acordarse de los
+tres.
+
+Ahora vive en `server/views/listing.ts` y cada lista aporta lo suyo:
+
+| Lo que comparte `listing.ts`         | Lo que declara cada lista                   |
+| ------------------------------------ | ------------------------------------------- |
+| Leer y validar la consulta de la URL | Qué se puede buscar y qué filtros hay       |
+| Aplicar la pila de filtros           | Por qué columnas se ordena, y con qué clave |
+| Ordenar, desempatar y cortar         | Cuántas filas entran en una página          |
+
+Dos reglas que salieron de ahí y valen para todas:
+
+- **La página se acota a lo que hay.** Quedarse en la siete de un listado que ahora
+  tiene dos es una pantalla vacía sin explicación, y pasa solo apenas alguien
+  filtra estando en una página alta.
+- **El desempate no es un lujo.** Dos filas con la misma clave pueden salir en
+  cualquier orden entre dos cargas, y una lista que se reacomoda sola mientras se la
+  mira es una lista rota. Se resuelve con una función de segundo criterio, o dejando
+  que el orden determinista de la base decida —el ordenamiento es estable— cuando
+  ese orden significa algo.
+
+Es puro: recibe filas ya leídas y devuelve filas. Ordenar en memoria es lo correcto
+hasta bien entradas las decenas de miles, y cuando deje de serlo hay un solo lugar
+donde cambiarlo.
+
 ## Escalar
 
 No se optimiza lo que todavía no duele, pero sí se evita lo que después no se
