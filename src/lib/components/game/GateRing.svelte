@@ -131,7 +131,7 @@
 	];
 </script>
 
-<div class="relative aspect-square w-full max-w-[17rem]">
+<div class="relative aspect-square w-[17rem] max-w-full">
 	<!--
 		Sin rol ni texto: todo lo que dice el dibujo está escrito en las lecturas de
 		al lado, que es la regla de toda figura del juego.

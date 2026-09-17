@@ -390,6 +390,8 @@ export interface Ubicacion {
 	readonly asteroids: readonly Roca[];
 	/** Adónde lleva y qué cuesta, si es una puerta. */
 	readonly gate: SalidaPuerta | null;
+	/** El vecindario, si es un cuerpo que orbita: planeta, luna o estrella. */
+	readonly orbit: Orbita | null;
 	/** El tramo que está haciendo, si va en camino. */
 	readonly leg: Tramo | null;
 }
@@ -670,6 +672,15 @@ export interface FilaCuerpo {
 	readonly services: readonly string[];
 	/** Marca dónde está parado el piloto ahora mismo. */
 	readonly isHere: boolean;
+	/**
+	 * Y adónde va, si está viajando.
+	 *
+	 * Aparte de `isHere` y no en su lugar: mientras la nave está en camino el
+	 * piloto **sigue teniendo guardado el cuerpo del que salió**, así que las dos
+	 * marcas conviven en el mismo árbol —de dónde saliste y adónde venís—, que es
+	 * justamente lo que hay que ver mientras se espera.
+	 */
+	readonly isDestination: boolean;
 }
 
 /** El sistema donde está el piloto, con todos sus cuerpos. */
@@ -784,6 +795,39 @@ export interface PilotoAqui {
 	readonly profession: string;
 	/** La corporación a la que responde, o vacío si vuela por su cuenta. */
 	readonly corporation: string;
+}
+
+/** Un cuerpo del vecindario, con lo justo para ponerle un punto y un nombre. */
+export interface CuerpoVecino {
+	readonly name: string;
+	readonly icon: IconName;
+	/** Si ése sos vos. */
+	readonly here: boolean;
+}
+
+/**
+ * El vecindario de un cuerpo: alrededor de qué da vueltas y qué le da vueltas.
+ *
+ * **Es lo único que un planeta tiene para decir de sí mismo.** Una puerta tiene su
+ * salto y un cinturón sus rocas; un planeta no tiene verbos, tiene **lugar**: de
+ * quién cuelga, qué tan afuera está y qué le cuelga a él. Dicho con palabras son
+ * tres renglones iguales a los de cualquier otro cuerpo; dibujado, un planeta
+ * interior con tres lunas no se parece en nada a una luna pelada del borde.
+ *
+ * Sirve igual para los tres casos y por eso es uno solo: para un planeta el
+ * centro es su estrella, para una luna es su planeta, y para una estrella el
+ * centro es ella misma y el anillo son sus planetas.
+ */
+export interface Orbita {
+	/** Lo que está en el centro, y con qué ícono se dibuja. */
+	readonly center: string;
+	readonly centerIcon: IconName;
+	/** Si el centro sos vos, que es el caso de estar parado en una estrella. */
+	readonly centerIsHere: boolean;
+	/** Lo que da vueltas alrededor del centro, de más cerca a más lejos. */
+	readonly ring: readonly CuerpoVecino[];
+	/** Y lo que te da vueltas a vos. */
+	readonly satellites: readonly CuerpoVecino[];
 }
 
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */

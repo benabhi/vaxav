@@ -30,6 +30,7 @@ import {
 	systemOverview,
 	systemTree,
 	type AgentInfo,
+	type BodyDetail,
 	type SystemNode
 } from '../services/universe';
 import { JUMP_KIND, REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
@@ -77,6 +78,7 @@ import type {
 	ConsultaGalaxia,
 	Galaxia,
 	NodoGalaxia,
+	Orbita,
 	PilotoEnElMapa,
 	SalidaGalaxia,
 	Lectura,
@@ -265,6 +267,7 @@ function transit(db: Db, row: Pilot): Ubicacion {
 		field: SIN_CAMPO,
 		asteroids: [],
 		gate: null,
+		orbit: null,
 		leg
 	};
 }
@@ -302,6 +305,7 @@ function nowhere(): Ubicacion {
 		field: SIN_CAMPO,
 		asteroids: [],
 		gate: null,
+		orbit: null,
 		leg: null
 	};
 }
@@ -379,7 +383,61 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		field: cinturon.field,
 		asteroids: cinturon.asteroids,
 		gate: buildSalida(db, row, detail.body),
+		orbit: buildOrbita(db, detail),
 		leg: null
+	};
+}
+
+/**
+ * El vecindario de un cuerpo: alrededor de qué da vueltas y qué le da vueltas.
+ *
+ * **Sólo para los que orbitan.** Una puerta tiene su aro, un cinturón su campo y
+ * una estación su mosaico de módulos; los que no tenían nada eran justamente el
+ * planeta, la luna y la estrella, que no tienen verbos: lo único que tienen para
+ * decir de sí mismos es **el lugar** que ocupan.
+ *
+ * Una sola cuenta para los tres casos, porque son el mismo mirado desde otra
+ * altura: el centro es el padre —la estrella de un planeta, el planeta de una
+ * luna— y el anillo son sus hijos. Una estrella no tiene padre, así que el centro
+ * es ella misma y el anillo son sus planetas: parado en una estrella, estás en el
+ * centro, y el dibujo lo dice sin una palabra.
+ */
+function buildOrbita(db: Db, detail: BodyDetail): Orbita | null {
+	const cuerpo = detail.body;
+	if (cuerpo.kind !== 'planet' && cuerpo.kind !== 'moon' && cuerpo.kind !== 'star') return null;
+
+	// Todo el sistema de una consulta: el anillo y los satélites salen los dos de
+	// acá, y pedirlos por separado sería ir dos veces a buscar lo mismo.
+	const todos = db.select().from(body).where(eq(body.systemId, cuerpo.systemId)).all();
+
+	const centro = detail.parent ?? cuerpo;
+	const vecino = (fila: Body) => ({
+		name: fila.name,
+		icon: bodyKindIcon(fila.kind),
+		here: fila.id === cuerpo.id
+	});
+
+	// Por distancia y no por nombre: el anillo **es** el orden en que están, y
+	// ordenarlo de otra manera dibujaría un sistema que no existe.
+	const porDistancia = (a: Body, b: Body) => a.orbitDistance - b.orbitDistance;
+
+	return {
+		center: centro.name,
+		centerIcon: bodyKindIcon(centro.kind),
+		centerIsHere: centro.id === cuerpo.id,
+		ring: todos
+			.filter((fila) => fila.parentId === centro.id)
+			.sort(porDistancia)
+			.map(vecino),
+		// Lo que te cuelga a vos. Vacío si sos el centro: ahí tus hijos ya son el
+		// anillo, y dibujarlos dos veces sería contar el sistema dos veces.
+		satellites:
+			centro.id === cuerpo.id
+				? []
+				: todos
+						.filter((fila) => fila.parentId === cuerpo.id)
+						.sort(porDistancia)
+						.map(vecino)
 	};
 }
 
@@ -421,7 +479,9 @@ export function buildBodyRows(
 	nodes: readonly SystemNode[],
 	here: string,
 	originId: number | null,
-	speed: number
+	speed: number,
+	/** El cuerpo al que va la nave, si va a alguno de este sistema. */
+	destinationId: number | null = null
 ): readonly FilaCuerpo[] {
 	const filas: FilaCuerpo[] = [];
 	const guias = railsFor(nodes);
@@ -457,7 +517,8 @@ export function buildBodyRows(
 			corporationKind: node.corporation ? corporationKindLabel(node.corporation.kind) : '',
 			owner: node.corporation ? factionName(node.corporation.faction) : '',
 			services: node.services.map(serviceLabel).sort(),
-			isHere: esAqui
+			isHere: esAqui,
+			isDestination: destinationId !== null && node.body.id === destinationId
 		});
 	}
 
@@ -837,7 +898,11 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			systemTree(db, system.code),
 			here?.code ?? '',
 			row.locationId,
-			readout?.speed ?? REFERENCE_SPEED
+			readout?.speed ?? REFERENCE_SPEED,
+			// Adónde va la nave, para que el árbol lo marque. Sale de la orden en
+			// curso: el árbol es la pantalla en la que uno mira adónde está yendo, y
+			// hasta acá el destino vivía solamente en la barra de arriba.
+			currentAction(db, row.id)?.destinationBodyId ?? null
 		),
 		hasShip: activeShip(db, row.id) !== null,
 		actionInProgress: currentAction(db, row.id) !== null,

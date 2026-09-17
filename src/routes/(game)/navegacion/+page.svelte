@@ -20,6 +20,7 @@
 	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
 	import GateRing from '$lib/components/game/GateRing.svelte';
 	import BeltField from '$lib/components/game/BeltField.svelte';
+	import BodyOrbit from '$lib/components/game/BodyOrbit.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
@@ -428,6 +429,88 @@
 								{#snippet fields()}{/snippet}
 							</ConfirmAction>
 						</div>
+					</div>
+				</div>
+			</TitledPanel>
+		</div>
+	{/if}
+
+	<!--
+		El vecindario, para los cuerpos que orbitan: planeta, luna y estrella.
+
+		**Ocupa la columna ancha**, que hasta acá quedaba vacía. Una estación tiene
+		su mosaico, una puerta su aro y un cinturón su campo; parado en un planeta no
+		había nada del lado ancho y la pantalla era una ficha angosta con dos tercios
+		de pantalla en negro al lado. No era que le faltara un dibujo: le faltaba
+		tener algo que decir, y lo que un planeta tiene para decir es su lugar.
+	-->
+	{#if place.orbit}
+		<div class="w-full min-w-0 flex-[2_1_0]">
+			<TitledPanel title="En órbita" detail={place.orbit.center} class="w-full">
+				<div class="flex w-full flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-6">
+					<div class="flex w-full justify-center lg:w-auto lg:shrink-0">
+						<BodyOrbit orbit={place.orbit} />
+					</div>
+
+					<!-- Y su lista al lado, como toda figura del juego. -->
+					<div class="flex w-full min-w-0 flex-col gap-4">
+						<div class="flex w-full flex-col items-start gap-1">
+							<Label>{place.orbit.centerIsHere ? 'Sos el centro' : 'Gira alrededor de'}</Label>
+							<span class="flex items-center gap-2">
+								<Icon
+									name={place.orbit.centerIcon}
+									weight="duotone"
+									size="1rem"
+									class="text-accent"
+								/>
+								<HudValue>{place.orbit.center}</HudValue>
+							</span>
+						</div>
+
+						<div class="flex w-full flex-col items-start gap-2">
+							<Label>
+								{place.orbit.centerIsHere ? 'Le dan vueltas' : 'En el mismo anillo'}
+							</Label>
+							<div class="grid w-full grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+								{#each place.orbit.ring as vecino (vecino.name)}
+									<span class="flex min-w-0 items-center gap-2">
+										<Icon
+											name={vecino.icon}
+											weight="bold"
+											size="0.7rem"
+											class="shrink-0 {vecino.here ? 'text-accent-bright' : 'text-accent-dim'}"
+										/>
+										<span
+											class="truncate text-1 {vecino.here
+												? 'text-accent-bright'
+												: 'text-text-body'}"
+										>
+											{vecino.name}
+										</span>
+									</span>
+								{/each}
+							</div>
+						</div>
+
+						<!-- Lo que te cuelga. Sin nada colgando, el bloque no se dibuja. -->
+						{#if place.orbit.satellites.length}
+							<div class="flex w-full flex-col items-start gap-2">
+								<Label>Te orbitan</Label>
+								<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-1">
+									{#each place.orbit.satellites as satelite (satelite.name)}
+										<span class="flex min-w-0 items-center gap-2">
+											<Icon
+												name={satelite.icon}
+												weight="bold"
+												size="0.7rem"
+												class="shrink-0 text-text-muted"
+											/>
+											<span class="truncate text-1 text-text-body">{satelite.name}</span>
+										</span>
+									{/each}
+								</div>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</TitledPanel>

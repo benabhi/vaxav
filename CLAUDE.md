@@ -109,6 +109,7 @@ Las que ya existen:
 | Navegación · Ubicación, viajando       | La banda del tramo        | Cuánto falta, hacia dónde y dónde está la nave ahora          |
 | Navegación · Ubicación, en una puerta  | El aro de salto           | Por qué lado se sale, si lleva a alguna parte y si se cruza   |
 | Navegación · Ubicación, en un cinturón | El campo de rocas         | Cuántas hay, qué les queda y cuánto conocés del campo         |
+| Navegación · Ubicación, en un cuerpo   | El vecindario en órbita   | De quién colgás, qué tan afuera estás y qué te cuelga         |
 
 Las reglas que las hacen funcionar:
 

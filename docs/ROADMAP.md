@@ -213,15 +213,15 @@ Afinarlo antes sería balancear una economía que todavía no existe.
 Cosas decididas que no entraron todavía, para que no se pierdan entre una etapa y
 la siguiente:
 
-- **La ruta, dibujada mientras se viaja.** En el mapa de la galaxia, la línea
-  entre origen y destino animada y de otro color; es la base de lo que va a
-  necesitar el autopiloto para mostrar un recorrido de varios saltos. Y en el
-  árbol del sistema, el cuerpo de destino destacado mientras se va hacia él.
-- **Cada ubicación visitable con identidad propia.** La de viaje ya la tiene —la
-  banda con la nave avanzando—, y falta que la tengan las otras: una puerta, una
-  estación, un cinturón y un planeta no pueden verse como la misma pantalla con
-  otro texto. Cada una con su dibujo, como toda figura del juego: hecho a mano y
-  sin librerías.
+- ~~**La ruta, dibujada mientras se viaja.**~~ En el mapa va en cian con el guión
+  corriendo hacia el destino, y en el árbol del sistema el cuerpo al que se va
+  queda marcado en cian mientras el de dónde se salió sigue en naranja. Es la
+  base de lo que va a necesitar el autopiloto para mostrar un recorrido de varios
+  saltos.
+- ~~**Cada ubicación visitable con identidad propia.**~~ Las seis: la banda del
+  viaje, el aro de la puerta, el mosaico de la estación con su columna de
+  secciones, el campo de rocas del cinturón y el vecindario en órbita de un
+  planeta, una luna o una estrella.
 - **Y después, `Piloto · Reputación`.** La pestaña donde se ve el panorama
   completo: toda facción, corporación y agente con el que haya número. Va en
   Piloto porque es del piloto y sobrevive a renunciar, y va **después** de lo de

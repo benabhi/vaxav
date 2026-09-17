@@ -342,6 +342,42 @@ pantallas que el jugador no distingue.
 con el rótulo puesto sobre su propio radio y tapaba justo el muñón que tenía que
 dejar ver. La palabra va en la lista de al lado, que es donde va siempre.
 
+### La pantalla parado en un planeta, una luna o una estrella
+
+Eran las tres que no tenían nada, y el problema no era que les faltara un dibujo:
+**no tenían nada del lado ancho**. Una estación tiene su mosaico de módulos, una
+puerta su salto y un cinturón sus rocas; parado en un planeta la pantalla era una
+ficha angosta con dos tercios de pantalla en negro al lado.
+
+Lo que un cuerpo tiene para decir de sí mismo es **el lugar que ocupa**. Dicho con
+palabras son tres renglones iguales a los de cualquier otro —«orbita a Ánfora, a
+842 ud»—; dibujado, un planeta interior con tres lunas no se parece en nada a una
+luna pelada del borde.
+
+| Se ve                             | Quiere decir                               |
+| --------------------------------- | ------------------------------------------ |
+| Lo que está en el centro          | De quién colgás: tu estrella, o tu planeta |
+| Tu anillo entre todos los que hay | Qué tan afuera estás                       |
+| Los íconos de los otros puntos    | Qué clase de vecinos tenés, y cuántos      |
+| El anillito alrededor tuyo        | Lo que te cuelga: lunas y estaciones       |
+
+**Una sola figura para los tres casos**, porque son el mismo mirado desde otra
+altura: el centro es el padre y el anillo son sus hijos. Una estrella no tiene
+padre, así que el centro es ella misma y el anillo son sus planetas —parado en
+una estrella estás en el centro, y eso sale solo, sin caso especial—.
+
+**Y gira.** Los de afuera tardan más, con el exponente de la tercera ley de
+Kepler, así que la velocidad **también dice** qué tan lejos está cada uno. No es
+una simulación: la cuenta real reparte las velocidades mejor que cualquier número
+elegido a ojo. Despacio en serio —la vuelta más corta ronda el minuto— porque
+esta pantalla queda abierta mientras se espera, y algo que se mueve rápido al
+lado de un texto es algo que no deja leer. Quien pidió menos movimiento en su
+sistema ve el plano quieto.
+
+Los satélites **viajan con el cuerpo y no dan su propia vuelta**: dos giros
+encimados a escalas muy distintas convierten ese rincón en un remolino, y lo que
+hay que ver ahí es cuántos te cuelgan.
+
 ### La pantalla parado en un cinturón
 
 La lista dice qué tiene cada piedra. La figura dice **cómo es el campo**, que es
@@ -365,6 +401,17 @@ un piloto: el dibujo sale del dato.
 
 Y lo que no tiene lectura se dibuja **entero**, no vacío: suponerlo agotado sería
 contar algo que el piloto no sabe.
+
+### El destino, marcado en el árbol
+
+Mientras la nave va en camino, el árbol del sistema muestra **las dos puntas del
+viaje**: naranja donde estás parado y cian adónde venís. Conviven porque el
+piloto en tránsito sigue teniendo guardado el cuerpo del que salió, y verlas
+juntas es justamente lo que uno quiere mientras espera.
+
+El cian no es una elección suelta: es el mismo que el mapa usa para el tramo en
+curso, y por la misma regla —en este juego el cian quiere decir **vos**, dónde
+estás y adónde vas—.
 
 ### El chat
 
