@@ -95,6 +95,28 @@ export const MODULES: readonly Module[] = [
 			}
 		]
 	},
+	// Va después de Navegación y antes del Mercado porque es **de quién sos**, no
+	// de qué hacés: primero el piloto, su nave y dónde está; después a quién le
+	// rinde cuentas; recién ahí lo que compra y vende.
+	{
+		code: 'corporation',
+		label: 'Corporación',
+		icon: 'buildings',
+		// **Va a ser una zona de varias pestañas**: listado de miembros, roles y
+		// permisos, bienes de la corporación, contratos. Están las dos que hoy tienen
+		// algo detrás, y las demás llegan cuando lo tengan: una entrada que lleva a un
+		// cartel es una puerta cerrada con el nombre puesto.
+		tabs: [
+			{
+				route: '/corporacion',
+				label: 'Ficha'
+			},
+			{
+				route: '/corporacion/miembros',
+				label: 'Miembros'
+			}
+		]
+	},
 	{
 		code: 'market',
 		label: 'Mercado',

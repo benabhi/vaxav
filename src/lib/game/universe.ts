@@ -293,33 +293,6 @@ export function suggestedSecurity(government: Government, controlled: boolean): 
 	return Math.floor((min + max) / 2);
 }
 
-/** A qué se dedica una corporación. */
-export const CORPORATION_KINDS = [
-	'mining',
-	'industry',
-	'trade',
-	'exploration',
-	'security',
-	'logistics'
-] as const;
-export type CorporationKind = (typeof CORPORATION_KINDS)[number];
-
-/**
- * Una corporación del mundo.
- *
- * Las estaciones pertenecen a corporaciones, y **las corporaciones responden a
- * una facción o a ninguna**. La facción de una estación se deriva de ahí, así
- * que no se guarda dos veces y no puede contradecirse.
- */
-export interface CorporationBlueprint {
-	readonly code: string;
-	readonly name: string;
-	readonly kind: CorporationKind;
-	/** Código de facción, o vacío si no responde a ninguna. */
-	readonly faction: string;
-	readonly description: string;
-}
-
 /**
  * Lo que hace estación a un cuerpo: quién la opera, qué ofrece y quién para.
  *
@@ -457,71 +430,13 @@ export interface GalaxyBlueprint {
 }
 
 /**
- * Las corporaciones del mundo.
+ * Las corporaciones que la siembra carga, que son todas las del catálogo.
  *
- * Una por estación, para empezar. Van a ser muchísimas: cada rubro del juego
- * va a tener las suyas, y las de los jugadores viven en la misma tabla.
+ * Se reexporta desde acá porque quien siembra pide **el plano del mundo** y no
+ * tiene por qué saber en qué archivo vive cada catálogo. El día que la siembra
+ * cargue sólo algunas, el recorte se hace acá y nadie más se entera.
  */
-export const CORPORATIONS: readonly CorporationBlueprint[] = [
-	{
-		code: 'casa_verlan',
-		name: 'Casa Verlan',
-		kind: 'trade',
-		faction: 'dominion',
-		description:
-			'Casa comercial con carta del Dominio. Administra Puerto Ánfora ' +
-			'desde hace tres generaciones y lo trata como propiedad ' +
-			'familiar, que en los papeles casi lo es.'
-	},
-	{
-		code: 'extractora_anillo',
-		name: 'Extractora Anillo',
-		kind: 'mining',
-		faction: 'concord',
-		description:
-			'Cooperativa de mineros que creció hasta volverse empresa. ' +
-			'Sigue votando sus decisiones en asamblea, aunque ahora la ' +
-			'asamblea sean cuatro mil personas.'
-	},
-	{
-		code: 'hidros_escarcha',
-		name: 'Hidros Escarcha',
-		kind: 'industry',
-		faction: 'concord',
-		description:
-			'Saca agua y combustible del hielo de la luna. Trabajo ' +
-			'monótono, turnos largos y una clientela que no puede ir a otro ' +
-			'lado.'
-	},
-	{
-		code: 'comuna_talo',
-		name: 'Comuna Talo',
-		kind: 'mining',
-		faction: 'pact',
-		description:
-			'Nació como el hábitat que excavó el asteroide y nunca dejó de ' +
-			'ser eso: la gente que vive ahí es la que la dirige.'
-	},
-	{
-		code: 'vigilia_anfora',
-		name: 'Vigilia Ánfora',
-		kind: 'security',
-		faction: 'dominion',
-		description:
-			'Seguridad contratada. El Dominio le paga por patrullar el ' +
-			'sistema y ella subcontrata a quien esté dispuesto, que suele ' +
-			'ser un piloto con la nave a nombre de otro.'
-	},
-	{
-		code: 'libre_amarre',
-		name: 'Libre Amarre',
-		kind: 'logistics',
-		faction: '',
-		description:
-			'Sin bandera y con eso alcanza para tener clientes. Mueve lo ' +
-			'que haya que mover y no pregunta de quién es.'
-	}
-];
+export { CORPORATIONS, type CorporationBlueprint, type CorporationKind } from './corporations';
 
 /** El único sistema que existe hoy. Todo lo demás cuelga de él. */
 const ANFORA: SystemBlueprint = {
@@ -851,11 +766,6 @@ export function allBodies(): readonly BodyBlueprint[] {
 /** Todos los agentes del plano, sin importar dónde estén sentados. */
 export function allAgents(): readonly AgentBlueprint[] {
 	return allBodies().flatMap((body) => body.station?.agents ?? []);
-}
-
-/** Busca una corporación por código. */
-export function findCorporation(code: string): CorporationBlueprint | null {
-	return CORPORATIONS.find((corporation) => corporation.code === code) ?? null;
 }
 
 /**

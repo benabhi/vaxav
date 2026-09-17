@@ -12,6 +12,7 @@ import {
 	asteroidSurvey,
 	authSession,
 	container,
+	corporation,
 	creditEntry,
 	fittedModule,
 	itemEntry,
@@ -28,6 +29,7 @@ import {
 } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
+import { getCorporation } from '$lib/game/corporations';
 import { placeInFreeSlot } from '$lib/game/fitting';
 import { getModule } from '$lib/game/modules';
 import { getProfession, startingKit, startingXp } from '$lib/game/professions';
@@ -166,7 +168,8 @@ export async function createPilot(
 	email: string,
 	password: string,
 	profession: string,
-	faction: string
+	faction: string,
+	corporationCode = ''
 ): Promise<Pilot> {
 	callsign = callsign.trim();
 	email = email.trim();
@@ -190,6 +193,18 @@ export async function createPilot(
 		throw new PilotError('Esa profesión todavía no está disponible.');
 	}
 
+	// **La corporación tiene que ser de la facción que eligió.** Alistarse en una
+	// del Dominio habiendo nacido en el Pacto no es una elección interesante: es una
+	// contradicción, y la pantalla ya ofrece nada más que las suyas.
+	let suCorporacion = null;
+	if (corporationCode) {
+		const elegida = getCorporation(corporationCode);
+		if (!elegida || elegida.faction !== chosenFaction.code) {
+			throw new PilotError('Esa corporación no recibe pilotos de tu origen.');
+		}
+		suCorporacion = elegida;
+	}
+
 	if (callsignTaken(db, callsign)) throw new PilotError(`Ya hay un piloto llamado ${callsign}.`);
 	if (emailTaken(db, email)) throw new PilotError('Ese correo ya está usado por otro piloto.');
 
@@ -208,6 +223,13 @@ export async function createPilot(
 	const passwordHash = await hashPassword(password);
 
 	return db.transaction((tx) => {
+		// La fila de la corporación se busca adentro de la transacción: el catálogo
+		// dice cuál es, pero el identificador es de la base y puede no estar sembrada.
+		const suya = suCorporacion
+			? (tx.select().from(corporation).where(eq(corporation.code, suCorporacion.code)).get() ??
+				null)
+			: null;
+
 		const created = tx
 			.insert(pilot)
 			.values({
@@ -216,6 +238,7 @@ export async function createPilot(
 				passwordHash,
 				profession: chosenProfession.code,
 				faction: chosenFaction.code,
+				corporationId: suya?.id ?? null,
 				locationId: home.id
 			})
 			.returning()

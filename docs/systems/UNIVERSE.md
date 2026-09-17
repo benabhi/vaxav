@@ -774,6 +774,36 @@ un botón que siempre devuelve lo mismo. Es además el mecanismo que va a servir
 para explorar sistemas nuevos: lo que se aprende de una piedra desconocida es lo
 mismo que se va a aprender de un sistema al que nadie fue.
 
+## Cómo se llama la parte civilizada
+
+**Sin decidir todavía, pero hay que decidirlo temprano**, porque es una palabra que
+va a aparecer en cien textos del juego y cambiarla después es reescribirlos todos.
+
+Es el centro del sector: donde están las tres facciones, sus estaciones, sus
+corporaciones y la ley. Lo que hay más allá no tiene dueño ni patrullas. Todo juego
+del género le puso nombre a eso —EVE tiene «el imperio», Elite «la burbuja»— y
+sirve para lo mismo: que un piloto pueda decir en una frase dónde está y qué clase
+de lugar es. La prueba de fuego es la frase opuesta, que se va a usar más que el
+nombre: **«fuera de …»**.
+
+| Nombre           | Qué sugiere                                                                                                  | Y la frase opuesta  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ | ------------------- |
+| **La Rada**      | El fondeadero resguardado. Sigue el vocabulario que el juego ya habla —puerto, muelle, amarre, casco, rumbo— | fuera de la rada    |
+| **El Amparo**    | Lo protegido. No dice quién protege, y eso lo hace funcionar para las tres a la vez                          | fuera del amparo    |
+| **El Perímetro** | Lo defendido y vigilado. Más militar y más frío, muy de HUD                                                  | fuera del perímetro |
+| **La Cuenca**    | Geografía, como las regiones-continente: el lugar donde todo desemboca                                       | fuera de la cuenca  |
+
+**A definir.** De las cuatro, la que más cerca estuvo es **El Perímetro**, y no
+convence del todo: dice bien lo que hay que decir —adentro hay ley, afuera no— pero
+suena más a operación militar que a un lugar donde vive gente. Ninguna de las
+cuatro choca con una palabra ya ocupada; región, constelación, cinturón y borde
+tienen dueño.
+
+Queda abierto a propósito y no se usa ninguna mientras tanto: escribir textos con
+un nombre provisorio es garantizar que quede la mitad sin cambiar el día que se
+elija otro. Cuando se decida, la palabra entra en [la voz](../DESIGN.md) como
+término fijo y se usa igual en toda la interfaz.
+
 ## Por decidir
 
 - Si el mapa es fijo y curado, o generado por procedimiento a partir de semillas.

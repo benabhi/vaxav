@@ -46,6 +46,7 @@ lugar y aparece en los tres.
 | Piloto      | Información · Habilidades · Bitácora           |
 | Nave        | Ficha · Bodega                                 |
 | Navegación  | Ubicación · Sistema · Galaxia                  |
+| Corporación | Ficha · Miembros                               |
 | Mercado     | Mercado · Órdenes de venta · Órdenes de compra |
 | Propiedades | Propiedades                                    |
 | Billetera   | Billetera                                      |
@@ -337,19 +338,19 @@ Con ochenta componentes, «fijarse si ya existe» no pasa solo: hay que pregunta
 pieza por pieza, y para eso hace falta saber qué hay. Esta tabla es el mapa, por
 carpeta; los archivos están en `src/lib/components/`.
 
-| Carpeta       | Para qué                                          | Lo que más se usa                                                                            |
-| ------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                       |
-| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                           |
-| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                       |
-| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`     |
-| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                      |
-| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `PilotCredential`, `FittingRig` |
-| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                        |
-| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                       |
-| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                            |
-| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                              |
-| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                      |
+| Carpeta       | Para qué                                          | Lo que más se usa                                                                           |
+| ------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                      |
+| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                          |
+| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                      |
+| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`    |
+| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                     |
+| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `Identicon`, `PilotCredential` |
+| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                       |
+| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                      |
+| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                           |
+| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                             |
+| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                     |
 
 Tres que conviene conocer antes de escribir una pantalla nueva, porque son las
 que más se reinventan sin querer:
@@ -366,6 +367,23 @@ vuelve del cuartel. `SelectField` era un campo de formulario con otra dirección
 `GalaxyMap` terminó siendo la pestaña Galaxia del juego. Cuando una pieza de esa
 carpeta le sirve a una pantalla del juego, **se muda**; envolverla o copiarla es
 quedarse con dos.
+
+### El sello, que le da cara a lo que no tiene
+
+`Identicon` dibuja un emblema calculado a partir de un nombre. Existe porque hay
+cosas que necesitan cara y nadie va a dibujarles una: treinta y siete
+corporaciones hoy, cientos mañana, y un piloto que todavía no subió foto.
+
+Lo que hay que saber para usarlo: **la familia decide la silueta entera**
+—`corporacion` es un panal hexagonal, `piloto` un disco de casillas cuadradas— y
+el tamaño es una medida de CSS que vale para el ancho y el alto, así que nunca se
+deforma. El porqué de cada decisión está en
+[corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una).
+
+**Sin foto, la credencial del piloto lleva su sello** en vez de una silueta gris.
+La silueta decía «acá falta algo» y nada más: todas iguales, la del piloto y la de
+los otros mil. El sello sale del distintivo, así que desde el primer segundo la
+credencial muestra algo que es suyo y de nadie más.
 
 ### El mapa de la galaxia y su marco
 

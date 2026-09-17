@@ -82,9 +82,18 @@ export const actions: Actions = {
 		const { callsign, email, password } = readAccount(form);
 		const profession = String(form.get('profession') ?? '');
 		const faction = String(form.get('faction') ?? '');
+		const corporation = String(form.get('corporacion') ?? '');
 
 		try {
-			const pilot = await createPilot(db, callsign, email, password, profession, faction);
+			const pilot = await createPilot(
+				db,
+				callsign,
+				email,
+				password,
+				profession,
+				faction,
+				corporation
+			);
 			setSessionCookie(cookies, openSession(db, pilot.id));
 		} catch (error) {
 			if (error instanceof PilotError) return fail(400, { error: error.message });

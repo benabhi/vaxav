@@ -85,6 +85,76 @@ export interface PilotoConectado {
 	readonly ship: NaveDelPiloto | null;
 }
 
+/**
+ * La corporación a la que pertenece el piloto.
+ *
+ * **Sin corporación no es un hueco**: es un independiente, y la pantalla lo dice
+ * con esas palabras. Va a ser el estado normal el día que se pueda renunciar.
+ */
+export interface Corporacion {
+	/** Si pertenece a alguna. Lo demás describe a cuál, o a la falta de una. */
+	readonly belongs: boolean;
+	readonly name: string;
+	readonly code: string;
+	/** El rubro, en palabras y en ícono. */
+	readonly kind: string;
+	readonly kindIcon: IconName;
+	/** A qué facción responde, o vacío. */
+	readonly faction: string;
+	readonly factionCode: string;
+	readonly description: string;
+	/** Cuántos pilotos son, ya escrito. */
+	readonly members: string;
+	/** Las estaciones que opera. Puede no operar ninguna y existir igual. */
+	readonly stations: readonly EstacionCorporacion[];
+	/** Dónde tiene gente sentada repartiendo trabajo. */
+	readonly agents: readonly AgenteCorporacion[];
+}
+
+/** Una estación que opera la corporación. */
+export interface EstacionCorporacion {
+	readonly code: string;
+	readonly name: string;
+	readonly system: string;
+	/** Qué ofrece, ya escrito. */
+	readonly services: readonly string[];
+}
+
+/**
+ * Los miembros de la corporación.
+ *
+ * Pestaña aparte de la ficha porque es otra pregunta —quiénes son los otros— y
+ * porque va a crecer sola: el día que una corporación tenga dos mil pilotos, acá
+ * van a hacer falta orden, filtros y paginado, y la ficha va a seguir cabiendo en
+ * una pantalla.
+ */
+export interface Miembros {
+	readonly belongs: boolean;
+	readonly name: string;
+	/** Cuántos son, ya escrito. */
+	readonly count: string;
+	readonly members: readonly MiembroCorporacion[];
+}
+
+/** Un piloto de la corporación, con lo que es público de él. */
+export interface MiembroCorporacion {
+	readonly callsign: string;
+	readonly profession: string;
+	readonly faction: string;
+	/** Desde cuándo vuela, en milisegundos UTC: la fecha la escribe el navegador. */
+	readonly since: number;
+	/** Si sos vos, para que la fila se destaque. */
+	readonly isYou: boolean;
+}
+
+/** Un agente de la corporación, y dónde está sentado. */
+export interface AgenteCorporacion {
+	readonly code: string;
+	readonly name: string;
+	readonly station: string;
+	readonly system: string;
+}
+
 /** Un módulo de la estación, listo para dibujar en el mosaico. */
 export interface BaldosaModulo {
 	readonly code: string;
