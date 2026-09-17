@@ -41,7 +41,6 @@ import { inArray } from 'drizzle-orm';
 import type { Db } from '../db/types';
 import { record } from './events';
 import { hashPassword } from './passwords';
-import { deletePortrait } from './portraits';
 import { credit, debit } from './wallet';
 import { ADMIN_ROLE, adminCount, rolesOf } from './roles';
 import {
@@ -296,9 +295,4 @@ export function deletePilot(db: Db, pilotId: number, actor: Pilot | null): void 
 			}
 		});
 	});
-
-	// El retrato es un archivo y no una fila, así que sale después de que la
-	// transacción cerró: si el borrado se hubiera deshecho, sería una lástima
-	// haberle tirado la foto a una cuenta que sigue existiendo.
-	deletePortrait(pilotId);
 }

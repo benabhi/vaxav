@@ -8,11 +8,17 @@
 import { describe, expect, it } from 'vitest';
 import {
 	MAX_REPUTATION,
+	MAX_REPUTATION_RAW,
 	MIN_REPUTATION,
+	MIN_REPUTATION_RAW,
 	MISSION_LEVELS,
+	REPUTATION_SCALE,
 	TIERS,
 	canBeHired,
+	effectiveMissionLevel,
 	missionLevelFor,
+	missionLevelForRaw,
+	reputationGain,
 	requiredReputation,
 	tierFor,
 	tierForLevel
@@ -81,23 +87,99 @@ describe('a qué nivel de misión se llega', () => {
 	});
 });
 
+/** Lo que se guarda para tener esos puntos de reputación. */
+function puntos(valor: number): number {
+	return valor * REPUTATION_SCALE;
+}
+
 describe('quién atiende a quién', () => {
 	it('no pide papeles si la corporación no tiene bandera', () => {
 		// Es el atractivo de un puerto franco: se llega antes y sin caerle bien a nadie.
 		for (let level = 1; level <= MISSION_LEVELS; level++) {
 			expect(requiredReputation(level, '')).toBe(MIN_REPUTATION);
-			expect(canBeHired(level, '', MIN_REPUTATION)).toBe(true);
+			expect(canBeHired(level, '', MIN_REPUTATION_RAW, MIN_REPUTATION_RAW)).toBe(true);
 		}
 	});
 
 	it('con bandera, pide reputación en los niveles altos', () => {
 		expect(requiredReputation(4, 'dominion')).toBeGreaterThan(MIN_REPUTATION);
-		expect(canBeHired(4, 'dominion', MIN_REPUTATION)).toBe(false);
+		expect(canBeHired(4, 'dominion', MIN_REPUTATION_RAW, MIN_REPUTATION_RAW)).toBe(false);
 	});
 
-	it('atiende con la reputación justa y no con una menos', () => {
-		const needed = requiredReputation(3, 'concord');
-		expect(canBeHired(3, 'concord', needed)).toBe(true);
-		expect(canBeHired(3, 'concord', needed - 1)).toBe(false);
+	it('atiende en el umbral justo y no un escalón antes', () => {
+		const escalon = TIERS[2];
+		expect(canBeHired(escalon.level, 'concord', puntos(escalon.reputation), 0)).toBe(true);
+		expect(canBeHired(escalon.level, 'concord', puntos(escalon.reputation) - 1, 0)).toBe(false);
+	});
+
+	/*
+	 * Las dos escaleras: la de la corporación abre a los suyos y la de la facción
+	 * abre ese nivel en todas las de su bandera. Al agente le alcanza con una.
+	 */
+	it('abre con la corporación aunque la facción esté en cero', () => {
+		expect(canBeHired(3, 'dominion', puntos(25), 0)).toBe(true);
+	});
+
+	it('abre con la facción aunque la corporación esté en cero', () => {
+		expect(canBeHired(3, 'dominion', 0, puntos(25))).toBe(true);
+	});
+
+	it('vale la más alta de las dos y no la suma', () => {
+		// Dos escalones a medio subir no hacen uno entero: si se sumaran, ninguna de
+		// las dos escaleras significaría nada por sí sola.
+		expect(effectiveMissionLevel(puntos(9), puntos(9))).toBe(1);
+		expect(effectiveMissionLevel(puntos(50), puntos(10))).toBe(4);
+		expect(effectiveMissionLevel(puntos(10), puntos(50))).toBe(4);
+	});
+});
+
+describe('cuánto cuesta subir', () => {
+	it('se gana una fracción de lo que falta y no una cantidad fija', () => {
+		const desdeCero = reputationGain(0, 1);
+		const desdeArriba = reputationGain(puntos(80), 1);
+
+		expect(desdeCero).toBe(250);
+		expect(desdeArriba).toBeLessThan(desdeCero);
+	});
+
+	it('una misión de nivel alto mueve más que una de nivel bajo', () => {
+		expect(reputationGain(0, 5)).toBeGreaterThan(reputationGain(0, 1));
+	});
+
+	it('nunca pasa del techo, y en el techo ya no da nada', () => {
+		expect(reputationGain(MAX_REPUTATION_RAW, 5)).toBe(0);
+		expect(reputationGain(MAX_REPUTATION_RAW - 1, 5)).toBeLessThanOrEqual(1);
+	});
+
+	it('cerca del último escalón todavía mueve algo, que es para lo que hay decimales', () => {
+		// Con enteros esto daría cero y la escalera se moriría justo acá.
+		expect(reputationGain(puntos(80), 4)).toBe(200);
+	});
+
+	/*
+	 * El largo del juego, recorrido de verdad. No es un número lindo: es la
+	 * decisión de balance, y si alguien mueve la constante este test se lo dice.
+	 */
+	it('de cero a Leal con una corporación son doscientas veinticinco misiones', () => {
+		const tramos: number[] = [];
+		let raw = MIN_REPUTATION_RAW;
+		let nivel = missionLevelForRaw(raw);
+		let hechas = 0;
+
+		while (missionLevelForRaw(raw) < MISSION_LEVELS && hechas < 5000) {
+			// Se hacen las misiones del nivel más alto que esté abierto.
+			const abierto = missionLevelForRaw(raw);
+			if (abierto !== nivel) {
+				tramos.push(hechas);
+				nivel = abierto;
+			}
+			raw += reputationGain(raw, abierto);
+			hechas++;
+		}
+		tramos.push(hechas);
+
+		expect(hechas).toBe(225);
+		// Y cada tramo es del orden del anterior: ninguno es un muro.
+		expect(tramos).toEqual([43, 79, 133, 225]);
 	});
 });

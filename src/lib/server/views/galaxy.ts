@@ -21,14 +21,23 @@
  * Corresponde a docs/systems/UNIVERSE.md.
  */
 
-import { body, constellation, gate, region, station, stationService, system } from '../db/schema';
+import {
+	body,
+	constellation,
+	corporation,
+	gate,
+	region,
+	station,
+	stationService,
+	system
+} from '../db/schema';
 import type { Db } from '../db/types';
 import { ORIGIN, hexDistance, neighbourOf, sameHex } from '$lib/game/galaxy';
 import { lightYears } from '$lib/game/jumps';
 import { FACTION_LIST } from '$lib/game/factions';
 import { SERVICE_ORDER, freeBearings, securityLevel } from '$lib/game/universe';
 import { governmentLabel, securityLabel } from '$lib/format';
-import type { EnlaceGalaxia, MapaGalaxia, NodoGalaxia } from '$lib/tipos';
+import type { CorporacionEnElMapa, EnlaceGalaxia, MapaGalaxia, NodoGalaxia } from '$lib/tipos';
 
 /** Cómo se lee una facción, o «Espacio libre» si no hay ninguna. */
 function factionLabel(code: string): string {
@@ -80,6 +89,13 @@ export function buildGalaxyMap(db: Db): MapaGalaxia {
 	const cuerpos = db.select().from(body).all();
 	const estaciones = db.select().from(station).all();
 	const servicios = db.select().from(stationService).all();
+	const corporaciones = new Map(
+		db
+			.select()
+			.from(corporation)
+			.all()
+			.map((una) => [una.id, una])
+	);
 	const constelaciones = new Map(
 		db
 			.select()
@@ -118,11 +134,23 @@ export function buildGalaxyMap(db: Db): MapaGalaxia {
 	// estaciones está. Eso se lo dice la pestaña Sistema una vez que llegó.
 	const serviciosPorSistema = new Map<number, Set<string>>();
 	const sistemaDeLaEstacion = new Map<number, number>();
+	// Y quién opera en cada sistema, que es con lo que se contesta «¿dónde está la
+	// mía?». Va en la misma pasada: recorrer las estaciones dos veces para contar
+	// una vez y agrupar la otra es recorrerlas de más.
+	const corporacionesPorSistema = new Map<number, Set<string>>();
+	const conPuesto = new Map<string, CorporacionEnElMapa>();
 	for (const una of estaciones) {
 		const suyo = sistemaDelCuerpo.get(una.bodyId);
 		if (suyo === undefined) continue;
 		sistemaDeLaEstacion.set(una.id, suyo);
 		estacionesPorSistema.set(suyo, (estacionesPorSistema.get(suyo) ?? 0) + 1);
+
+		const suya = corporaciones.get(una.corporationId);
+		if (!suya) continue;
+		const suyas = corporacionesPorSistema.get(suyo) ?? new Set<string>();
+		suyas.add(suya.code);
+		corporacionesPorSistema.set(suyo, suyas);
+		conPuesto.set(suya.code, { code: suya.code, name: suya.name });
 	}
 	for (const servicio of servicios) {
 		const suyo = sistemaDeLaEstacion.get(servicio.stationId);
@@ -137,6 +165,7 @@ export function buildGalaxyMap(db: Db): MapaGalaxia {
 		const suConstelacion = constelaciones.get(uno.constellationId);
 		const suRegion = suConstelacion ? regiones.get(suConstelacion.regionId) : undefined;
 		const suyos = serviciosPorSistema.get(uno.id) ?? new Set<string>();
+		const suyasCorp = corporacionesPorSistema.get(uno.id) ?? new Set<string>();
 
 		return {
 			code: uno.code,
@@ -157,6 +186,7 @@ export function buildGalaxyMap(db: Db): MapaGalaxia {
 			// servicios que cambia de orden entre dos sistemas no se puede comparar de
 			// un vistazo, que es justo para lo que está.
 			services: SERVICE_ORDER.filter((servicio) => suyos.has(servicio)),
+			corporations: [...suyasCorp].sort(),
 			gates: suyas.length,
 			looseBearings: suyas.filter((una) => una.destinationId === null).map((una) => una.bearing),
 			free: freeBearings(suyas.map((una) => una.bearing)),
@@ -199,6 +229,7 @@ export function buildGalaxyMap(db: Db): MapaGalaxia {
 	return {
 		systems: nodos,
 		links: enlaces,
+		corporations: [...conPuesto.values()].sort((a, b) => a.name.localeCompare(b.name, 'es')),
 		radius: radio,
 		adrift: nodos.filter((nodo) => nodo.adrift).length
 	};

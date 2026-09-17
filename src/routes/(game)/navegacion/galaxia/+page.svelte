@@ -128,6 +128,16 @@
 			.sort((a, b) => a.label.localeCompare(b.label, 'es'))
 	]);
 
+	/**
+	 * Sólo las que operan algún puesto, y ya ordenadas por nombre desde el
+	 * servidor: el mapa no puede decir nada de una corporación que no tiene dónde
+	 * aparecer.
+	 */
+	let opcionesCorporacion = $derived([
+		{ value: '', label: 'Todas' },
+		...galaxia.map.corporations.map((una) => ({ value: una.code, label: una.name }))
+	]);
+
 	let opcionesRegion = $derived([
 		{ value: '', label: 'Todas' },
 		...[...new Set(galaxia.map.systems.map((uno) => uno.region))]
@@ -243,9 +253,20 @@
 		{ label: 'Podés cruzarla', color: 'var(--color-accent)' },
 		{ label: 'Salida del elegido', color: 'var(--color-accent-bright)' },
 		{ label: 'Otra conexión', color: 'var(--color-accent-dim)' },
-		{ label: 'Atajo', color: 'var(--color-data)' },
+		{ label: 'Atajo', color: 'var(--color-text-strong)' },
 		{ label: 'Paso cerrado', color: 'var(--color-danger)' }
 	];
+
+	/**
+	 * La leyenda, con el tramo en curso adelante **sólo mientras se está viajando**.
+	 *
+	 * Una entrada de algo que no está en pantalla es una línea que hay que
+	 * descartar cada vez que se lee la leyenda, y la leyenda se lee justamente
+	 * cuando uno no sabe qué está mirando.
+	 */
+	let leyenda = $derived(
+		galaxia.pilot.route ? [{ label: 'Tu ruta', color: 'var(--color-data)' }, ...LEYENDA] : LEYENDA
+	);
 
 	let hayFiltro = $derived(
 		Boolean(
@@ -254,6 +275,7 @@
 			consulta.region ||
 			consulta.security ||
 			consulta.service ||
+			consulta.corporation ||
 			consulta.paint ||
 			consulta.territory
 		)
@@ -266,7 +288,8 @@
 			consulta.faction,
 			consulta.region,
 			consulta.security,
-			consulta.service
+			consulta.service,
+			consulta.corporation
 		].filter(Boolean).length
 	);
 
@@ -280,6 +303,14 @@
 	 * motivo.
 	 */
 	let puedeViajar = $derived(galaxia.travelSource.blockers.length === 0);
+
+	/**
+	 * Y si se puede cruzar la puerta donde ya estás parado.
+	 *
+	 * Mismo criterio que arriba y por el mismo motivo: el control apagado y el
+	 * cartel que dice por qué leen la misma lista.
+	 */
+	let puedeSaltar = $derived(galaxia.jumpSource.blockers.length === 0);
 
 	let elegidoNodo = $derived(galaxia.map.systems.find((uno) => uno.code === elegido) ?? null);
 
@@ -367,11 +398,32 @@
 				Ya estás en la puerta: lo que falta es el salto, y el salto se da desde
 				Ubicación, que es la pantalla del lugar donde estás parado. Mandar ahí es
 				más honesto que repetir el botón acá y que diga lo mismo.
+
+				**Salvo que no se pueda dar la orden**, y entonces se apaga en el lugar en
+				vez de mandar a ninguna parte: con la nave en camino, Ubicación muestra el
+				viaje y no la puerta, así que el enlace llevaba a una pantalla que no
+				tenía el botón que prometía. Un enlace vivo que no cumple es peor que uno
+				apagado que dice por qué.
 			-->
-			<HudLink href="/navegacion" variant="primary" size="1" class="mt-1">
-				<Icon name="rocket-launch" weight="bold" size="0.7rem" />
-				Estás en la puerta: saltar
-			</HudLink>
+			<ActionSource source={galaxia.jumpSource}>
+				{#if puedeSaltar}
+					<HudLink href="/navegacion" variant="primary" size="1" class="mt-1">
+						<Icon name="rocket-launch" weight="bold" size="0.7rem" />
+						Estás en la puerta: saltar
+					</HudLink>
+				{:else}
+					<HudButton
+						type="button"
+						variant="primary"
+						size="1"
+						disabled
+						class="mt-1 cursor-not-allowed opacity-45"
+					>
+						<Icon name="rocket-launch" weight="bold" size="0.7rem" />
+						Estás en la puerta: saltar
+					</HudButton>
+				{/if}
+			</ActionSource>
 		{:else}
 			<ConfirmAction
 				formAction="?/viajar"
@@ -479,6 +531,23 @@
 				options={OPCIONES_SERVICIO}
 			/>
 		</div>
+
+		<!--
+			Dónde tiene puestos una corporación. Lo enciende el botón «ver en el mapa»
+			de la pestaña Corporación, y está acá para poder verlo puesto y sacarlo:
+			un recorte que llega por la URL y no tiene control es un mapa al que le
+			faltan sistemas sin que nada diga por qué.
+		-->
+		<div class="w-full min-w-0 xs:w-[9.5rem]">
+			<SelectField
+				label="Corporación"
+				name="corporacion"
+				size="1"
+				onchange={alCambiar}
+				value={consulta.corporation}
+				options={opcionesCorporacion}
+			/>
+		</div>
 	</div>
 
 	<div class="flex w-full flex-wrap items-end gap-3 border-t border-border-soft/60 pt-[0.6rem]">
@@ -558,7 +627,7 @@
 {/snippet}
 
 {#snippet leyendasDelMapa()}
-	<GalaxyLegend paint={leyendaPintura} strokes={LEYENDA} />
+	<GalaxyLegend paint={leyendaPintura} strokes={leyenda} />
 {/snippet}
 
 {#snippet fichaDelMapa()}

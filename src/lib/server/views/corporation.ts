@@ -27,9 +27,27 @@ import {
 import type { Db } from '../db/types';
 import { FACTIONS } from '$lib/game/factions';
 import { SERVICE_ORDER, type StationServiceKind } from '$lib/game/universe';
-import { corporationKindIcon, corporationKindLabel, serviceLabel } from '$lib/format';
-import type { CorporationKind } from '$lib/game/corporations';
-import type { Corporacion, EstacionCorporacion } from '$lib/tipos';
+import {
+	corporationKindIcon,
+	corporationKindLabel,
+	reputationLabel,
+	roman,
+	serviceLabel
+} from '$lib/format';
+import { getCorporation, type CorporationKind } from '$lib/game/corporations';
+import { REPUTATION_SCALE, TIERS, effectiveMissionLevel, tierForRaw } from '$lib/game/reputation';
+import { pilotStandings } from '../services/reputation';
+import type { Corporacion, EscalonReputacion, ReputacionCorporacion } from '$lib/tipos';
+import type { EstacionCorporacion } from '$lib/tipos';
+
+/**
+ * Cuántas estaciones entran en el panel de la ficha.
+ *
+ * Suficientes para leer de qué tamaño es la corporación, pocas para que el panel
+ * no se vuelva una lista que hay que recorrer. Lo que no entra lo dice el
+ * contador, y verlas todas es el mapa.
+ */
+const ESTACIONES_EN_LA_FICHA = 5;
 
 /** Lo que se muestra cuando el piloto no pertenece a ninguna. */
 const INDEPENDIENTE: Corporacion = {
@@ -38,6 +56,7 @@ const INDEPENDIENTE: Corporacion = {
 	code: '',
 	kind: '',
 	kindIcon: 'users',
+	origin: '',
 	faction: '',
 	factionCode: '',
 	description:
@@ -45,8 +64,52 @@ const INDEPENDIENTE: Corporacion = {
 		'no le debés explicaciones a nadie.',
 	members: '',
 	stations: [],
-	agents: []
+	moreStations: 0,
+	stationCount: '',
+	agentCount: '',
+	reputation: null
 };
+
+/**
+ * La escalera del piloto con una corporación, escrita para la pantalla.
+ *
+ * Las **dos** escaleras juntas, y no sólo la de la corporación: la de la bandera
+ * abre ese mismo nivel en todas las que la llevan, así que mostrar una sin la
+ * otra dejaría sin explicación a un agente que atiende cuando no debería.
+ */
+export function buildReputacion(
+	corporationRaw: number,
+	factionRaw: number,
+	factionName: string
+): ReputacionCorporacion {
+	const escalon = tierForRaw(corporationRaw);
+	const siguiente = TIERS.find((uno) => uno.level === escalon.level + 1);
+
+	const ladder: EscalonReputacion[] = TIERS.map((uno) => ({
+		name: uno.name,
+		at: uno.reputation,
+		level: roman(uno.level),
+		reached: corporationRaw >= uno.reputation * REPUTATION_SCALE
+	}));
+
+	return {
+		value: reputationLabel(corporationRaw),
+		percent: corporationRaw / REPUTATION_SCALE,
+		tier: escalon.name,
+		reached: escalon.level,
+		tiers: TIERS.length,
+		// Lo que falta y **para qué**: un umbral sin su premio es un número más.
+		next: siguiente
+			? `${siguiente.name} a ${reputationLabel(siguiente.reputation * REPUTATION_SCALE)} · abre agentes de nivel ${roman(siguiente.level)}`
+			: '',
+		faction: factionName,
+		factionValue: reputationLabel(factionRaw),
+		factionPercent: factionRaw / REPUTATION_SCALE,
+		factionTier: tierForRaw(factionRaw).name,
+		level: roman(effectiveMissionLevel(corporationRaw, factionRaw)),
+		ladder
+	};
+}
 
 /**
  * La corporación del piloto, con lo que hace falta para reconocerla.
@@ -101,33 +164,26 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 		.filter((una) => una.name !== '')
 		.sort((a, b) => a.name.localeCompare(b.name, 'es'));
 
-	// Dónde tiene gente sentada, que no es lo mismo que dónde opera: una
-	// corporación puede repartir trabajo desde una estación ajena.
-	const suyosAgentes = db.select().from(agent).where(eq(agent.corporationId, suya.id)).all();
-	const puestosPorId = new Map(
-		db
-			.select()
-			.from(station)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
-
-	const agents = suyosAgentes
-		.map((uno) => {
-			const puesto = puestosPorId.get(uno.stationId);
-			const cuerpo = puesto ? cuerpos.get(puesto.bodyId) : undefined;
-			return {
-				code: uno.code,
-				name: uno.name,
-				station: cuerpo?.name ?? '',
-				system: cuerpo ? (sistemas.get(cuerpo.systemId)?.name ?? '') : ''
-			};
-		})
-		.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+	// Cuánta gente reparte trabajo. **Sólo la cuenta**: la lista con sus columnas
+	// —nivel, clase, si te atiende— vive en su propia pestaña, que es donde se la
+	// puede recortar y ordenar.
+	const cuantosAgentes = db
+		.select()
+		.from(agent)
+		.where(eq(agent.corporationId, suya.id))
+		.all().length;
 
 	const cuantos = db.select().from(pilot).where(eq(pilot.corporationId, suya.id)).all().length;
 
 	const bandera = FACTIONS[suya.faction as keyof typeof FACTIONS];
+
+	// Las dos escaleras, de la misma consulta que ya trae todo lo del piloto.
+	const suyas = pilotStandings(db, row.id);
+	const reputation = buildReputacion(
+		suyas.corporations[suya.code] ?? 0,
+		suya.faction ? (suyas.factions[suya.faction] ?? 0) : 0,
+		bandera?.name ?? 'Sin bandera'
+	);
 
 	return {
 		belongs: true,
@@ -135,11 +191,22 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 		code: suya.code,
 		kind: corporationKindLabel(suya.kind as CorporationKind),
 		kindIcon: corporationKindIcon(suya.kind as CorporationKind),
+		// Del catálogo y no de una columna: las del mundo son exactamente las que
+		// están ahí. El día que se puedan fundar, las de jugadores no van a estar y
+		// la cuenta sigue dando sin migrar nada.
+		origin: getCorporation(suya.code) ? 'NPC' : 'De jugadores',
 		faction: bandera?.name ?? 'Sin bandera',
 		factionCode: suya.faction,
 		description: suya.description,
 		members: cuantos === 1 ? '1 piloto' : `${cuantos} pilotos`,
-		stations,
-		agents
+		// **Una muestra y no la lista entera.** Una corporación grande puede operar
+		// cientos de puestos, y el panel de una ficha no es el lugar para leerlos: lo
+		// que contesta acá es de qué tamaño es y por dónde anda. El resto lo contesta
+		// el mapa, que para eso ya recorta por corporación.
+		stations: stations.slice(0, ESTACIONES_EN_LA_FICHA),
+		moreStations: Math.max(0, stations.length - ESTACIONES_EN_LA_FICHA),
+		stationCount: stations.length === 1 ? '1 estación' : `${stations.length} estaciones`,
+		agentCount: cuantosAgentes === 1 ? '1 agente' : `${cuantosAgentes} agentes`,
+		reputation
 	};
 }

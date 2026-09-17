@@ -23,7 +23,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import { ACTION_KINDS } from '$lib/game/actions';
 import { CONTAINER_KINDS } from '$lib/game/items';
-import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
+import { MISSION_KINDS } from '$lib/game/agents';
 import { BODY_KINDS, GATE_BEARINGS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
 import { CORPORATION_KINDS } from '$lib/game/corporations';
 import { SANCTION_KINDS } from '$lib/sanctions';
@@ -494,9 +494,7 @@ export const agent = sqliteTable(
 		 */
 		level: integer('level').notNull().default(1),
 		missionKind: text('mission_kind', { enum: MISSION_KINDS }).notNull(),
-		description: text('description').notNull().default(''),
-		/** Con qué fondo de retratos se lo dibuja. Ver static/portraits/LEEME.md. */
-		appearance: text('appearance', { enum: APPEARANCES }).notNull().default('x')
+		description: text('description').notNull().default('')
 	},
 	(table) => [
 		uniqueIndex('agent_code_idx').on(table.code),
@@ -1412,6 +1410,87 @@ export const auditEvent = sqliteTable(
 	]
 );
 
+// --- La reputación -----------------------------------------------------------
+//
+// Dos tablas y no una, como los créditos: el saldo que se lee todo el tiempo y
+// el libro que lo explica. `ARCHITECTURE.md` §4 vale igual acá —la reputación se
+// gana y se pierde como cualquier otra cosa de valor—, así que el número no se
+// edita: es la suma de sus asientos.
+//
+// **Una sola tabla para los dos casos**, con `subject_kind` diciendo si es una
+// corporación o una facción. La pregunta es la misma para los dos —«cuánto
+// confía esto en mí»— y las columnas serían idénticas; los dos libros de la
+// billetera están separados porque ahí las preguntas eran distintas.
+//
+// Por **código** y no por identificador: las facciones no tienen tabla, viven en
+// `src/lib/game/factions.ts`. Una columna que a veces es foránea y a veces no
+// sería peor que ninguna.
+
+/**
+ * Lo que una corporación o una facción piensa de un piloto, en milésimas.
+ *
+ * Una fila por piloto y sujeto, y sólo de los que alguna vez movieron algo: **sin
+ * fila es cero**, que es donde arranca todo el mundo. Nadie nace con cuarenta
+ * filas en cero, una por cada corporación del sector.
+ */
+export const standing = sqliteTable(
+	'standing',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		/** `corporation` o `faction`. */
+		subjectKind: text('subject_kind').notNull(),
+		/** El código de la corporación o de la facción. */
+		subjectCode: text('subject_code').notNull(),
+		/** En milésimas de punto: 12.400 son 12,40. Nunca con coma flotante. */
+		value: integer('value').notNull().default(0),
+		updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	// Una fila por piloto y sujeto: sin la restricción, un duplicado partiría la
+	// reputación en dos y se descubriría tarde, igual que con el pozo de la rama.
+	(table) => [uniqueIndex('standing_unico').on(table.pilotId, table.subjectKind, table.subjectCode)]
+);
+
+/**
+ * El libro mayor de la reputación: un asiento por cada cosa que la movió.
+ *
+ * Es lo que el jugador lee como su historia con alguien —cuándo empezó a caerle
+ * bien y por qué—, y lo que permite auditar un saldo que no cierra. Igual que el
+ * de créditos, es de **sólo agregado**: nada se edita ni se borra.
+ */
+export const standingEntry = sqliteTable(
+	'standing_entry',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		pilotId: integer('pilot_id')
+			.notNull()
+			.references(() => pilot.id),
+		subjectKind: text('subject_kind').notNull(),
+		subjectCode: text('subject_code').notNull(),
+		/** Con signo, en milésimas: positivo lo que sube, negativo lo que baja. */
+		amount: integer('amount').notNull(),
+		/** El valor que dejó este asiento. */
+		valueAfter: integer('value_after').notNull(),
+		/** Por qué se movió: `mission`, `adjustment`, y las que vengan. */
+		kind: text('kind').notNull(),
+		memo: text('memo').notNull().default(''),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
+	},
+	(table) => [
+		// El histórico completo del piloto, que es la pantalla.
+		index('standing_entry_pilot_idx').on(table.pilotId, table.createdAt),
+		// Y el de una corporación sola, que es la pestaña de su ficha.
+		index('standing_entry_sujeto_idx').on(
+			table.pilotId,
+			table.subjectKind,
+			table.subjectCode,
+			table.createdAt
+		)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -1423,6 +1502,8 @@ export type Constellation = typeof constellation.$inferSelect;
 export type System = typeof system.$inferSelect;
 export type Body = typeof body.$inferSelect;
 export type Corporation = typeof corporation.$inferSelect;
+export type Standing = typeof standing.$inferSelect;
+export type StandingEntry = typeof standingEntry.$inferSelect;
 export type Station = typeof station.$inferSelect;
 export type StationService = typeof stationService.$inferSelect;
 export type Gate = typeof gate.$inferSelect;

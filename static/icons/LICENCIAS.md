@@ -8,11 +8,12 @@ internet.
 - **Qué hay acá**: sólo los íconos que la interfaz usa, en los seis pesos
   (`thin`, `light`, `regular`, `bold`, `fill`, `duotone`), organizados por peso.
 - **Cómo se usan**: nunca como `<img>`, sino con `mask` en
-  `vaxav/components/icons.py`, para que tomen el color del texto que los rodea y
-  acompañen el modo claro y el oscuro.
+  `src/lib/components/Icon.svelte`, para que tomen el color del texto que los
+  rodea en lugar de traer el suyo.
 
 Para sumar un ícono, descargar los seis pesos desde
 `https://raw.githubusercontent.com/phosphor-icons/core/main/assets/<peso>/<nombre>[-<peso>].svg`
-y guardarlos como `assets/icons/<peso>/<nombre>.svg` — sin el sufijo del peso en
-el nombre, porque ya lo dice la carpeta. Los tests de `tests/test_icons.py`
-verifican que no falte ninguno.
+y guardarlos como `static/icons/<peso>/<nombre>.svg` — sin el sufijo del peso en
+el nombre, porque ya lo dice la carpeta— y sumarlo a `ICON_NAMES` en
+`src/lib/icons.ts`. `src/lib/icons.test.ts` verifica que no falte ninguno de los
+seis pesos y que no sobre ninguno que nadie use.

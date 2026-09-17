@@ -443,12 +443,18 @@ Lo que el trazo codifica:
 
 | Se ve                              | Quiere decir                                         |
 | ---------------------------------- | ---------------------------------------------------- |
+| Línea cian con marcas corriendo    | El **tramo que estás cruzando** ahora mismo          |
 | Línea llena                        | Una puerta que sigue la grilla                       |
 | Línea gruesa, naranja claro        | Una **salida del sistema elegido**                   |
-| Línea punteada, en cian            | Un **atajo**: sus puntas no son vecinas              |
+| Línea punteada, en blanco          | Un **atajo**: sus puntas no son vecinas              |
 | Línea roja con un tajo al medio    | El **paso está cerrado**                             |
 | Un brazo corto amarillo            | Una **puerta sin conectar**, saliendo hacia su rumbo |
 | Un anillo rojo alrededor del punto | El sistema **no llega** hasta la semilla             |
+
+El primero es el único que se mueve, y es a propósito: en el mapa el color dice
+**cuál** y el movimiento dice **cuándo**. Nada más en el lienzo corre, así que la
+marquesina no tiene con qué confundirse —y por eso el atajo, que antes era cian
+punteado, pasó al blanco: el cian quedó para vos, dónde estás y adónde vas—.
 
 Los tres últimos son trabajo a medio hacer que sólo se ve mirando el conjunto: el
 contador de arriba dice **cuántos** hay, el mapa dice **dónde**.
@@ -633,9 +639,21 @@ Qué cambia, y por qué:
   **pintan**, y la diferencia no es un descuido —pintadas dibujan el terreno y se
   leen sin saber cómo se llaman; filtrar por ellas pide conocer el nombre de
   antemano—.
+- **Y por corporación**, que es la otra pregunta que el mapa puede contestar:
+  dónde tiene puestos una. No la hace el que está mirando el mapa —nadie abre la
+  galaxia pensando en una corporación—, la trae el botón «ver en el mapa» de la
+  pestaña Corporación, que es donde la pregunta ya está hecha. El desplegable
+  ofrece **sólo las que operan algo**: una que no tiene dónde aparecer apagaría la
+  galaxia entera para no mostrar nada.
 - **Sin tabla de sistemas.** Hoy sería una lista de nombres sin nada que decidir.
   Se gana el lugar el día que haya mercados por sistema o servicios que valgan un
   viaje, que es cuando va a haber algo que ordenar.
+
+**Parado en una puerta, la pantalla es el salto.** No se dibuja la ficha del
+lugar: una puerta no es un sitio donde se hace algo, y describirla como a
+cualquier cuerpo —tipo, órbita, distancia al sol— contesta una pregunta que nadie
+hizo mientras tapa la que sí. Lo que hay es adónde lleva, cuánto tarda, cuánto
+cuesta y el botón de cruzar.
 
 **Desde el mapa no se salta.** Cruzar una puerta exige estar parado en ella, así
 que lo que el mapa ofrece es **viajar hasta la puerta** —una orden que ya existe—

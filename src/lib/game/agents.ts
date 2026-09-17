@@ -34,8 +34,6 @@ export type MissionKind = (typeof MISSION_KINDS)[number];
  * `x` no es un cajón de sastre: es para quien no entra en los otros dos, y
  * reparte del fondo entero.
  */
-export const APPEARANCES = ['m', 'f', 'x'] as const;
-export type Appearance = (typeof APPEARANCES)[number];
 
 /**
  * Un agente del mundo, tal como se lo siembra.
@@ -53,5 +51,4 @@ export interface AgentBlueprint {
 	readonly missionKind: MissionKind;
 	readonly description?: string;
 	/** De qué fondo de retratos sale su cara. Ver static/portraits/LEEME.md. */
-	readonly appearance?: Appearance;
 }

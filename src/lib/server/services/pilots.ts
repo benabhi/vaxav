@@ -38,7 +38,6 @@ import { moveItem, shipContainer } from './containers';
 import { credit } from './wallet';
 import { createStarterShip, saveFit, shipFit, shipHull } from './ships';
 import { UniverseError, requireStation } from './universe';
-import { deletePortrait } from './portraits';
 import { record } from './events';
 import { ADMIN_ROLE, adminCount, rolesOf } from './roles';
 
@@ -463,11 +462,6 @@ export async function deleteAccount(db: Db, row: Pilot, password: string): Promi
 			payload: { actor: row.callsign, callsign: row.callsign, faction: row.faction }
 		});
 	});
-
-	// El retrato es un archivo y no una fila, así que sale después de que la
-	// transacción cerró: si el borrado se hubiera deshecho, la cuenta seguiría
-	// existiendo y sería una lástima haberle tirado la foto.
-	deletePortrait(row.id);
 }
 
 /**

@@ -375,7 +375,8 @@ cosas que necesitan cara y nadie va a dibujarles una: cuarenta corporaciones
 hoy, cientos mañana, y un piloto que todavía no subió foto.
 
 Lo que hay que saber para usarlo: **la familia decide la silueta entera**
-—`corporacion` es un panal hexagonal, `piloto` un disco de casillas cuadradas— y
+—`corporacion` es un panal hexagonal, `piloto` un disco de casillas cuadradas y
+`agente` un triángulo— y
 el tamaño es una medida de CSS que vale para el ancho y el alto, así que nunca se
 deforma. El porqué de cada decisión está en
 [corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una).
@@ -418,16 +419,16 @@ La cámara vive en **la pantalla** y no en el marco ni en el mapa: agrandar dibu
 la otra versión y eso vuelve a montar el lienzo, así que con la vista adentro cada
 expansión volvería al encuadre inicial.
 
-### La credencial, y el retrato del piloto
+### La credencial, y el sello del piloto
 
 La pantalla de Información es **una credencial**, y es la figura de esa pantalla
 igual que el anillo lo es de Nave. Lo que la hace reconocible antes de leer una
-palabra son cuatro cosas: una banda de cabecera con el número de serie, una foto
-de proporción de carnet pegada al borde que ocupa el alto entero de la fila,
-escuadras de visor en sus esquinas, y el escudo de la facción como marca de agua
-detrás de las lecturas —detrás de **las lecturas** y no de la tarjeta entera,
-porque al fondo se le metía debajo al hexágono, y una figura que informa por su
-forma no puede tener otra encima—.
+palabra son cuatro cosas: una banda de cabecera con el número de serie, el sello
+del piloto en un marco cuadrado con escuadras de visor en las esquinas, el índice
+debajo, y el escudo de la facción como marca de agua detrás de las lecturas
+—detrás de **las lecturas** y no de la tarjeta entera, porque al fondo se le metía
+debajo al hexágono, y una figura que informa por su forma no puede tener otra
+encima—.
 
 El hexágono de ramas va **adentro**, al otro lado de los datos. Una credencial
 dice quién sos, y en un juego de progresión eso no es el nombre: es la silueta de
@@ -444,44 +445,27 @@ Es una regla, no una excepción: **lo que se agota se muestra donde se lo va a
 extrañar**, no sólo en su ficha. El combustible aparece en la nave, en la
 credencial, junto al botón de saltar y en el informe del viaje.
 
-**El retrato:**
+#### No hay foto, hay sello
 
-| Qué           | Cómo                                 |
-| ------------- | ------------------------------------ |
-| Tamaño        | 480×640, proporción de carnet        |
-| Formato       | WebP, siempre                        |
-| Peso máximo   | 512 kB                               |
-| Dónde vive    | `data/retratos/<id del piloto>.webp` |
-| Cómo se sirve | `/retratos/<id>?v=<marca de tiempo>` |
+El piloto **no sube una imagen**. La tuvo, y resolvía menos de lo que costaba: el
+que no subía ninguna quedaba con una silueta gris igual a las otras mil, el que
+subía una traía una imagen de afuera al medio de un HUD que es todo trazo fino, y
+el proyecto cargaba con una ruta, un servicio, un recortador en el navegador y
+archivos de estado en `data/`.
 
-Tres decisiones que lo ordenan:
+El sello sale del distintivo, así que **desde el primer segundo la credencial
+muestra algo que es suyo y de nadie más**, y se ve igual acá, en el listado de
+miembros y en cualquier lista donde el piloto aparezca. No se guarda en ninguna
+parte: se recalcula.
 
-1. **El recorte y la compresión pasan en el navegador.** Lo que llega al servidor
-   ya tiene la forma y el peso definitivos, así que no hace falta una librería de
-   imágenes del lado del servidor —que acá sería una dependencia nativa por una
-   sola pantalla— y nadie espera a que se suban ocho megas para que le digan que
-   no. El servidor **igual valida** tipo, peso y firma del archivo, porque el
-   navegador es del jugador y un pedido se puede armar a mano.
-2. **Se guarda ya recortado**, no entero. Si cada pantalla lo recortara al
-   dibujarlo, sería una cara en la credencial y otra en una lista.
-3. **Vive en `data/` y no en `static/`.** `static/` es contenido del proyecto:
-   entra al repositorio y se rehace en cada despliegue. Esto es estado de la
-   partida, como la base, y por eso va al lado. El precio es que SvelteKit no lo
-   sirve solo; son unas pocas líneas de ruta y a cambio queda claro qué es
-   contenido y qué es partida. Los retratos de los **agentes** son contenido y
-   siguen en `static/portraits/`.
+El marco es **cuadrado y no de carnet**. La proporción alta venía de la foto; con
+un sello cuadrado dejaba dos franjas muertas arriba y abajo, y en un teléfono
+—donde la columna va arriba de todo y a lo ancho— eso era media pantalla de nada.
+El alto que sobra lo ocupa el índice, que es lo que corresponde: el sello dice
+quién sos y el índice qué tan lejos llegaste.
 
-El nombre del archivo es el id y nada más: la carpeta ya es el espacio de
-nombres. Que esté atado a la cuenta es lo que hace que subir uno nuevo reemplace
-al anterior sin dejar basura, y que dar de baja una cuenta sea borrar un archivo.
-
-Se cambia **desde la propia foto y en ningún otro lado**: ahí el resultado está a
-la vista al tamaño exacto en que va a quedar. Una chapita de cámara siempre
-visible dice que se puede tocar —un disparador que sólo aparece al pasar el mouse
-es un disparador que nadie descubre—, el velo con Cambiar y Quitar aparece al
-señalar o con el foco del teclado, y mientras sube se queda encendido con un aro
-girando: una subida sin señal parece una que no pasó, y el jugador vuelve a
-apretar.
+Y lleva **su «?»**. Un dibujo que aparece solo y no se puede tocar necesita
+explicar de dónde salió; sin eso el jugador se queda buscando dónde cambiarlo.
 
 ### La ayuda que dice qué habilidad mueve un número
 

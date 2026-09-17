@@ -15,6 +15,7 @@ import { getItem, type Item, type ItemKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
 import { startingKit, startingLevels, type ProfessionCode } from '$lib/game/professions';
 import { MAX_LEVEL } from '$lib/game/progression';
+import { REPUTATION_SCALE } from '$lib/game/reputation';
 import { getSkill, type Requirement, type SkillFamily } from '$lib/game/skills';
 import {
 	SERVICES,
@@ -495,6 +496,17 @@ const ACTION_NOUNS: Record<ActionKind, string> = {
 /** El nombre de una acción terminada, o algo genérico si es nueva. */
 export function actionNoun(kind: string): string {
 	return ACTION_NOUNS[kind as ActionKind] ?? 'Acción';
+}
+
+/**
+ * Una reputación guardada, escrita como la lee el jugador: `12,40`.
+ *
+ * Dos decimales siempre, aunque sean ceros: una columna de números que a veces
+ * tiene coma y a veces no deja de leerse como una columna. Adentro son milésimas
+ * enteras —ver `game/reputation.ts`— y acá recién se vuelven un número con coma.
+ */
+export function reputationLabel(raw: number): string {
+	return (raw / REPUTATION_SCALE).toFixed(2).replace('.', ',');
 }
 
 /** Un entero grande con separador de miles, como el resto del HUD. */

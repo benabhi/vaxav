@@ -105,7 +105,7 @@
 		{@const carga = report.loot}
 		<div class="flex w-full flex-col gap-2 border-t border-border-soft pt-2">
 			<div class="flex w-full items-center gap-3">
-				<Label>A la bodega</Label>
+				<Label>Bodega</Label>
 				<div class="grow"></div>
 				<span class="font-mono text-[0.72rem] text-data">{carga.value} CR</span>
 			</div>

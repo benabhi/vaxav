@@ -74,6 +74,7 @@ export const ICON_NAMES = [
 	'rocket-launch',
 	'rocket',
 	'scales',
+	'share-network',
 	'shield-check',
 	'shield-chevron',
 	'shield',

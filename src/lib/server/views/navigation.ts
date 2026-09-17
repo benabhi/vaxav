@@ -10,7 +10,6 @@ import { eq } from 'drizzle-orm';
 import { body, gate, system as systemTable, type Body, type Pilot } from '../db/schema';
 import { railsFor } from '$lib/tree';
 import type { Db } from '../db/types';
-import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
 import { beltDeposits, miningPlan, miningSource } from '../services/mining';
 import { asteroidsAt } from '../services/asteroids';
@@ -40,7 +39,8 @@ import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
-import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
+import { canBeHired, requiredReputation } from '$lib/game/reputation';
+import { NO_STANDINGS, pilotStandings, type PilotStandings } from '../services/reputation';
 import {
 	SECURITY_LEVELS,
 	SERVICES,
@@ -92,12 +92,14 @@ import type {
 	Ubicacion
 } from '$lib/tipos';
 
-/**
- * La reputación del piloto con cada facción todavía no se guarda: la escriben
- * las misiones, que llegan en F9. Hasta entonces todos empiezan de cero, y la
- * pantalla muestra qué agentes se abren con eso y cuáles no.
- */
-export const PILOT_REPUTATION = MIN_REPUTATION;
+/** En qué sistema está ese cuerpo, por código. Vacío si no se lo encuentra. */
+function sistemaDelCuerpo(db: Db, bodyId: number): string | null {
+	const cuerpo = db.select().from(body).where(eq(body.id, bodyId)).get();
+	if (!cuerpo) return null;
+	return (
+		db.select().from(systemTable).where(eq(systemTable.id, cuerpo.systemId)).get()?.code ?? null
+	);
+}
 
 /** Nombre de la facción dueña, o el rótulo de las que no tienen bandera. */
 function factionName(code: string): string {
@@ -131,12 +133,15 @@ export function buildModuleTiles(
  */
 export function buildAgentRows(
 	agents: readonly AgentInfo[],
-	reputation: number = PILOT_REPUTATION
+	reputation: PilotStandings = NO_STANDINGS
 ): readonly FilaAgente[] {
 	return agents.map(({ agent, corporation }) => {
 		const faction = corporation.faction;
 		const name = faction ? factionName(faction) : 'Sin bandera';
 		const needed = requiredReputation(agent.level, faction);
+		// Las dos escaleras que pueden abrirlo: la suya y la de su bandera.
+		const suya = reputation.corporations[corporation.code] ?? 0;
+		const deLaBandera = faction ? (reputation.factions[faction] ?? 0) : 0;
 		return {
 			code: agent.code,
 			name: agent.name,
@@ -144,11 +149,12 @@ export function buildAgentRows(
 			faction: name,
 			kind: missionKindLabel(agent.missionKind),
 			kindIcon: missionKindIcon(agent.missionKind),
-			portrait: portraitFor(agent.code, agent.appearance),
 			level: roman(agent.level),
 			description: agent.description,
-			open: canBeHired(agent.level, faction, reputation),
-			requirement: `Requiere ${needed} de reputación con ${name}`
+			open: canBeHired(agent.level, faction, suya, deLaBandera),
+			// Las dos puertas, dichas: con la corporación alcanza para los suyos, y
+			// con la bandera se abren los de todas las corporaciones que la llevan.
+			requirement: `Requiere ${needed} de reputación con ${corporation.name} o con ${name}`
 		};
 	});
 }
@@ -321,7 +327,9 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		detail.body.kind === 'belt'
 			? buildBelt(db, row, ahora.orderBlocked)
 			: { field: SIN_CAMPO, asteroids: [] };
-	const agents = isStation ? buildAgentRows(detail.agents) : [];
+	// Lo que las corporaciones de esta estación piensan del piloto, de una sola
+	// consulta: es lo que decide qué agente atiende y qué agente todavía no.
+	const agents = isStation ? buildAgentRows(detail.agents, pilotStandings(db, row.id)) : [];
 	const abiertos = agents.filter((agent) => agent.open).length;
 
 	return {
@@ -855,6 +863,7 @@ export function readGalaxyQuery(params: URLSearchParams): ConsultaGalaxia {
 		search: (params.get('buscar') ?? '').trim().slice(0, 60),
 		faction: params.get('faccion') ?? '',
 		region: params.get('region') ?? '',
+		corporation: params.get('corporacion') ?? '',
 		security: SECURITY_LEVELS.includes(seguridad as SecurityLevel) ? seguridad : '',
 		service: SERVICE_ORDER.includes(servicio as StationServiceKind) ? servicio : '',
 		paint: GALAXY_PAINTS.includes(pintar as (typeof GALAXY_PAINTS)[number]) ? pintar : '',
@@ -872,8 +881,12 @@ export function readGalaxyQuery(params: URLSearchParams): ConsultaGalaxia {
  * desplegable en la pantalla, sin tocar nada más.
  *
  * Son **los del piloto y no los del constructor**: buscar, bandera, región,
- * cuánta ley hay y qué servicios ofrece. Ninguno pregunta por algo que no se
- * pueda mirar desde la cabina.
+ * cuánta ley hay, qué servicios ofrece y quién tiene puesto ahí. Ninguno
+ * pregunta por algo que no se pueda mirar desde la cabina.
+ *
+ * El de la corporación entra por la puerta de al lado: lo pone el botón «ver en
+ * el mapa» de la pestaña Corporación, que es el único lugar donde la pregunta
+ * «¿dónde está la mía?» ya está hecha.
  */
 const GALAXY_FILTERS: readonly ((nodo: NodoGalaxia, query: ConsultaGalaxia) => boolean)[] = [
 	(nodo, query) =>
@@ -884,7 +897,8 @@ const GALAXY_FILTERS: readonly ((nodo: NodoGalaxia, query: ConsultaGalaxia) => b
 		(query.faction === FREE_SPACE ? nodo.faction === '' : nodo.faction === query.faction),
 	(nodo, query) => !query.region || nodo.region === query.region,
 	(nodo, query) => !query.security || securityLevel(nodo.security) === query.security,
-	(nodo, query) => !query.service || nodo.services.includes(query.service)
+	(nodo, query) => !query.service || nodo.services.includes(query.service),
+	(nodo, query) => !query.corporation || nodo.corporations.includes(query.corporation)
 ];
 
 /**
@@ -990,6 +1004,13 @@ export function buildGalaxia(
 
 	const exits = cuerpo ? buildSalidas(db, row, cuerpo) : [];
 
+	// El salto en curso, para que el mapa pueda dibujar por dónde va la nave. Sólo
+	// un salto: un viaje adentro del sistema no cruza ninguna línea del mapa.
+	const orden = currentAction(db, row.id);
+	const salto = orden?.kind === JUMP_KIND ? orden : null;
+	const desde = salto?.originBodyId ? sistemaDelCuerpo(db, salto.originBodyId) : null;
+	const hasta = salto?.destinationBodyId ? sistemaDelCuerpo(db, salto.destinationBodyId) : null;
+
 	const pilot: PilotoEnElMapa = {
 		system: here?.code ?? '',
 		// Los saltos se cuentan sobre el grafo de puertas abiertas: «a dos saltos»
@@ -997,10 +1018,24 @@ export function buildGalaxia(
 		// plano. Lo que no aparece **no se puede alcanzar**, que no es lo mismo que
 		// estar lejos.
 		jumps: here ? Object.fromEntries(hopsFrom(neighbourhood(map), here.code)) : {},
-		reach: Object.fromEntries(exits.map((salida) => [salida.code, salida.blocked]))
+		reach: Object.fromEntries(exits.map((salida) => [salida.code, salida.blocked])),
+		route:
+			salto && desde && hasta && desde !== hasta
+				? {
+						from: desde,
+						to: hasta,
+						startedAt: salto.startedAt.getTime(),
+						durationSeconds: salto.durationSeconds
+					}
+				: null
 	};
 
 	const pasan = map.systems.filter((nodo) => GALAXY_FILTERS.every((cumple) => cumple(nodo, query)));
+
+	// Una sola lectura de la situación para los dos verbos: los dos preguntan lo
+	// mismo y consultarla por separado sería pedirle a la base tres veces lo que ya
+	// contestó.
+	const ahora = situation(db, row);
 
 	return {
 		map,
@@ -1024,7 +1059,26 @@ export function buildGalaxia(
 			[{ grant: 'thrust', label: 'Propulsores' }],
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(shipReadout(db, row)?.speed ?? 0)} ud/h` }],
-			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
+			ahora.orderBlocked ? [ahora.orderBlocked] : []
+		),
+		// Y la de **saltar**, para cuando ya estás parado en la puerta. Desde acá no
+		// se cruza —el mapa manda a Ubicación, que es la pantalla del lugar— pero
+		// con una orden en curso aquella pantalla muestra el viaje y no la puerta:
+		// el camino no lleva a ninguna parte y hay que decirlo acá.
+		jumpSource: fuenteDeVerbo(
+			db,
+			row,
+			'Saltar',
+			[
+				{ grant: 'jumpPower', label: 'Motor de salto' },
+				{ grant: 'fuel', label: 'Tanque' }
+			],
+			'jump_range',
+			[{ label: 'Alcance', value: lightYears(shipReadout(db, row)?.jumpRange ?? 0) }],
+			// La orden en curso primero: con la nave en camino da igual que falte
+			// combustible, y «ya hay una orden» es lo que hay que leer para saber qué
+			// hacer. Es el mismo criterio que el del cinturón.
+			[ahora.orderBlocked, exits.find((una) => una.standingThere)?.blocked ?? ''].filter(Boolean)
 		)
 	};
 }

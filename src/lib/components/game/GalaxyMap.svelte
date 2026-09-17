@@ -12,9 +12,12 @@
 	resolver algo que entra en cincuenta líneas. El día que la galaxia tenga diez
 	mil sistemas, la capa de dibujo ya está aislada y se cambia sin tocar el resto.
 
-	**No hay bucle de cuadros.** Se redibuja cuando algo cambia y nada más. Vaxav
-	es un juego de esperar y esta pestaña va a quedar abierta horas: un `rAF`
-	permanente sería una pantalla que consume batería para no mostrar nada nuevo.
+	**No hay bucle de cuadros, salvo mientras la nave cruza un tramo.** Se redibuja
+	cuando algo cambia y nada más: Vaxav es un juego de esperar y esta pestaña va a
+	quedar abierta horas, así que un `rAF` permanente sería una pantalla que gasta
+	batería para no mostrar nada nuevo. Durante un salto **sí** hay algo nuevo cada
+	cuadro —la línea que se completa y las marcas que corren hacia el destino—, y
+	ahí, y sólo ahí, el bucle se enciende.
 
 	Los colores salen de las variables del tema y no de literales, así que el mapa
 	sigue a la paleta sin que haya que acordarse de él.
@@ -177,6 +180,62 @@
 	let viewport = $state<Punto>({ x: 0, y: 0 });
 	/** Cuánto agrandó el CSS la interfaz. Es 1 en un portátil. */
 	let escala = $state(1);
+
+	/**
+	 * El reloj del tramo en curso.
+	 *
+	 * **Late sólo mientras hay un salto**, y a un cuadro por vez: es la excepción
+	 * declarada arriba. Con un tic por segundo la línea se completaba a los saltos
+	 * y las marcas del guión no podían correr —una marquesina a un cuadro por
+	 * segundo no es una marquesina, es un parpadeo—, y el movimiento es justamente
+	 * lo que dice que hay un viaje en curso.
+	 *
+	 * `requestAnimationFrame` y no un temporizador porque **el navegador lo frena
+	 * solo** cuando la pestaña se va al fondo: un viaje de diez minutos en una
+	 * pestaña olvidada no dibuja un solo cuadro. Y cuando no hay tramo el bucle no
+	 * existe, así que el mapa vuelve a redibujarse sólo cuando algo cambia.
+	 */
+	let ahora = $state(Date.now());
+
+	$effect(() => {
+		const ruta = pilot?.route;
+		if (!ruta) return;
+		let pedido = requestAnimationFrame(function latir() {
+			ahora = Date.now();
+			// **Y se apaga solo al llegar.** El dato de la ruta lo trae el servidor, así
+			// que sigue ahí hasta que la página se entere de que la nave llegó: sin
+			// esto el bucle se quedaría dibujando el mismo cuadro para siempre.
+			if (ahora - ruta.startedAt >= ruta.durationSeconds * 1000) return;
+			pedido = requestAnimationFrame(latir);
+		});
+		return () => cancelAnimationFrame(pedido);
+	});
+
+	/** Qué fracción del tramo lleva recorrida, de cero a uno. */
+	let recorrido = $derived.by(() => {
+		const ruta = pilot?.route;
+		if (!ruta || ruta.durationSeconds <= 0) return 0;
+		const pasado = (ahora - ruta.startedAt) / 1000;
+		return Math.min(1, Math.max(0, pasado / ruta.durationSeconds));
+	});
+
+	/**
+	 * El guión del tramo en curso, y a qué velocidad corre.
+	 *
+	 * La marquesina es lo que convierte una línea resaltada en **un viaje**: la
+	 * línea llena de atrás dice cuánto llevas y las marcas que corren dicen que
+	 * eso se está moviendo ahora, que es la única cosa del mapa que está pasando.
+	 * Nada más en el lienzo se mueve, y por eso el movimiento alcanza para
+	 * distinguirlo sin gastar un color.
+	 *
+	 * `GUION` se escribe entero porque la corrida tiene que dar la vuelta justo en
+	 * su largo: con cualquier otro módulo la marquesina pega un salto por vuelta.
+	 */
+	const GUION = [7, 6];
+	const LARGO_GUION = GUION[0] + GUION[1];
+	/** Cuántas unidades del HUD corre el guión por segundo. */
+	const CORRIDA_POR_SEGUNDO = 26;
+	let corrida = $derived(((ahora / 1000) * CORRIDA_POR_SEGUNDO) % LARGO_GUION);
 	/**
 	 * La cámara propia, para cuando nadie la sostiene desde afuera.
 	 *
@@ -225,7 +284,20 @@
 	 * ir último o queda tapado por la maraña de líneas normales, que es justo lo que
 	 * se estaba tratando de leer. Va de menos a más importante.
 	 */
+	/** El tramo que la nave está cruzando ahora mismo. */
+	function esLaRuta(enlace: EnlaceGalaxia): boolean {
+		const ruta = pilot?.route;
+		if (!ruta) return false;
+		return (
+			(enlace.from === ruta.from && enlace.to === ruta.to) ||
+			(enlace.from === ruta.to && enlace.to === ruta.from)
+		);
+	}
+
 	function rango(enlace: EnlaceGalaxia): number {
+		// El tramo en curso va último de todos: es lo único del mapa que está
+		// pasando ahora, y tapado por la maraña no sirve de nada.
+		if (esLaRuta(enlace)) return 3;
 		if (esMia(enlace)) return 2;
 		if (esDelElegido(enlace)) return 1;
 		return 0;
@@ -331,11 +403,14 @@
 			const a = toScreen(desde, camara, viewport);
 			const b = toScreen(hasta, camara, viewport);
 
-			ctx.beginPath();
-			ctx.moveTo(a.x, a.y);
-			ctx.lineTo(b.x, b.y);
-			// **El atajo se dibuja punteado.** No es un error: es un pasaje que se
-			// saltea el camino largo, y verlo distinto es toda la gracia de marcarlo.
+			// **El atajo se dibuja punteado y en blanco.** No es un error: es un pasaje
+			// que se saltea el camino largo, y verlo distinto es toda la gracia de
+			// marcarlo. Era cian y dejó de serlo el día que hubo una ruta en curso:
+			// **el cian pasó a querer decir vos** —dónde estás y adónde vas— y dos
+			// líneas largas del mismo color diciendo cosas distintas es una que no dice
+			// ninguna. El blanco quedó porque es el único valor que no usa **ninguna
+			// otra línea** del mapa, y porque un atajo es geometría y no un estado: el
+			// verde, el ámbar y el rojo ya significan algo y mentirían.
 			// **Las salidas del sistema donde está el piloto se leen distinto**, y en
 			// tres estados: la que puede cruzar va encendida y gruesa, la que sale de acá
 			// pero no alcanza va punteada, y el resto de la galaxia queda de fondo. La
@@ -348,26 +423,90 @@
 			// camino completo hasta el otro extremo de la galaxia es otra pregunta, y
 			// pintarla entera dejaría el mapa iluminado de punta a punta—.
 			const suya = !mia && esDelElegido(enlace);
+			// **El tramo en curso manda sobre todo lo demás.** Mientras la nave está
+			// cruzando, ése es el único pasaje del mapa donde está pasando algo: va en
+			// cian con halo, con lo ya recorrido lleno encima y con las marcas del
+			// guión corriendo hacia el destino.
+			//
+			// **El color dice cuál y el movimiento dice cuándo**, que son dos preguntas
+			// distintas. Nada más en el lienzo se mueve, así que la marquesina es la
+			// única señal del mapa que no tiene con qué confundirse.
+			const enCurso = esLaRuta(enlace);
 
-			ctx.setLineDash(enlace.shortcut || (mia && motivo) ? [6, 5] : []);
-			ctx.strokeStyle = apagado
-				? muted
-				: enlace.closed
-					? danger
-					: mia
-						? motivo
-							? muted
-							: accent
-						: suya
-							? accentBright
-							: enlace.shortcut
-								? data
-								: accentDim;
-			ctx.globalAlpha = apagado ? 0.25 : enlace.closed ? 0.55 : mia && motivo ? 0.5 : 1;
-			ctx.lineWidth = mia && !motivo ? 2.5 : suya ? 2 : enlace.shortcut ? 1 : 1.5;
+			// Se traza **en el sentido del viaje** y no en el que el enlace tenga
+			// guardado: las marcas corren a lo largo del guión, y al revés apuntarían
+			// hacia el lugar del que la nave se está yendo.
+			const salida = enCurso && enlace.to === pilot?.route?.from ? b : a;
+			const llegada = salida === a ? b : a;
+
+			ctx.beginPath();
+			ctx.moveTo(salida.x, salida.y);
+			ctx.lineTo(llegada.x, llegada.y);
+
+			ctx.setLineDash(enCurso ? GUION : enlace.shortcut || (mia && motivo) ? [6, 5] : []);
+			// En negativo, porque el lienzo corre el patrón en el sentido contrario al
+			// del trazo: en positivo las marcas irían hacia atrás.
+			ctx.lineDashOffset = enCurso ? -corrida : 0;
+			ctx.strokeStyle = enCurso
+				? data
+				: apagado
+					? muted
+					: enlace.closed
+						? danger
+						: mia
+							? motivo
+								? muted
+								: accent
+							: suya
+								? accentBright
+								: enlace.shortcut
+									? strong
+									: accentDim;
+			ctx.globalAlpha = enCurso
+				? 0.85
+				: apagado
+					? 0.25
+					: enlace.closed
+						? 0.55
+						: mia && motivo
+							? 0.5
+							: 1;
+			ctx.lineWidth = enCurso ? 2.5 : mia && !motivo ? 2.5 : suya ? 2 : enlace.shortcut ? 1 : 1.5;
+			if (enCurso) {
+				ctx.shadowColor = data;
+				ctx.shadowBlur = 10;
+			}
 			ctx.stroke();
+			ctx.shadowBlur = 0;
 			ctx.setLineDash([]);
+			ctx.lineDashOffset = 0;
 			ctx.globalAlpha = 1;
+
+			// Y encima, lo ya recorrido: una línea llena que se completa con el viaje.
+			// Es lo que convierte un tramo resaltado en «vas por acá».
+			if (enCurso) {
+				const punta = {
+					x: salida.x + (llegada.x - salida.x) * recorrido,
+					y: salida.y + (llegada.y - salida.y) * recorrido
+				};
+
+				ctx.shadowColor = data;
+				ctx.shadowBlur = 12;
+
+				ctx.beginPath();
+				ctx.moveTo(salida.x, salida.y);
+				ctx.lineTo(punta.x, punta.y);
+				ctx.strokeStyle = data;
+				ctx.lineWidth = 3;
+				ctx.stroke();
+
+				ctx.beginPath();
+				ctx.arc(punta.x, punta.y, 3.2, 0, Math.PI * 2);
+				ctx.fillStyle = data;
+				ctx.fill();
+
+				ctx.shadowBlur = 0;
+			}
 
 			// **La barra del paso cerrado.** Una línea más fina o más apagada no
 			// alcanza: cerrado no es «menos importante», es «no se cruza», y eso se
@@ -729,7 +868,7 @@
 	// El dibujo depende de todo esto y de nada más. Leerlos acá es lo que hace que
 	// se redibuje solo cuando alguno cambia, sin bucle de cuadros.
 	$effect(() => {
-		void [camara, viewport, escala, selected, hover, visible, map, paint];
+		void [camara, viewport, escala, selected, hover, visible, map, paint, recorrido, corrida];
 		dibujar();
 	});
 </script>

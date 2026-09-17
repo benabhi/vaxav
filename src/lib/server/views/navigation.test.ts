@@ -8,7 +8,7 @@ import type { Db } from '../db/types';
 import { startTravel } from '../services/actions';
 import { bodyDetail, getBody, systemTree } from '../services/universe';
 import { SERVICES, allBodies } from '$lib/game/universe';
-import { MIN_REPUTATION, MAX_REPUTATION } from '$lib/game/reputation';
+import { MAX_REPUTATION, REPUTATION_SCALE } from '$lib/game/reputation';
 import { connectGates, createGate, createSystem, setGateClosed } from '../services/worldbuilding';
 import {
 	buildAgentRows,
@@ -19,6 +19,7 @@ import {
 	buildSystemView,
 	readGalaxyQuery
 } from './navigation';
+import { NO_STANDINGS, type PilotStandings } from '../services/reputation';
 
 describe('el mosaico de módulos', () => {
 	it('muestra los ocho siempre, marcando los que la estación tiene', () => {
@@ -48,12 +49,22 @@ describe('el mosaico de módulos', () => {
 	});
 });
 
+/** Un piloto con esa reputación con la facción y nada con nadie más. */
+function conLaBandera(code: string, puntos: number): PilotStandings {
+	return { corporations: {}, factions: { [code]: puntos * REPUTATION_SCALE } };
+}
+
+/** Y uno con esa reputación con una sola corporación. */
+function conLaCorporacion(code: string, puntos: number): PilotStandings {
+	return { corporations: { [code]: puntos * REPUTATION_SCALE }, factions: {} };
+}
+
 describe('los agentes', () => {
 	it('salen todos, atiendan o no', () => {
 		const db = seededDb();
 		const detalle = bodyDetail(db, 'puerto_anfora')!;
 
-		const filas = buildAgentRows(detalle.agents, MIN_REPUTATION);
+		const filas = buildAgentRows(detalle.agents, NO_STANDINGS);
 
 		expect(filas).toHaveLength(detalle.agents.length);
 		expect(filas.length).toBeGreaterThan(1);
@@ -66,19 +77,58 @@ describe('los agentes', () => {
 		const db = seededDb();
 		const detalle = bodyDetail(db, 'puerto_anfora')!;
 
-		const cerrado = buildAgentRows(detalle.agents, MIN_REPUTATION).find((f) => !f.open)!;
+		const cerrado = buildAgentRows(detalle.agents, NO_STANDINGS).find((f) => !f.open)!;
 
+		// Las dos puertas, dichas: la corporación abre a los suyos y la bandera abre
+		// ese nivel en todas las que la llevan.
 		expect(cerrado.requirement).toMatch(/^Requiere \d+ de reputación con /);
+		expect(cerrado.requirement).toContain(cerrado.corporation);
 		expect(cerrado.requirement).toContain(cerrado.faction);
 	});
 
-	it('con reputación al tope los abre a todos', () => {
+	/*
+	 * La bandera abre a todas las corporaciones que la llevan **y a ninguna más**.
+	 * En Puerto Ánfora hay una agente de la Extractora Anillo, que es concorde,
+	 * sentada en un puerto del Dominio: con el Dominio al tope ella sigue cerrada,
+	 * y eso es exactamente lo que tiene que pasar.
+	 */
+	it('la bandera abre a los suyos, no a los de la de al lado', () => {
 		const db = seededDb();
 		const detalle = bodyDetail(db, 'puerto_anfora')!;
 
-		const filas = buildAgentRows(detalle.agents, MAX_REPUTATION);
+		const filas = buildAgentRows(detalle.agents, conLaBandera('dominion', MAX_REPUTATION));
+		const delDominio = detalle.agents
+			.filter((uno) => uno.corporation.faction === 'dominion')
+			.map((uno) => uno.agent.name);
+		const ajenos = detalle.agents
+			.filter((uno) => uno.corporation.faction && uno.corporation.faction !== 'dominion')
+			.map((uno) => uno.agent.name);
 
-		expect(filas.every((f) => f.open)).toBe(true);
+		expect(delDominio.length).toBeGreaterThan(0);
+		expect(ajenos.length).toBeGreaterThan(0);
+		for (const fila of filas) {
+			if (delDominio.includes(fila.name)) expect(fila.open, `${fila.name}`).toBe(true);
+			if (ajenos.includes(fila.name)) expect(fila.open, `${fila.name}`).toBe(false);
+		}
+	});
+
+	/*
+	 * La escalera barata: sin nada con la bandera, la reputación con una sola
+	 * corporación abre a **sus** agentes y no a los de las otras.
+	 */
+	it('la reputación con una corporación abre sólo la suya', () => {
+		const db = seededDb();
+		const detalle = bodyDetail(db, 'puerto_anfora')!;
+
+		const cerrado = buildAgentRows(detalle.agents, NO_STANDINGS).find((f) => !f.open)!;
+		const suCodigo = detalle.agents.find((uno) => uno.agent.name === cerrado.name)!.corporation
+			.code;
+
+		const abierto = buildAgentRows(detalle.agents, conLaCorporacion(suCodigo, MAX_REPUTATION)).find(
+			(f) => f.name === cerrado.name
+		)!;
+
+		expect(abierto.open).toBe(true);
 	});
 
 	it('escribe el nivel en romanos', () => {
@@ -390,7 +440,7 @@ describe('lo que el mapa de la galaxia lee de la URL', () => {
 	it('deja pasar lo que existe', () => {
 		const query = readGalaxyQuery(
 			new URLSearchParams(
-				'buscar=Ocaso&faccion=dominion&region=Confin&seguridad=high&servicio=market&pintar=region&territorio=constelacion'
+				'buscar=Ocaso&faccion=dominion&region=Confin&seguridad=high&servicio=market&corporacion=casa_verlan&pintar=region&territorio=constelacion'
 			)
 		);
 
@@ -400,6 +450,7 @@ describe('lo que el mapa de la galaxia lee de la URL', () => {
 			region: 'Confin',
 			security: 'high',
 			service: 'market',
+			corporation: 'casa_verlan',
 			paint: 'region',
 			territory: 'constelacion'
 		});
@@ -538,6 +589,35 @@ describe('la pestaña Galaxia', () => {
 		expect(conMercado.matches).not.toContain('ocaso');
 	});
 
+	/*
+	 * El que enciende el botón «ver en el mapa» de la pestaña Corporación: sin
+	 * esto, el botón prometía mostrar dónde está la tuya y abría la galaxia entera.
+	 */
+	it('filtra por corporación, que es dónde tiene puestos', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		conSalida(db);
+
+		const suyos = buildGalaxia(
+			db,
+			piloto,
+			readGalaxyQuery(new URLSearchParams('corporacion=casa_verlan'))
+		);
+
+		expect(suyos.matches).toContain('anfora');
+		expect(suyos.matches).not.toContain('ocaso');
+
+		// Una que existe en el catálogo pero no opera nada no deja nada en pie: es
+		// la respuesta correcta, y el desplegable ni siquiera la ofrece.
+		const ninguno = buildGalaxia(
+			db,
+			piloto,
+			readGalaxyQuery(new URLSearchParams('corporacion=mineria_baronal'))
+		);
+
+		expect(ninguno.matches).toEqual([]);
+	});
+
 	it('filtra por bandera y por cuánta ley hay', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
@@ -558,5 +638,22 @@ describe('la pestaña Galaxia', () => {
 
 		expect(vista.travelSource.verb).toBe('Viajar');
 		expect(vista.travelSource.modules.map((uno) => uno.requirement)).toEqual(['Propulsores']);
+	});
+
+	// El mapa también ofrece **saltar**, para cuando ya estás parado en la puerta.
+	// No da la orden —manda a Ubicación— pero con una orden en curso aquella
+	// pantalla muestra el viaje y no la puerta, así que el camino no lleva a ninguna
+	// parte: el control tiene que apagarse **acá** y decir por qué.
+	it('con una orden en curso el mapa apaga el salto y dice el motivo', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const libre = buildGalaxia(db, piloto);
+		expect(libre.jumpSource.verb).toBe('Saltar');
+		expect(libre.jumpSource.blockers).toEqual([]);
+
+		startTravel(db, piloto, getBody(db, 'muelle_de_los_anillos')!);
+
+		expect(buildGalaxia(db, piloto).jumpSource.blockers).toContain('Ya hay una orden en curso.');
 	});
 });

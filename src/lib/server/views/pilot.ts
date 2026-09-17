@@ -6,7 +6,6 @@
  * sin levantar nada, igual que las reglas del juego.
  */
 
-import { portraitVersion } from '../services/portraits';
 import { eq } from 'drizzle-orm';
 import { body, corporation, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
@@ -14,6 +13,7 @@ import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
 import { roundHalfEven } from '$lib/game/math';
 import { jumpsWithFuel } from '$lib/game/jumps';
+import { RATING_RANKS, nextRankFor, pilotIndex, rankFor } from '$lib/game/rating';
 import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
 import { pools } from '../services/pools';
@@ -127,14 +127,15 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 			}
 		: null;
 
-	// El retrato, si subió uno. La marca de tiempo va en la consulta porque el
-	// archivo se llama siempre igual: sin algo que cambie, el navegador se queda
-	// con el anterior en la caché y el jugador cree que la subida no funcionó.
-	const version = portraitVersion(row.id);
+	// El índice sale de lo que ya se calculó por rama: recorrer el árbol de nuevo
+	// sería recorrerlo dos veces para llegar al mismo número.
+	const familias = buildFamilyXp(xp, pozos);
+	const indice = pilotIndex(Object.fromEntries(familias.map((rama) => [rama.family, rama.xp])));
+	const rango = rankFor(indice);
+	const siguiente = nextRankFor(indice);
 
 	return {
 		callsign: row.callsign,
-		portrait: version > 0 ? `/retratos/${row.id}?v=${version}` : '',
 		professionName: getProfession(row.profession).name,
 		factionName: faction.name,
 		factionCode: faction.code,
@@ -146,7 +147,15 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		credits: row.credits,
 		creditsLabel: creditsLabel(row.credits),
 		locationLabel: locationLabel(station, systemName),
-		families: buildFamilyXp(xp, pozos),
+		families: familias,
+		rating: {
+			value: thousands(indice),
+			rank: rango.name,
+			step: rango.step,
+			steps: RATING_RANKS.length,
+			// Lo que falta y **para qué**: un umbral sin su nombre es un número más.
+			next: siguiente ? `${siguiente.name} a ${thousands(siguiente.at)}` : ''
+		},
 		since: row.createdAt.getTime(),
 		// A quién le rinde cuentas. **Vacío quiere decir independiente**, que es un
 		// estado legítimo: la credencial lo dice con esa palabra en vez de dejar el

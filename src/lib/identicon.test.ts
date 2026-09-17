@@ -148,7 +148,73 @@ describe('el sello', () => {
 	 * el nombre. Y el mismo nombre en las dos familias da dos dibujos distintos,
 	 * porque la familia entra en la semilla.
 	 */
-	it('las dos familias se ven distintas', () => {
+	it('las tres familias se ven distintas', () => {
+		const corp = sealFor('Comuna Talo', 'corporacion');
+		const piloto = sealFor('Comuna Talo', 'piloto');
+		const agente = sealFor('Comuna Talo', 'agente');
+
+		// La silueta es lo que separa a una familia de otra, y se lee antes que
+		// cualquier otra cosa del dibujo.
+		expect([corp.ring, piloto.ring, agente.ring]).toEqual(['hexagono', 'disco', 'triangulo']);
+		expect([corp.cellShape, piloto.cellShape, agente.cellShape]).toEqual([
+			'hexagono',
+			'cuadrado',
+			'triangulo'
+		]);
+	});
+
+	it('el triángulo del agente también es simétrico y entra en el lienzo', () => {
+		for (const nombre of ['Sela Verlan', 'Oren Casteig', 'Idra Nolm', 'Z']) {
+			const celdas = sealFor(nombre, 'agente').cells;
+			expect(celdas.length).toBeGreaterThan(0);
+
+			for (const celda of celdas) {
+				expect(celda.cx).toBeGreaterThan(0);
+				expect(celda.cx).toBeLessThan(LIENZO);
+				expect(celda.cy).toBeGreaterThan(0);
+				expect(celda.cy).toBeLessThan(LIENZO);
+				expect(
+					celdas.some(
+						(otra) =>
+							redondo(otra.cx) === redondo(LIENZO - celda.cx) &&
+							redondo(otra.cy) === redondo(celda.cy) &&
+							otra.glyph === celda.glyph
+					)
+				).toBe(true);
+			}
+		}
+	});
+
+	/*
+	 * El triángulo girado deja de leerse como triángulo: pasa a ser una mancha con
+	 * tres puntas en cualquier lado, y la silueta es justamente lo que separa a
+	 * esta familia de las otras dos.
+	 */
+	it('el triángulo del agente no gira', () => {
+		for (const nombre of ['Sela Verlan', 'Oren Casteig', 'Renna Bosc', 'Idra Nolm']) {
+			expect(sealFor(nombre, 'agente').tilt).toBe(0);
+		}
+	});
+
+	it('no repite dibujo sobre veinte mil nombres de agente', () => {
+		const vistos = new Set<string>();
+		for (let i = 0; i < 20_000; i++) {
+			const sello = sealFor(`agente-${i}`, 'agente');
+			vistos.add(
+				[
+					sello.ink,
+					sello.edge,
+					sello.core,
+					sello.innerRing,
+					sello.spokes,
+					sello.cells.map((celda) => `${redondo(celda.cx)}:${celda.glyph}`).join('|')
+				].join('/')
+			);
+		}
+		expect(vistos.size).toBe(20_000);
+	});
+
+	it('las dos familias viejas se ven distintas', () => {
 		const corp = sealFor('Comuna Talo', 'corporacion');
 		const piloto = sealFor('Comuna Talo', 'piloto');
 

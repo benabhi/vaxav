@@ -102,22 +102,73 @@ facción elegida: alistarse en una del Dominio habiendo nacido en el Pacto no es
 elección interesante, es una contradicción. El servicio lo revalida, porque la
 pantalla filtra pero no decide.
 
+### Y se puede cambiar después
+
+Desde la ficha se **renuncia** y desde el estado de independiente se **elige otra**,
+con las mismas reglas del alta y con la misma lista. Tres condiciones, y las tres
+dicen lo mismo desde distintos lados —que la elección signifique algo—:
+
+- **Hay que estar libre para alistarse.** Renunciar es una decisión aparte; sin
+  eso se podría aparecer en otra sin haber salido de la anterior.
+- **Tiene que ser de la facción del piloto.** Las cuatro sin bandera quedan afuera
+  por la misma cuenta: operan estaciones, no reciben pilotos.
+- **Las del mundo aceptan siempre.** El día que existan las de jugadores va a
+  haber un campo que diga si reciben aspirantes; ponerlo hoy sería una columna en
+  `true` para todas.
+
+**La reputación no se toca al entrar ni al salir**, y ésa es la decisión que más
+va a rendir después. El número es del par piloto × corporación y existe con o sin
+membresía: se puede tener treinta con una en la que nunca se estuvo, y el que
+renuncia no pierde lo que se ganó. Es lo que va a permitir que una corporación de
+jugadores pida «Confiable para entrar» sin inventar ninguna mecánica nueva.
+
 ## El módulo Corporación
 
 Entrada propia en el Neocom, después de Navegación y antes del Mercado: primero el
 piloto, su nave y dónde está; después a quién le rinde cuentas; recién ahí lo que
 compra y vende.
 
-**Va a ser una zona de varias pestañas** —miembros, roles y permisos, bienes,
-contratos—, y están las dos que hoy tienen algo detrás:
+**Va a ser una zona de varias pestañas** —roles y permisos, bienes, contratos—, y
+están las cuatro que hoy tienen algo detrás:
 
-| Pestaña      | Qué contesta                                                         |
-| ------------ | -------------------------------------------------------------------- |
-| **Ficha**    | Quién es, qué rubro tiene, qué estaciones opera y dónde tiene gente  |
-| **Miembros** | Quiénes son los otros: buscar, filtrar por oficio, ordenar y paginar |
+| Pestaña        | Qué contesta                                                            |
+| -------------- | ----------------------------------------------------------------------- |
+| **Ficha**      | Qué es, de qué clase, qué estaciones opera y qué piensa de vos          |
+| **Reputación** | Dónde estás en su escalera, qué abre el próximo escalón y cómo llegaste |
+| **Agentes**    | A quién le podés pedir trabajo, y qué le falta al que todavía no        |
+| **Miembros**   | Quiénes son los otros                                                   |
 
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
 cartel es una puerta cerrada con el nombre puesto.
+
+**Los agentes van aparte de los miembros** aunque los dos listen gente. Las
+preguntas son distintas —«¿a quién le pido trabajo?» contra «¿quién más vuela
+acá?»—, las columnas no se parecen —nivel, clase de misión, estación y si te
+atiende contra oficio y antigüedad— y los filtros tampoco. Un interruptor adentro
+de una sola tabla sería dos tablas peleando por un archivo. Y hay una razón más
+fuerte: **la pestaña de agentes es donde la reputación se cobra**, así que su
+vecina natural es Reputación y no Miembros.
+
+Los que todavía no atienden **salen igual, apagados y con lo que les falta**,
+mismo criterio que la ficha del lugar. Y hay un recorte de «sólo los que
+atienden», que es la única pregunta que importa antes de salir a buscar trabajo
+cuando la lista se hace larga.
+
+La ficha dice además **de qué clase es**: NPC o de jugadores, con un «?» al lado
+que explica la diferencia —«NPC» es una palabra de afuera del juego y la ficha no
+puede dar por sabido lo que significa acá adentro—. Hoy son todas
+del mundo y el rótulo dice siempre lo mismo, y va igual: el día que se puedan
+fundar, el que mire una ficha tiene que poder saber de cuál de las dos es **sin
+haberlo aprendido antes**, y una distinción que aparece recién cuando ya hay con
+qué confundirse llega tarde. Sale del catálogo y no de una columna —las del mundo
+son exactamente las que están ahí—, así que no hay nada que migrar.
+
+La ficha termina en **«ver en el mapa»**, que abre la galaxia recortada a los
+sistemas donde la corporación tiene un puesto. Es un botón y no una lista de
+enlaces porque la pregunta no es «¿dónde está este puesto?» sino «¿dónde está
+metida?», y eso lo contesta la forma del conjunto y no un nombre a la vez. El
+recorte viaja en la URL y el mapa lo deja puesto en su propio desplegable, así
+que se ve de dónde salió y se saca desde ahí.
 
 Del listado de miembros se muestra **lo público** —cómo se llama cada uno, a qué se
 dedica y desde cuándo vuela—: dónde está parado ahora no, porque un listado de
@@ -152,7 +203,9 @@ Tres decisiones lo sostienen:
 - **Simétrico**, espejado sobre el eje vertical: es lo que convierte un ruido de
   celdas en algo que parece un escudo.
 - **Una familia por clase de cosa.** La corporación es un panal hexagonal con marco
-  de seis lados; el piloto, un disco de casillas cuadradas y de un solo tono. No se
+  de seis lados; el piloto, un disco de casillas cuadradas y de un solo tono; el
+  agente, un triángulo de casillas triangulares que no gira nunca —girado deja de
+  leerse como triángulo y pasa a ser una mancha con tres puntas—. No se
   confunden ni de reojo, y agregar una familia —alianzas, estaciones— es agregar una
   receta. La familia entra en la semilla, así que una corporación y un piloto que se
   llamen igual tampoco comparten dibujo.
@@ -172,6 +225,6 @@ millón—, no el hash.
 
 - Cómo se crea una corporación de jugadores, y qué cuesta.
 - Si una corporación de jugadores puede alinearse con una facción, y qué gana.
-- Qué hace la reputación con una corporación, además de existir (ver
-  [misiones](MISSIONS.md)).
+- Si renunciar tendría que costar algo —reputación, un tiempo de espera— o si
+  está bien que sea gratis.
 - Si las corporaciones NPC compiten entre sí de forma visible para el jugador.

@@ -204,6 +204,28 @@ sistema que se agregue —cargas, drones, fabricación, combate— trae las suya
 El detalle fino de todo esto se decide **cuando el circuito esté cerrado**.
 Afinarlo antes sería balancear una economía que todavía no existe.
 
+### Anotado y sin hacer
+
+Cosas decididas que no entraron todavía, para que no se pierdan entre una etapa y
+la siguiente:
+
+- **La ruta, dibujada mientras se viaja.** En el mapa de la galaxia, la línea
+  entre origen y destino animada y de otro color; es la base de lo que va a
+  necesitar el autopiloto para mostrar un recorrido de varios saltos. Y en el
+  árbol del sistema, el cuerpo de destino destacado mientras se va hacia él.
+- **Cada ubicación visitable con identidad propia.** La de viaje ya la tiene —la
+  banda con la nave avanzando—, y falta que la tengan las otras: una puerta, una
+  estación, un cinturón y un planeta no pueden verse como la misma pantalla con
+  otro texto. Cada una con su dibujo, como toda figura del juego: hecho a mano y
+  sin librerías.
+- **Y después, `Piloto · Reputación`.** La pestaña donde se ve el panorama
+  completo: toda facción, corporación y agente con el que haya número. Va en
+  Piloto porque es del piloto y sobrevive a renunciar, y va **después** de lo de
+  arriba. Ver «Dónde se mira» en [misiones](systems/MISSIONS.md).
+- **La ficha de tránsito tiene que variar según a dónde se va.** Hoy cuenta igual
+  un salto a otro sistema, un viaje a un cinturón y uno a una estación, y no son
+  el mismo viaje.
+
 ## Lo que se decide en el camino
 
 | Pregunta                                          | Se necesita en |

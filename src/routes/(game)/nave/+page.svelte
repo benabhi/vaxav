@@ -813,7 +813,7 @@
 		vistazo es si falta algo; cuáles son es la segunda pregunta, y va adentro.
 	-->
 	<span class="flex items-center gap-[0.35rem]">
-		<Label>Para volarla</Label>
+		<Label>Requisitos</Label>
 		{#if hullRequirements.length === 0}
 			<span class="text-1 text-text-muted">no pide nada</span>
 		{:else}

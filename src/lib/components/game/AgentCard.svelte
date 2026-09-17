@@ -30,7 +30,7 @@
 		: 'border border-dead-border border-l-dead-rail bg-transparent'}"
 >
 	<div class="flex w-full items-stretch gap-[0.9rem]">
-		<AgentPortrait open={agent.open} portrait={agent.portrait} />
+		<AgentPortrait name={agent.name} open={agent.open} />
 
 		<div class="flex w-full min-w-0 flex-col items-start gap-2 py-[0.85rem] pr-[0.85rem]">
 			<div class="flex w-full items-center gap-[0.6rem]">

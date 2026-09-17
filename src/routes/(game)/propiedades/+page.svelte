@@ -39,7 +39,7 @@
 		<p class="font-mono text-2 text-data">{assets.totalValue} CR</p>
 	</div>
 	<div class="flex flex-col items-start gap-1">
-		<Label>Lugares con carga</Label>
+		<Label>Lugares</Label>
 		<p class="font-mono text-2 text-text-body">{assets.placeCount}</p>
 	</div>
 </div>

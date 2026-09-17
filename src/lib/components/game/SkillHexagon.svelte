@@ -29,11 +29,26 @@
 	import Icon from '../Icon.svelte';
 	import type { RamaXp } from '$lib/tipos';
 
+	/**
+	 * Qué capas se dibujan.
+	 *
+	 * Las dos juntas son la vista completa, y es la que va cuando hay lugar para
+	 * mirarla: la distancia entre las líneas **es** la decisión pendiente. Pero en
+	 * la credencial, chica y al lado de otros datos, dos figuras encimadas piden
+	 * una leyenda y un segundo de lectura para contestar algo que ahí no se
+	 * preguntó: ahí alcanza con quién es el piloto hoy.
+	 */
+	export type CapasHexagono = 'invested' | 'pool' | 'both';
+
 	interface Props {
 		families: readonly RamaXp[];
+		layers?: CapasHexagono;
 	}
 
-	let { families }: Props = $props();
+	let { families, layers = 'both' }: Props = $props();
+
+	let muestraInvertido = $derived(layers !== 'pool');
+	let muestraPozo = $derived(layers !== 'invested');
 
 	/** Radio del hexágono, en porcentaje del lado del cuadro. */
 	const RADIO = 32;
@@ -129,7 +144,7 @@
 				que quedar por encima. Punteado y sin relleno para que se lea como algo
 				que todavía no pasó.
 			-->
-			{#if hayPozo}
+			{#if hayPozo && muestraPozo}
 				<polygon
 					points={potencial}
 					fill="rgb(93 214 255 / 0.08)"
@@ -141,14 +156,16 @@
 			{/if}
 
 			<!-- La forma del piloto: lo invertido, sólido y encendido. -->
-			<polygon
-				points={forma}
-				fill="rgb(255 122 26 / 0.16)"
-				stroke="var(--color-accent)"
-				stroke-width="0.7"
-				stroke-linejoin="round"
-				style="filter: drop-shadow(0 0 5px rgb(255 122 26 / 0.35))"
-			/>
+			{#if muestraInvertido}
+				<polygon
+					points={forma}
+					fill="rgb(255 122 26 / 0.16)"
+					stroke="var(--color-accent)"
+					stroke-width="0.7"
+					stroke-linejoin="round"
+					style="filter: drop-shadow(0 0 5px rgb(255 122 26 / 0.35))"
+				/>
+			{/if}
 
 			<!--
 				Un nodo por vértice: marca dónde llega cada rama.
@@ -158,19 +175,21 @@
 				da escala. Un instrumento de cabina se lee por dónde cae la línea, no por
 				lo gruesa que es.
 			-->
-			{#each families as rama, i (rama.family)}
-				{@const p = punto(i, families.length, Math.max(PISO, rama.share / 100))}
-				<circle
-					cx={p.x.toFixed(2)}
-					cy={p.y.toFixed(2)}
-					r="0.9"
-					fill={rama.xp > 0 ? 'var(--color-accent-bright)' : 'var(--color-text-muted)'}
-				/>
-			{/each}
+			{#if muestraInvertido}
+				{#each families as rama, i (rama.family)}
+					{@const p = punto(i, families.length, Math.max(PISO, rama.share / 100))}
+					<circle
+						cx={p.x.toFixed(2)}
+						cy={p.y.toFixed(2)}
+						r="0.9"
+						fill={rama.xp > 0 ? 'var(--color-accent-bright)' : 'var(--color-text-muted)'}
+					/>
+				{/each}
+			{/if}
 
 			<!-- Y uno hueco donde llegaría si se gastara el pozo. -->
 			{#each families as rama, i (rama.family)}
-				{#if rama.pool > 0}
+				{#if rama.pool > 0 && muestraPozo}
 					{@const p = punto(i, families.length, Math.max(PISO, rama.poolShare / 100))}
 					<circle
 						cx={p.x.toFixed(2)}
@@ -190,6 +209,8 @@
 			interletrado que el resto del HUD.
 		-->
 		{#each rotulos as { rama, left, top } (rama.family)}
+			<!-- Encendida según la capa que se está mirando, no siempre por lo invertido. -->
+			{@const encendida = muestraInvertido ? rama.xp > 0 : rama.pool > 0}
 			<span
 				style="left: {left}; top: {top}"
 				class="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 flex-col
@@ -197,18 +218,20 @@
 			>
 				<Icon
 					name={rama.icon}
-					weight={rama.xp > 0 ? 'fill' : 'thin'}
+					weight={encendida ? 'fill' : 'thin'}
 					size="0.7rem"
-					class={rama.xp > 0 ? 'text-accent' : 'text-text-muted'}
+					class={encendida ? 'text-accent' : 'text-text-muted'}
 				/>
-				<span
-					class="font-mono text-[0.6rem] leading-none
-						{rama.xp > 0 ? 'text-accent-bright' : 'text-text-muted'}"
-				>
-					{rama.xp}
-				</span>
+				{#if muestraInvertido}
+					<span
+						class="font-mono text-[0.6rem] leading-none
+							{rama.xp > 0 ? 'text-accent-bright' : 'text-text-muted'}"
+					>
+						{rama.xp}
+					</span>
+				{/if}
 				<!-- El pozo sólo aparece si hay algo: un "+0" en seis vértices es ruido. -->
-				{#if rama.pool > 0}
+				{#if rama.pool > 0 && muestraPozo}
 					<span class="font-mono text-[0.58rem] leading-none text-data">+{rama.pool}</span>
 				{/if}
 			</span>
@@ -216,21 +239,30 @@
 	</div>
 
 	<!--
-		La leyenda. Dos figuras encimadas necesitan que se diga cuál es cuál una
-		vez; sin esto, el punteado cian es un adorno.
+		La leyenda. Dos figuras encimadas necesitan que se diga cuál es cuál una vez;
+		sin esto, el punteado cian es un adorno.
+
+		**Se muestra sólo la de la capa dibujada, pero el renglón queda siempre.**
+		Sacarla entera al quedar una sola capa hacía que el dibujo saltara al
+		cambiar de vista, y con el interruptor al lado la leyenda sigue teniendo qué
+		decir: cuál de las dos estás mirando.
 	-->
 	<div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-		<span class="flex items-center gap-[0.4rem]">
-			<span class="h-0 w-[0.9rem] border-t-2 border-accent"></span>
-			<span class="font-display text-[0.6rem] tracking-label text-text-muted uppercase">
-				Invertido
+		{#if muestraInvertido}
+			<span class="flex items-center gap-[0.4rem]">
+				<span class="h-0 w-[0.9rem] border-t-2 border-accent"></span>
+				<span class="font-display text-[0.6rem] tracking-label text-text-muted uppercase">
+					Invertido
+				</span>
 			</span>
-		</span>
-		<span class="flex items-center gap-[0.4rem]">
-			<span class="h-0 w-[0.9rem] border-t-2 border-dashed border-data"></span>
-			<span class="font-display text-[0.6rem] tracking-label text-text-muted uppercase">
-				En el pozo
+		{/if}
+		{#if muestraPozo}
+			<span class="flex items-center gap-[0.4rem]">
+				<span class="h-0 w-[0.9rem] border-t-2 border-dashed border-data"></span>
+				<span class="font-display text-[0.6rem] tracking-label text-text-muted uppercase">
+					En el pozo
+				</span>
 			</span>
-		</span>
+		{/if}
 	</div>
 </div>

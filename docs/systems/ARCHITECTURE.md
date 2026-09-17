@@ -33,9 +33,14 @@ hay millones dando vueltas.
 
 ### 4. Todo movimiento de valor deja asiento
 
-Créditos e ítems se mueven **sólo** escribiendo en un libro mayor de sólo
-agregado: quién, qué, cuánto, de dónde a dónde y por qué. El saldo es la suma de
-los asientos, no un número que se edita.
+Créditos, ítems y reputación se mueven **sólo** escribiendo en un libro mayor de
+sólo agregado: quién, qué, cuánto, de dónde a dónde y por qué. El saldo es la
+suma de los asientos, no un número que se edita.
+
+La reputación entra en la misma regla aunque no se compre ni se venda: se gana y
+se pierde, el jugador quiere saber por qué —«¿de dónde salieron estos doce
+puntos?»— y sin asientos esa pregunta no tiene respuesta. Su histórico paginado
+no es una tabla aparte: **es el libro**.
 
 Es la decisión más incómoda de agregar tarde y la que salva el proyecto cuando
 aparezca el primer duplicado de ítems, que va a aparecer. Sin asientos no hay

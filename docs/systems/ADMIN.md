@@ -471,7 +471,9 @@ volver a conectar.
   para que reciba las nuevas;
 - dos pilotos de prueba —`benabhi` y `Prueba`, uno por par de ojos— **los dos con
   el rol de administrador**, porque sin ninguno el cuartel quedaría cerrado desde
-  el primer arranque.
+  el primer arranque. `benabhi` es la cuenta de quien hace el juego y **`Prueba`
+  la de la asistencia**: tocar la del otro es pisarle dónde estaba parado, y los
+  dos pierden el rato averiguando qué pasó. Ver `AGENTS.md`.
 
 Los dos se alistan **en una corporación de su facción**, como cualquiera que pase
 por el alta: sin eso la pestaña Corporación arranca diciendo «Independiente», que

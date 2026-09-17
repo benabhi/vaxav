@@ -222,7 +222,7 @@
 		</span>
 	</div>
 	<div class="flex flex-col items-start gap-1">
-		<Label>Controla</Label>
+		<Label>Control</Label>
 		<span class="flex items-center gap-2 font-display text-[0.8rem] text-text-strong">
 			{sistema.controlledBy}
 			{#if sistema.capitalOf}

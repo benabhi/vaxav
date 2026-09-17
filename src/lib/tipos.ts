@@ -47,16 +47,26 @@ export interface NaveDelPiloto {
 }
 
 /** Lo que toda pantalla del juego sabe del piloto conectado. */
+/**
+ * El índice del piloto y su rango, ya escritos para la pantalla.
+ *
+ * El rango va con su número de escalón porque **la pantalla lo enciende cada vez
+ * más**: un número suelto que sube no se siente como progreso, y cruzar un umbral
+ * sí. Ver `game/rating.ts`.
+ */
+export interface IndicePiloto {
+	/** La cifra, con separador de miles. */
+	readonly value: string;
+	readonly rank: string;
+	/** Qué escalón es, de cero en adelante, y cuántos hay. */
+	readonly step: number;
+	readonly steps: number;
+	/** Qué falta para el que sigue, ya escrito. Vacío en el último. */
+	readonly next: string;
+}
+
 export interface PilotoConectado {
 	readonly callsign: string;
-	/**
-	 * La URL de su retrato, o vacío si no subió ninguno.
-	 *
-	 * Vacío **no es un error**: es lo que hay antes de subir una foto, y la
-	 * credencial dibuja la silueta, que dice que ahí falta algo. Lleva la marca de
-	 * tiempo de la subida en la consulta porque el archivo se llama siempre igual.
-	 */
-	readonly portrait: string;
 	readonly professionName: string;
 	readonly factionName: string;
 	readonly factionCode: string;
@@ -70,6 +80,8 @@ export interface PilotoConectado {
 	readonly locationLabel: string;
 	/** Cuánta experiencia lleva en cada rama del árbol. */
 	readonly families: readonly RamaXp[];
+	/** Qué tan lejos llegó, en un solo número con su rango. */
+	readonly rating: IndicePiloto;
 	/** Desde cuándo vuela, en milisegundos UTC. */
 	readonly since: number;
 	/**
@@ -91,6 +103,46 @@ export interface PilotoConectado {
  * **Sin corporación no es un hueco**: es un independiente, y la pantalla lo dice
  * con esas palabras. Va a ser el estado normal el día que se pueda renunciar.
  */
+/** Un escalón de la escalera, tal como lo dibuja la figura. */
+export interface EscalonReputacion {
+	/** Desconocido, Conocido, Confiable, Aliado, Leal. */
+	readonly name: string;
+	/** En qué punto de la escala de cien está, para ubicarlo en el dibujo. */
+	readonly at: number;
+	/** Qué nivel de agente abre, en romanos. */
+	readonly level: string;
+	readonly reached: boolean;
+}
+
+/**
+ * Lo que una corporación piensa del piloto, ya escrito para la pantalla.
+ *
+ * Viene con **las dos escaleras**: la suya y la de su bandera. No es un dato de
+ * más —la de la facción abre ese mismo nivel en todas las corporaciones que la
+ * llevan—, así que mostrar una sin la otra dejaría al jugador sin entender por
+ * qué un agente que debería estar cerrado lo atiende.
+ */
+export interface ReputacionCorporacion {
+	/** Lo que tiene con ella, con dos decimales. */
+	readonly value: string;
+	/** Lo mismo como número de cien, para dibujar. */
+	readonly percent: number;
+	readonly tier: string;
+	/** Cuántos escalones lleva y cuántos hay, para el medidor compacto. */
+	readonly reached: number;
+	readonly tiers: number;
+	/** Qué falta para el próximo, ya escrito. Vacío si ya está arriba de todo. */
+	readonly next: string;
+	/** El nombre de la bandera, y lo que tiene con ella. */
+	readonly faction: string;
+	readonly factionValue: string;
+	readonly factionPercent: number;
+	readonly factionTier: string;
+	/** El nivel de agente que le atiende hoy, en romanos: el mayor de los dos. */
+	readonly level: string;
+	readonly ladder: readonly EscalonReputacion[];
+}
+
 export interface Corporacion {
 	/** Si pertenece a alguna. Lo demás describe a cuál, o a la falta de una. */
 	readonly belongs: boolean;
@@ -99,6 +151,15 @@ export interface Corporacion {
 	/** El rubro, en palabras y en ícono. */
 	readonly kind: string;
 	readonly kindIcon: IconName;
+	/**
+	 * Si la fundó el mundo o la fundaron jugadores, ya escrito.
+	 *
+	 * Hoy son todas del mundo, así que el rótulo dice siempre lo mismo. Va igual:
+	 * el día que existan las de jugadores, el que mire una ficha tiene que poder
+	 * saber de cuál de las dos clases es **sin haberlo aprendido antes**, y una
+	 * distinción que aparece recién cuando hay con qué confundirse llega tarde.
+	 */
+	readonly origin: string;
 	/** A qué facción responde, o vacío. */
 	readonly faction: string;
 	readonly factionCode: string;
@@ -106,9 +167,29 @@ export interface Corporacion {
 	/** Cuántos pilotos son, ya escrito. */
 	readonly members: string;
 	/** Las estaciones que opera. Puede no operar ninguna y existir igual. */
+	/**
+	 * Las primeras estaciones que opera, no todas.
+	 *
+	 * Una corporación grande puede operar cientos y el panel de una ficha no es el
+	 * lugar para leerlas: lo que contesta acá es «¿de qué tamaño es y por dónde
+	 * anda?». La lista entera la contesta el mapa, con su recorte puesto.
+	 */
 	readonly stations: readonly EstacionCorporacion[];
+	/** Cuántas quedaron afuera de esa muestra. Cero si entran todas. */
+	readonly moreStations: number;
+	/** Cuántas opera en total, ya escrito. */
+	readonly stationCount: string;
+	/** Cuántos agentes tiene, ya escrito. La lista vive en su pestaña. */
+	readonly agentCount: string;
 	/** Dónde tiene gente sentada repartiendo trabajo. */
-	readonly agents: readonly AgenteCorporacion[];
+	/**
+	 * Lo que piensa de vos, o `null` si no respondés a ninguna.
+	 *
+	 * Es lo único de esta pantalla que habla del piloto y no de ella, y por eso va
+	 * aparte: un independiente no tiene reputación «con nadie», tiene reputación
+	 * con cada una por separado, y eso es otra pantalla.
+	 */
+	readonly reputation: ReputacionCorporacion | null;
 }
 
 /** Una estación que opera la corporación. */
@@ -148,6 +229,65 @@ export interface Miembros {
 	readonly professions: readonly OpcionConstructor[];
 }
 
+/** Un agente de la corporación, tal como lo lista su pestaña. */
+export interface FilaAgenteCorporacion {
+	readonly code: string;
+	readonly name: string;
+	/** Qué clase de misiones reparte, en palabras y en ícono. */
+	readonly kind: string;
+	readonly kindCode: string;
+	readonly kindIcon: IconName;
+	/** El nivel en romanos para leer, y en número para ordenar. */
+	readonly level: string;
+	readonly levelValue: number;
+	readonly station: string;
+	readonly system: string;
+	/** Si este piloto tiene reputación suficiente para que lo atienda. */
+	readonly open: boolean;
+	/** Qué le falta, cuando no. */
+	readonly requirement: string;
+}
+
+/** Lo que se pidió del listado de agentes. */
+export interface ConsultaAgentes {
+	readonly search: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+	/** La clase de misión, o vacío. */
+	readonly kind: string;
+	/** Si se muestran sólo los que ya atienden a este piloto. */
+	readonly onlyOpen: boolean;
+}
+
+/**
+ * La pestaña Agentes: quiénes reparten trabajo en nombre de la corporación.
+ *
+ * Nace con recorte, orden y paginado como todo listado del proyecto: una
+ * corporación grande puede tener un agente por estación, y eso crece por su
+ * cuenta mucho después de que la ficha dejó de crecer.
+ */
+export interface AgentesCorporacion {
+	readonly belongs: boolean;
+	readonly name: string;
+	/** Cuántos son en total, ya escrito. No cambia al filtrar. */
+	readonly count: string;
+	readonly agents: readonly FilaAgenteCorporacion[];
+	readonly query: ConsultaAgentes;
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+	/** Cuántos te atienden hoy, para decirlo al lado del filtro. */
+	readonly open: number;
+	/**
+	 * Las clases de misión que hay adentro, para el desplegable.
+	 *
+	 * Sólo las que alguien reparte: ofrecer las cinco cuando la corporación sólo
+	 * tiene mineros hace perder el tiempo cuatro veces de cada cinco.
+	 */
+	readonly kinds: readonly OpcionConstructor[];
+}
+
 /** Lo que se pidió del listado de miembros. */
 export interface ConsultaMiembros {
 	readonly search: string;
@@ -171,14 +311,6 @@ export interface MiembroCorporacion {
 	readonly isYou: boolean;
 }
 
-/** Un agente de la corporación, y dónde está sentado. */
-export interface AgenteCorporacion {
-	readonly code: string;
-	readonly name: string;
-	readonly station: string;
-	readonly system: string;
-}
-
 /** Un módulo de la estación, listo para dibujar en el mosaico. */
 export interface BaldosaModulo {
 	readonly code: string;
@@ -197,8 +329,6 @@ export interface FilaAgente {
 	readonly faction: string;
 	readonly kind: string;
 	readonly kindIcon: IconName;
-	/** Ruta de su retrato, o vacía si todavía no hay ninguna imagen. */
-	readonly portrait: string;
 	/** Nivel de las misiones que reparte, en romanos. */
 	readonly level: string;
 	readonly description: string;
@@ -866,6 +996,39 @@ export interface MovimientoBilletera {
 }
 
 /** La billetera del piloto: el saldo y el libro que lo explica. */
+/** Un asiento del libro de reputación, ya escrito para la tabla. */
+export interface MovimientoReputacion {
+	readonly id: number;
+	/** Con el signo escrito y no sólo pintado: `+1,00`. */
+	readonly amount: string;
+	readonly positive: boolean;
+	/** El valor que dejó, para poder seguir la escalera fila por fila. */
+	readonly valueAfter: string;
+	/** Por qué se movió, en palabras. */
+	readonly reason: string;
+	readonly icon: IconName;
+	readonly memo: string;
+	/** Cuándo, en milisegundos UTC: lo formatea el navegador. */
+	readonly at: number;
+}
+
+/**
+ * La pestaña Reputación: la escalera con tu corporación y cómo llegaste ahí.
+ *
+ * Es la única pantalla del juego que contesta «¿de dónde salió este número?», y
+ * por eso el histórico no es un adorno: es la mitad de la pantalla.
+ */
+export interface PaginaReputacion {
+	readonly belongs: boolean;
+	readonly name: string;
+	readonly code: string;
+	readonly reputation: ReputacionCorporacion | null;
+	readonly moves: readonly MovimientoReputacion[];
+	readonly page: number;
+	readonly pages: number;
+	readonly total: number;
+}
+
 export interface Billetera {
 	readonly balance: string;
 	/**
@@ -1427,9 +1590,23 @@ export interface ConsultaUniverso {
  * unos cientos de sistemas pesa menos que una pantalla de mercado. El día que no
  * entre, el recorte natural es por región, no por cercanía.
  */
+export interface CorporacionEnElMapa {
+	readonly code: string;
+	readonly name: string;
+}
+
 export interface MapaGalaxia {
 	readonly systems: readonly NodoGalaxia[];
 	readonly links: readonly EnlaceGalaxia[];
+	/**
+	 * Las corporaciones que operan **al menos un puesto** del mapa, por nombre.
+	 *
+	 * Van acá y no se deducen de los sistemas porque el desplegable necesita el
+	 * nombre y el nodo guarda códigos. Y son sólo las que tienen algo: un filtro
+	 * que ofrece cuarenta opciones de las que treinta y cinco no encuentran nada
+	 * hace perder el tiempo siete veces de cada ocho.
+	 */
+	readonly corporations: readonly CorporacionEnElMapa[];
 	/** Qué tan grande es el mapa, en casillas, para encuadrar el dibujo. */
 	readonly radius: number;
 	/** Cuántos sistemas quedaron fuera del mapa por no llegar a la semilla. */
@@ -1463,6 +1640,16 @@ export interface Galaxia {
 	 * acción del juego dice qué la habilita y por qué no se puede.
 	 */
 	readonly travelSource: Procedencia;
+	/**
+	 * Y de dónde sale **saltar**, para el único control del mapa que no viaja.
+	 *
+	 * Cuando ya estás parado en la puerta, lo que falta es cruzarla, y eso se hace
+	 * desde Ubicación. El mapa no da esa orden pero sí ofrece el camino hasta ella,
+	 * así que tiene que saber **por qué no se puede** —con una orden en curso,
+	 * Ubicación muestra el viaje y no la puerta— o mandaría a una pantalla que no
+	 * tiene el botón que promete.
+	 */
+	readonly jumpSource: Procedencia;
 }
 
 /** Una salida del sistema donde está el piloto, vista desde el mapa. */
@@ -1500,6 +1687,8 @@ export interface ConsultaGalaxia {
 	readonly region: string;
 	readonly security: string;
 	readonly service: string;
+	/** Código de la corporación cuyos puestos se quieren ver, o vacío. */
+	readonly corporation: string;
 	readonly paint: string;
 	readonly territory: string;
 }
@@ -1531,6 +1720,27 @@ export interface PilotoEnElMapa {
 	 * orden, así que el mapa, la pantalla y el servidor dicen exactamente lo mismo.
 	 */
 	readonly reach: Readonly<Record<string, string>>;
+	/**
+	 * El salto que está cruzando ahora mismo, o `null`.
+	 *
+	 * Sólo existe mientras hay un salto en curso: un viaje adentro del sistema no
+	 * cruza ninguna línea del mapa y no tendría qué dibujar. Trae cuándo empezó y
+	 * cuánto dura para que el mapa pueda mostrar **cuánto lleva recorrido**, que es
+	 * lo que convierte una línea resaltada en un viaje.
+	 *
+	 * Es la base de lo que va a necesitar el autopiloto: un recorrido de varios
+	 * saltos es esta misma línea, repetida.
+	 */
+	readonly route: RutaEnElMapa | null;
+}
+
+/** El tramo que el piloto está cruzando, en códigos de sistema. */
+export interface RutaEnElMapa {
+	readonly from: string;
+	readonly to: string;
+	/** En milisegundos UTC, para que el navegador lleve la cuenta. */
+	readonly startedAt: number;
+	readonly durationSeconds: number;
 }
 
 /** Un sistema en su casilla de la grilla. */
@@ -1566,6 +1776,13 @@ export interface NodoGalaxia {
 	 * pestaña Sistema una vez que llegaste.
 	 */
 	readonly services: readonly string[];
+	/**
+	 * Las corporaciones con un puesto en el sistema, por código.
+	 *
+	 * Códigos y no nombres porque es con lo que se filtra; el nombre para leer lo
+	 * pone el mapa una sola vez, en su propia lista.
+	 */
+	readonly corporations: readonly string[];
 	/** Cuántas salidas tiene. */
 	readonly gates: number;
 	/**

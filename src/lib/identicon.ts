@@ -72,8 +72,21 @@ const PASO_DISCO = 16;
 const CELDA_DISCO = PASO_DISCO * 0.84;
 const RADIO_DISCO = 2;
 
+/**
+ * Separación entre casillas del triángulo, y cuánto mide cada una.
+ *
+ * El triángulo crece hacia abajo —una fila más ancha que la anterior— y tiene que
+ * entrar en el que va inscripto en el marco. La fila de abajo es la que aprieta:
+ * con cuatro filas, su media anchura es `3 · paso`, y a esa altura el triángulo
+ * del marco todavía da para más.
+ */
+const PASO_TRIANGULO = 9.5;
+const CELDA_TRIANGULO = PASO_TRIANGULO * 0.8;
+/** Cuántas filas tiene: cuatro dan 1 + 3 + 5 + 7 = dieciséis casillas. */
+const FILAS_TRIANGULO = 4;
+
 /** A qué clase de cosa pertenece el sello. */
-export type Familia = 'corporacion' | 'piloto';
+export type Familia = 'corporacion' | 'piloto' | 'agente';
 
 /** Qué se dibuja en una celda encendida. */
 export type Glifo = 'lleno' | 'hueco' | 'nucleo';
@@ -82,8 +95,8 @@ export type Glifo = 'lleno' | 'hueco' | 'nucleo';
 export type Corazon = 'hexagono' | 'anillo' | 'rombo' | 'triangulo' | 'disco' | 'cruz' | 'barra';
 
 /** Con qué figura se dibuja cada casilla y el marco. */
-export type Forma = 'hexagono' | 'cuadrado';
-export type Marco = 'hexagono' | 'disco';
+export type Forma = 'hexagono' | 'cuadrado' | 'triangulo';
+export type Marco = 'hexagono' | 'disco' | 'triangulo';
 
 /** Una celda ya ubicada en el lienzo. */
 export interface CeldaSello {
@@ -139,10 +152,17 @@ const BOLSA: readonly (Glifo | 'vacio')[] = [
 	'nucleo'
 ];
 
-/** Los corazones de cada familia. No comparten ninguno, y es a propósito. */
+/**
+ * Los corazones de cada familia.
+ *
+ * Se solapan apenas y no pasa nada: lo que separa a una familia de otra es la
+ * **silueta** —el marco y la forma de la casilla—, que se lee antes que el
+ * centro. El corazón agrega variedad adentro de la familia, no entre familias.
+ */
 const CORAZONES: Readonly<Record<Familia, readonly Corazon[]>> = {
 	corporacion: ['hexagono', 'anillo', 'rombo', 'triangulo'],
-	piloto: ['disco', 'cruz', 'barra', 'rombo']
+	piloto: ['disco', 'cruz', 'barra', 'rombo'],
+	agente: ['triangulo', 'cruz', 'anillo', 'barra']
 };
 
 /** Una posición del lienzo con su reflejo ya calculado. */
@@ -206,6 +226,34 @@ function disco(): readonly Casilla[] {
 }
 
 /**
+ * Las casillas del triángulo: cuatro filas que se ensanchan hacia abajo.
+ *
+ * La fila del medio es la que lleva el corazón, y por eso la cuenta arranca una
+ * fila más arriba: un triángulo con el centro en la punta se vería descabezado.
+ * Que haya más casillas abajo que arriba no es un descuido —es lo que hace que la
+ * silueta se lea como un triángulo y no como una pirámide recortada—.
+ *
+ * El reflejo es negar la columna, como en el disco: la grilla es cuadrada aunque
+ * la silueta no lo sea.
+ */
+function triangulo(): readonly Casilla[] {
+	const salida: Casilla[] = [];
+	for (let fila = -1; fila < FILAS_TRIANGULO - 1; fila++) {
+		const ancho = fila + 1;
+		for (let col = 0; col <= ancho; col++) {
+			if (col === 0 && fila === 0) continue;
+			const cy = CENTRO + fila * PASO_TRIANGULO;
+			salida.push({
+				cx: CENTRO + col * PASO_TRIANGULO,
+				cy,
+				espejo: col === 0 ? null : { cx: CENTRO - col * PASO_TRIANGULO, cy }
+			});
+		}
+	}
+	return salida;
+}
+
+/**
  * El sello de ese nombre, en la familia que corresponda.
  *
  * **Nada de esto es aleatorio de verdad**: el dado sale del nombre, así que lo que
@@ -220,6 +268,7 @@ export function sealFor(name: string, family: Familia = 'corporacion'): Sello {
 	const semilla = `${family} ${name || 'sin nombre'}`;
 	const dado = dadoDe(semilla);
 	const esPiloto = family === 'piloto';
+	const esAgente = family === 'agente';
 
 	// El tono primero, para que agregar variantes más abajo no le cambie el color a
 	// lo que ya existe. El orden en que se tira **es** parte del formato.
@@ -227,9 +276,14 @@ export function sealFor(name: string, family: Familia = 'corporacion'): Sello {
 	// **El segundo tono es lo que separa a las dos familias en color.** Una
 	// corporación es de dos colores —el marco lejos del relleno, como una bandera—
 	// y un piloto es de uno solo, apenas corrido, como una chapa grabada.
+	// El agente va en el medio de los dos: un contraste que se nota pero no grita,
+	// porque en una lista aparece al lado de su corporación y no tiene que
+	// pelearle.
 	const tonoMarco = esPiloto
 		? (tono + 350 + Math.floor(dado() * 20)) % 360
-		: (tono + 140 + Math.floor(dado() * 80)) % 360;
+		: esAgente
+			? (tono + 60 + Math.floor(dado() * 50)) % 360
+			: (tono + 140 + Math.floor(dado() * 80)) % 360;
 
 	const corazones = CORAZONES[family];
 	const core = corazones[Math.floor(dado() * corazones.length)];
@@ -237,12 +291,15 @@ export function sealFor(name: string, family: Familia = 'corporacion'): Sello {
 	const spokes = dado() < (esPiloto ? 0.35 : 0.45);
 	// El disco gira en pasos de quince grados y el panal sólo tiene dos posiciones
 	// útiles: un hexágono girado treinta ya es el mismo hexágono.
-	const tilt = esPiloto ? Math.floor(dado() * 4) * 15 : dado() < 0.5 ? 0 : 30;
+	// El triángulo **no gira**: girado deja de leerse como triángulo y pasa a ser
+	// una mancha con tres puntas en cualquier lado.
+	const tilt = esAgente ? 0 : esPiloto ? Math.floor(dado() * 4) * 15 : dado() < 0.5 ? 0 : 30;
 
 	// La mitad derecha decide, la izquierda la copia. Las de la columna del medio
 	// son su propio reflejo, así que se plantan una sola vez.
 	const cells: CeldaSello[] = [];
-	for (const casilla of esPiloto ? disco() : panal()) {
+	const casillas = esAgente ? triangulo() : esPiloto ? disco() : panal();
+	for (const casilla of casillas) {
 		const elegido = BOLSA[Math.floor(dado() * BOLSA.length)];
 		if (elegido === 'vacio') continue;
 
@@ -252,7 +309,7 @@ export function sealFor(name: string, family: Familia = 'corporacion'): Sello {
 
 	// El piloto va un punto menos saturado: son chapas, no banderas, y en una lista
 	// de cien nombres un color más calmo se lee mejor que cien colores peleando.
-	const sat = esPiloto ? SATURACION - 14 : SATURACION;
+	const sat = esPiloto ? SATURACION - 14 : esAgente ? SATURACION - 7 : SATURACION;
 
 	return {
 		seed: name,
@@ -261,9 +318,9 @@ export function sealFor(name: string, family: Familia = 'corporacion'): Sello {
 		bright: hslToHex(tono, Math.min(100, sat + 8), Math.min(100, BRILLO + 16)),
 		dim: hslToHex(tono, Math.max(0, sat - 12), Math.max(0, BRILLO - 26)),
 		edge: hslToHex(tonoMarco, Math.max(0, sat - 16), Math.max(0, BRILLO - 14)),
-		ring: esPiloto ? 'disco' : 'hexagono',
-		cellShape: esPiloto ? 'cuadrado' : 'hexagono',
-		cellSize: esPiloto ? CELDA_DISCO / 2 : CELDA_PANAL,
+		ring: esAgente ? 'triangulo' : esPiloto ? 'disco' : 'hexagono',
+		cellShape: esAgente ? 'triangulo' : esPiloto ? 'cuadrado' : 'hexagono',
+		cellSize: esAgente ? CELDA_TRIANGULO / 2 : esPiloto ? CELDA_DISCO / 2 : CELDA_PANAL,
 		cells,
 		core,
 		innerRing,

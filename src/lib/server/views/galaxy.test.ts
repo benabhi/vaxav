@@ -127,6 +127,29 @@ describe('el mapa de la galaxia', () => {
 		expect(vela.services).toEqual(['market', 'refinery']);
 	});
 
+	/*
+	 * Con esto se contesta «¿dónde está la mía?» desde la pestaña Corporación. La
+	 * lista del mapa es la que llena el desplegable, así que ofrece sólo las que
+	 * tienen dónde aparecer.
+	 */
+	it('anota quién opera en cada sistema, y las lista una sola vez', () => {
+		const db = seededDb();
+		const mapa = buildGalaxyMap(db);
+		const anfora = mapa.systems.find((nodo) => nodo.code === 'anfora')!;
+
+		expect(anfora.corporations).toContain('casa_verlan');
+		// Casa Verlan opera más de un puesto en Ánfora y aparece una sola vez: la
+		// pregunta es quién está en el sistema, no cuántas veces.
+		expect(new Set(anfora.corporations).size).toBe(anfora.corporations.length);
+
+		const nombres = mapa.corporations.map((una) => una.name);
+		expect(nombres).toContain('Casa Verlan');
+		expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, 'es')));
+		// Minería Baronal existe en el catálogo y no opera nada: el desplegable no
+		// la ofrece porque no tendría nada que mostrar.
+		expect(nombres).not.toContain('Minería Baronal');
+	});
+
 	it('no inventa servicios donde no hay estaciones', () => {
 		const db = seededDb();
 		const { otro } = dosSistemas(db);

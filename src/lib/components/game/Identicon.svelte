@@ -67,6 +67,22 @@
 			.join(' ');
 	}
 
+	/**
+	 * Un triángulo con la punta arriba, inscripto en un círculo de ese radio.
+	 *
+	 * Sirve para el marco del agente y para cada una de sus casillas: la misma
+	 * figura en dos tamaños es lo que hace que el emblema se lea de una pieza.
+	 * Empieza a las doce y avanza de ciento veinte en ciento veinte.
+	 */
+	function triangulo(cx: number, cy: number, radio: number): string {
+		return [-90, 30, 150]
+			.map((grados) => {
+				const angulo = (grados * Math.PI) / 180;
+				return `${(cx + radio * Math.cos(angulo)).toFixed(2)},${(cy + radio * Math.sin(angulo)).toFixed(2)}`;
+			})
+			.join(' ');
+	}
+
 	/** Un cuadrado centrado, que es la casilla del disco. */
 	function cuadrado(cx: number, cy: number, medio: number): string {
 		const izq = (cx - medio).toFixed(2);
@@ -149,6 +165,14 @@
 				stroke={sello.edge}
 				stroke-width="1.6"
 			/>
+		{:else if sello.ring === 'triangulo'}
+			<polygon
+				points={triangulo(MEDIO, MEDIO, MARCO)}
+				fill="var(--color-background)"
+				stroke={sello.edge}
+				stroke-width="1.6"
+				stroke-linejoin="round"
+			/>
 		{:else}
 			<circle
 				cx={MEDIO}
@@ -207,6 +231,15 @@
 				stroke-width="1"
 				stroke-dasharray="4 3"
 			/>
+		{:else if sello.ring === 'triangulo'}
+			<polygon
+				points={triangulo(MEDIO, MEDIO, INTERIOR)}
+				fill="none"
+				stroke={sello.dim}
+				stroke-width="1"
+				stroke-dasharray="4 3"
+				stroke-linejoin="round"
+			/>
 		{:else}
 			<circle
 				cx={MEDIO}
@@ -228,7 +261,9 @@
 		{@const figura =
 			sello.cellShape === 'hexagono'
 				? puntos(celda.cx, celda.cy, sello.cellSize * 0.86)
-				: cuadrado(celda.cx, celda.cy, sello.cellSize * 0.88)}
+				: sello.cellShape === 'triangulo'
+					? triangulo(celda.cx, celda.cy, sello.cellSize * 1.25)
+					: cuadrado(celda.cx, celda.cy, sello.cellSize * 0.88)}
 
 		{#if celda.glyph === 'lleno'}
 			<polygon points={figura} fill={sello.ink} />

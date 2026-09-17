@@ -101,7 +101,9 @@ export const MODULES: readonly Module[] = [
 	{
 		code: 'corporation',
 		label: 'Corporación',
-		icon: 'buildings',
+		// Una red de nodos y no un edificio: lo que el jugador integra no es una
+		// oficina, es gente conectada, y en un HUD un edificio se lee terrestre.
+		icon: 'share-network',
 		// **Va a ser una zona de varias pestañas**: listado de miembros, roles y
 		// permisos, bienes de la corporación, contratos. Están las dos que hoy tienen
 		// algo detrás, y las demás llegan cuando lo tengan: una entrada que lleva a un
@@ -110,6 +112,18 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/corporacion',
 				label: 'Ficha'
+			},
+			// Entre la ficha y los miembros a propósito: primero qué es, después qué
+			// piensa de vos, y al final quiénes son los otros.
+			{
+				route: '/corporacion/reputacion',
+				label: 'Reputación'
+			},
+			// Los agentes antes que los miembros: a la corporación se le pide trabajo
+			// más seguido que compañía.
+			{
+				route: '/corporacion/agentes',
+				label: 'Agentes'
 			},
 			{
 				route: '/corporacion/miembros',

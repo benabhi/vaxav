@@ -13,6 +13,7 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
@@ -26,7 +27,6 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
-	import type { PuntaTramo } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -95,29 +95,6 @@
 	ley, porque mientras la nave vuela **la ficha del lugar está apagada** y no hay
 	ninguna otra pantalla donde mirar a qué se está entrando.
 -->
-{#snippet punta(titulo: string, lado: PuntaTramo)}
-	<div class="flex min-w-0 flex-col gap-2">
-		<div class="flex min-w-0 items-center gap-3">
-			<Icon name={lado.icon} weight="duotone" size="1.3rem" class="shrink-0 text-accent" />
-			<div class="flex min-w-0 flex-col gap-[0.1rem]">
-				<Label>{titulo}</Label>
-				<HudValue class="text-[0.88rem]">{lado.name || '—'}</HudValue>
-				<span class="text-1 text-text-muted">{lado.kindLabel}</span>
-			</div>
-		</div>
-
-		{#if lado.system}
-			<div class="flex flex-col gap-[0.1rem] border-l-2 border-l-border pl-3">
-				<span class="tracking-wide font-mono text-[0.8rem] text-accent-bright">
-					{lado.system}
-				</span>
-				<span class="text-1 text-text-muted">{lado.faction} · {lado.government}</span>
-				<span class="text-1 text-text-muted">Seguridad {lado.security}</span>
-			</div>
-		{/if}
-	</div>
-{/snippet}
-
 <!--
 	El tramo en curso, mientras la nave está en camino.
 
@@ -135,31 +112,25 @@
 		detail={place.leg.destination.system}
 		class="mb-[1.25rem] w-full"
 	>
-		<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-4">
-			{@render punta('Salida', place.leg.origin)}
-
+		<div class="flex w-full flex-col gap-5">
 			<!--
-				La flecha sólo cuando las dos puntas están una al lado de la otra.
-				Apiladas en un teléfono apunta hacia la derecha, a un costado, y señala
-				el margen: los rótulos «Salida» y «Llegada» ya ordenan la lectura.
+				El viaje dibujado, a todo el ancho: mientras se espera, la pantalla tiene
+				que mostrar que algo se mueve. Las cifras exactas van debajo, como manda
+				la regla de las figuras.
 			-->
-			<Icon
-				name="caret-right"
-				weight="bold"
-				size="0.8rem"
-				class="mt-3 hidden shrink-0 text-accent-dim sm:block"
+			<TransitTrack
+				origin={place.leg.origin}
+				destination={place.leg.destination}
+				startedAt={place.leg.startedAt}
+				durationSeconds={place.leg.durationSeconds}
 			/>
-
-			{@render punta('Llegada', place.leg.destination)}
-
-			<div class="grow"></div>
 
 			<!--
 				Lo que cuesta el tramo. La distancia y el combustible sólo aparecen
 				cuando hay un salto detrás: un viaje dentro del sistema no quema nada, y
 				una fila en blanco miente más que una fila que no está.
 			-->
-			<div class="flex flex-wrap items-start gap-x-6 gap-y-3">
+			<div class="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-border-soft pt-4">
 				{#if place.leg.distance}
 					<div class="flex flex-col items-start gap-1">
 						<Label>Distancia</Label>
@@ -179,7 +150,7 @@
 				{/if}
 
 				<div class="flex flex-col items-start gap-1">
-					<Label>Tarda</Label>
+					<Label>Duración</Label>
 					<span class="font-mono text-[0.88rem] whitespace-nowrap text-accent-bright">
 						{place.leg.duration}
 					</span>
@@ -288,8 +259,26 @@
 				class="w-full"
 			>
 				<div class="flex w-full flex-col gap-4">
+					<!--
+						La ambientación de la puerta, acá adentro y no en una ficha aparte: en
+						una puerta no hay nada más que contar del lugar, y lo que importa es el
+						salto que sigue.
+					-->
+					<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
+					{#if place.description}
+						<div class="flex w-full items-start gap-[0.9rem]">
+							<Icon
+								name={place.icon}
+								weight="thin"
+								size="2.25rem"
+								class="shrink-0 text-accent-dim"
+							/>
+							<BodyText>{place.description}</BodyText>
+						</div>
+					{/if}
+
 					{#if place.gate.destination}
-						<div class="flex w-full flex-wrap items-center gap-3">
+						<div class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4">
 							<Icon name="arrow-circle-right" weight="duotone" size="1.3rem" class="text-accent" />
 							<div class="flex min-w-0 flex-col gap-[0.1rem]">
 								<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
@@ -307,7 +296,7 @@
 								<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
 							</div>
 							<div class="flex flex-col items-start gap-1">
-								<Label>Tarda</Label>
+								<Label>Duración</Label>
 								<span class="font-mono text-[0.85rem] text-accent-bright">
 									{place.gate.duration}
 								</span>
@@ -408,12 +397,12 @@
 						</span>
 					</span>
 					<span class="flex items-baseline gap-2">
-						<Label>Tarda</Label>
+						<Label>Duración</Label>
 						<span class="font-mono text-[0.78rem] text-accent-bright">{place.field.duration}</span>
 					</span>
 					{#if place.field.regen}
 						<span class="flex items-baseline gap-2">
-							<Label>Repone</Label>
+							<Label>Reposición</Label>
 							<span class="font-mono text-[0.78rem] text-data">{place.field.regen}</span>
 						</span>
 					{/if}
@@ -466,7 +455,7 @@
 								<div class="grow"></div>
 								{#if roca.remaining}
 									<span class="flex shrink-0 items-baseline gap-2">
-										<Label>Queda</Label>
+										<Label>Restante</Label>
 										<span class="font-mono text-[0.78rem] text-accent-bright">{roca.remaining}</span
 										>
 									</span>
@@ -485,17 +474,17 @@
 									<span class="text-1 text-warning">{roca.blocked}</span>
 								{:else}
 									<span class="flex items-baseline gap-2">
-										<Label>Extraés</Label>
+										<Label>Extracción</Label>
 										<span class="font-mono text-[0.8rem] text-data">
 											{roca.units} u · {roca.volume} m³
 										</span>
 									</span>
 									<span class="flex items-baseline gap-2">
-										<Label>Tarda</Label>
+										<Label>Duración</Label>
 										<span class="font-mono text-[0.8rem] text-accent-bright">{roca.duration}</span>
 									</span>
 									<span class="flex items-baseline gap-2">
-										<Label>Vale</Label>
+										<Label>Valor</Label>
 										<span class="font-mono text-[0.8rem] text-data">{roca.value} CR</span>
 									</span>
 								{/if}
@@ -592,8 +581,13 @@
 		**En tránsito no se dibuja.** No hay lugar del que dar ficha, así que sus
 		cinco lecturas salen vacías y el panel queda diciendo «Órbita a: nada,
 		Distancia: nada». El tramo de arriba ya cuenta todo lo que hay para contar.
+
+		**En una puerta tampoco.** Una puerta no es un lugar donde se hace algo: es
+		el salto que sigue, y eso lo cuenta entero el panel de al lado. Describirla
+		como a cualquier cuerpo —tipo, órbita, distancia al sol— es contestar una
+		pregunta que nadie hizo mientras se tapa la que sí.
 	-->
-	{#if !place.inTransit}
+	{#if !place.inTransit && !place.gate}
 		<div class="w-full min-w-0 flex-[1_1_0]">
 			<div class="flex w-full min-w-0 flex-col gap-4">
 				<TitledPanel title="Ficha del lugar" class="w-full">
@@ -613,7 +607,7 @@
 				</TitledPanel>
 
 				{#if place.isStation}
-					<TitledPanel title="Operada por" class="w-full">
+					<TitledPanel title="Operador" class="w-full">
 						<div class="flex w-full flex-col items-start gap-2">
 							<HudValue>{place.corporation}</HudValue>
 							<div class="flex flex-wrap items-center gap-[0.4rem]">
