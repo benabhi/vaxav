@@ -375,7 +375,9 @@ Son tres piezas y conviene no confundirlas:
   qué hay alrededor.
 - **`GalaxyStage`** es el marco: acomoda el lienzo, los filtros, la ficha del
   costado y la leyenda, y resuelve el botón de agrandar —panel arriba, pantalla
-  completa encima de todo—.
+  completa encima de todo—. A pantalla completa **pliega los dos bloques que
+  flotan**, filtros y ficha, cada uno con su botón en su esquina; el de la ficha
+  lleva el nombre de lo que describe, porque plegada es lo único que queda.
 - **`GalaxyLegend`** —sin botones: los controles de la cámara son del mapa y viven
   en su esquina— dice qué significa lo que se ve, y ordena dos preguntas
   distintas: qué dice el color —que cambia con el filtro— y qué dice la línea —que

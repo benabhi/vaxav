@@ -38,6 +38,22 @@
 		 * abiertos al volver. Ahí el lugar es del mapa.
 		 */
 		filtersOpen?: boolean;
+		/**
+		 * Si la ficha está desplegada sobre el mapa a pantalla completa.
+		 *
+		 * Se pliega como los filtros y por el mismo motivo: agrandado, todo lo que
+		 * flota encima le tapa galaxia, y la ficha es lo más grande que flota. Va
+		 * hacia afuera para que la pantalla decida con qué estado abre.
+		 */
+		cardOpen?: boolean;
+		/**
+		 * Cómo se llama lo que la ficha describe, para el botón que la despliega.
+		 *
+		 * Plegada, el botón es lo único que queda: si dijera sólo «Sistema» habría que
+		 * abrirlo para saber de cuál habla, que es justo lo que uno no quiere hacer
+		 * mientras mira el mapa.
+		 */
+		cardLabel?: string;
 		/** Si hay algo que mostrar en la ficha del costado. */
 		showCard?: boolean;
 		/** El lienzo. */
@@ -57,6 +73,8 @@
 		detail = '',
 		expanded,
 		filtersOpen = $bindable(true),
+		cardOpen = $bindable(true),
+		cardLabel = 'Sistema',
 		showCard = true,
 		map,
 		filters,
@@ -138,15 +156,39 @@
 
 		{#if card && showCard}
 			<!--
-				Debajo del botón de filtros y por encima de la leyenda: la ficha se mete
-				entre los dos en vez de taparlos, que es lo que pasaría con una capa que
-				ocupe todo el alto.
+				Debajo de los controles del mapa y por encima de la leyenda: la ficha se
+				mete entre los dos en vez de taparlos, que es lo que pasaría con una capa
+				que ocupe todo el alto.
+
+				**Y se pliega**, como los filtros del otro lado. Es lo más grande que flota
+				sobre el lienzo, así que plegarla es la diferencia entre mirar la galaxia y
+				mirar dos tercios de la galaxia. El botón queda: plegada sin botón no habría
+				cómo traerla de vuelta.
+
+				La columna **no atrapa el mouse** —sólo el botón y la ficha lo hacen—: un
+				rectángulo invisible de veinte rem sobre el mapa se comería los arrastres de
+				toda esa franja, y eso se siente como un mapa roto.
 			-->
 			<div
-				class="absolute top-2 right-2 bottom-[4.5rem] z-10 flex w-[min(20rem,calc(100vw-2rem))]
-					flex-col pt-9"
+				class="pointer-events-none absolute top-2 right-2 bottom-[4.5rem] z-10 flex
+					w-[min(20rem,calc(100vw-2rem))] flex-col items-end gap-2 pt-9"
 			>
-				{@render card()}
+				<HudButton
+					type="button"
+					size="1"
+					variant={cardOpen ? 'primary' : 'outline'}
+					class="pointer-events-auto max-w-full"
+					onclick={() => (cardOpen = !cardOpen)}
+				>
+					<Icon name={cardOpen ? 'caret-up' : 'caret-down'} weight="bold" size="0.7rem" />
+					<span class="truncate">{cardLabel}</span>
+				</HudButton>
+
+				{#if cardOpen}
+					<div class="pointer-events-auto flex min-h-0 w-full flex-1 *:h-full">
+						{@render card()}
+					</div>
+				{/if}
 			</div>
 		{/if}
 

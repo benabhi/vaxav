@@ -564,6 +564,17 @@ leyendas, los filtros— flota encima del lienzo y se pliega. Agrandar el mapa e
 para mirar el mapa, y un mapa rodeado de recuadros es el mapa chico con más
 píxeles.
 
+**Los filtros y la ficha se pliegan con su botón**, cada uno en su esquina, y con
+estados de entrada opuestos a propósito: los filtros arrancan plegados porque no
+hacen falta hasta que se los busca, y la ficha desplegada porque es lo que se lee
+al tocar un sistema, que es lo que uno hace apenas agranda. El botón de la ficha
+**dice de qué sistema habla**: plegada es lo único que queda, y si dijera sólo
+«Sistema» habría que abrirla para saber de cuál.
+
+Y la columna de la ficha **no atrapa el mouse** donde no hay nada: sólo el botón y
+la ficha lo hacen. Un rectángulo invisible de veinte rem sobre el lienzo se comería
+los arrastres de toda esa franja, y eso se siente como un mapa roto.
+
 Se dibuja **una sola de las dos versiones**, nunca las dos a la vez: dejar la de
 abajo escondida repetiría el identificador de cada campo del filtro, y dos
 controles con el mismo `id` rompen las etiquetas de los dos.
