@@ -229,6 +229,8 @@ export interface SalidaPuerta {
 	readonly range: string;
 	/** Por qué no se puede, o vacío si se puede. */
 	readonly blocked: string;
+	/** Qué módulo permite saltar y qué habilidades lo mejoran. */
+	readonly source: Procedencia;
 }
 
 /**
@@ -270,6 +272,81 @@ export interface Roca {
 }
 
 /**
+ * De dónde sale un verbo, dicho para que el jugador lo lea.
+ *
+ * **La regla es que el juego no explique la cadena sólo cuando se rompe.** Un
+ * piloto con el escáner montado nunca se entera de que hacía falta un escáner, ni
+ * de qué habilidades hacen que su lectura sea mejor: se entera el día que le
+ * falta algo, que es tarde. Esto va debajo del verbo y lo dice siempre.
+ *
+ * Distingue dos relaciones que no se parecen y que mostradas iguales confunden:
+ * **la llave** habilita —sin escáner no hay verbo— y **la palanca** mejora —con
+ * más Escaneo la lectura es mejor, pero sin Escaneo igual se escanea—.
+ */
+export interface Procedencia {
+	/** El verbo del que se habla: «Escanear», «Extraer». */
+	readonly verb: string;
+	/**
+	 * Por qué no se puede **ahora mismo**. Vacía si se puede.
+	 *
+	 * No es lo mismo que un módulo que falta, y confundirlos fue el error: un
+	 * módulo que falta es una carencia permanente que se arregla comprando, y esto
+	 * es por qué el botón está apagado en este momento, que puede ser una orden en
+	 * curso y se arregla esperando. Un botón apagado sin este renglón es un botón
+	 * que no explica nada, y es exactamente lo que el aviso vino a evitar.
+	 */
+	readonly blockers: readonly string[];
+	/**
+	 * Los módulos que el verbo necesita montados, cumplidos o no.
+	 *
+	 * Los que faltan viajan igual: son lo que hay que comprar, y el único motivo
+	 * por el que alguien abre este aviso cuando el botón está apagado.
+	 */
+	readonly modules: readonly Aparato[];
+	/** Las habilidades que cambian el resultado, tenidas o no. */
+	readonly levers: readonly Palanca[];
+	/** Qué rinde hoy, con su rótulo: «Alcance · 2,7 al». */
+	readonly effects: readonly Lectura[];
+	/**
+	 * Qué daría cada escalón siguiente, o vacía si no hay ninguno a la vista.
+	 *
+	 * Es lo que convierte el rótulo en una decisión: sin esto la línea informa, y
+	 * con esto es el motivo para entrenar la habilidad de al lado.
+	 */
+	readonly next: readonly string[];
+}
+
+/** Un módulo que un verbo necesita: qué hace falta, y qué hay puesto. */
+export interface Aparato {
+	/** Qué clase de pieza pide: «Motor de salto», «Escáner». */
+	readonly requirement: string;
+	/** El módulo montado que lo cumple, o vacío si falta. */
+	readonly name: string;
+	readonly fitted: boolean;
+}
+
+/**
+ * Un rótulo y su valor, ya escritos.
+ *
+ * Existe porque esta pareja aparece en media docena de lugares —el cartel de
+ * confirmación, el informe, la procedencia— y escribirla a mano en cada uno deja
+ * seis formas de lo mismo.
+ */
+export interface Lectura {
+	readonly label: string;
+	readonly value: string;
+}
+
+/** Una habilidad que mueve el resultado de un verbo. */
+export interface Palanca {
+	readonly name: string;
+	/** El nivel que tiene, en romano, o vacío si todavía no la tiene. */
+	readonly level: string;
+	/** Si la tiene. Las que faltan se dibujan apagadas: son la lista de compras. */
+	readonly known: boolean;
+}
+
+/**
  * El campo de rocas y el instrumento con que se lo mira.
  *
  * Es lo que las rocas tienen en común —cuántas hay, cuántas están identificadas,
@@ -288,6 +365,15 @@ export interface CampoRocas {
 	readonly regen: string;
 	/** Por qué no se puede escanear nada acá, o vacío si se puede. */
 	readonly blocked: string;
+	/**
+	 * De dónde salen los dos verbos del cinturón.
+	 *
+	 * Van acá y no en cada roca porque el escáner y el láser son **de la nave**:
+	 * repetirlos debajo de las ocho piedras sería decir ocho veces lo mismo, que es
+	 * el mismo motivo por el que este tipo existe.
+	 */
+	readonly scanSource: Procedencia;
+	readonly mineSource: Procedencia;
 }
 
 /**
@@ -349,6 +435,14 @@ export interface Sistema {
 	/** Lo único que el botón de viajar necesita para saber si mostrarse bloqueado. */
 	readonly hasShip: boolean;
 	readonly actionInProgress: boolean;
+	/**
+	 * Qué módulo permite viajar y qué habilidades lo mejoran.
+	 *
+	 * Uno solo para todo el árbol: los propulsores son de la nave, no del cuerpo al
+	 * que se va. Cada fila lo muestra igual porque el botón vive en la fila, y la
+	 * explicación tiene que estar donde está el botón.
+	 */
+	readonly travelSource: Procedencia;
 }
 
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */

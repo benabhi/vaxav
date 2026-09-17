@@ -17,7 +17,8 @@ import { and, asc, eq } from 'drizzle-orm';
 import { beltDeposit as beltDepositTable, body, type BeltDeposit, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { cargoHold, shipContainer } from './containers';
-import { activeShip, shipReadout } from './ships';
+import { activeShip, pilotSkillLevels, shipFit, shipReadout } from './ships';
+import { grantingModule, leversFor, type Lever } from '$lib/game/sourcing';
 import { planMining, restored, type MiningPlan } from '$lib/game/mining';
 import { getAsteroid } from './asteroids';
 import { getOre } from '$lib/game/items';
@@ -136,6 +137,48 @@ export function miningPlan(db: Db, row: Pilot, asteroidId: number): MiningPlan {
 		freeTenths: hold.freeTenths,
 		remainingUnits: roca.units
 	});
+}
+
+/**
+ * De dónde sale poder extraer: el láser montado y las llaves que lo mueven.
+ *
+ * Va aparte del plan y no adentro porque `MiningPlan` lo arma `game/mining.ts`,
+ * que es puro y no sabe qué hay montado: meterle el módulo obligaría a pasarle la
+ * nave entera a una función cuyo trabajo son las cuentas. Son dos preguntas
+ * distintas —cuánto sale de esta roca, y gracias a qué— y se contestan por
+ * separado.
+ *
+ * El rendimiento sale del mismo `readout` que usa el plan, así que lo que la
+ * línea promete y lo que la orden hace no pueden desfasarse.
+ */
+export function miningSource(db: Db, row: Pilot): MiningSource {
+	const nave = activeShip(db, row.id);
+	const readout = shipReadout(db, row);
+	const levels = pilotSkillLevels(db, row.id);
+
+	if (readout === null || nave === null) {
+		return { module: '', levers: [], perHour: 0 };
+	}
+
+	// Las palancas salen aunque no haya láser: el que no lo tiene necesita saber
+	// no sólo qué comprar sino qué entrenar para que valga la pena.
+	const palancas = leversFor('mining_yield', readout.hull, levels);
+	const laser = grantingModule(shipFit(db, nave), 'miningYield');
+
+	return {
+		module: laser?.name ?? '',
+		levers: palancas,
+		perHour: readout.miningPerHour
+	};
+}
+
+/** El aparato y las llaves de extraer, sin las cuentas de ninguna roca. */
+export interface MiningSource {
+	/** El láser montado que habilita el verbo, o vacío si no hay ninguno. */
+	readonly module: string;
+	readonly levers: readonly Lever[];
+	/** Lo que la nave rinde por hora, ya con los bonos aplicados. */
+	readonly perHour: number;
 }
 
 /** Si ese cuerpo es un cinturón con algo para sacar. */

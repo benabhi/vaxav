@@ -12,6 +12,7 @@
 	import { tick } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
+	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
@@ -21,7 +22,6 @@
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
-	import HoverCard from '$lib/components/ui/HoverCard.svelte';
 	import Popover from '$lib/components/ui/Popover.svelte';
 	import type { FilaCuerpo } from '$lib/tipos';
 	import type { PageProps } from './$types';
@@ -129,14 +129,6 @@
 		setTimeout(() => fila.classList.remove('vaxav-flash'), 1800);
 	}
 
-	/** Por qué el botón de viajar está bloqueado, o para qué sirve si no lo está. */
-	let travelTooltip = $derived(
-		!system.hasShip
-			? 'Necesitás una nave para viajar'
-			: system.actionInProgress
-				? 'Ya hay una orden en curso'
-				: 'Viajar hasta acá'
-	);
 	let canTravel = $derived(system.hasShip && !system.actionInProgress);
 </script>
 
@@ -184,6 +176,12 @@
 	Las acciones de una fila. Hoy sólo viajar, y no sobre la propia fila del
 	piloto. Bloqueada por un requisito que falta, se ve igual pero atenuada y con
 	el motivo en el aviso: nunca desaparece en silencio.
+
+	**Un solo aviso sobre el botón.** Acá había un `HoverCard` con el motivo y se le
+	anidó adentro el de la procedencia: el de adentro ganaba y el motivo se perdía,
+	que es justo lo que este comentario prometía que no pasaba. Ahora los dos datos
+	viven en `ActionSource`, que dice primero por qué no se puede y después de dónde
+	sale el verbo.
 -->
 {#snippet actions(body: FilaCuerpo)}
 	{#if !body.isHere}
@@ -192,53 +190,45 @@
 			onclick={(evento) => evento.stopPropagation()}
 			onkeydown={(evento) => evento.stopPropagation()}
 		>
-			<HoverCard>
-				{#snippet trigger()}
-					<!--
-						Viajar no se ordena de un click: compromete tiempo real y mientras
-						corre no se puede hacer otra cosa. El diálogo dice cuánto cuesta
-						antes de encargarlo.
-					-->
-					<ConfirmAction
-						formAction="?/viajar"
-						title="Viajar a {body.name}"
-						icon="rocket-launch"
-						confirmLabel="Viajar"
-						disabled={!canTravel}
-						readings={[
-							{ label: 'Distancia', value: body.distance },
-							{ label: 'Duración', value: body.travelLabel }
-						]}
-						note="Mientras dure el viaje no vas a poder dar otra orden."
-					>
-						{#snippet trigger(abrir)}
-							<HudButton
-								type="button"
-								variant="outline"
-								size="1"
-								disabled={!canTravel}
-								onclick={abrir}
-								class="w-[4.5rem] {canTravel ? '' : 'cursor-not-allowed opacity-45'}"
-							>
-								<Icon name="rocket-launch" weight="bold" size="0.75rem" />
-								<span class="overflow-hidden text-[0.7rem] text-ellipsis whitespace-nowrap">
-									{body.travelLabel}
-								</span>
-							</HudButton>
-						{/snippet}
-						{#snippet fields()}
-							<input type="hidden" name="destino" value={body.code} />
-						{/snippet}
-					</ConfirmAction>
+			<!--
+				Viajar no se ordena de un click: compromete tiempo real y mientras corre
+				no se puede hacer otra cosa. El diálogo dice cuánto cuesta antes de
+				encargarlo.
+			-->
+			<ConfirmAction
+				formAction="?/viajar"
+				title="Viajar a {body.name}"
+				icon="rocket-launch"
+				confirmLabel="Viajar"
+				disabled={!canTravel}
+				readings={[
+					{ label: 'Distancia', value: body.distance },
+					{ label: 'Duración', value: body.travelLabel }
+				]}
+				note="Mientras dure el viaje no vas a poder dar otra orden."
+				source={system.travelSource}
+			>
+				{#snippet trigger(abrir)}
+					<ActionSource source={system.travelSource}>
+						<HudButton
+							type="button"
+							variant="outline"
+							size="1"
+							disabled={!canTravel}
+							onclick={abrir}
+							class="w-[4.5rem] {canTravel ? '' : 'cursor-not-allowed opacity-45'}"
+						>
+							<Icon name="rocket-launch" weight="bold" size="0.75rem" />
+							<span class="overflow-hidden text-[0.7rem] text-ellipsis whitespace-nowrap">
+								{body.travelLabel}
+							</span>
+						</HudButton>
+					</ActionSource>
 				{/snippet}
-				<FloatingPanel class="px-[0.7rem] py-[0.4rem]">
-					<span
-						class="font-display text-[0.7rem] font-bold tracking-label whitespace-nowrap text-accent-bright uppercase"
-					>
-						{travelTooltip}
-					</span>
-				</FloatingPanel>
-			</HoverCard>
+				{#snippet fields()}
+					<input type="hidden" name="destino" value={body.code} />
+				{/snippet}
+			</ConfirmAction>
 		</span>
 	{/if}
 {/snippet}

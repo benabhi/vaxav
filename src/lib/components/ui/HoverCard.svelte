@@ -22,9 +22,19 @@
 		gap?: number;
 		/** Cuánto espera antes de aparecer, en milisegundos. */
 		delay?: number;
+		/**
+		 * Si se puede entrar al panel con el mouse sin que se cierre.
+		 *
+		 * Apagado por omisión, que es lo correcto para un aviso de una línea: dejarlo
+		 * vivo mientras el mouse pasa por encima lo convierte en algo que estorba. Se
+		 * enciende **sólo cuando el panel tiene algo que hacer adentro** —scroll,
+		 * porque el contenido puede crecer— porque si no, el techo de altura es
+		 * decorativo: lo que sobra queda cortado y sin forma de llegar.
+		 */
+		interactive?: boolean;
 	}
 
-	let { trigger, children, gap = 6, delay = 200 }: Props = $props();
+	let { trigger, children, gap = 6, delay = 200, interactive = false }: Props = $props();
 
 	let disparador = $state<HTMLElement>();
 	let panel = $state<HTMLElement>();
@@ -63,8 +73,21 @@
 
 	function cerrar() {
 		clearTimeout(pendiente);
-		if (abierto) panel?.hidePopover();
+		if (!interactive) {
+			if (abierto) panel?.hidePopover();
+			return;
+		}
+
+		// Con el panel vivo, cerrar de inmediato haría imposible entrar: entre el
+		// disparador y el panel hay un hueco de unos píxeles, y el mouse lo cruza.
+		// La espera es lo que vuelve alcanzable al panel.
+		pendiente = setTimeout(() => {
+			if (abierto) panel?.hidePopover();
+		}, CIERRE);
 	}
+
+	/** Cuánto aguanta abierto después de salir, cuando se puede entrar al panel. */
+	const CIERRE = 160;
 
 	$effect(() => {
 		// Se limpia el temporizador pendiente si el componente se va antes de que
@@ -91,11 +114,21 @@
 	{@render trigger()}
 </span>
 
+<!--
+	Sin `interactive`, el panel no recibe el mouse: es un aviso y nada más, y
+	dejarlo interceptar clics taparía lo que hay debajo. Con `interactive` sí lo
+	recibe, porque hay algo que hacer adentro.
+-->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	bind:this={panel}
 	popover="auto"
-	class="pointer-events-none m-0 w-fit border-0 bg-transparent p-0"
+	class="m-0 w-fit border-0 bg-transparent p-0 {interactive
+		? 'pointer-events-auto'
+		: 'pointer-events-none'}"
 	ontoggle={(evento) => (abierto = evento.newState === 'open')}
+	onmouseenter={interactive ? abrir : undefined}
+	onmouseleave={interactive ? cerrar : undefined}
 >
 	{@render children()}
 </div>

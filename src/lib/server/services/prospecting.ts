@@ -16,7 +16,8 @@
 import { and, eq } from 'drizzle-orm';
 import { asteroidSurvey, type AsteroidSurvey, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
-import { pilotSkillLevels, shipReadout } from './ships';
+import { activeShip, pilotSkillLevels, shipFit, shipReadout } from './ships';
+import { grantingModule, leverOf, leversFor, type Lever } from '$lib/game/sourcing';
 import {
 	SURVEY_REFINE_SKILL,
 	SURVEY_SKILL,
@@ -76,6 +77,16 @@ export interface SurveyPlan {
 	readonly sensorRange: number;
 	readonly durationSeconds: number;
 	readonly depth: SurveyDepth;
+	/**
+	 * El escáner montado que habilita el verbo, o vacío si no hay ninguno.
+	 *
+	 * Viaja en el plan y no se busca aparte porque **es la misma pregunta** que
+	 * `blocked` contesta al revés: uno dice por qué no se puede y el otro gracias a
+	 * qué sí. Separarlos deja que se contradigan.
+	 */
+	readonly module: string;
+	/** Las habilidades que cambian la lectura, con el nivel que el piloto tiene. */
+	readonly levers: readonly Lever[];
 	/** Por qué no se puede, o vacío si se puede. */
 	readonly blocked: string;
 }
@@ -90,18 +101,38 @@ export interface SurveyPlan {
  * único que paga Ciencias. Sería una puerta cerrada con la llave adentro.
  */
 export function surveyPlan(db: Db, row: Pilot): SurveyPlan {
+	const nave = activeShip(db, row.id);
 	const readout = shipReadout(db, row);
 	const levels = pilotSkillLevels(db, row.id);
 	const depth = surveyDepth(levels[SURVEY_SKILL] ?? 0, levels[SURVEY_REFINE_SKILL] ?? 0);
 
-	if (readout === null) {
-		return { sensorRange: 0, durationSeconds: 0, depth, blocked: 'Necesitás una nave.' };
-	}
-	if (readout.sensorRange <= 0) {
+	if (readout === null || nave === null) {
 		return {
 			sensorRange: 0,
 			durationSeconds: 0,
 			depth,
+			module: '',
+			levers: [],
+			blocked: 'Necesitás una nave.'
+		};
+	}
+
+	// Las palancas salen igual cuando no hay escáner: sin ellas, la pantalla que
+	// dice «te falta un escáner» no dice qué más hace falta, y el piloto compra el
+	// instrumento para descubrir después que la lectura le sale a medias.
+	const palancas = [
+		...leversFor('sensor_range', readout.hull, levels),
+		leverOf(SURVEY_REFINE_SKILL, levels)
+	];
+	const instrumento = grantingModule(shipFit(db, nave), 'sensorRange');
+
+	if (readout.sensorRange <= 0 || instrumento === null) {
+		return {
+			sensorRange: 0,
+			durationSeconds: 0,
+			depth,
+			module: '',
+			levers: palancas,
 			blocked: 'No tenés escáner montado: sin instrumento no hay nada que leer.'
 		};
 	}
@@ -110,6 +141,8 @@ export function surveyPlan(db: Db, row: Pilot): SurveyPlan {
 		sensorRange: readout.sensorRange,
 		durationSeconds: surveySeconds(readout.sensorRange),
 		depth,
+		module: instrumento.name,
+		levers: palancas,
 		blocked: readout.flyable ? '' : 'Tu nave no está en condiciones de trabajar.'
 	};
 }

@@ -33,6 +33,13 @@ estado del mundo, y la única forma de ganar experiencia.
 | Habilidades secundarias | Reciben el 15 % del pozo cada una                               |
 | Resultado               | Se calcula al resolver: qué se obtuvo, qué se gastó, qué cambió |
 
+**Y toda acción declara de dónde sale**: qué módulos necesita montados y qué
+habilidades cambian su resultado. No es un adorno de la interfaz, es parte de la
+acción: sin eso el jugador descubre lo que le falta sólo cuando le falta, que es
+tarde. Cómo se dibuja está en
+[la procedencia de una acción](INTERFACE.md#la-procedencia-de-una-acción); por qué
+es obligatorio, en [«la cadena»](../DESIGN.md#la-cadena-se-muestra-o-no-existe).
+
 ## Cuánto tarda
 
 ```

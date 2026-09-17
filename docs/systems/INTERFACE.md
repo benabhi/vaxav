@@ -441,22 +441,91 @@ una pantalla naranja se lleva el ojo antes que el aviso que hay que leer.
   de `src/lib/components/`. Esa es la razón de haber hecho el sistema de estilos
   antes que el juego.
 
-### Decir por qué se puede y por qué no
+### La procedencia de una acción
 
 La regla es de diseño y está escrita entera en
-[«La cadena»](../DESIGN.md#la-cadena-se-muestra-o-no-existe); acá está lo que le
-toca a la interfaz hacer con ella:
+[«La cadena»](../DESIGN.md#la-cadena-se-muestra-o-no-existe). Acá está **cómo se
+dibuja**, que es lo que hay que copiar cuando se agrega un verbo nuevo.
 
-- **Las habilidades que pide una acción van junto al botón**, con el nivel que
-  hace falta y el que se tiene. No en una ficha aparte.
-- **El módulo que habilita una acción se nombra** en la acción misma. Es lo que
-  deja razonar al revés —«quiero hacer esto, ¿qué me falta?»— que es como se
-  decide la próxima compra.
-- **Un verbo que no se puede usar se apaga con su motivo al lado**, en vez de
-  desaparecer. Uno que no está no enseña nada.
-- **El motivo lo decide una función pura que comparten pantalla y servicio**, así
-  el botón apagado y el rechazo del servidor dicen exactamente lo mismo.
-  `jumpProblem` es el caso testigo.
+**Toda acción del juego lleva su procedencia**: qué módulos necesita montados,
+qué habilidades cambian su resultado, qué rinde hoy, qué daría el escalón
+siguiente y por qué no se puede ahora mismo. Vive en un solo tipo, `Procedencia`
+(`src/lib/tipos.ts`), y se dibuja con un solo componente.
+
+**Dónde aparece, y por qué en dos lugares:**
+
+| Dónde                              | Cómo                                                | Para quién                                          |
+| ---------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| Señalando el botón                 | `ActionSource` envuelve al botón con un `HoverCard` | Mouse y teclado —el aviso también abre con el foco— |
+| Adentro del cartel de confirmación | `ConfirmAction` recibe `source`                     | **Teléfono**, donde no hay con qué señalar          |
+
+Entre los dos no queda nadie afuera. Un ícono de ayuda al lado del botón se
+probó y se descartó: es otra cosa que tocar, y con dos botones seguidos no se
+sabe de cuál habla.
+
+**Cuatro decisiones de forma que no son negociables:**
+
+1. **El motivo del bloqueo va arriba de todo.** Es lo primero que alguien busca
+   cuando el botón está apagado. Acá ya pasó una vez lo contrario —el aviso
+   contaba de dónde salía el verbo mientras callaba el único dato que se estaba
+   buscando— y es el peor modo de fallar de esta pieza.
+2. **Los que faltan se muestran igual**, en rojo y nombrando la pieza. Módulos y
+   habilidades. Lo que falta es lo que hay que comprar o entrenar, y es el único
+   motivo por el que alguien abre el aviso con el botón apagado.
+3. **Es una grilla de dos columnas, no filas con un ancho a ojo.** Con un ancho
+   fijo, un rótulo largo empuja su valor y rompe la columna, y lo que envuelve cae
+   contra el margen. La grilla alinea sola.
+4. **Techo de alto y scroll propio.** Hoy son tres filas; un verbo puede pedir
+   cuatro módulos y mover cinco habilidades. Por eso el `HoverCard` que lo
+   envuelve va con `interactive`: sin eso el panel no recibe el mouse, y un
+   scroll al que no se puede entrar es un recorte.
+
+**Todo lo que puede ser varios, es una lista.** No hay ni un campo singular en
+`Procedencia`, y es a propósito: saltar ya necesita **dos** módulos —motor y
+tanque—, viajar tiene dos habilidades que lo mueven, y un verbo puede estar
+bloqueado por más de una razón. Un campo que empieza en singular obliga a
+reescribir el tipo, las vistas y la pantalla el día que aparezca el segundo, que
+es siempre antes de lo que parece.
+
+**Los rótulos son palabras del juego, no del diseño.** «Módulo», «Habilidades»,
+«Mejora». Acá decía «Aparato» y «Llaves», que es el vocabulario con que
+[la cadena](../DESIGN.md#la-cadena) se piensa: sirve para razonar y no lo
+entiende nadie que no haya leído el documento.
+
+#### Al agregar un verbo nuevo
+
+1. El servicio que lo resuelve devuelve **qué módulo lo habilita y qué
+   habilidades lo mueven**, no sólo si se puede. El módulo sale de
+   `grantingModules` y las habilidades de `leversFor` (`src/lib/game/sourcing.ts`),
+   que leen la misma tabla que usa la calculadora: una lista escrita a mano al
+   lado se desfasa el día que nadie mira.
+2. La vista arma la `Procedencia`. Si el verbo se mueve por porcentajes, alcanza
+   con `fuenteDeVerbo`; si tiene efectos que no son un porcentaje —como la lectura
+   del escáner— se arma a mano.
+3. La pantalla envuelve el botón con `ActionSource` y le pasa `source` al
+   `ConfirmAction`.
+4. **El motivo del bloqueo sale de una función pura que comparten pantalla y
+   servicio**, así el botón apagado y el rechazo del servidor dicen exactamente lo
+   mismo y nadie aprieta algo que va a rebotar. `jumpProblem` es el caso testigo.
+
+#### Dónde está puesto
+
+| Verbo    | Módulos                     | Habilidades                                |
+| -------- | --------------------------- | ------------------------------------------ |
+| Viajar   | Propulsores                 | Navegación, y la del bono de rol del casco |
+| Saltar   | Motor de salto **y** tanque | Astrogación                                |
+| Escanear | Escáner                     | Escaneo, Prospección                       |
+| Extraer  | Láser de extracción         | Minería, y la del bono de rol del casco    |
+
+Los verbos del mercado —comprar, vender, acordar— todavía no la llevan: no
+dependen de un módulo de la nave, pero sí de habilidades como Regateo, que hoy no
+mueve ningún número. Entran cuando esa habilidad sea mecánica.
+
+Y hay un hueco anotado: **Eficiencia de combustible no mueve nada todavía**. El
+salto la nombra en la hoja de ruta pero `jumpFuel` recibe su bono en cero, así que
+no aparece entre las habilidades de saltar. Aparece el día que lo mueva, no antes:
+prometer una habilidad que no hace nada es el huérfano que la cadena existe para
+evitar.
 
 ## Reglas de diseño
 

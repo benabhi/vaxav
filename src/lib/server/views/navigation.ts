@@ -12,12 +12,16 @@ import { railsFor } from '$lib/tree';
 import type { Db } from '../db/types';
 import { portraitFor } from '../portraits';
 import { currentAction } from '../services/actions';
-import { beltDeposits, miningPlan } from '../services/mining';
+import { beltDeposits, miningPlan, miningSource } from '../services/mining';
 import { asteroidsAt } from '../services/asteroids';
 import { surveyPlan, surveysOf } from '../services/prospecting';
-import { activeShip, shipReadout } from '../services/ships';
+import { activeShip, pilotSkillLevels, shipFit, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
-import { depthLabel, surveyAge } from '$lib/game/prospecting';
+import { SURVEY_REFINE_SKILL, SURVEY_SKILL, depthLabel, surveyAge } from '$lib/game/prospecting';
+import { grantingModules, leversFor, type Fitted, type Lever, type Need } from '$lib/game/sourcing';
+import { getSkill } from '$lib/game/skills';
+import type { SkillLevels } from '$lib/game/fitting';
+import type { BonusTarget } from '$lib/game/hulls';
 import {
 	bodyDetail,
 	bodyDistance,
@@ -31,6 +35,7 @@ import { JUMP_KIND, REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/act
 import { FACTIONS } from '$lib/game/factions';
 import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
+import { MAX_LEVEL } from '$lib/game/progression';
 import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
 import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
 import { SERVICES, securityLevel, type StationServiceKind } from '$lib/game/universe';
@@ -55,6 +60,10 @@ import {
 	thousands
 } from '$lib/format';
 import type {
+	Aparato,
+	Lectura,
+	Palanca,
+	Procedencia,
 	PuntaTramo,
 	SalidaPuerta,
 	Tramo,
@@ -325,13 +334,24 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 }
 
 /** Un campo apagado: acá no hay rocas ni nada que escanear. */
+const SIN_VERBO: Procedencia = {
+	verb: '',
+	blockers: [],
+	modules: [],
+	levers: [],
+	effects: [],
+	next: []
+};
+
 const SIN_CAMPO: CampoRocas = {
 	scannable: false,
 	count: '',
 	depthLabel: '',
 	duration: '',
 	regen: '',
-	blocked: ''
+	blocked: '',
+	scanSource: SIN_VERBO,
+	mineSource: SIN_VERBO
 };
 
 /**
@@ -444,7 +464,25 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 		fuel: tenths === null ? 0 : jumpFuel(tenths, masa),
 		fuelInTank: tanque,
 		range: lightYears(alcance),
-		blocked: problema ?? ''
+		blocked: problema ?? '',
+		// El motor de salto es el requisito duro y Astrogación la palanca: sin el
+		// primero no hay verbo, con más de la segunda el mismo salto tarda menos.
+		// **Saltar pide dos piezas**, y es el caso que obligó a que esto sea una
+		// lista: sin motor no hay salto, y sin tanque no hay con qué pagarlo.
+		source: fuenteDeVerbo(
+			db,
+			row,
+			'Saltar',
+			[
+				{ grant: 'jumpPower', label: 'Motor de salto' },
+				{ grant: 'fuel', label: 'Tanque' }
+			],
+			'jump_range',
+			[{ label: 'Alcance', value: lightYears(alcance) }],
+			// El mismo motivo que apaga el botón, dicho una sola vez: sale de
+			// `jumpProblem`, que también usa el servicio para rechazar la orden.
+			problema ? [problema] : []
+		)
 	};
 }
 
@@ -464,7 +502,8 @@ function uncharted(): Sistema {
 		exploredCount: '',
 		bodies: [],
 		hasShip: false,
-		actionInProgress: false
+		actionInProgress: false,
+		travelSource: SIN_VERBO
 	};
 }
 
@@ -480,12 +519,117 @@ function uncharted(): Sistema {
  * esta nave y esta bodega**, y no sólo cuánto queda en la piedra: "quedan 4.800
  * unidades" no dice nada; "traés 225 y tardás 38 minutos" dice si vale la pena.
  */
+/** Lo que un verbo pide, escrito: qué pieza y qué hay puesto en su lugar. */
+function aparatos(fitted: readonly Fitted[]): Aparato[] {
+	return fitted.map((uno) => ({
+		requirement: uno.need.label,
+		name: uno.module?.name ?? '',
+		fitted: uno.module !== null
+	}));
+}
+
+/**
+ * Las habilidades de un verbo, escritas: nombre, nivel y si se tiene.
+ *
+ * **Las que faltan salen igual, con un guion.** Mostrar sólo las entrenadas
+ * convertiría la línea en un adorno: la que no está es justamente la que dice qué
+ * entrenar, y es la mitad útil del renglón.
+ */
+function palancas(levers: readonly Lever[]): Palanca[] {
+	return levers.map((lever) => ({
+		name: lever.name,
+		level: lever.level > 0 ? roman(lever.level) : '',
+		known: lever.level > 0
+	}));
+}
+
+/**
+ * Qué daría el próximo nivel de cada palanca, de la más floja a la más alta.
+ *
+ * Sirve para cualquier verbo movido por porcentajes y por eso no vive dentro de
+ * ninguno. **Devuelve todas y no la mejor**: con dos habilidades sobre la misma
+ * magnitud, quedarse con una esconde media decisión, y el orden ya dice cuál
+ * rinde más entrenar.
+ */
+function siguientePalanca(levers: readonly Lever[]): string[] {
+	return levers
+		.filter((lever) => lever.percentPerLevel > 0 && lever.level < MAX_LEVEL)
+		.sort((a, b) => a.level - b.level)
+		.map((lever) => `${lever.name} ${roman(lever.level + 1)} → +${lever.percentPerLevel} %`);
+}
+
+/**
+ * Qué daría cada escalón siguiente de la lectura, o vacía si ya está al tope.
+ *
+ * Es lo que convierte el rótulo en una decisión. «Lectura: con cantidades» informa
+ * y se queda ahí; «Prospección I → lectura completa» es un motivo para entrenar, y
+ * ésa es toda la diferencia entre mostrar la cadena y sólo tenerla.
+ */
+function siguienteLectura(levels: SkillLevels): string[] {
+	const pasos: string[] = [];
+	if ((levels[SURVEY_SKILL] ?? 0) < 1) {
+		pasos.push(`${getSkill(SURVEY_SKILL).name} I → lectura con cantidades`);
+	}
+	if ((levels[SURVEY_REFINE_SKILL] ?? 0) < 1) {
+		pasos.push(`${getSkill(SURVEY_REFINE_SKILL).name} I → lectura completa`);
+	}
+	return pasos;
+}
+
+/**
+ * De dónde sale un verbo movido por un módulo y unos porcentajes.
+ *
+ * Es el caso corriente —viajar, saltar— y por eso se arma una vez: el módulo que
+ * lo habilita, las habilidades que lo mueven y qué daría la siguiente. Escanear y
+ * extraer no lo usan porque tienen efectos que no son un porcentaje; todo lo
+ * demás debería entrar acá, y si no entra conviene preguntarse por qué antes de
+ * escribir otro constructor.
+ */
+function fuenteDeVerbo(
+	db: Db,
+	row: Pilot,
+	verb: string,
+	needs: readonly Need[],
+	target: BonusTarget,
+	effects: readonly Lectura[],
+	blockers: readonly string[]
+): Procedencia {
+	const nave = activeShip(db, row.id);
+	const readout = shipReadout(db, row);
+	if (!nave || !readout) {
+		return {
+			verb,
+			blockers: ['Necesitás una nave.'],
+			modules: needs.map((need) => ({ requirement: need.label, name: '', fitted: false })),
+			levers: [],
+			effects: [],
+			next: []
+		};
+	}
+
+	const llaves = leversFor(target, readout.hull, pilotSkillLevels(db, row.id));
+	const puestos = grantingModules(shipFit(db, nave), needs);
+
+	return {
+		verb,
+		blockers,
+		modules: aparatos(puestos),
+		levers: palancas(llaves),
+		// Lo que rinde sólo se promete si está todo puesto: una nave a la que le
+		// falta el tanque no salta, y decir su alcance sería prometer un salto.
+		effects: puestos.every((uno) => uno.module) ? effects : [],
+		next: siguientePalanca(llaves)
+	};
+}
+
 function buildBelt(
 	db: Db,
 	row: Pilot,
 	orderBlocked: string
 ): { field: CampoRocas; asteroids: readonly Roca[] } {
 	const plan = surveyPlan(db, row);
+	const fuente = miningSource(db, row);
+	const niveles = pilotSkillLevels(db, row.id);
 	const rocas = asteroidsAt(db, row.locationId);
 	const lecturas = surveysOf(
 		db,
@@ -557,7 +701,37 @@ function buildBelt(
 			depthLabel: depthLabel(plan.depth),
 			duration: remainingLabel(plan.durationSeconds),
 			regen: ritmo > 0 ? `${thousands(ritmo)} u/h` : '',
-			blocked: orderBlocked || plan.blocked
+			blocked: orderBlocked || plan.blocked,
+			// Los dos verbos del cinturón dicen de dónde salen, una sola vez arriba:
+			// repetirlo debajo de cada piedra sería decir ocho veces lo mismo, y el
+			// escáner y el láser son de la nave, no de la roca.
+			scanSource: {
+				verb: 'Escanear',
+				blockers: [orderBlocked, plan.blocked].filter(Boolean),
+				modules: [{ requirement: 'Escáner', name: plan.module, fitted: plan.module !== '' }],
+				levers: palancas(plan.levers),
+				effects: [{ label: 'Lectura', value: depthLabel(plan.depth) }],
+				next: siguienteLectura(niveles)
+			},
+			mineSource: {
+				verb: 'Extraer',
+				// Sólo lo que es de la nave: por qué **esta** roca no se puede picar lo
+				// dice la fila, que es donde vive esa razón.
+				blockers: [orderBlocked].filter(Boolean),
+				modules: [
+					{
+						requirement: 'Láser de extracción',
+						name: fuente.module,
+						fitted: fuente.module !== ''
+					}
+				],
+				levers: palancas(fuente.levers),
+				effects:
+					fuente.perHour > 0
+						? [{ label: 'Rinde', value: `${cubicMeters(fuente.perHour)} m³/h` }]
+						: [],
+				next: siguientePalanca(fuente.levers)
+			}
 		},
 		asteroids
 	};
@@ -612,6 +786,17 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			readout?.speed ?? REFERENCE_SPEED
 		),
 		hasShip: activeShip(db, row.id) !== null,
-		actionInProgress: currentAction(db, row.id) !== null
+		actionInProgress: currentAction(db, row.id) !== null,
+		// Uno solo para todo el árbol: los propulsores son de la nave, no del cuerpo
+		// al que se va. La duración de cada fila ya sale de esta misma velocidad.
+		travelSource: fuenteDeVerbo(
+			db,
+			row,
+			'Viajar',
+			[{ grant: 'thrust', label: 'Propulsores' }],
+			'speed',
+			[{ label: 'Velocidad', value: `${thousands(readout?.speed ?? 0)} ud/h` }],
+			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
+		)
 	};
 }

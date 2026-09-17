@@ -26,7 +26,9 @@
 	import HudButton from '../buttons/HudButton.svelte';
 	import Modal from '../ui/Modal.svelte';
 	import Label from '../typography/Label.svelte';
+	import ActionSourceDetail from './ActionSourceDetail.svelte';
 	import type { IconName } from '$lib/icons';
+	import type { Procedencia } from '$lib/tipos';
 
 	interface Props {
 		/** Qué se va a hacer, en imperativo: «Viajar a Ánfora III». */
@@ -36,6 +38,15 @@
 		readings?: readonly { label: string; value: string }[];
 		/** Una línea de contexto, si hace falta. */
 		note?: string;
+		/**
+		 * De dónde sale el verbo: el módulo que lo habilita y las habilidades.
+		 *
+		 * Es lo mismo que muestra `ActionSource` al señalar el botón, y va también
+		 * acá porque **en un teléfono no hay con qué señalar**. El cartel es la
+		 * puerta por la que pasa toda acción igual, así que entre los dos no queda
+		 * nadie sin la explicación.
+		 */
+		source?: Procedencia | null;
 		confirmLabel?: string;
 		disabled?: boolean;
 		/** El botón que abre el diálogo. */
@@ -51,6 +62,7 @@
 		icon = 'warning',
 		readings = [],
 		note = '',
+		source = null,
 		confirmLabel = 'Confirmar',
 		disabled = false,
 		trigger,
@@ -89,6 +101,10 @@
 					</div>
 				{/each}
 			</div>
+		{/if}
+
+		{#if source}
+			<ActionSourceDetail {source} heading={false} />
 		{/if}
 
 		{#if note}

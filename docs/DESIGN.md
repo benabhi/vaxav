@@ -155,11 +155,26 @@ Tres reglas, y ninguna es opcional:
    ficha de un módulo que no está montado también es información: es la lista de
    lo que se abre si lo comprás.
 
+**Y la llave no es lo mismo que la palanca.** Son dos relaciones distintas, y
+mostrarlas iguales fue lo que confundió desde el principio:
+
+|                | Qué es                                  | Qué pasa sin ella             |
+| -------------- | --------------------------------------- | ----------------------------- |
+| **La llave**   | Habilita. El escáner, el motor de salto | El verbo **no existe**        |
+| **La palanca** | Mejora. Escaneo, Astrogación, Minería   | El verbo existe y rinde menos |
+
+Una es un requisito y la otra una recompensa. Un aviso que las mezcla deja al
+jugador sin saber si le falta comprar algo o le falta entrenar, que son dos días
+de juego distintos.
+
 El caso testigo es el salto: el panel de la puerta dice la distancia, el alcance
 de la nave, cuánto tarda y cuánto quema **antes** de apretar, y cuando no se
 puede, el motivo sale de la misma función pura que usa el servidor para
 rechazarlo. El botón apagado y el rechazo del servidor dicen lo mismo, y el
 jugador nunca aprieta algo que va a rebotar.
+
+Cómo se dibuja —dónde va, qué lleva y qué hacer al agregar un verbo nuevo— está
+en [la procedencia de una acción](systems/INTERFACE.md#la-procedencia-de-una-acción).
 
 Dicho corto: **la cadena es la explicación de por qué el juego te deja o no te
 deja, y esa explicación es interfaz, no documentación.**
@@ -234,6 +249,9 @@ ahora**, y estorba.
   «Error: nave no encontrada» no le dice a nadie qué hacer después.
 - **Sin jerga de oficio ni guiños.** Si una palabra sólo la entiende quien ya
   juega, no va en un aviso. En una descripción de ambientación, sí.
+- **Y sin el vocabulario del diseño.** «Verbo», «insumo», «aparato», «llave»,
+  «palanca» son las palabras con que este documento piensa, y no las de nadie
+  más: en pantalla van «módulo» y «habilidad». Ya se filtraron una vez.
 - **Sin signos de exclamación, sin emoji, sin mayúsculas para gritar.** El énfasis
   lo pone la tipografía, que para eso está diseñada.
 - **Sin disculpas ni cortesías de formulario.** Nada de «lo sentimos», «por

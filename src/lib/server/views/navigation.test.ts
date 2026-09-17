@@ -175,6 +175,50 @@ describe('la ficha del lugar', () => {
 	});
 });
 
+describe('de dónde sale cada verbo del cinturón', () => {
+	it('nombra el módulo que lo habilita y las habilidades que lo mejoran', async () => {
+		const db = seededDb();
+		const piloto = moverPiloto(db, await crearPiloto(db), 'anillos_anfora_iii');
+
+		const campo = buildLocationView(db, piloto).field;
+
+		// **El módulo no es un detalle:** es la diferencia entre poder y no poder, y
+		// el piloto que lo tiene montado nunca se enteraba de que existía.
+		expect(campo.scanSource.modules.every((uno) => uno.fitted)).toBe(true);
+		expect(campo.mineSource.modules.every((uno) => uno.fitted)).toBe(true);
+		expect(campo.scanSource.verb).toBe('Escanear');
+		expect(campo.mineSource.verb).toBe('Extraer');
+
+		// Las habilidades salen aunque el piloto no las tenga: son la lista de lo
+		// que queda por entrenar, que es la mitad útil del renglón.
+		expect(campo.scanSource.levers.length).toBeGreaterThan(0);
+		expect(campo.mineSource.levers.length).toBeGreaterThan(0);
+	});
+
+	it('dice qué daría el escalón siguiente', async () => {
+		const db = seededDb();
+		const piloto = moverPiloto(db, await crearPiloto(db), 'anillos_anfora_iii');
+
+		const campo = buildLocationView(db, piloto).field;
+
+		// Sin esto la línea informa y se queda ahí; con esto es un motivo para
+		// entrenar, que es toda la diferencia entre mostrar la cadena y sólo tenerla.
+		expect(campo.scanSource.next.length).toBeGreaterThan(0);
+		expect(campo.mineSource.next.length).toBeGreaterThan(0);
+	});
+
+	it('fuera de un cinturón no inventa ningún verbo', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const campo = buildLocationView(db, piloto).field;
+
+		expect(campo.scannable).toBe(false);
+		expect(campo.scanSource.verb).toBe('');
+		expect(campo.mineSource.modules).toEqual([]);
+	});
+});
+
 describe('el árbol del sistema', () => {
 	it('aplana el sistema entero en orden de árbol', async () => {
 		const db = seededDb();

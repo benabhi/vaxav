@@ -13,6 +13,7 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
@@ -360,17 +361,20 @@
 							}
 						]}
 						note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
+						source={place.gate.source}
 					>
 						{#snippet trigger(abrir)}
-							<HudButton
-								type="button"
-								variant="primary"
-								disabled={Boolean(place.gate?.blocked)}
-								onclick={abrir}
-							>
-								<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
-								Saltar
-							</HudButton>
+							<ActionSource source={place.gate!.source}>
+								<HudButton
+									type="button"
+									variant="primary"
+									disabled={Boolean(place.gate?.blocked)}
+									onclick={abrir}
+								>
+									<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
+									Saltar
+								</HudButton>
+							</ActionSource>
 						{/snippet}
 						{#snippet fields()}{/snippet}
 					</ConfirmAction>
@@ -503,6 +507,16 @@
 									campo es de todos y se agota entre todos, así que volver a mirarla
 									antes de encender el láser es una decisión válida.
 								-->
+								<!--
+									El aviso **envuelve al botón**: señalarlo dice qué módulo lo permite,
+									qué habilidades lo mejoran y qué daría la siguiente. Un ícono de ayuda
+									al lado sería otra cosa que tocar, y con dos botones seguidos ni
+									siquiera se sabría de cuál habla.
+
+									Lo mismo va adentro del cartel de confirmación, por `source`: en un
+									teléfono no hay con qué señalar, y el cartel es la puerta por la que
+									pasa toda acción igual.
+								-->
 								{#if !roca.scanBlocked}
 									<ConfirmAction
 										formAction="?/escanear"
@@ -514,12 +528,15 @@
 											{ label: 'Lectura', value: place.field.depthLabel }
 										]}
 										note="Mientras dure no vas a poder dar otra orden. La lectura deja experiencia de Ciencias."
+										source={place.field.scanSource}
 									>
 										{#snippet trigger(abrir)}
-											<HudButton type="button" size="1" onclick={abrir}>
-												<Icon name="binoculars" weight="bold" size="0.75rem" />
-												{roca.age ? 'Volver a escanear' : 'Escanear'}
-											</HudButton>
+											<ActionSource source={place.field.scanSource}>
+												<HudButton type="button" size="1" onclick={abrir}>
+													<Icon name="binoculars" weight="bold" size="0.75rem" />
+													{roca.age ? 'Volver a escanear' : 'Escanear'}
+												</HudButton>
+											</ActionSource>
 										{/snippet}
 										{#snippet fields()}
 											<input type="hidden" name="roca" value={roca.id} />
@@ -539,12 +556,15 @@
 											{ label: 'Vale', value: `${roca.value} CR` }
 										]}
 										note="Mientras dure la extracción no vas a poder dar otra orden."
+										source={place.field.mineSource}
 									>
 										{#snippet trigger(abrir)}
-											<HudButton type="button" size="1" onclick={abrir}>
-												<Icon name="diamond" weight="bold" size="0.75rem" />
-												Extraer
-											</HudButton>
+											<ActionSource source={place.field.mineSource}>
+												<HudButton type="button" size="1" onclick={abrir}>
+													<Icon name="diamond" weight="bold" size="0.75rem" />
+													Extraer
+												</HudButton>
+											</ActionSource>
 										{/snippet}
 										{#snippet fields()}
 											<input type="hidden" name="roca" value={roca.id} />
