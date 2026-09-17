@@ -47,6 +47,24 @@ export interface NaveDelPiloto {
 }
 
 /** Lo que toda pantalla del juego sabe del piloto conectado. */
+/**
+ * El índice del piloto y su rango, ya escritos para la pantalla.
+ *
+ * El rango va con su número de escalón porque **la pantalla lo enciende cada vez
+ * más**: un número suelto que sube no se siente como progreso, y cruzar un umbral
+ * sí. Ver `game/rating.ts`.
+ */
+export interface IndicePiloto {
+	/** La cifra, con separador de miles. */
+	readonly value: string;
+	readonly rank: string;
+	/** Qué escalón es, de cero en adelante, y cuántos hay. */
+	readonly step: number;
+	readonly steps: number;
+	/** Qué falta para el que sigue, ya escrito. Vacío en el último. */
+	readonly next: string;
+}
+
 export interface PilotoConectado {
 	readonly callsign: string;
 	/**
@@ -70,6 +88,8 @@ export interface PilotoConectado {
 	readonly locationLabel: string;
 	/** Cuánta experiencia lleva en cada rama del árbol. */
 	readonly families: readonly RamaXp[];
+	/** Qué tan lejos llegó, en un solo número con su rango. */
+	readonly rating: IndicePiloto;
 	/** Desde cuándo vuela, en milisegundos UTC. */
 	readonly since: number;
 	/**

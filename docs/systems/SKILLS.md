@@ -263,6 +263,52 @@ Un piloto no arranca en cero: la **profesión** que elige al crearse le da un
 puñado de habilidades ya entrenadas, que es lo que le permite hacer algo desde el
 primer minuto. Ver [profesiones](PROFESSIONS.md).
 
+## El IPP
+
+El **Índice de Pericia del Piloto**: un solo número para saber qué tan lejos llegó
+un piloto, que es **la experiencia invertida en habilidades, sumada**.
+
+Se lo nombra por la sigla, como el TSI de Hattrick, y ése es medio el punto: un
+índice se vuelve una cosa del juego recién cuando los jugadores lo dicen en voz
+alta. En pantalla va «IPP» y el nombre entero aparece donde haya lugar. Contesta «¿qué tan armado está este piloto?» sin tener que
+leerle el árbol entero, como el TSI de Hattrick, y el día que existan las
+corporaciones de jugadores va a servir para pedir un mínimo para entrar.
+
+**Se extiende solo.** No hay nada que registrar cuando se agrega una habilidad al
+catálogo: si tiene experiencia adentro, entra en la cuenta. Ésa es la razón de que
+sea la XP y no una fórmula con pesos por rama, que habría que revisar cada vez que
+el árbol crece —y el árbol se quiere grande a propósito—.
+
+**Cuenta lo invertido y no el pozo.** Lo que está sin gastar es potencial, no
+poder: dos pilotos con el mismo pozo y distinto árbol no vuelan igual.
+
+### Los rangos
+
+Un número suelto que sube no se siente como progreso; cruzar un umbral y pasar de
+Veterano a Experto, sí. Por eso el índice lleva **rango con nombre**, como los de
+Elite Dangerous, y la pantalla **lo enciende cada vez más**: los primeros se leen
+como cualquier dato y los últimos se despegan. La cifra se queda en cian, que es
+el color de toda lectura del juego; lo que cambia es el nombre.
+
+| Rango      | IPP     |
+| ---------- | ------- |
+| Recluta    | 0       |
+| Novato     | 1.000   |
+| Competente | 5.000   |
+| Veterano   | 20.000  |
+| Experto    | 60.000  |
+| Maestro    | 180.000 |
+| Élite      | 420.000 |
+
+Los saltos triplican, que es la forma de la curva de experiencia: cada nivel de
+una habilidad cuesta el triple que el anterior, así que un IPP que avanzara
+parejo mentiría sobre lo que costó llegar. Con las veintitrés habilidades de hoy,
+tenerlas todas al máximo da 580.800: Élite es una meta lejana y no un trámite.
+
+Son **datos de balance**, como los escalones de la reputación. Los umbrales se van
+a mover cuando el catálogo crezca, y moverlos tiene que ser cambiar esa tabla y
+nada más.
+
 ## Por decidir
 
 - Si el multiplicador llega a x5 o conviene estirarlo (EVE llega a x16).

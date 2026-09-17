@@ -26,12 +26,32 @@
 	import FamilyXpPanel from './FamilyXpPanel.svelte';
 	import Modal from '../ui/Modal.svelte';
 	import Label from '../typography/Label.svelte';
+	import BodyText from '../typography/BodyText.svelte';
+	import FloatingPanel from '../cards/FloatingPanel.svelte';
+	import Popover from '../ui/Popover.svelte';
 	import Identicon from './Identicon.svelte';
 	import PortraitPicker from './PortraitPicker.svelte';
 	import SkillHexagon from './SkillHexagon.svelte';
 	import { factionCrest } from '$lib/format';
 	import { PORTRAIT_ASPECT } from '$lib/game/portraits';
 	import type { PilotoConectado } from '$lib/tipos';
+
+	/**
+	 * Cuánto se enciende el nombre del rango.
+	 *
+	 * Los primeros escalones se leen como cualquier dato; los últimos se despegan.
+	 * Es la sensación de progresión que un número solo no da, y la misma idea que
+	 * el halo del HUD: si se nota como efecto, está de más.
+	 */
+	const INTENSIDAD = [
+		'text-text-muted',
+		'text-text-body',
+		'text-text-strong',
+		'text-accent-dim',
+		'text-accent',
+		'text-accent-bright',
+		'text-accent-bright text-shadow-glow'
+	];
 
 	interface Props {
 		pilot: PilotoConectado;
@@ -40,6 +60,8 @@
 	}
 
 	let { pilot, serial }: Props = $props();
+
+	let intensidad = $derived(INTENSIDAD[Math.min(pilot.rating.step, INTENSIDAD.length - 1)]);
 
 	let crest = $derived(factionCrest(pilot.factionCode));
 
@@ -219,6 +241,52 @@
 				{@render lectura('Créditos', pilot.creditsLabel)}
 				{@render lectura('Nave', pilot.ship?.name ?? 'Sin nave', !pilot.ship)}
 				{@render lectura('Piloto desde', desde)}
+
+				<!--
+					El índice es una lectura más y no un bloque aparte: puesto debajo del
+					hexágono estiraba la credencial a lo alto para decir tres cosas cortas.
+
+					**El rango se enciende cada vez más.** Un número que sube no se siente
+					como progreso; cruzar un umbral y pasar de Veterano a Experto, sí. La
+					cifra se queda en cian, que es el color de toda lectura del juego, y lo
+					que cambia es el nombre.
+				-->
+				<div class="flex flex-col items-start gap-[0.15rem]">
+					<!--
+						Con su «?» al lado, como el casco de la nave: una sigla que nadie vio
+						antes necesita decir qué mide, y no hay lugar en la grilla para el
+						nombre entero.
+					-->
+					<span class="flex items-center gap-[0.35rem]">
+						<Label>IPP</Label>
+						<Popover label="Qué es el IPP">
+							{#snippet trigger()}
+								<Icon
+									name="question"
+									weight="bold"
+									size="0.65rem"
+									class="text-text-muted transition-colors hover:text-accent-bright"
+								/>
+							{/snippet}
+							<FloatingPanel class="flex max-w-[20rem] flex-col gap-1 p-3">
+								<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+									Índice de Pericia del Piloto
+								</span>
+								<BodyText>
+									Toda la experiencia que tenés invertida en habilidades, sumada. Dice qué tan lejos
+									llegaste sin tener que leer el árbol entero, y sube sola cuando aprendés cualquier
+									cosa. Lo que está en el pozo sin gastar no cuenta: es potencial, no pericia.
+								</BodyText>
+							</FloatingPanel>
+						</Popover>
+					</span>
+					<span class="flex items-baseline gap-2">
+						<span class="font-mono text-[0.78rem] text-data">{pilot.rating.value}</span>
+						<span class="font-display text-[0.7rem] tracking-label uppercase {intensidad}">
+							{pilot.rating.rank}
+						</span>
+					</span>
+				</div>
 			</div>
 
 			<!--
@@ -292,8 +360,8 @@
 			es lo que dice de un vistazo a qué se dedicó este piloto.
 		-->
 		<div
-			class="flex shrink-0 flex-col items-center gap-1 border-t border-border-soft pt-3 md:w-[13rem]
-				md:border-t-0 md:border-l md:pt-0 md:pl-5 lg:w-[15rem]"
+			class="flex shrink-0 flex-col items-center gap-3 border-t border-border-soft pt-3 md:w-[15rem]
+				md:border-t-0 md:border-l md:pt-0 md:pl-5 lg:w-[17rem]"
 		>
 			<div class="flex w-full items-center justify-center gap-2">
 				<Label>Habilidades</Label>
@@ -310,7 +378,7 @@
 					<Icon name="arrows-out" weight="bold" size="0.75rem" />
 				</button>
 			</div>
-			<div class="w-full max-w-[15rem]">
+			<div class="w-full max-w-[17rem]">
 				<SkillHexagon families={pilot.families} />
 			</div>
 		</div>
