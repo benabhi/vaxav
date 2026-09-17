@@ -58,6 +58,19 @@
 		 */
 		expanded?: boolean;
 		onToggleExpand?: () => void;
+		/**
+		 * Dónde está mirando, y si ya se encuadró una vez.
+		 *
+		 * **Van afuera para que el mapa pueda cambiar de lugar sin perder la vista.**
+		 * Agrandarlo lo saca del panel y lo pone en una capa propia, y eso lo vuelve a
+		 * montar: con la cámara adentro, cada vez que se agranda o se achica volverías
+		 * al encuadre inicial en vez de seguir mirando lo que estabas mirando.
+		 *
+		 * Son opcionales: una pantalla que dibuje el mapa en un solo lugar no necesita
+		 * saber nada de esto.
+		 */
+		camera?: Camara | null;
+		fitted?: boolean;
 	}
 
 	let {
@@ -68,6 +81,8 @@
 		territory,
 		expanded = false,
 		onToggleExpand,
+		camera = $bindable(null),
+		fitted = $bindable(false),
 		onSelect
 	}: Props = $props();
 
@@ -96,8 +111,20 @@
 	let lienzo = $state<HTMLCanvasElement>();
 	let caja = $state<HTMLDivElement>();
 	let viewport = $state<Punto>({ x: 0, y: 0 });
-	let camara = $state<Camara>({ center: { x: 0, y: 0 }, scale: 1 });
-	let encuadrado = $state(false);
+	/**
+	 * La cámara propia, para cuando nadie la sostiene desde afuera.
+	 *
+	 * El componente escribe siempre en `camera`, que es `$bindable`: si la pantalla
+	 * lo ató a su propio estado, la vista sobrevive a que el mapa se mude; si no, el
+	 * valor vive acá y se pierde al desmontarse, que es lo correcto para un mapa que
+	 * se dibuja en un solo lugar.
+	 */
+	let camara = $derived(camera ?? { center: { x: 0, y: 0 }, scale: 1 });
+
+	/** Mueve la cámara, viva donde viva. */
+	function mover(nueva: Camara) {
+		camera = nueva;
+	}
 	let hover = $state('');
 
 	/** Dónde cae cada sistema en el plano, una sola vez por carga. */
@@ -446,7 +473,7 @@
 		// sistema con la mano poco firme no selecciona nada.
 		if (Math.abs(dx) > 2 || Math.abs(dy) > 2) movido = true;
 		ultimo = { x: evento.clientX, y: evento.clientY };
-		camara = pan(camara, dx, dy);
+		mover(pan(camara, dx, dy));
 	}
 
 	function alSoltar(evento: MouseEvent) {
@@ -459,12 +486,12 @@
 
 	function alRodar(evento: WheelEvent) {
 		evento.preventDefault();
-		camara = zoomAt(camara, relativo(evento), evento.deltaY < 0 ? 1.12 : 1 / 1.12, viewport);
+		mover(zoomAt(camara, relativo(evento), evento.deltaY < 0 ? 1.12 : 1 / 1.12, viewport));
 	}
 
 	/** Vuelve a encuadrar todo lo que hay. La usa el botón de la pantalla. */
 	export function encuadrar() {
-		camara = fit([...puntos.values()], viewport);
+		mover(fit([...puntos.values()], viewport));
 	}
 
 	/**
@@ -482,7 +509,7 @@
 	export function centrar(code: string) {
 		const punto = puntos.get(code);
 		if (!punto) return;
-		camara = { center: punto, scale: Math.max(camara.scale, CERCA) };
+		mover({ center: punto, scale: Math.max(camara.scale, CERCA) });
 	}
 
 	$effect(() => {
@@ -497,9 +524,9 @@
 	// El primer encuadre, cuando ya se sabe cuánto mide el lienzo. **Una sola vez**:
 	// re-encuadrar en cada cambio le sacaría el mapa de las manos al que lo movió.
 	$effect(() => {
-		if (encuadrado || viewport.x === 0 || puntos.size === 0) return;
-		camara = fit([...puntos.values()], viewport);
-		encuadrado = true;
+		if (fitted || viewport.x === 0 || puntos.size === 0) return;
+		mover(fit([...puntos.values()], viewport));
+		fitted = true;
 	});
 
 	// El dibujo depende de todo esto y de nada más. Leerlos acá es lo que hace que

@@ -437,12 +437,24 @@ Dos reglas distintas, a propósito:
 
 #### Agrandado
 
-El mapa tiene un botón en su esquina que lo lleva a pantalla casi completa, y se
-sale con él o con Escape. **Es la misma instancia con otro envoltorio**, no un
-segundo mapa en un diálogo: dibujar otro perdería la cámara y al agrandar
-volverías al encuadre inicial en vez de seguir mirando lo que estabas mirando.
-Agrandado, los filtros se pliegan solos —ahí el lugar es del mapa— y se despliegan
-con su botón.
+El mapa tiene un botón en su esquina que lo lleva a **pantalla completa**, y se
+sale con él o con Escape.
+
+**Ahí no queda nada más que la galaxia.** Sin el marco del panel, sin la tabla,
+sin los filtros ocupando lugar: lo que hace falta —la ficha del sistema, las
+leyendas, los filtros— flota encima del lienzo y se pliega. Agrandar el mapa es
+para mirar el mapa, y un mapa rodeado de recuadros es el mapa chico con más
+píxeles.
+
+Se dibuja **una sola de las dos versiones**, nunca las dos a la vez: dejar la de
+abajo escondida repetiría el identificador de cada campo del filtro, y dos
+controles con el mismo `id` rompen las etiquetas de los dos.
+
+Eso obliga a que **la cámara viva en la pantalla y no en el mapa**: cambiar de
+versión lo vuelve a montar, y con la vista adentro del componente cada expansión
+volvería al encuadre inicial. Al agrandar sí se reencuadra a propósito —un
+encuadre hecho para un recuadro de veintiséis rem deja la galaxia corrida en una
+pantalla entera— pero al volver se conserva lo que se estaba mirando.
 
 ## Cómo se agrega contenido
 

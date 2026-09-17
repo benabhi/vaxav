@@ -39,6 +39,7 @@
 	import { getFaction } from '$lib/game/factions';
 	import { oppositeBearing, type GateBearing } from '$lib/game/universe';
 	import type { NodoGalaxia } from '$lib/tipos';
+	import type { Camara } from '$lib/camera';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -394,14 +395,30 @@
 	 */
 	let agrandado = $state(false);
 
+	/**
+	 * Dónde está mirando el mapa, y si ya se encuadró.
+	 *
+	 * **Vive acá y no adentro del mapa** porque agrandar lo saca del panel y lo pone
+	 * en una capa propia, y eso lo vuelve a montar: con la vista adentro, cada vez
+	 * que se agranda o se achica volverías al encuadre inicial en vez de seguir
+	 * mirando lo que estabas mirando.
+	 */
+	let camara = $state<Camara | null>(null);
+	let encuadrado = $state(false);
+
 	/** Los filtros se pliegan cuando el mapa es la pantalla: ahí el lugar es del mapa. */
 	let filtrosAbiertos = $state(true);
 
 	function alternarAgrandado() {
 		agrandado = !agrandado;
-		// Plegados de entrada al agrandar, abiertos al volver: agrandar es para
-		// mirar el mapa, y la barra de filtros ocupa el alto de dos sistemas.
+		// Plegados de entrada al agrandar, abiertos al volver: agrandar es para mirar
+		// el mapa, y la barra de filtros ocupa el alto de dos sistemas.
 		filtrosAbiertos = !agrandado;
+		// **Y se vuelve a encuadrar en el tamaño nuevo.** La cámara se conserva —por
+		// eso vive acá— pero un encuadre hecho para un recuadro de veintiséis rem deja
+		// la galaxia corrida en una pantalla entera, y lo primero que uno ve al
+		// agrandar tiene que ser la galaxia, no un rincón de ella.
+		encuadrado = false;
 	}
 
 	/** Escape cierra, como todo lo que tapa la pantalla en este juego. */
@@ -555,37 +572,11 @@
 		encuentren sin mirar.
 	-->
 	<!--
-		Plegable, y plegada de entrada cuando el mapa está agrandado: ahí el lugar es
-		del mapa, y dos filas de campos se comen el alto de dos sistemas.
+		Las cuatro piezas de la pantalla, en snippets, porque se dibujan en **dos
+		sitios**: metidas en el panel, y sueltas sobre la capa de pantalla completa.
+		Escribirlas dos veces sería tener dos fichas que se van separando.
 	-->
-	<div class="flex w-full items-center gap-2 {agrandado ? 'order-first' : 'hidden'}">
-		<HudButton
-			type="button"
-			size="1"
-			variant="ghost"
-			onclick={() => (filtrosAbiertos = !filtrosAbiertos)}
-		>
-			<Icon name={filtrosAbiertos ? 'caret-up' : 'caret-down'} weight="bold" size="0.7rem" />
-			Filtros
-		</HudButton>
-		{#if hayFiltro}
-			<HudLink href="?" size="1" variant="outline">
-				<Icon name="x" weight="bold" size="0.7rem" />
-				Quitar
-			</HudLink>
-		{/if}
-		<div class="grow"></div>
-		<span class="font-mono text-[0.72rem] text-text-muted">
-			{universo.found} de {universo.total}
-		</span>
-	</div>
-
-	<form
-		method="GET"
-		onsubmit={alEnviar}
-		class="w-full flex-col gap-3 border border-border-soft bg-surface px-[0.9rem] py-[0.7rem]
-			{filtrosAbiertos ? 'flex' : 'hidden'}"
-	>
+	{#snippet camposDeFiltro()}
 		<div class="flex w-full flex-wrap items-end gap-3">
 			<div class="w-full min-w-0 xs:w-[11rem]">
 				<TextField
@@ -644,11 +635,11 @@
 
 		<div class="flex w-full flex-wrap items-end gap-3 border-t border-border-soft/60 pt-[0.6rem]">
 			<!--
-				Cómo se mira el mapa, no qué se muestra: el color de los puntos y la
-				mancha de abajo. Van con los filtros porque son la misma clase de
-				decisión —qué recorte de la galaxia estoy viendo— pero en la fila de las
-				acciones, separadas de lo que quita sistemas de la lista.
-			-->
+			Cómo se mira el mapa, no qué se muestra: el color de los puntos y la
+			mancha de abajo. Van con los filtros porque son la misma clase de
+			decisión —qué recorte de la galaxia estoy viendo— pero en la fila de las
+			acciones, separadas de lo que quita sistemas de la lista.
+		-->
 			<div class="w-full min-w-0 xs:w-[9.5rem]">
 				<SelectField
 					label="Pintar por"
@@ -681,10 +672,10 @@
 			</HudButton>
 
 			<!--
-				Quitar el recorte, de un toque. Con contorno y no fantasma: es lo que uno
-				busca cuando se perdió, y un enlace apagado al lado de un botón encendido
-				no se encuentra. Sólo está cuando hay algo que quitar.
-			-->
+			Quitar el recorte, de un toque. Con contorno y no fantasma: es lo que uno
+			busca cuando se perdió, y un enlace apagado al lado de un botón encendido
+			no se encuentra. Sólo está cuando hay algo que quitar.
+		-->
 			{#if hayFiltro}
 				<HudLink href="?" size="1" variant="outline">
 					<Icon name="x" weight="bold" size="0.7rem" />
@@ -702,202 +693,276 @@
 				{/if}
 			</span>
 		</div>
-	</form>
+	{/snippet}
 
-	<div
-		bind:this={panel}
-		class={agrandado
-			? 'fixed inset-[0.75rem] z-40 flex flex-col overflow-auto bg-background p-[0.75rem]'
-			: 'w-full scroll-mt-4'}
-	>
-		<TitledPanel
-			title="Mapa de la galaxia"
-			detail={detalleMapa}
-			class="w-full {agrandado ? 'flex grow flex-col' : ''}"
-		>
+	{#snippet lienzoDelMapa()}
+		<GalaxyMap
+			bind:this={mapa}
+			bind:camera={camara}
+			bind:fitted={encuadrado}
+			map={universo.map}
+			selected={elegido}
+			visible={visibles}
+			paint={pintar}
+			territory={territorio}
+			expanded={agrandado}
+			onToggleExpand={alternarAgrandado}
+			onSelect={(code) => (elegido = elegido === code ? '' : code)}
+		/>
+	{/snippet}
+
+	{#snippet leyendasDelMapa()}
+		{#if leyendaPintura.length > 0}
+			<!--
+		Qué dice el color, cuando el mapa está pintado. Va arriba de la del
+		trazo porque es la que cambia: la del trazo es siempre la misma y se
+		aprende una sola vez.
+	-->
+			<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+				{#each leyendaPintura as entrada (entrada.label)}
+					<span class="flex items-center gap-[0.4rem]">
+						<span
+							class="inline-block h-[0.55rem] w-[0.55rem] shrink-0 rounded-full"
+							style="background: {entrada.color}"
+						></span>
+						<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
+							{entrada.label}
+						</span>
+					</span>
+				{/each}
+			</div>
+		{/if}
+
+		<!--
+	La leyenda. Un mapa que codifica cinco cosas en el trazo y no dice
+	cuáles es un mapa que hay que adivinar.
+-->
+		<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
+			{#each LEYENDA as entrada (entrada.label)}
+				<span class="flex items-center gap-[0.4rem]">
+					<span class="inline-block h-[2px] w-[1.1rem] shrink-0" style="background: {entrada.color}"
+					></span>
+					<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
+						{entrada.label}
+					</span>
+				</span>
+			{/each}
+			<div class="grow"></div>
+			<!--
+				Ícono distinto del de agrandar, aunque los dos hablen de tamaño: agrandar
+				cambia **la ventana** y encuadrar cambia **lo que se ve adentro**. Con el
+				mismo dibujo, dos botones cerca parecen el mismo botón puesto dos veces.
+			-->
+			<HudButton size="1" variant="ghost" onclick={() => mapa?.encuadrar()}>
+				<Icon name="arrows-out-cardinal" weight="bold" size="0.7rem" />
+				Encuadrar
+			</HudButton>
+		</div>
+	{/snippet}
+
+	{#snippet fichaDelMapa()}
+		{#if elegidoNodo}
+			<!--
+			Mide lo mismo que el lienzo y desborda hacia adentro. Una ficha que
+			crece con el contenido corre el resto de la pantalla cada vez que se
+			elige un sistema con más salidas que el anterior.
+		-->
 			<div
-				class="flex w-full flex-col items-start gap-[1.25rem] lg:flex-row
-					{agrandado ? 'grow' : 'lg:h-[28rem]'}"
+				class="flex w-full flex-col gap-3 overflow-y-auto border border-border-soft bg-surface
+				p-[0.9rem] lg:h-full"
 			>
-				<div
-					class="flex w-full min-w-0 flex-col gap-2 lg:flex-[3_1_0]
-						{agrandado ? 'h-full min-h-[24rem]' : 'h-[26rem] lg:h-full'}"
-				>
-					<GalaxyMap
-						bind:this={mapa}
-						map={universo.map}
-						selected={elegido}
-						visible={visibles}
-						paint={pintar}
-						territory={territorio}
-						expanded={agrandado}
-						onToggleExpand={alternarAgrandado}
-						onSelect={(code) => (elegido = elegido === code ? '' : code)}
-					/>
+				<div class="flex flex-col items-start gap-1">
+					<Label>{elegidoNodo.region} · {elegidoNodo.constellation}</Label>
+					<CardTitle>{elegidoNodo.name}</CardTitle>
+				</div>
 
-					{#if leyendaPintura.length > 0}
-						<!--
-						Qué dice el color, cuando el mapa está pintado. Va arriba de la del
-						trazo porque es la que cambia: la del trazo es siempre la misma y se
-						aprende una sola vez.
-					-->
-						<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
-							{#each leyendaPintura as entrada (entrada.label)}
-								<span class="flex items-center gap-[0.4rem]">
-									<span
-										class="inline-block h-[0.55rem] w-[0.55rem] shrink-0 rounded-full"
-										style="background: {entrada.color}"
-									></span>
-									<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
-										{entrada.label}
-									</span>
-								</span>
-							{/each}
-						</div>
+				{#if elegidoNodo.adrift}
+					<p class="text-1 text-danger">
+						No llega caminando hasta el sistema inicial: su casilla todavía no significa nada.
+						Conectale una puerta a algo que sí esté en el mapa.
+					</p>
+				{/if}
+
+				<div class="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-[0.3rem]">
+					{@render lectura('Gobierno', elegidoNodo.government)}
+					{@render lectura('Seguridad', `${elegidoNodo.securityLevel} ${elegidoNodo.security}`)}
+					{@render lectura('Facción', elegidoNodo.factionName)}
+					{@render lectura(
+						'Casilla',
+						`${elegidoNodo.hex.x} · ${elegidoNodo.hex.y} · ${elegidoNodo.hex.z}`
+					)}
+					{@render lectura(
+						'Contenido',
+						`${elegidoNodo.bodies} cuerpos · ${elegidoNodo.stations} estaciones`
+					)}
+					{@render lectura('Salidas', `${elegidoNodo.gates} de 6`)}
+					{#if elegidoNodo.looseBearings.length > 0}
+						{@render lectura('Sin conectar', elegidoNodo.looseBearings.map(rumbo).join(' · '))}
 					{/if}
-
-					<!--
-					La leyenda. Un mapa que codifica cinco cosas en el trazo y no dice
-					cuáles es un mapa que hay que adivinar.
-				-->
-					<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
-						{#each LEYENDA as entrada (entrada.label)}
-							<span class="flex items-center gap-[0.4rem]">
-								<span
-									class="inline-block h-[2px] w-[1.1rem] shrink-0"
-									style="background: {entrada.color}"
-								></span>
-								<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
-									{entrada.label}
-								</span>
-							</span>
-						{/each}
-						<div class="grow"></div>
-						<HudButton size="1" variant="ghost" onclick={() => mapa?.encuadrar()}>
-							<Icon name="arrows-out" weight="bold" size="0.7rem" />
-							Encuadrar
-						</HudButton>
-					</div>
+					{#if elegidoNodo.free.length > 0}
+						{@render lectura('Rumbos libres', elegidoNodo.free.map(rumbo).join(' · '))}
+					{/if}
 				</div>
 
 				<!--
-				La barra lateral y no un globo flotante: lo que va a crecer acá son
-				acciones —ir al constructor, plantar una puerta, cerrar un paso— y un
-				globo con seis botones es un menú disfrazado. Además tapa el mapa justo
-				donde uno está mirando.
+				Las salidas, una por una. Es lo que convierte la ficha en algo que se
+				usa: el mapa dice que hay tres puertas, y esto dice adonde va cada una,
+				cuanto mide el salto y cual esta cerrada. Sin esto hay que abrir el
+				constructor para saber algo que el servidor ya mando.
 			-->
-				<div class="w-full min-w-0 lg:h-full lg:flex-[1_1_0]">
-					{#if elegidoNodo}
-						<!--
-						Mide lo mismo que el lienzo y desborda hacia adentro. Una ficha que
-						crece con el contenido corre el resto de la pantalla cada vez que se
-						elige un sistema con más salidas que el anterior.
-					-->
-						<div
-							class="flex w-full flex-col gap-3 overflow-y-auto border border-border-soft bg-surface
-							p-[0.9rem] lg:h-full"
-						>
-							<div class="flex flex-col items-start gap-1">
-								<Label>{elegidoNodo.region} · {elegidoNodo.constellation}</Label>
-								<CardTitle>{elegidoNodo.name}</CardTitle>
-							</div>
-
-							{#if elegidoNodo.adrift}
-								<p class="text-1 text-danger">
-									No llega caminando hasta el sistema inicial: su casilla todavía no significa nada.
-									Conectale una puerta a algo que sí esté en el mapa.
-								</p>
-							{/if}
-
-							<div class="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-[0.3rem]">
-								{@render lectura('Gobierno', elegidoNodo.government)}
-								{@render lectura(
-									'Seguridad',
-									`${elegidoNodo.securityLevel} ${elegidoNodo.security}`
-								)}
-								{@render lectura('Facción', elegidoNodo.factionName)}
-								{@render lectura(
-									'Casilla',
-									`${elegidoNodo.hex.x} · ${elegidoNodo.hex.y} · ${elegidoNodo.hex.z}`
-								)}
-								{@render lectura(
-									'Contenido',
-									`${elegidoNodo.bodies} cuerpos · ${elegidoNodo.stations} estaciones`
-								)}
-								{@render lectura('Salidas', `${elegidoNodo.gates} de 6`)}
-								{#if elegidoNodo.looseBearings.length > 0}
-									{@render lectura(
-										'Sin conectar',
-										elegidoNodo.looseBearings.map(rumbo).join(' · ')
-									)}
+				{#if salidas.length > 0}
+					<div class="flex w-full flex-col gap-1 border-t border-border-soft pt-2">
+						<Label>Salidas</Label>
+						{#each salidas as salida (salida.bearing)}
+							<div class="flex w-full flex-wrap items-baseline gap-x-2">
+								<span
+									class="w-[4.5rem] shrink-0 font-display text-[0.62rem] tracking-label
+									text-accent-dim uppercase"
+								>
+									{rumbo(salida.bearing)}
+								</span>
+								<button
+									type="button"
+									class="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left
+									text-1 text-text-body hover:text-accent-bright"
+									onclick={() => mostrarEnMapa(salida.code)}
+								>
+									{salida.name}
+								</button>
+								<span class="font-mono text-[0.7rem] text-data">{salida.distance}</span>
+								{#if salida.closed}
+									<span class="text-[0.6rem] tracking-label text-danger uppercase">Cerrada</span>
 								{/if}
-								{#if elegidoNodo.free.length > 0}
-									{@render lectura('Rumbos libres', elegidoNodo.free.map(rumbo).join(' · '))}
+								{#if salida.shortcut}
+									<span class="text-[0.6rem] tracking-label text-data uppercase">Atajo</span>
 								{/if}
 							</div>
+						{/each}
+					</div>
+				{/if}
 
-							<!--
-							Las salidas, una por una. Es lo que convierte la ficha en algo que se
-							usa: el mapa dice que hay tres puertas, y esto dice adonde va cada una,
-							cuanto mide el salto y cual esta cerrada. Sin esto hay que abrir el
-							constructor para saber algo que el servidor ya mando.
-						-->
-							{#if salidas.length > 0}
-								<div class="flex w-full flex-col gap-1 border-t border-border-soft pt-2">
-									<Label>Salidas</Label>
-									{#each salidas as salida (salida.bearing)}
-										<div class="flex w-full flex-wrap items-baseline gap-x-2">
-											<span
-												class="w-[4.5rem] shrink-0 font-display text-[0.62rem] tracking-label
-												text-accent-dim uppercase"
-											>
-												{rumbo(salida.bearing)}
-											</span>
-											<button
-												type="button"
-												class="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left
-												text-1 text-text-body hover:text-accent-bright"
-												onclick={() => mostrarEnMapa(salida.code)}
-											>
-												{salida.name}
-											</button>
-											<span class="font-mono text-[0.7rem] text-data">{salida.distance}</span>
-											{#if salida.closed}
-												<span class="text-[0.6rem] tracking-label text-danger uppercase"
-													>Cerrada</span
-												>
-											{/if}
-											{#if salida.shortcut}
-												<span class="text-[0.6rem] tracking-label text-data uppercase">Atajo</span>
-											{/if}
-										</div>
-									{/each}
-								</div>
-							{/if}
+				<div class="grow"></div>
 
-							<div class="grow"></div>
-
-							<HudLink href="{ADMIN_ROUTE}/universo/{elegidoNodo.code}" variant="primary" size="1">
-								<Icon name="wrench" weight="bold" size="0.7rem" />
-								Abrir en el constructor
-							</HudLink>
-						</div>
-					{:else}
-						<div
-							class="flex w-full flex-col gap-2 overflow-y-auto border border-dead-border p-[0.9rem]
-							lg:h-full"
-						>
-							<CardTitle>Nada elegido</CardTitle>
-							<BodyText>
-								Tocá un sistema del mapa para ver su ficha y abrirlo en el constructor. Se arrastra
-								para moverlo y la rueda acerca.
-							</BodyText>
-						</div>
-					{/if}
-				</div>
+				<HudLink href="{ADMIN_ROUTE}/universo/{elegidoNodo.code}" variant="primary" size="1">
+					<Icon name="wrench" weight="bold" size="0.7rem" />
+					Abrir en el constructor
+				</HudLink>
 			</div>
-		</TitledPanel>
-	</div>
+		{:else}
+			<div
+				class="flex w-full flex-col gap-2 overflow-y-auto border border-dead-border p-[0.9rem]
+				lg:h-full"
+			>
+				<CardTitle>Nada elegido</CardTitle>
+				<BodyText>
+					Tocá un sistema del mapa para ver su ficha y abrirlo en el constructor. Se arrastra para
+					moverlo y la rueda acerca.
+				</BodyText>
+			</div>
+		{/if}
+	{/snippet}
+
+	<!--
+		**La capa de pantalla completa: la galaxia y nada más.**
+
+		Sin el marco del panel, sin la tabla, sin los filtros ocupando lugar. Lo que
+		hace falta ahí —la ficha, las leyendas, los filtros— flota encima del lienzo y
+		se pliega, porque agrandar el mapa es para mirar el mapa.
+
+		Se dibuja **una sola de las dos versiones**, nunca las dos: dejar la de abajo
+		escondida repetiría los identificadores de cada campo del filtro, y dos
+		controles con el mismo `id` rompen las etiquetas de los dos. Por eso la cámara
+		vive en esta pantalla y no en el mapa: cambiar de versión lo vuelve a montar.
+	-->
+	{#if agrandado}
+		<div class="fixed inset-0 z-50 bg-background">
+			<div class="absolute inset-0">
+				{@render lienzoDelMapa()}
+			</div>
+
+			<div class="absolute top-2 left-2 z-10 flex flex-col items-start gap-2">
+				<div class="flex flex-wrap items-center gap-2">
+					<HudButton
+						type="button"
+						size="1"
+						variant={filtrosAbiertos ? 'primary' : 'outline'}
+						onclick={() => (filtrosAbiertos = !filtrosAbiertos)}
+					>
+						<Icon name="magnifying-glass" weight="bold" size="0.7rem" />
+						Filtros
+					</HudButton>
+					{#if hayFiltro}
+						<HudLink href="?" size="1" variant="outline">
+							<Icon name="x" weight="bold" size="0.7rem" />
+							Quitar
+						</HudLink>
+					{/if}
+					<span
+						class="border border-border-soft bg-well px-[0.45rem] py-[0.3rem] font-mono
+							text-[0.68rem] whitespace-nowrap text-text-muted"
+					>
+						{universo.found} de {universo.total}
+					</span>
+				</div>
+
+				{#if filtrosAbiertos}
+					<form
+						method="GET"
+						onsubmit={alEnviar}
+						class="flex w-[min(21rem,calc(100vw-2rem))] flex-col gap-3 border border-border-soft
+							bg-well p-[0.8rem]"
+					>
+						{@render camposDeFiltro()}
+					</form>
+				{/if}
+			</div>
+
+			{#if elegidoNodo}
+				<div
+					class="absolute top-2 right-2 bottom-[4.5rem] z-10 flex w-[min(20rem,calc(100vw-2rem))]
+						flex-col pt-9"
+				>
+					{@render fichaDelMapa()}
+				</div>
+			{/if}
+
+			<div
+				class="absolute right-2 bottom-2 left-2 z-10 flex flex-col gap-2 border border-border-soft
+					bg-well px-[0.7rem] py-[0.5rem]"
+			>
+				{@render leyendasDelMapa()}
+			</div>
+		</div>
+	{:else}
+		<form
+			method="GET"
+			onsubmit={alEnviar}
+			class="flex w-full flex-col gap-3 border border-border-soft bg-surface px-[0.9rem]
+				py-[0.7rem]"
+		>
+			{@render camposDeFiltro()}
+		</form>
+
+		<div bind:this={panel} class="w-full scroll-mt-4">
+			<TitledPanel title="Mapa de la galaxia" detail={detalleMapa} class="w-full">
+				<div class="flex w-full flex-col items-start gap-[1.25rem] lg:h-[28rem] lg:flex-row">
+					<div class="flex h-[26rem] w-full min-w-0 flex-col gap-2 lg:h-full lg:flex-[3_1_0]">
+						{@render lienzoDelMapa()}
+						{@render leyendasDelMapa()}
+					</div>
+
+					<!--
+						La barra lateral y no un globo flotante: lo que va a crecer acá son
+						acciones —ir al constructor, plantar una puerta, cerrar un paso— y un
+						globo con seis botones es un menú disfrazado.
+					-->
+					<div class="w-full min-w-0 lg:h-full lg:flex-[1_1_0]">
+						{@render fichaDelMapa()}
+					</div>
+				</div>
+			</TitledPanel>
+		</div>
+	{/if}
 
 	<TitledPanel
 		title="Sistemas"
