@@ -102,6 +102,26 @@ facción elegida: alistarse en una del Dominio habiendo nacido en el Pacto no es
 elección interesante, es una contradicción. El servicio lo revalida, porque la
 pantalla filtra pero no decide.
 
+### Y se puede cambiar después
+
+Desde la ficha se **renuncia** y desde el estado de independiente se **elige otra**,
+con las mismas reglas del alta y con la misma lista. Tres condiciones, y las tres
+dicen lo mismo desde distintos lados —que la elección signifique algo—:
+
+- **Hay que estar libre para alistarse.** Renunciar es una decisión aparte; sin
+  eso se podría aparecer en otra sin haber salido de la anterior.
+- **Tiene que ser de la facción del piloto.** Las cuatro sin bandera quedan afuera
+  por la misma cuenta: operan estaciones, no reciben pilotos.
+- **Las del mundo aceptan siempre.** El día que existan las de jugadores va a
+  haber un campo que diga si reciben aspirantes; ponerlo hoy sería una columna en
+  `true` para todas.
+
+**La reputación no se toca al entrar ni al salir**, y ésa es la decisión que más
+va a rendir después. El número es del par piloto × corporación y existe con o sin
+membresía: se puede tener treinta con una en la que nunca se estuvo, y el que
+renuncia no pierde lo que se ganó. Es lo que va a permitir que una corporación de
+jugadores pida «Confiable para entrar» sin inventar ninguna mecánica nueva.
+
 ## El módulo Corporación
 
 Entrada propia en el Neocom, después de Navegación y antes del Mercado: primero el
@@ -118,6 +138,13 @@ contratos—, y están las dos que hoy tienen algo detrás:
 
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
 cartel es una puerta cerrada con el nombre puesto.
+
+La ficha termina en **«ver en el mapa»**, que abre la galaxia recortada a los
+sistemas donde la corporación tiene un puesto. Es un botón y no una lista de
+enlaces porque la pregunta no es «¿dónde está este puesto?» sino «¿dónde está
+metida?», y eso lo contesta la forma del conjunto y no un nombre a la vez. El
+recorte viaja en la URL y el mapa lo deja puesto en su propio desplegable, así
+que se ve de dónde salió y se saca desde ahí.
 
 Del listado de miembros se muestra **lo público** —cómo se llama cada uno, a qué se
 dedica y desde cuándo vuela—: dónde está parado ahora no, porque un listado de
@@ -172,6 +199,6 @@ millón—, no el hash.
 
 - Cómo se crea una corporación de jugadores, y qué cuesta.
 - Si una corporación de jugadores puede alinearse con una facción, y qué gana.
-- Qué hace la reputación con una corporación, además de existir (ver
-  [misiones](MISSIONS.md)).
+- Si renunciar tendría que costar algo —reputación, un tiempo de espera— o si
+  está bien que sea gratis.
 - Si las corporaciones NPC compiten entre sí de forma visible para el jugador.
