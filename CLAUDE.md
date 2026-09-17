@@ -99,15 +99,16 @@ que ninguna se salga del lenguaje.
 
 Las que ya existen:
 
-| Pantalla                              | Su figura                 | Qué se lee sin leer                                           |
-| ------------------------------------- | ------------------------- | ------------------------------------------------------------- |
-| Nave                                  | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo |
-| Navegación · Sistema                  | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                       |
-| Piloto                                | El hexágono de ramas      | A qué se dedicó, y en qué está por convertirse                |
-| Universo (cuartel)                    | El mapa de la galaxia     | La forma del conjunto: dónde está el agujero y qué no llega   |
-| Corporación · Reputación              | La escalera de reputación | Cuánto llevás, y que el último tramo es el más largo de todos |
-| Navegación · Ubicación, viajando      | La banda del tramo        | Cuánto falta, hacia dónde y dónde está la nave ahora          |
-| Navegación · Ubicación, en una puerta | El aro de salto           | Por qué lado se sale, si lleva a alguna parte y si se cruza   |
+| Pantalla                               | Su figura                 | Qué se lee sin leer                                           |
+| -------------------------------------- | ------------------------- | ------------------------------------------------------------- |
+| Nave                                   | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo |
+| Navegación · Sistema                   | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                       |
+| Piloto                                 | El hexágono de ramas      | A qué se dedicó, y en qué está por convertirse                |
+| Universo (cuartel)                     | El mapa de la galaxia     | La forma del conjunto: dónde está el agujero y qué no llega   |
+| Corporación · Reputación               | La escalera de reputación | Cuánto llevás, y que el último tramo es el más largo de todos |
+| Navegación · Ubicación, viajando       | La banda del tramo        | Cuánto falta, hacia dónde y dónde está la nave ahora          |
+| Navegación · Ubicación, en una puerta  | El aro de salto           | Por qué lado se sale, si lleva a alguna parte y si se cruza   |
+| Navegación · Ubicación, en un cinturón | El campo de rocas         | Cuántas hay, qué les queda y cuánto conocés del campo         |
 
 Las reglas que las hacen funcionar:
 

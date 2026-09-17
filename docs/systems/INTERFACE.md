@@ -342,6 +342,30 @@ pantallas que el jugador no distingue.
 con el rótulo puesto sobre su propio radio y tapaba justo el muñón que tenía que
 dejar ver. La palabra va en la lista de al lado, que es donde va siempre.
 
+### La pantalla parado en un cinturón
+
+La lista dice qué tiene cada piedra. La figura dice **cómo es el campo**, que es
+otra pregunta y la que uno se hace al llegar: si vale la pena quedarse.
+
+| Se ve                  | Quiere decir                                       |
+| ---------------------- | -------------------------------------------------- |
+| Cuántos bultos hay     | Cuántas rocas tiene el campo                       |
+| El tamaño de cada uno  | Lo que le **queda** de lo que traía al aparecer    |
+| Encendido, con silueta | Tiene lectura vigente: sabés qué es y cuánto tiene |
+| Contorno apagado       | **Un bulto y nada más**: le falta el escáner       |
+| Contorno punteado      | La lectura venció                                  |
+
+Así que **un campo trabajado se ve trabajado**: las piedras exprimidas quedan de
+guijarro al lado de una entera, y se lee de un vistazo si alguien pasó antes.
+
+Cada roca tiene su propia silueta, sacada de su número. No es azar de dibujo —el
+mismo número da siempre la misma piedra—, así que la que estabas mirando sigue
+estando donde estaba después de escanearla. Es el mismo criterio que el sello de
+un piloto: el dibujo sale del dato.
+
+Y lo que no tiene lectura se dibuja **entero**, no vacío: suponerlo agotado sería
+contar algo que el piloto no sabe.
+
 ### El chat
 
 > **Sin construir.** Hubo una ventana con líneas inventadas y se sacó: una maqueta

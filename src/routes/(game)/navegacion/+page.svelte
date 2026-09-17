@@ -19,6 +19,7 @@
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
 	import GateRing from '$lib/components/game/GateRing.svelte';
+	import BeltField from '$lib/components/game/BeltField.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
@@ -436,6 +437,16 @@
 	{#if place.field.scannable}
 		<div class="w-full min-w-0 flex-[2_1_0]">
 			<TitledPanel title="Campo de rocas" detail={place.name} class="w-full">
+				<!--
+					**La figura de esta pantalla, arriba de todo.** La lista de abajo dice
+					qué tiene cada piedra; el dibujo dice cómo es el campo —cuántas hay,
+					qué les queda y cuánto conocés—, que es la pregunta que uno se hace al
+					llegar: si vale la pena quedarse.
+				-->
+				<div class="mb-3 w-full border-b border-border-soft pb-3">
+					<BeltField asteroids={place.asteroids} />
+				</div>
+
 				<!--
 					El instrumento y el campo, una sola vez arriba: cuántas rocas hay, qué
 					lectura sacaría el escáner montado y cuánto tarda. Repetirlo en cada
