@@ -209,10 +209,6 @@ Afinarlo antes sería balancear una economía que todavía no existe.
 Cosas decididas que no entraron todavía, para que no se pierdan entre una etapa y
 la siguiente:
 
-- **Toda lista de la ficha tiene que aguantar mil filas.** Las estaciones están
-  hoy en un panel al costado, que sirve con cuatro y se rompe con cuarenta: el
-  panel pasa a mostrar las primeras y a llevar a la tabla completa, con el recorte
-  compartido que ya usa el resto del proyecto.
 - **La ruta, dibujada mientras se viaja.** En el mapa de la galaxia, la línea
   entre origen y destino animada y de otro color; es la base de lo que va a
   necesitar el autopiloto para mostrar un recorrido de varios saltos. Y en el

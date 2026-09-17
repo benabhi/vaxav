@@ -209,7 +209,7 @@
 			qué pasa cuando está vacío.
 		-->
 		<div class="w-full min-w-0 lg:flex-[1_1_0]">
-			<TitledPanel title="Ubicaciones" class="w-full">
+			<TitledPanel title="Ubicaciones" detail={corp.stationCount} class="w-full">
 				<div class="flex w-full flex-col gap-4">
 					<div class="flex w-full flex-col gap-2">
 						<Label>Estaciones</Label>
@@ -237,6 +237,15 @@
 									{/if}
 								</div>
 							{/each}
+							{#if corp.moreStations > 0}
+								<!--
+									Lo que no entra se cuenta, no se esconde. Verlas todas es el mapa,
+									que para eso ya recorta por corporación.
+								-->
+								<span class="pl-[1.35rem] text-[0.7rem] text-text-muted">
+									y {corp.moreStations} más
+								</span>
+							{/if}
 						{:else}
 							<span class="text-1 text-text-muted">
 								Ninguna. No todas las corporaciones tienen edificios: ésta es gente.
@@ -244,28 +253,27 @@
 						{/if}
 					</div>
 
+					<!--
+						De los agentes, sólo la cuenta. La lista con lo que la hace útil
+						—nivel, clase de misión y si te atiende— vive en su pestaña, que es
+						donde se la puede recortar y ordenar; repetirla acá sería tener dos
+						listas de lo mismo y una sola que sirve.
+					-->
 					<div class="flex w-full flex-col gap-2 border-t border-border-soft pt-3">
 						<Label>Agentes</Label>
-						{#if corp.agents.length > 0}
-							{#each corp.agents as uno (uno.code)}
-								<span class="flex items-baseline gap-2">
-									<Icon
-										name="identification-badge"
-										weight="bold"
-										size="0.75rem"
-										class="shrink-0 text-accent"
-									/>
-									<span class="truncate text-1 text-text-body">{uno.name}</span>
-									<span class="truncate text-[0.7rem] text-text-muted">
-										{uno.station}{uno.system ? ` · ${uno.system}` : ''}
-									</span>
-								</span>
-							{/each}
-						{:else}
-							<span class="text-1 text-text-muted">
-								Todavía no tiene a nadie sentado en ninguna estación.
-							</span>
-						{/if}
+						<span class="flex items-baseline gap-2">
+							<Icon
+								name="identification-badge"
+								weight="bold"
+								size="0.75rem"
+								class="shrink-0 text-accent"
+							/>
+							<span class="text-1 text-text-body">{corp.agentCount}</span>
+						</span>
+						<HudLink href="/corporacion/agentes" variant="outline" size="1">
+							<Icon name="address-book" weight="bold" size="0.7rem" />
+							Ver quién reparte trabajo
+						</HudLink>
 					</div>
 
 					<!--

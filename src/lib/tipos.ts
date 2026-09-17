@@ -175,9 +175,21 @@ export interface Corporacion {
 	/** Cuántos pilotos son, ya escrito. */
 	readonly members: string;
 	/** Las estaciones que opera. Puede no operar ninguna y existir igual. */
+	/**
+	 * Las primeras estaciones que opera, no todas.
+	 *
+	 * Una corporación grande puede operar cientos y el panel de una ficha no es el
+	 * lugar para leerlas: lo que contesta acá es «¿de qué tamaño es y por dónde
+	 * anda?». La lista entera la contesta el mapa, con su recorte puesto.
+	 */
 	readonly stations: readonly EstacionCorporacion[];
+	/** Cuántas quedaron afuera de esa muestra. Cero si entran todas. */
+	readonly moreStations: number;
+	/** Cuántas opera en total, ya escrito. */
+	readonly stationCount: string;
+	/** Cuántos agentes tiene, ya escrito. La lista vive en su pestaña. */
+	readonly agentCount: string;
 	/** Dónde tiene gente sentada repartiendo trabajo. */
-	readonly agents: readonly AgenteCorporacion[];
 	/**
 	 * Lo que piensa de vos, o `null` si no respondés a ninguna.
 	 *
@@ -305,14 +317,6 @@ export interface MiembroCorporacion {
 	readonly since: number;
 	/** Si sos vos, para que la fila se destaque. */
 	readonly isYou: boolean;
-}
-
-/** Un agente de la corporación, y dónde está sentado. */
-export interface AgenteCorporacion {
-	readonly code: string;
-	readonly name: string;
-	readonly station: string;
-	readonly system: string;
 }
 
 /** Un módulo de la estación, listo para dibujar en el mosaico. */
