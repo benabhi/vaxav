@@ -233,7 +233,7 @@ el juego no tiene con nadie.
 | Clase                 | Quién habla          | Cómo suena                                                                         | Ejemplo                                                                   |
 | --------------------- | -------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | **Aviso del sistema** | La nave, el servidor | Seco, presente, sin adorno. Dice qué pasa o qué falta, nunca por qué te lo merecés | «Acá no hay nada que extraer.»                                            |
-| **Rótulo**            | La interfaz          | Un sustantivo. Ni una frase ni un verbo conjugado                                  | «Combustible», «Alcance», «Tarda»                                         |
+| **Rótulo**            | La interfaz          | Un sustantivo. Ni una frase, ni una pregunta, ni un verbo conjugado                | «Combustible», «Alcance», «Duración»                                      |
 | **Ambientación**      | El mundo             | Acá sí hay prosa: describe cosas, no le habla al jugador                           | «Roca gris con vetas de hierro. El pan de todos los días en los Anillos.» |
 | **Informe**           | La bitácora          | Casi no es prosa: un sustantivo y filas de dato y cifra, con su unidad             | «Salto · Llegada: Puerta Sur · Combustible: −7 u»                         |
 
@@ -241,6 +241,39 @@ La confusión más fácil es meter ambientación en un aviso. La descripción de
 mineral puede tener imagen y ritmo porque describe **una cosa**; un aviso que se
 pone literario está adornando **un problema que el jugador tiene que resolver
 ahora**, y estorba.
+
+### Un rótulo nombra, no explica
+
+Es la regla que más se viola, porque una frase descriptiva siempre parece más
+amable. No lo es: en una grilla de veinte rótulos, el que explica obliga a leerlo
+entero para llegar al dato que está al lado. El rótulo **nombra**; lo que hay que
+explicar lo dice el contenido de la fila, o no hace falta decirlo.
+
+| ✗                           | ✓             |
+| --------------------------- | ------------- |
+| «Estaciones que opera»      | «Estaciones»  |
+| «Gente repartiendo trabajo» | «Agentes»     |
+| «Quién es»                  | «Información» |
+| «Dónde se la encuentra»     | «Ubicaciones» |
+| «Cómo llegaste»             | «Historial»   |
+| «Extraés»                   | «Extracción»  |
+| «Te atienden hasta»         | «Agentes»     |
+
+Vale igual para los **títulos de panel y de pestaña**, que son rótulos grandes.
+
+Tres pruebas, en orden:
+
+1. **¿Es una pregunta?** Entonces no es un rótulo. «Quién es», «dónde está» y
+   «cómo llegaste» conversan, y la interfaz informa.
+2. **¿Tiene un verbo conjugado?** Pasalo a sustantivo: «Repone» → «Reposición»,
+   «Dura» → «Duración», «Controla» → «Control».
+3. **¿Le habla al jugador?** «Te atienden hasta», «Para volarla» y «Firmás como»
+   meten una segunda persona que el resto de la grilla no tiene.
+
+**Neutro antes que pintoresco.** «Gente repartiendo trabajo» tiene color, y el
+color va en la ambientación —en la descripción de la corporación, que para eso
+está—, no en el rótulo de la lista que hay que recorrer con el ojo. Un rótulo con
+personalidad se lee la primera vez y estorba las otras cincuenta.
 
 ### Reglas que se aplican al escribir una frase
 
