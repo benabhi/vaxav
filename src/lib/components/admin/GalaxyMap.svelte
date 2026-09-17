@@ -284,7 +284,12 @@
 			if (!punto) continue;
 
 			const donde = toScreen(punto, camara, viewport);
-			const radio = Math.max(2.5, HEX * camara.scale * 0.1);
+			// **Con piso y con techo.** Proporcional al acercamiento a secas, con sesenta
+			// sistemas entrando en un recuadro de veintiséis rem el punto queda de tres
+			// píxeles y el color del filtro no se distingue; y muy de cerca se vuelve un
+			// plato que tapa su propia casilla. El piso es lo que hace que el mapa chico
+			// se lea, que es donde más falta hace.
+			const radio = Math.min(10, Math.max(4, HEX * camara.scale * 0.13));
 			const apagado = !seVe(nodo.code);
 			const elegido = nodo.code === selected;
 			const senalado = nodo.code === hover;

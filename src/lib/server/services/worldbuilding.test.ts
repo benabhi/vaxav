@@ -2,7 +2,13 @@
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { beltDeposit, body as bodyTable, pilot as pilotTable, system } from '../db/schema';
+import {
+	beltDeposit,
+	body as bodyTable,
+	gate as gateTable,
+	pilot as pilotTable,
+	system
+} from '../db/schema';
 import { crearPiloto, seededDb } from '../db/testing';
 import { eventsPage } from './events';
 import { getBody, systemTree } from './universe';
@@ -654,6 +660,66 @@ describe('las puertas', () => {
 		// No hay paso que cerrar, y decirlo es mejor que dejar una bandera puesta en
 		// algo que no la usa.
 		expect(() => setGateClosed(db, suelta.gate.id, true, null)).toThrow(BuilderError);
+	});
+
+	it('se niega si la conexión encimaría dos sistemas', () => {
+		const db = seededDb();
+		const anfora = getBody(db, 'anfora_estrella')!;
+		const norte = createSystem(db, borrador(db, { name: 'Ocaso' }), null);
+		const noreste = createSystem(db, borrador(db, { name: 'Vigía' }), null);
+		const tercero = createSystem(db, borrador(db, { name: 'Brida' }), null);
+
+		// Dos vecinos de Ánfora: uno al norte y otro al noreste.
+		const aN = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Norte'), 'n', null);
+		const deN = createGate(db, norte.system.id, puerta(norte.star.id, 'Puerta Sur'), 's', null);
+		connectGates(db, aN.gate.id, deN.gate.id, 10, null);
+
+		const aNE = createGate(db, anfora.systemId, puerta(anfora.id, 'Puerta Noreste'), 'ne', null);
+		const deNE = createGate(
+			db,
+			noreste.system.id,
+			puerta(noreste.star.id, 'Puerta Suroeste'),
+			'sw',
+			null
+		);
+		connectGates(db, aNE.gate.id, deNE.gate.id, 10, null);
+
+		// El sureste del que está al norte es **la casilla del que está al noreste**.
+		const puestoN = db.select().from(system).where(eq(system.id, norte.system.id)).get()!;
+		const puestoNE = db.select().from(system).where(eq(system.id, noreste.system.id)).get()!;
+		expect(neighbourOf({ x: puestoN.x, y: puestoN.y, z: puestoN.z }, 'se')).toEqual({
+			x: puestoNE.x,
+			y: puestoNE.y,
+			z: puestoNE.z
+		});
+
+		// Así que colgar ahí un sistema sin lugar lo pondría encima. **Eso es un mapa
+		// roto, y roto de la peor manera**: no falla ninguna restricción de la base,
+		// los dos se dibujan uno sobre el otro y el de abajo desaparece sin que nada
+		// lo diga.
+		const aChoque = createGate(
+			db,
+			norte.system.id,
+			puerta(norte.star.id, 'Puerta Sureste'),
+			'se',
+			null
+		);
+		const deTercero = createGate(
+			db,
+			tercero.system.id,
+			puerta(tercero.star.id, 'Puerta Noroeste'),
+			'nw',
+			null
+		);
+
+		expect(() => connectGates(db, aChoque.gate.id, deTercero.gate.id, 10, null)).toThrow(
+			BuilderError
+		);
+
+		// Y no dejó nada a medio hacer: las puertas siguen sueltas.
+		expect(
+			db.select().from(gateTable).where(eq(gateTable.id, aChoque.gate.id)).get()!.destinationId
+		).toBeNull();
 	});
 
 	it('no se conectan dos del mismo sistema, ni una ya conectada', () => {

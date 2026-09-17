@@ -794,6 +794,42 @@ export function looseGates(db: Db): readonly { gate: Gate; body: Body; system: S
  * así. Por eso se escriben las dos filas juntas y con la misma distancia de
  * salto: un test verifica que no quede ninguna gemela suelta.
  */
+/**
+ * Qué sistema quedaría encimado si se hiciera esa mudanza, o `null` si ninguno.
+ *
+ * **Dos sistemas en la misma casilla es un mapa roto**, y roto de la peor manera:
+ * no falla nada, los dos se dibujan uno sobre el otro y el de abajo desaparece sin
+ * que nada lo diga. Es el mismo error que el ramal a la deriva —una posición que
+ * no significa lo que dice— sólo que más difícil de ver.
+ *
+ * Se comprueba **la isla entera**, no sólo el sistema que se conecta: un ramal se
+ * muda de una pieza, así que cualquiera de sus miembros puede caer encima de algo.
+ */
+function collisionAfterMove(
+	db: Db,
+	members: readonly System[],
+	from: Hex,
+	to: Hex
+): { member: System; ocupante: System } | null {
+	const dx = to.x - from.x;
+	const dy = to.y - from.y;
+	const dz = to.z - from.z;
+	if (dx === 0 && dy === 0 && dz === 0) return null;
+
+	const seMudan = new Set(members.map((uno) => uno.id));
+	const ocupadas = new Map<string, System>();
+	for (const uno of db.select().from(system).all()) {
+		if (seMudan.has(uno.id)) continue;
+		ocupadas.set(`${uno.x},${uno.y},${uno.z}`, uno);
+	}
+
+	for (const miembro of members) {
+		const ocupante = ocupadas.get(`${miembro.x + dx},${miembro.y + dy},${miembro.z + dz}`);
+		if (ocupante) return { member: miembro, ocupante };
+	}
+	return null;
+}
+
 /** Dónde está un sistema en la grilla de la galaxia. */
 function hexOf(row: System): Hex {
 	return { x: row.x, y: row.y, z: row.z };
@@ -936,6 +972,20 @@ export function connectGates(
 			from: hexOf(sistemaOtra),
 			to: neighbourOf(hexOf(sistemaUna), una.bearing)
 		};
+	}
+
+	// **Antes de tocar nada.** Que la mudanza encime dos sistemas no rompe ninguna
+	// restricción de la base: los dos quedan en la misma casilla y el mapa dibuja
+	// uno encima del otro sin que nada avise. Se comprueba acá, que es el único
+	// lugar donde se mueve un sistema.
+	if (mudanza) {
+		const choque = collisionAfterMove(db, mudanza.members, mudanza.from, mudanza.to);
+		if (choque) {
+			throw new BuilderError(
+				`Esa conexión pondría ${choque.member.name} encima de ${choque.ocupante.name}. ` +
+					'Elegí otro rumbo.'
+			);
+		}
 	}
 
 	db.transaction((tx) => {
