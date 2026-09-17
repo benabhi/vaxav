@@ -48,6 +48,20 @@ de git.
 | `npm run db:seed`            | Carga el universo. Idempotente                          |
 | `npm run db:seed:demo`       | Sesenta sistemas de prueba, para mirar el mapa a escala |
 
+### Para probar, `Prueba` y no `benabhi`
+
+La siembra deja **dos pilotos y son dos pares de ojos**: `benabhi` es la cuenta de
+quien hace el juego y `Prueba` es la de la asistencia. Con una sola cuenta
+compartida cada uno le pisa al otro dónde estaba parado —una nave que sale de
+viaje, un piloto movido a una puerta, una corporación cambiada— y los dos pierden
+el rato averiguando qué pasó.
+
+Así que **todo lo que haya que mirar en el navegador se mira con `Prueba`**:
+viajar, saltar, alistarse, renunciar, mover el piloto de lugar para ver una
+pantalla. Están en dos facciones distintas a propósito, así que probar con una no
+dice nada de la otra: para mirar algo del lado del Dominio se crea otro piloto, no
+se usa el de benabhi.
+
 ## Flujo de trabajo
 
 Rama local por feature, con commits chicos. Las ramas **no se pushean**: se
