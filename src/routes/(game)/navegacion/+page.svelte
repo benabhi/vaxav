@@ -13,6 +13,7 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
@@ -95,29 +96,6 @@
 	ley, porque mientras la nave vuela **la ficha del lugar está apagada** y no hay
 	ninguna otra pantalla donde mirar a qué se está entrando.
 -->
-{#snippet punta(titulo: string, lado: PuntaTramo)}
-	<div class="flex min-w-0 flex-col gap-2">
-		<div class="flex min-w-0 items-center gap-3">
-			<Icon name={lado.icon} weight="duotone" size="1.3rem" class="shrink-0 text-accent" />
-			<div class="flex min-w-0 flex-col gap-[0.1rem]">
-				<Label>{titulo}</Label>
-				<HudValue class="text-[0.88rem]">{lado.name || '—'}</HudValue>
-				<span class="text-1 text-text-muted">{lado.kindLabel}</span>
-			</div>
-		</div>
-
-		{#if lado.system}
-			<div class="flex flex-col gap-[0.1rem] border-l-2 border-l-border pl-3">
-				<span class="tracking-wide font-mono text-[0.8rem] text-accent-bright">
-					{lado.system}
-				</span>
-				<span class="text-1 text-text-muted">{lado.faction} · {lado.government}</span>
-				<span class="text-1 text-text-muted">Seguridad {lado.security}</span>
-			</div>
-		{/if}
-	</div>
-{/snippet}
-
 <!--
 	El tramo en curso, mientras la nave está en camino.
 
@@ -135,31 +113,25 @@
 		detail={place.leg.destination.system}
 		class="mb-[1.25rem] w-full"
 	>
-		<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-4">
-			{@render punta('Salida', place.leg.origin)}
-
+		<div class="flex w-full flex-col gap-5">
 			<!--
-				La flecha sólo cuando las dos puntas están una al lado de la otra.
-				Apiladas en un teléfono apunta hacia la derecha, a un costado, y señala
-				el margen: los rótulos «Salida» y «Llegada» ya ordenan la lectura.
+				El viaje dibujado, a todo el ancho: mientras se espera, la pantalla tiene
+				que mostrar que algo se mueve. Las cifras exactas van debajo, como manda
+				la regla de las figuras.
 			-->
-			<Icon
-				name="caret-right"
-				weight="bold"
-				size="0.8rem"
-				class="mt-3 hidden shrink-0 text-accent-dim sm:block"
+			<TransitTrack
+				origin={place.leg.origin}
+				destination={place.leg.destination}
+				startedAt={place.leg.startedAt}
+				durationSeconds={place.leg.durationSeconds}
 			/>
-
-			{@render punta('Llegada', place.leg.destination)}
-
-			<div class="grow"></div>
 
 			<!--
 				Lo que cuesta el tramo. La distancia y el combustible sólo aparecen
 				cuando hay un salto detrás: un viaje dentro del sistema no quema nada, y
 				una fila en blanco miente más que una fila que no está.
 			-->
-			<div class="flex flex-wrap items-start gap-x-6 gap-y-3">
+			<div class="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-border-soft pt-4">
 				{#if place.leg.distance}
 					<div class="flex flex-col items-start gap-1">
 						<Label>Distancia</Label>
