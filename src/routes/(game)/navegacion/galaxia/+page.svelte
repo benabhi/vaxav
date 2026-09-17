@@ -76,6 +76,15 @@
 	let agrandado = $state(false);
 	let filtrosAbiertos = $state(true);
 
+	/**
+	 * Y la ficha también se pliega, pero **abre desplegada**.
+	 *
+	 * Al revés que los filtros: uno agranda el mapa para mirar la galaxia, y los
+	 * filtros no hacen falta hasta que se los busca; la ficha, en cambio, es la que
+	 * dice adónde se puede ir desde acá, que es para lo que se abrió el mapa.
+	 */
+	let fichaAbierta = $state(true);
+
 	function alternarAgrandado() {
 		agrandado = !agrandado;
 		// Plegados al agrandar, abiertos al volver: agrandar es para mirar el mapa.
@@ -654,6 +663,8 @@
 
 <GalaxyStage
 	bind:filtersOpen={filtrosAbiertos}
+	bind:cardOpen={fichaAbierta}
+	cardLabel={elegidoNodo?.name ?? 'Sistema'}
 	title="Mapa de la galaxia"
 	detail={detalleMapa}
 	expanded={agrandado}
