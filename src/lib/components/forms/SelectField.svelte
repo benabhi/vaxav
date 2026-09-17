@@ -1,10 +1,12 @@
 <!--
 	Un desplegable del HUD, con su etiqueta.
 
-	Existe porque el constructor está hecho casi enteramente de elegir de una
-	lista: la constelación, la facción, el gobierno, la corporación, el mineral.
-	Sin él, cada pantalla resolvería por su cuenta el aspecto de un `<select>`, que
-	es justo lo que CLAUDE.md §1 manda no hacer.
+	Nació en el constructor, que está hecho casi enteramente de elegir de una lista
+	—la constelación, la facción, el gobierno, el mineral—, y **vive con los demás
+	campos** porque un desplegable no es del cuartel: lo usa cualquier pantalla que
+	tenga algo que elegir, empezando por los filtros del mapa del piloto. Sin él,
+	cada una resolvería por su cuenta el aspecto de un `<select>`, que es justo lo
+	que CLAUDE.md §1 manda no hacer.
 
 	Mide y se ve **igual que `TextField`**: mismo alto, mismo borde, mismo halo al
 	enfocarlo. En una cabina los controles están alineados, y un desplegable más

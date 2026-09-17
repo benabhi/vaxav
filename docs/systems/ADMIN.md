@@ -327,9 +327,16 @@ está en [universo](UNIVERSE.md#el-mapa); lo que hace falta saber acá es que
 contesta preguntas de conjunto —ramales sueltos, puertas sin terminar, pasos
 cerrados— que sistema por sistema no se ven.
 
+**El mapa y su marco son compartidos con la cabina.** `views/galaxy.ts` arma la
+galaxia para las dos pantallas y `GalaxyStage` pone alrededor lo mismo en las dos
+—los filtros, la ficha, la leyenda, y el mismo botón de agrandar—, así que lo que
+cambia es qué piezas entran, no dónde va cada una. Lo que el cuartel ve de más es
+la deuda de obra: las puertas sin conectar y los sistemas a la deriva, que al
+piloto no se le muestran porque no son contenido sino trabajo pendiente.
+
 **Los filtros valen para los dos.** El mismo recorte apaga sistemas en el mapa y
-quita filas de la lista: buscador, facción, región y gobierno, más un criterio
-para pintar el mapa. Viajan en la URL, como en todo listado del proyecto, así que
+quita filas de la lista: buscador, facción, región, constelación, gobierno y
+**servicio**, más un criterio para pintar el mapa. Viajan en la URL, como en todo listado del proyecto, así que
 un recorte se comparte y sobrevive al botón de atrás. Y **el mapa recibe la
 galaxia entera igual**: uno que sólo dibuja lo filtrado pierde la forma del
 conjunto, que es justamente lo que la tabla no da.
@@ -337,6 +344,19 @@ conjunto, que es justamente lo que la tabla no da.
 La tabla ordena por columna y pagina de a veinticinco, con `HudTable`. La mira de
 cada fila lleva la cámara hasta ese sistema y se le acerca: es el puente que hace
 que las dos vistas sean una.
+
+**El filtro por servicio es el único que pregunta para qué sirve un sistema** y no
+cómo es. Con sesenta, es la forma de encontrar el que tiene astillero sin abrirlos
+de a uno, y de ver que a una región entera no le pusiste dónde refinar. Está en
+las dos pantallas —el cuartel y la cabina— porque la pregunta es la misma de los
+dos lados; lo que cambia es qué se hace con la respuesta.
+
+Y **crece solo**: las opciones salen de `SERVICE_ORDER`, así que un servicio nuevo
+en el catálogo del juego queda filtrable el mismo día sin tocar ninguna de las dos
+pantallas. Uno que todavía no instaló nadie se ofrece igual: que no encuentre nada
+**es** la respuesta, y es la que dice qué falta construir. La cuenta de qué
+servicios tiene cada sistema sale del mapa, que ya la hizo: dos cuentas de lo
+mismo pueden dar distinto.
 
 Agregar un filtro nuevo es agregar una entrada a la tabla de filtros de
 `views/worldbuilding.ts` y un control en la pantalla. Agregar una columna

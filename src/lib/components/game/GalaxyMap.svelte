@@ -31,7 +31,7 @@
 	import { fit, pan, toScreen, toWorld, zoomAt, type Camara, type Punto } from '$lib/camera';
 	import type { GateBearing } from '$lib/game/universe';
 	import Icon from '../Icon.svelte';
-	import type { MapaGalaxia, NodoGalaxia } from '$lib/tipos';
+	import type { EnlaceGalaxia, MapaGalaxia, NodoGalaxia, PilotoEnElMapa } from '$lib/tipos';
 
 	interface Props {
 		map: MapaGalaxia;
@@ -78,6 +78,33 @@
 		 */
 		camera?: Camara | null;
 		fitted?: boolean;
+		/**
+		 * Dónde está el piloto y qué puede cruzar, si lo está mirando un jugador.
+		 *
+		 * Va aparte y no adentro de `map` porque **no es del mapa: es de quien lo
+		 * mira**. Dos pilotos abren la misma galaxia y ven cosas distintas —uno puede
+		 * saltar una puerta que al otro no le alcanza el tanque— y meter eso en el
+		 * dato del mapa obligaría a rearmarlo por piloto.
+		 */
+		pilot?: PilotoEnElMapa;
+		/**
+		 * A qué sistema mira al abrirse, en vez de encuadrar toda la galaxia.
+		 *
+		 * El cuartel abre encuadrando: la pregunta de quien construye es «cómo está
+		 * la galaxia». La del piloto es **«dónde estoy»**, y encuadrar sesenta
+		 * sistemas para contestarla lo deja buscándose a sí mismo en un plano. El
+		 * botón de encuadrar queda al lado para la otra pregunta.
+		 */
+		focus?: string;
+		/**
+		 * Si se dibuja la deuda de obra: ramales sueltos y puertas sin conectar.
+		 *
+		 * Encendida en el cuartel, donde es media razón de ser del mapa. **Apagada en
+		 * el juego**, porque no es contenido: un sistema a la deriva no es un lugar
+		 * misterioso, es uno que nadie terminó de conectar, y para el piloto
+		 * sencillamente no se puede llegar.
+		 */
+		debt?: boolean;
 	}
 
 	let {
@@ -90,8 +117,22 @@
 		onToggleExpand,
 		camera = $bindable(null),
 		fitted = $bindable(false),
+		pilot,
+		focus = '',
+		debt = true,
 		onSelect
 	}: Props = $props();
+
+	/**
+	 * Cómo se ven los controles que flotan sobre el lienzo.
+	 *
+	 * Escrito una vez porque son tres y tienen que verse igual: tres botones pegados
+	 * con tres píxeles de diferencia se leen como un error antes que como un grupo.
+	 */
+	const CONTROL =
+		'flex cursor-pointer items-center gap-1 border border-border-soft bg-well px-[0.45rem] ' +
+		'py-[0.25rem] font-display text-[0.62rem] tracking-label text-text-muted uppercase ' +
+		'transition-colors hover:border-accent hover:text-accent-bright';
 
 	/** El radio de una casilla en el plano. Todo lo demás se mide contra esto. */
 	const HEX = 52;
@@ -144,6 +185,34 @@
 		return visible.size === 0 || visible.has(code);
 	}
 
+	/** Si esa puerta sale del sistema donde está el piloto. */
+	function esMia(enlace: EnlaceGalaxia): boolean {
+		return Boolean(pilot) && (enlace.from === pilot!.system || enlace.to === pilot!.system);
+	}
+
+	/** El código del otro extremo, visto desde donde está el piloto. */
+	function otroLado(enlace: EnlaceGalaxia): string {
+		return enlace.from === pilot?.system ? enlace.to : enlace.from;
+	}
+
+	/** Si esa puerta sale del sistema que está elegido. */
+	function esDelElegido(enlace: EnlaceGalaxia): boolean {
+		return selected !== '' && (enlace.from === selected || enlace.to === selected);
+	}
+
+	/**
+	 * En qué orden se dibujan las líneas.
+	 *
+	 * En un lienzo **el orden de dibujo es la profundidad**: lo resaltado tiene que
+	 * ir último o queda tapado por la maraña de líneas normales, que es justo lo que
+	 * se estaba tratando de leer. Va de menos a más importante.
+	 */
+	function rango(enlace: EnlaceGalaxia): number {
+		if (esMia(enlace)) return 2;
+		if (esDelElegido(enlace)) return 1;
+		return 0;
+	}
+
 	/** Si hay un recorte puesto que deje afuera a alguien. */
 	let filtrando = $derived(visible.size > 0 && visible.size < map.systems.length);
 
@@ -170,6 +239,7 @@
 
 		const accent = token('--color-accent');
 		const accentDim = token('--color-accent-dim');
+		const accentBright = token('--color-accent-bright');
 		const data = token('--color-data');
 		const warning = token('--color-warning');
 		const danger = token('--color-danger');
@@ -231,7 +301,7 @@
 		}
 
 		// --- Las puertas primero: las casillas se dibujan encima ------------------
-		for (const enlace of map.links) {
+		for (const enlace of [...map.links].sort((a, b) => rango(a) - rango(b))) {
 			const desde = puntos.get(enlace.from);
 			const hasta = puntos.get(enlace.to);
 			if (!desde || !hasta) continue;
@@ -245,16 +315,35 @@
 			ctx.lineTo(b.x, b.y);
 			// **El atajo se dibuja punteado.** No es un error: es un pasaje que se
 			// saltea el camino largo, y verlo distinto es toda la gracia de marcarlo.
-			ctx.setLineDash(enlace.shortcut ? [6, 5] : []);
+			// **Las salidas del sistema donde está el piloto se leen distinto**, y en
+			// tres estados: la que puede cruzar va encendida y gruesa, la que sale de acá
+			// pero no alcanza va punteada, y el resto de la galaxia queda de fondo. La
+			// línea no dice sólo que hay un pasaje: dice si **vos** podés usarlo.
+			const mia = esMia(enlace);
+			const motivo = mia ? (pilot?.reach[otroLado(enlace)] ?? '') : '';
+			// **Y las del sistema elegido también.** Elegir un sistema es preguntar «¿y
+			// desde acá adónde se va?»: sin resaltar sus salidas hay que seguir la línea
+			// con el dedo entre todas las demás. Se resaltan las directas y nada más —el
+			// camino completo hasta el otro extremo de la galaxia es otra pregunta, y
+			// pintarla entera dejaría el mapa iluminado de punta a punta—.
+			const suya = !mia && esDelElegido(enlace);
+
+			ctx.setLineDash(enlace.shortcut || (mia && motivo) ? [6, 5] : []);
 			ctx.strokeStyle = apagado
 				? muted
 				: enlace.closed
 					? danger
-					: enlace.shortcut
-						? data
-						: accentDim;
-			ctx.globalAlpha = apagado ? 0.25 : enlace.closed ? 0.55 : 1;
-			ctx.lineWidth = enlace.shortcut ? 1 : 1.5;
+					: mia
+						? motivo
+							? muted
+							: accent
+						: suya
+							? accentBright
+							: enlace.shortcut
+								? data
+								: accentDim;
+			ctx.globalAlpha = apagado ? 0.25 : enlace.closed ? 0.55 : mia && motivo ? 0.5 : 1;
+			ctx.lineWidth = mia && !motivo ? 2.5 : suya ? 2 : enlace.shortcut ? 1 : 1.5;
 			ctx.stroke();
 			ctx.setLineDash([]);
 			ctx.globalAlpha = 1;
@@ -297,7 +386,7 @@
 			// El muñón: una puerta plantada que no lleva a ninguna parte. Sale del
 			// hexágono hacia su rumbo, y es lo que hace visible el trabajo a medio
 			// hacer que el contador de arriba cuenta sin decir dónde.
-			for (const rumbo of nodo.looseBearings) {
+			for (const rumbo of debt ? nodo.looseBearings : []) {
 				const paso = BEARING_VECTORS[rumbo as GateBearing];
 				if (!paso) continue;
 				const vecino = hexToPixel(
@@ -354,12 +443,32 @@
 			// **El ramal suelto va anillado en rojo.** Tiene casilla pero no tiene
 			// lugar: no llega caminando hasta la semilla, y su posición no significa
 			// nada hasta que alguien lo enganche.
-			if (nodo.adrift && !apagado) {
+			if (debt && nodo.adrift && !apagado) {
 				ctx.beginPath();
 				ctx.arc(donde.x, donde.y, radio + 4, 0, Math.PI * 2);
 				ctx.strokeStyle = danger;
 				ctx.lineWidth = 1.5;
 				ctx.stroke();
+			}
+
+			// **Estás acá**, y no se apaga nunca. Es lo primero que se busca al abrir el
+			// mapa, y un marcador que un filtro puede esconder es uno que falla justo
+			// cuando hace falta. Va con un aro doble, distinto del de la selección.
+			if (pilot && nodo.code === pilot.system) {
+				ctx.beginPath();
+				ctx.arc(donde.x, donde.y, radio + 6, 0, Math.PI * 2);
+				ctx.strokeStyle = data;
+				ctx.lineWidth = 2;
+				ctx.globalAlpha = 1;
+				ctx.stroke();
+
+				ctx.beginPath();
+				ctx.arc(donde.x, donde.y, radio + 10, 0, Math.PI * 2);
+				ctx.strokeStyle = data;
+				ctx.lineWidth = 1;
+				ctx.globalAlpha = 0.5;
+				ctx.stroke();
+				ctx.globalAlpha = 1;
 			}
 
 			if (elegido || senalado) {
@@ -557,6 +666,18 @@
 		mover({ center: punto, scale: Math.max(camara.scale, CERCA) });
 	}
 
+	/**
+	 * Lleva el mapa a donde está el piloto, y lo deja elegido.
+	 *
+	 * Las dos cosas: quien aprieta «dónde estoy» está preguntando por su sistema, y
+	 * mover la cámara sin cambiar la ficha dejaría el costado hablando de otro.
+	 */
+	function aquiEstoy() {
+		if (!pilot) return;
+		centrar(pilot.system);
+		onSelect?.(pilot.system);
+	}
+
 	$effect(() => {
 		if (!caja) return;
 		const observador = new ResizeObserver(([entrada]) => {
@@ -570,7 +691,8 @@
 	// re-encuadrar en cada cambio le sacaría el mapa de las manos al que lo movió.
 	$effect(() => {
 		if (fitted || viewport.x === 0 || puntos.size === 0) return;
-		mover(fit([...puntos.values()], viewport));
+		const mirado = focus ? puntos.get(focus) : undefined;
+		mover(mirado ? { center: mirado, scale: CERCA } : fit([...puntos.values()], viewport));
 		fitted = true;
 	});
 
@@ -596,13 +718,39 @@
 		Los controles del mapa, flotando en su esquina. Van encima del lienzo y no en
 		una barra al lado porque son del mapa: agrandado no hay barra al lado, y un
 		control que desaparece justo cuando hace más falta no es un control.
+
+		**Los tres juntos, y en este orden.** Los dos de la cámara son las dos
+		preguntas opuestas del mapa —«dónde estoy» se acerca a tu sistema, «encuadrar»
+		se aleja hasta que entre todo— y el de la ventana va último, separado de ellos
+		por ser de otra cosa. Agrandado, apoyarlos abajo les hacía comer una franja de
+		galaxia entera para dos botones.
 	-->
-	<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+	<div class="absolute top-2 right-2 z-10 flex flex-wrap items-center justify-end gap-1">
+		{#if pilot}
+			<button
+				type="button"
+				class={CONTROL}
+				title="Llevar el mapa a donde estás"
+				onclick={aquiEstoy}
+			>
+				<Icon name="crosshair" weight="bold" size="0.7rem" />
+				<span class="hidden xs:inline">Dónde estoy</span>
+			</button>
+		{/if}
+
+		<!--
+			Ícono distinto del de agrandar, aunque los dos hablen de tamaño: agrandar
+			cambia **la ventana** y encuadrar cambia **lo que se ve adentro**. Con el
+			mismo dibujo, dos botones pegados parecen el mismo botón puesto dos veces.
+		-->
+		<button type="button" class={CONTROL} title="Que entre toda la galaxia" onclick={encuadrar}>
+			<Icon name="arrows-out-cardinal" weight="bold" size="0.7rem" />
+			<span class="hidden xs:inline">Encuadrar</span>
+		</button>
+
 		<button
 			type="button"
-			class="flex cursor-pointer items-center gap-1 border border-border-soft bg-well px-[0.45rem]
-				py-[0.25rem] font-display text-[0.62rem] tracking-label text-text-muted uppercase
-				transition-colors hover:border-accent hover:text-accent-bright"
+			class={CONTROL}
 			title={expanded ? 'Volver al tamaño normal' : 'Agrandar el mapa'}
 			onclick={onToggleExpand}
 		>

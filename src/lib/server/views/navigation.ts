@@ -32,16 +32,27 @@ import {
 	type SystemNode
 } from '../services/universe';
 import { JUMP_KIND, REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
+import { hopsFrom } from '$lib/game/galaxy';
+import { buildGalaxyMap, neighbourhood } from './galaxy';
+import { FREE_SPACE } from '$lib/filters';
 import { FACTIONS } from '$lib/game/factions';
 import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
 import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
-import { SERVICES, securityLevel, type StationServiceKind } from '$lib/game/universe';
+import {
+	SECURITY_LEVELS,
+	SERVICES,
+	SERVICE_ORDER,
+	securityLevel,
+	type SecurityLevel,
+	type StationServiceKind
+} from '$lib/game/universe';
 import {
 	actionIcon,
 	actionLabel,
+	bearingLabel,
 	bodyKindIcon,
 	bodyKindLabel,
 	corporationKindLabel,
@@ -61,6 +72,11 @@ import {
 } from '$lib/format';
 import type {
 	Aparato,
+	ConsultaGalaxia,
+	Galaxia,
+	NodoGalaxia,
+	PilotoEnElMapa,
+	SalidaGalaxia,
 	Lectura,
 	Palanca,
 	Procedencia,
@@ -797,6 +813,217 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			[{ grant: 'thrust', label: 'Propulsores' }],
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(readout?.speed ?? 0)} ud/h` }],
+			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
+		)
+	};
+}
+
+// --- La galaxia --------------------------------------------------------------
+
+/**
+ * Por qué criterio puede pintar el mapa el piloto.
+ *
+ * **Tres y no los cuatro del cuartel.** El gobierno se queda afuera porque a un
+ * piloto le dice menos que la seguridad, que es el mismo eje contado en el número
+ * que le importa: cuánta ley hay donde va a entrar.
+ */
+export const GALAXY_PAINTS = ['faccion', 'region', 'seguridad'] as const;
+
+/**
+ * Qué territorio puede dibujar por debajo de todo.
+ *
+ * Las constelaciones **se pintan pero no se filtran**, y la diferencia no es un
+ * descuido: pintadas dibujan el terreno —dónde termina un grupo de sistemas y
+ * empieza otro— y eso se lee sin saber cómo se llaman. Filtrar por constelación
+ * pide conocer el nombre de antemano, que es vocabulario del constructor.
+ */
+export const GALAXY_TERRITORIES = ['region', 'constelacion'] as const;
+
+/**
+ * Lee la consulta del mapa desde la URL, validada contra los catálogos.
+ *
+ * Nada de confiar en el parámetro: un servicio inventado o una banda de seguridad
+ * que no existe entran igual de fácil que los buenos, y el borde es acá.
+ */
+export function readGalaxyQuery(params: URLSearchParams): ConsultaGalaxia {
+	const seguridad = params.get('seguridad') ?? '';
+	const servicio = params.get('servicio') ?? '';
+	const pintar = params.get('pintar') ?? '';
+	const territorio = params.get('territorio') ?? '';
+
+	return {
+		search: (params.get('buscar') ?? '').trim().slice(0, 60),
+		faction: params.get('faccion') ?? '',
+		region: params.get('region') ?? '',
+		security: SECURITY_LEVELS.includes(seguridad as SecurityLevel) ? seguridad : '',
+		service: SERVICE_ORDER.includes(servicio as StationServiceKind) ? servicio : '',
+		paint: GALAXY_PAINTS.includes(pintar as (typeof GALAXY_PAINTS)[number]) ? pintar : '',
+		territory: GALAXY_TERRITORIES.includes(territorio as (typeof GALAXY_TERRITORIES)[number])
+			? territorio
+			: ''
+	};
+}
+
+/**
+ * Los filtros del mapa, cada uno con su propia pregunta.
+ *
+ * **Se apilan**: un sistema entra si pasa todos. Agregar «los que tienen taller»
+ * o «los que están en guerra» el día que eso exista es agregar una fila acá y un
+ * desplegable en la pantalla, sin tocar nada más.
+ *
+ * Son **los del piloto y no los del constructor**: buscar, bandera, región,
+ * cuánta ley hay y qué servicios ofrece. Ninguno pregunta por algo que no se
+ * pueda mirar desde la cabina.
+ */
+const GALAXY_FILTERS: readonly ((nodo: NodoGalaxia, query: ConsultaGalaxia) => boolean)[] = [
+	(nodo, query) =>
+		!query.search ||
+		nodo.name.toLocaleLowerCase('es').includes(query.search.toLocaleLowerCase('es')),
+	(nodo, query) =>
+		!query.faction ||
+		(query.faction === FREE_SPACE ? nodo.faction === '' : nodo.faction === query.faction),
+	(nodo, query) => !query.region || nodo.region === query.region,
+	(nodo, query) => !query.security || securityLevel(nodo.security) === query.security,
+	(nodo, query) => !query.service || nodo.services.includes(query.service)
+];
+
+/**
+ * Las salidas del sistema donde está el piloto, con lo que cuesta cada una.
+ *
+ * **Todo se calcula antes de moverse.** Cuánto mide el salto, cuánto tarda, qué
+ * quema y por qué no se puede: un piloto tiene que poder decidir adónde va sin
+ * viajar hasta la puerta para enterarse de que no le alcanza el tanque. El motivo
+ * sale de `jumpProblem`, la misma función pura que apaga el botón en Ubicación y
+ * que usa el servicio para rechazar la orden.
+ *
+ * Sale de **dos consultas** y no de una por puerta: son seis como mucho, pero el
+ * patrón importa más que el número.
+ */
+function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] {
+	const puertas = db.select().from(gate).all();
+	const cuerpos = db.select().from(body).where(eq(body.systemId, here.systemId)).all();
+	const porCuerpo = new Map(puertas.map((una) => [una.bodyId, una]));
+	const nombres = new Map(cuerpos.map((uno) => [uno.id, uno]));
+
+	const readout = shipReadout(db, row);
+	const nave = activeShip(db, row.id);
+	const alcance = readout?.jumpRange ?? 0;
+	const masa = readout?.mass ?? 0;
+	const tanque = nave?.fuel ?? 0;
+	const velocidad = readout?.speed ?? REFERENCE_SPEED;
+
+	const salidas: SalidaGalaxia[] = [];
+	for (const salida of puertas) {
+		if (salida.systemId !== here.systemId || salida.destinationId === null) continue;
+		const gemela = porCuerpo.get(salida.destinationId);
+		if (!gemela) continue;
+
+		const alla = db.select().from(systemTable).where(eq(systemTable.id, gemela.systemId)).get();
+		const cuerpo = nombres.get(salida.bodyId);
+		if (!alla || !cuerpo) continue;
+
+		const problema =
+			readout === null || nave === null
+				? 'Necesitás una nave para saltar.'
+				: jumpProblem(
+						{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
+						salida.jumpDistance,
+						salida.closed
+					);
+
+		const segundos = alcance > 0 ? jumpSeconds(salida.jumpDistance, alcance) : 0;
+		// Cuánto hay hasta la puerta, que es el viaje que esta pantalla sí ordena. La
+		// cuenta es la misma que la del árbol del sistema, con la misma velocidad, así
+		// que las dos pantallas no pueden prometer duraciones distintas.
+		const hasta = bodyDistance(db, row.locationId, salida.bodyId);
+
+		salidas.push({
+			code: alla.code,
+			name: alla.name,
+			gate: cuerpo.name,
+			gateCode: cuerpo.code,
+			bearing: bearingLabel(salida.bearing),
+			travelDistance: `${thousands(hasta)} ud`,
+			travelDuration: remainingLabel(travelDurationSeconds(hasta, velocidad)),
+			distance: lightYears(salida.jumpDistance),
+			// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que
+			// faltan doce de combustible es lo que dice qué hacer, y un renglón en
+			// blanco con un «no podés» no dice nada.
+			duration: segundos > 0 ? remainingLabel(segundos) : '',
+			fuel: `${jumpFuel(salida.jumpDistance, masa)} u`,
+			standingThere: row.locationId === salida.bodyId,
+			blocked: problema ?? ''
+		});
+	}
+
+	return salidas.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
+
+/**
+ * La pestaña Galaxia: el mapa, dónde estás y adónde podés ir.
+ *
+ * Es el tercer nivel de acercamiento de Navegación —cuerpo, sistema, galaxia— y
+ * **contesta lo que los otros dos no pueden**: dónde queda esto que estoy mirando
+ * y qué hay alrededor.
+ *
+ * El mapa es el mismo que arma el cuartel. Lo que cambia es lo que viaja al lado:
+ * dónde está parado el piloto, a cuántos saltos le queda cada sistema y por qué
+ * no puede cruzar tal puerta. **La deuda de obra no viaja**: un sistema a la
+ * deriva no es un lugar misterioso, es uno que nadie terminó de conectar, y para
+ * el piloto sencillamente no se puede llegar.
+ */
+export function buildGalaxia(
+	db: Db,
+	row: Pilot,
+	query = readGalaxyQuery(new URLSearchParams())
+): Galaxia {
+	const map = buildGalaxyMap(db);
+
+	// **El sistema sale de dónde está parado**, igual que la pestaña Sistema. En
+	// tránsito sigue siendo el de origen: la nave no está en ningún lado, pero el
+	// mapa tiene que seguir diciendo de dónde salió.
+	const cuerpo = db.select().from(body).where(eq(body.id, row.locationId)).get();
+	const suyo = cuerpo
+		? db.select().from(systemTable).where(eq(systemTable.id, cuerpo.systemId)).get()
+		: undefined;
+	const here = map.systems.find((nodo) => nodo.code === suyo?.code) ?? null;
+
+	const exits = cuerpo ? buildSalidas(db, row, cuerpo) : [];
+
+	const pilot: PilotoEnElMapa = {
+		system: here?.code ?? '',
+		// Los saltos se cuentan sobre el grafo de puertas abiertas: «a dos saltos»
+		// tiene que ser un camino que el piloto pueda hacer, no uno que exista en el
+		// plano. Lo que no aparece **no se puede alcanzar**, que no es lo mismo que
+		// estar lejos.
+		jumps: here ? Object.fromEntries(hopsFrom(neighbourhood(map), here.code)) : {},
+		reach: Object.fromEntries(exits.map((salida) => [salida.code, salida.blocked]))
+	};
+
+	const pasan = map.systems.filter((nodo) => GALAXY_FILTERS.every((cumple) => cumple(nodo, query)));
+
+	return {
+		map,
+		pilot,
+		here,
+		exits,
+		// El mapa recibe la galaxia entera igual: lo que el filtro hace es **apagar**
+		// el resto, no borrarlo, porque un mapa que sólo dibuja lo filtrado pierde la
+		// forma del conjunto y deja de servir para ubicarse.
+		matches: pasan.map((nodo) => nodo.code),
+		query,
+		total: map.systems.length,
+		found: pasan.length,
+		// Desde el mapa no se salta: `startJump` exige estar parado en la puerta. Lo
+		// que el mapa ofrece es **viajar hasta la puerta**, que es una orden que ya
+		// existe, y por eso la fuente que se muestra es la de viajar.
+		travelSource: fuenteDeVerbo(
+			db,
+			row,
+			'Viajar',
+			[{ grant: 'thrust', label: 'Propulsores' }],
+			'speed',
+			[{ label: 'Velocidad', value: `${thousands(shipReadout(db, row)?.speed ?? 0)} ud/h` }],
 			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
 		)
 	};

@@ -19,7 +19,7 @@
 	import { submitting } from '$lib/forms.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import GateRose from '$lib/components/admin/GateRose.svelte';
-	import SelectField from '$lib/components/admin/SelectField.svelte';
+	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';

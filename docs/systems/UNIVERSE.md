@@ -428,15 +428,23 @@ jugador a gastar en algo que no lo va a dejar pasar igual.
 
 ### El mapa
 
-La galaxia se dibuja en `/admin/universo`, sobre un lienzo, y es **la figura de
-esa pantalla**. Contesta lo que ninguna tabla contesta: la forma del conjunto,
-dónde quedó el agujero, qué ramal no llega a ninguna parte.
+La galaxia se dibuja sobre un lienzo y es **la figura de su pantalla**. Contesta
+lo que ninguna tabla contesta: la forma del conjunto, dónde quedó el agujero, qué
+ramal no llega a ninguna parte.
+
+**Está en dos pantallas y se arma una sola vez.** El cuartel lo mira en
+`/admin/universo` para construir; el piloto lo mira en `/navegacion/galaxia` para
+navegar. La galaxia es la misma —los sistemas están donde están y las puertas unen
+lo que unen—, así que `views/galaxy.ts` la arma para las dos. Lo que cambia es
+**quién la mira**, y eso viaja aparte. Tenerla dos veces sería tener dos galaxias
+que se van separando: un atajo que en una pantalla se dibuja y en la otra no.
 
 Lo que el trazo codifica:
 
 | Se ve                              | Quiere decir                                         |
 | ---------------------------------- | ---------------------------------------------------- |
 | Línea llena                        | Una puerta que sigue la grilla                       |
+| Línea gruesa, naranja claro        | Una **salida del sistema elegido**                   |
 | Línea punteada, en cian            | Un **atajo**: sus puntas no son vecinas              |
 | Línea roja con un tajo al medio    | El **paso está cerrado**                             |
 | Un brazo corto amarillo            | Una **puerta sin conectar**, saliendo hacia su rumbo |
@@ -445,9 +453,30 @@ Lo que el trazo codifica:
 Los tres últimos son trabajo a medio hacer que sólo se ve mirando el conjunto: el
 contador de arriba dice **cuántos** hay, el mapa dice **dónde**.
 
+La leyenda no es un adorno: un mapa que codifica cinco cosas en el trazo y ocho
+en el color y no dice cuáles es un mapa que hay que adivinar. Cómo se ordena para
+que trece entradas se lean está en [interfaz](INTERFACE.md#el-mapa-de-la-galaxia-y-su-marco).
+
+**Elegir un sistema resalta sus salidas**, en las dos pantallas. Elegir es
+preguntar «¿y desde acá adónde se va?», y sin resaltarlas hay que seguir la línea
+con el dedo entre todas las demás. Se resaltan **las directas y nada más**: el
+camino completo hasta el otro extremo de la galaxia es otra pregunta, y pintarlo
+entero dejaría el mapa iluminado de punta a punta.
+
+Y se dibujan **al final**. En un lienzo el orden de dibujo es la profundidad, así
+que una línea resaltada pintada en su turno queda debajo de la maraña de las
+normales, que es justo lo que se estaba tratando de leer. Cuando la salida es
+además del sistema donde está el piloto, gana esa lectura: dice si la podés
+cruzar, que es más de lo que dice estar elegida.
+
 Se dibuja en Canvas 2D **sin biblioteca**, como todas las figuras del juego, y
 **sin bucle de cuadros**: se redibuja cuando algo cambia. Ésta es una pestaña que
 va a quedar abierta horas.
+
+Los controles —encuadrar, dónde estoy, agrandar— flotan **en la esquina del mapa y
+no en una barra al lado**. Son del mapa: agrandado no hay barra al lado, y un
+control que desaparece justo cuando hace más falta no es un control. Apoyados
+abajo, además, le comían una franja de galaxia entera para dos botones.
 
 #### Los territorios
 
@@ -478,6 +507,25 @@ contorno solo no lograba.
 Para que esto sirva, **un territorio tiene que ser contiguo**: una región es un
 continente, no un archipiélago. El sembrador de prueba lo garantiza haciendo que
 cada constelación crezca colgándose de los suyos.
+
+#### Qué sabe el mapa de quien lo mira
+
+Todo lo que depende del piloto va **aparte del mapa y no adentro**, en
+`PilotoEnElMapa`: dónde está parado, a cuántos saltos le queda cada sistema y por
+qué no puede cruzar tal puerta. Dos pilotos abren la misma galaxia y ven cosas
+distintas —uno cruza una puerta que al otro no le alcanza el tanque—, y meter eso
+en el dato del mapa obligaría a rearmarlo entero por piloto.
+
+Los saltos se cuentan con un recorrido a lo ancho sobre el grafo de puertas, y con
+dos reglas que importan:
+
+- **Un paso cerrado no es un camino.** Lo que se lee como «a dos saltos» tiene que
+  ser una ruta que el piloto pueda hacer, no una que exista en el plano.
+- **Lo que no está en la cuenta no se alcanza**, que no es lo mismo que estar
+  lejos. Un número grande diría que hay camino; a veces no lo hay.
+
+Y **saltos, no casillas**: dos sistemas que se ven lejísimos pueden estar a uno
+solo si los une un atajo.
 
 #### Los colores
 
@@ -525,6 +573,65 @@ versión lo vuelve a montar, y con la vista adentro del componente cada expansi�
 volvería al encuadre inicial. Al agrandar sí se reencuadra a propósito —un
 encuadre hecho para un recuadro de veintiséis rem deja la galaxia corrida en una
 pantalla entera— pero al volver se conserva lo que se estaba mirando.
+
+#### El mapa del piloto
+
+La pestaña Galaxia de Navegación es **el mismo mapa con otras piezas alrededor**.
+Es el tercer acercamiento —el cuerpo, el sistema, la galaxia— y contesta lo que
+los otros dos no pueden: dónde queda esto que estoy mirando.
+
+Qué cambia, y por qué:
+
+| En el cuartel                       | En la cabina                                       |
+| ----------------------------------- | -------------------------------------------------- |
+| Abre encuadrando toda la galaxia    | Abre **centrada en tu sistema**, con el zoom cerca |
+| Dibuja la deuda de obra             | **No la dibuja**                                   |
+| Todas las conexiones se ven igual   | Las tuyas se leen en **tres estados**              |
+| Ficha con casilla, cuerpos y rumbos | Ficha con **servicios y salidas**                  |
+| Filtra por gobierno y constelación  | Sin gobierno ni constelación                       |
+| Tabla de sistemas debajo            | **Sin tabla**                                      |
+
+- **Abre centrada en tu sistema.** La primera pregunta de un piloto es dónde está,
+  no cómo es la galaxia; encuadrar sesenta sistemas para contestarla lo deja
+  buscándose a sí mismo en un plano. El marcador de «estás acá» es un aro doble en
+  cian y **no se apaga con los filtros**: un marcador que un recorte puede esconder
+  falla justo cuando hace falta.
+
+  Y la cámara tiene **dos botones, no uno**, porque son las dos preguntas del mapa
+  y son opuestas: **«dónde estoy»** la lleva a tu sistema, se le acerca y lo deja
+  elegido —es con el que se vuelve después de andar mirando lejos— y
+  **«encuadrar»** se aleja hasta que entre la galaxia entera.
+
+- **La deuda de obra no viaja.** Ni las puertas sin conectar ni los sistemas a la
+  deriva. Un ramal a medio construir no es un lugar misterioso, es trabajo
+  pendiente de otro, y para el piloto sencillamente no se puede llegar.
+- **Las salidas de tu sistema se leen en tres estados**: la que podés cruzar va
+  encendida y gruesa, la que sale de acá pero no alcanza va punteada y apagada, y
+  el resto de la galaxia queda de fondo. La línea no dice sólo que hay un pasaje:
+  dice si **vos** podés usarlo. El motivo sale de `jumpProblem`, la misma función
+  pura que apaga el botón en Ubicación y que usa el servicio para rechazar la
+  orden, así que el mapa, la ficha y el servidor dicen exactamente lo mismo.
+- **La ficha muestra lo accionable**: a cuántos saltos queda, quién manda, cuánta
+  ley hay y **qué servicios tiene** —juntando los de todas sus estaciones, porque
+  desde el mapa la pregunta es «¿dónde refino?» y no «¿en cuál de sus tres
+  estaciones está la refinería?»—. La casilla y el contenido crudo se quedan en el
+  cuartel, que es donde significan algo.
+- **Se filtra por servicio**, igual que en el cuartel: es el único filtro que
+  contesta «¿me conviene ir?» en vez de «¿cómo es ese lugar?». No se filtra por
+  constelación ni por gobierno: son vocabulario de quien arma la galaxia. Las constelaciones sí se
+  **pintan**, y la diferencia no es un descuido —pintadas dibujan el terreno y se
+  leen sin saber cómo se llaman; filtrar por ellas pide conocer el nombre de
+  antemano—.
+- **Sin tabla de sistemas.** Hoy sería una lista de nombres sin nada que decidir.
+  Se gana el lugar el día que haya mercados por sistema o servicios que valgan un
+  viaje, que es cuando va a haber algo que ordenar.
+
+**Desde el mapa no se salta.** Cruzar una puerta exige estar parado en ella, así
+que lo que el mapa ofrece es **viajar hasta la puerta** —una orden que ya existe—
+y el salto sigue ocurriendo en Ubicación. Cada salida dice las dos mitades de lo
+que cuesta: el viaje hasta la puerta y el salto de después, **aunque el salto no se
+pueda dar**. Enterarse de que faltan doce de combustible al llegar a la puerta es
+un viaje perdido.
 
 ## Cómo se agrega contenido
 
