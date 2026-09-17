@@ -473,9 +473,16 @@ volver a conectar.
   el rol de administrador**, porque sin ninguno el cuartel quedaría cerrado desde
   el primer arranque.
 
-Es idempotente: a un piloto que ya existe **no se le cambia la contraseña** ni se
-le devuelven los créditos. Si hace falta la contraseña de la lista, hay que dar de
-baja la cuenta y volver a sembrar.
+Los dos se alistan **en una corporación de su facción**, como cualquiera que pase
+por el alta: sin eso la pestaña Corporación arranca diciendo «Independiente», que
+es un estado legítimo del juego pero el que menos enseña —ni estaciones, ni
+agentes, ni los otros miembros—. Van en dos de rubros distintos a propósito, para
+que las dos formas que puede tomar esa pantalla se miren sin cambiar de cuenta.
+
+Es idempotente: a un piloto que ya existe **no se le cambia nada**. Ni la
+contraseña, ni los créditos, ni la corporación —lo último importa cuando la lista
+gana un campo, porque a las cuentas que ya estaban no les llega—. Si hace falta lo
+de la lista, hay que dar de baja la cuenta y volver a sembrar.
 
 ## Lo que falta
 
