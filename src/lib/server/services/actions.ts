@@ -445,6 +445,30 @@ export function startMining(db: Db, row: Pilot, asteroidId: number): PilotAction
 }
 
 /**
+ * Hace que la orden en curso venza ahora mismo. **Herramienta de pruebas.**
+ *
+ * **No resuelve nada**, y ahí está toda la gracia: le corre el arranque hacia
+ * atrás lo que dura, y después la resuelve `resolveIfDue` por el camino de
+ * siempre. Así el resultado es **idéntico** al de haber esperado —el mismo
+ * informe, la misma experiencia, el mismo movimiento— en vez de ser un segundo
+ * camino que hay que mantener al día y que un día va a dar otra cosa.
+ *
+ * Devuelve la orden que quedó vencida, o `null` si no había ninguna. Quien
+ * llama se encarga de comprobar que tenga la llave: acá no se sabe de permisos.
+ */
+export function rushAction(db: Db, row: Pilot): PilotAction | null {
+	const pending = currentAction(db, row.id);
+	if (pending === null) return null;
+
+	return db
+		.update(pilotAction)
+		.set({ startedAt: new Date(Date.now() - pending.durationSeconds * 1000) })
+		.where(and(eq(pilotAction.id, pending.id), eq(pilotAction.pilotId, row.id)))
+		.returning()
+		.get();
+}
+
+/**
  * Si la orden en curso ya venció, la aplica y la borra.
  *
  * Aplicar el resultado, depositar la experiencia, escribir el informe y borrar la

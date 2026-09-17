@@ -33,6 +33,8 @@
 		notices?: readonly string[];
 		/** Si este piloto tiene llaves del cuartel general. */
 		admin?: boolean;
+		/** Si puede terminar su orden al instante. Herramienta de pruebas. */
+		canRush?: boolean;
 	}
 
 	let {
@@ -44,7 +46,8 @@
 		systemName,
 		notice = null,
 		notices = [],
-		admin = false
+		admin = false,
+		canRush = false
 	}: Props = $props();
 
 	/** La clave con la que el navegador recuerda si la barra quedó desplegada. */
@@ -88,7 +91,7 @@
 	cuando el Neocom se pliega.
 -->
 <div class="neocom-content min-h-dvh">
-	<StatusBar {action} />
+	<StatusBar {action} {canRush} />
 	{#if tabs.length > 1}
 		<TabBar {tabs} activeRoute={activeTab} {notices} />
 	{/if}

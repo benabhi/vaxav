@@ -31,6 +31,7 @@ import { buildInforme } from '$lib/server/views/log';
 import { buildPilotView } from '$lib/server/views/pilot';
 import { actionIcon, actionLabel } from '$lib/format';
 import { canEnterAdmin } from '$lib/admin';
+import { RUSH_PERMISSION } from '$lib/permissions';
 import { LOG_TAB, MESSAGES_TAB, moduleForRoute, tabForRoute } from '$lib/navigation';
 import { LOGIN_ROUTE, SUSPENDED_ROUTE } from '$lib/routes';
 import type { AccionEnCurso, Informe } from '$lib/tipos';
@@ -98,6 +99,9 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		// El recuadro del cuartel sólo aparece si hay alguna llave. Un enlace que
 		// todos ven y casi nadie puede abrir invita a empujar una puerta cerrada.
 		admin: canEnterAdmin(locals.permissions),
+		// Y el botón de terminar la orden, sólo con **su** llave. Es una herramienta
+		// para probar el juego, no una del juego: ver `/terminar`.
+		canRush: locals.permissions.has(RUSH_PERMISSION),
 		activeModule: module?.code ?? '',
 		activeTab: tab?.route ?? '',
 		tabs: module?.tabs ?? [],

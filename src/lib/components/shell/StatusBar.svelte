@@ -16,16 +16,18 @@
 
 	interface Props {
 		action: AccionEnCurso | null;
+		/** Si se le dibuja el botón de terminar la orden. Herramienta de pruebas. */
+		canRush?: boolean;
 	}
 
-	let { action }: Props = $props();
+	let { action, canRush = false }: Props = $props();
 </script>
 
 <div
 	class="sticky top-0 z-20 flex h-topbar w-full items-center border-b border-border bg-surface-overlay px-[0.9rem] backdrop-blur-[10px] xs:px-[1.1rem] sm:px-6"
 >
 	<div class="flex w-full items-center gap-4">
-		<ActionIndicator {action} />
+		<ActionIndicator {action} {canRush} />
 		<div class="grow"></div>
 		<div class="flex items-center gap-2">
 			<Icon name="clock" weight="fill" size="0.9rem" class="text-accent-dim" />
