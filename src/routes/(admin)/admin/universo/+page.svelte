@@ -135,9 +135,65 @@
 		{ value: 'seguridad', label: 'Seguridad' }
 	];
 
-	/** Si hay algun recorte puesto, para ofrecer limpiarlo y decir cuantos quedan. */
+	/**
+	 * Si la vista está recortada de algún modo.
+	 *
+	 * **Cuenta todo lo que se aparta de la vista de entrada**, no sólo los
+	 * desplegables: el pintado, el orden y la página también. Antes miraba nada más
+	 * los cuatro filtros, así que quien cambiaba el pintado y se iba a otra cosa no
+	 * tenía cómo volver salvo borrando la URL a mano.
+	 */
 	let hayFiltro = $derived(
-		Boolean(consulta.search || consulta.faction || consulta.region || consulta.government)
+		Boolean(
+			consulta.search ||
+			consulta.faction ||
+			consulta.region ||
+			consulta.government ||
+			consulta.paint ||
+			consulta.page > 1 ||
+			consulta.sort !== 'nombre' ||
+			consulta.dir !== 'asc'
+		)
+	);
+
+	/**
+	 * Elegir de un desplegable filtra solo.
+	 *
+	 * **Es la mitad de lo que hace cómoda una barra de filtros.** Apretar «Filtrar»
+	 * después de cada elección es un paso que no decide nada: ya se decidió al
+	 * elegir. El botón se queda igual, para el buscador —que sí necesita saber
+	 * cuándo terminaste de escribir— y para quien llega con el teclado.
+	 */
+	function alCambiar(evento: Event & { currentTarget: HTMLSelectElement }) {
+		evento.currentTarget.form?.requestSubmit();
+	}
+
+	/**
+	 * Los campos vacíos no viajan en la URL.
+	 *
+	 * Un formulario `GET` manda todo, incluso lo que no se llenó, y la barra queda
+	 * con `?buscar=&faccion=&region=&pintar=` colgando. No rompe nada —el servidor
+	 * lee el vacío como «sin filtro»— pero una URL que se comparte tiene que poder
+	 * leerse, y ahí el recorte real se pierde entre la paja.
+	 *
+	 * Se apagan antes de mandar y se vuelven a prender enseguida, porque la página
+	 * no se recarga entera: sin eso quedarían deshabilitados en pantalla.
+	 */
+	function alEnviar(evento: SubmitEvent & { currentTarget: HTMLFormElement }) {
+		const vacios = [...evento.currentTarget.elements].filter(
+			(campo): campo is HTMLInputElement | HTMLSelectElement =>
+				(campo instanceof HTMLInputElement || campo instanceof HTMLSelectElement) &&
+				campo.value === ''
+		);
+		for (const campo of vacios) campo.disabled = true;
+		setTimeout(() => {
+			for (const campo of vacios) campo.disabled = false;
+		});
+	}
+
+	/** Cuántos recortes hay puestos, para decirlo en el botón. */
+	let cuantosFiltros = $derived(
+		[consulta.search, consulta.faction, consulta.region, consulta.government].filter(Boolean).length
 	);
 
 	/** Los que pasan el filtro, para que el mapa apague el resto. */
@@ -389,6 +445,7 @@
 	-->
 	<form
 		method="GET"
+		onsubmit={alEnviar}
 		class="flex w-full flex-wrap items-end gap-3 border border-border-soft bg-surface
 			px-[0.9rem] py-[0.7rem]"
 	>
@@ -407,6 +464,7 @@
 				label="Facción"
 				name="faccion"
 				size="1"
+				onchange={alCambiar}
 				value={consulta.faction}
 				options={opcionesFaccion}
 			/>
@@ -417,6 +475,7 @@
 				label="Región"
 				name="region"
 				size="1"
+				onchange={alCambiar}
 				value={consulta.region}
 				options={opcionesRegion}
 			/>
@@ -427,6 +486,7 @@
 				label="Gobierno"
 				name="gobierno"
 				size="1"
+				onchange={alCambiar}
 				value={consulta.government}
 				options={opcionesGobierno}
 			/>
@@ -441,6 +501,7 @@
 				label="Pintar por"
 				name="pintar"
 				size="1"
+				onchange={alCambiar}
 				value={consulta.paint}
 				options={PINTAR}
 			/>
@@ -455,10 +516,22 @@
 			Filtrar
 		</HudButton>
 
+		<!--
+			Quitar el recorte, de un toque. Con contorno y no fantasma: es lo que uno
+			busca cuando se perdió, y un enlace apagado al lado de un botón encendido
+			no se encuentra. Sólo está cuando hay algo que quitar.
+		-->
 		{#if hayFiltro}
-			<HudLink href="?" size="1" variant="ghost">Limpiar</HudLink>
+			<HudLink href="?" size="1" variant="outline">
+				<Icon name="x" weight="bold" size="0.7rem" />
+				Quitar filtros
+			</HudLink>
 			<span class="font-mono text-[0.72rem] text-text-muted">
-				{universo.found} de {universo.total}
+				{#if cuantosFiltros > 0}
+					{universo.found} de {universo.total}
+				{:else}
+					{universo.total} sistemas
+				{/if}
 			</span>
 		{/if}
 	</form>
@@ -722,10 +795,19 @@
 			{/each}
 		</HudTable>
 
+		<!--
+			Y otra vez acá, que es donde más se lo necesita: una lista vacía es el
+			momento exacto en que uno quiere deshacer, y mandarlo a buscar el botón de
+			arriba es hacerlo subir para nada.
+		-->
 		{#if universo.found === 0}
-			<p class="mt-3 text-1 text-text-muted">
-				Ningún sistema pasa el filtro. Probá con menos condiciones.
-			</p>
+			<div class="mt-3 flex flex-wrap items-center gap-3">
+				<p class="text-1 text-text-muted">Ningún sistema pasa el filtro.</p>
+				<HudLink href="?" size="1" variant="outline">
+					<Icon name="x" weight="bold" size="0.7rem" />
+					Quitar filtros
+				</HudLink>
+			</div>
 		{/if}
 
 		<Paginator
