@@ -116,7 +116,7 @@
 				name="buscar"
 				value={pilotos.search}
 				placeholder="Distintivo o correo"
-				class="h-[2.15rem] w-full border border-border-soft bg-field px-[11px] font-body
+				class="h-[2.15rem] w-full border border-border-soft bg-field px-[0.7rem] font-body
 					text-[0.85rem] text-text-strong focus:border-accent focus:shadow-glow focus:outline-none"
 			/>
 		</div>
