@@ -115,3 +115,15 @@ export function sectionForRoute(path: string): AdminSection | null {
 
 	return mejor;
 }
+
+/**
+ * Cómo se pide «los que no controla nadie» en el filtro de facción del universo.
+ *
+ * El catálogo del constructor ya usa la cadena vacía para «espacio libre», y en un
+ * filtro el vacío significa «todas». Hacen falta las dos cosas, así que el espacio
+ * libre se pide con un centinela y el vacío queda para no filtrar.
+ *
+ * Vive acá y no en la vista porque lo leen los dos lados: el servidor para
+ * filtrar y la pantalla para armar el desplegable.
+ */
+export const FREE_SPACE = 'libre';

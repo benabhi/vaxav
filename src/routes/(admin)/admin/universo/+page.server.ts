@@ -11,7 +11,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { buildUniverso } from '$lib/server/views/worldbuilding';
+import { buildUniverso, readUniverseQuery } from '$lib/server/views/worldbuilding';
 import { takeFlash } from '$lib/server/flash';
 import {
 	BuilderError,
@@ -24,9 +24,11 @@ import { GOVERNMENTS, type Government } from '$lib/game/universe';
 import { ADMIN_ROUTE } from '$lib/admin';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = ({ cookies }) => {
+export const load: PageServerLoad = ({ cookies, url }) => {
 	return {
-		universo: buildUniverso(db),
+		// Los filtros viajan en la URL, como en toda lista del proyecto: así se
+		// comparten, se vuelve con el botón de atrás y se recarga sin perder nada.
+		universo: buildUniverso(db, readUniverseQuery(url.searchParams)),
 		// El aviso de lo que se acaba de hacer, si se acaba de hacer algo. Leerlo lo
 		// consume, así que aparece exactamente una vez.
 		aviso: takeFlash(cookies)

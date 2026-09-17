@@ -54,6 +54,7 @@ import {
 } from '$lib/game/universe';
 import { ORIGIN, hexDistance, neighbourOf, sameHex } from '$lib/game/galaxy';
 import { lightYears } from '$lib/game/jumps';
+import { FREE_SPACE } from '$lib/admin';
 import { FACTION_LIST } from '$lib/game/factions';
 import { ORE_LIST } from '$lib/game/items';
 import {
@@ -65,6 +66,7 @@ import {
 	serviceLabel
 } from '$lib/format';
 import type {
+	ConsultaUniverso,
 	Constructor,
 	EnlaceGalaxia,
 	MapaGalaxia,
@@ -165,6 +167,82 @@ function accepts(kind: BodyKind): readonly OpcionConstructor[] {
 const ROOT_KINDS: readonly OpcionConstructor[] = [{ value: 'star', label: bodyKindLabel('star') }];
 
 /** El listado de sistemas, con lo que hace falta para elegir cuál abrir. */
+/**
+ * Por qué columnas se puede ordenar el listado, y cómo.
+ *
+ * Es una tabla y no un `switch` porque **agregar una columna ordenable tiene que
+ * ser agregar una fila**. La pantalla dibuja sus encabezados desde acá, así que
+ * una columna que no está en esta tabla no aparece como ordenable: no hay forma
+ * de que el encabezado prometa un orden que el servidor no sabe hacer.
+ */
+export const SYSTEM_SORTS: Readonly<Record<string, (fila: FilaSistema) => string | number>> = {
+	nombre: (fila) => fila.name.toLocaleLowerCase('es'),
+	donde: (fila) => `${fila.region} ${fila.constellation}`.toLocaleLowerCase('es'),
+	gobierno: (fila) => fila.government.toLocaleLowerCase('es'),
+	seguridad: (fila) => fila.security,
+	controla: (fila) => fila.controlledBy.toLocaleLowerCase('es'),
+	contenido: (fila) => fila.bodies
+};
+
+/**
+ * Los filtros del listado, cada uno con su propia pregunta.
+ *
+ * **Se apilan**: un sistema entra si pasa todos. Agregar «los que tienen
+ * astillero» o «los que están en guerra» el día que eso exista es agregar una
+ * entrada acá y un select en la pantalla, sin tocar nada más. Ése es el punto de
+ * que sea una tabla.
+ */
+const SYSTEM_FILTERS: readonly ((fila: FilaSistema, query: ConsultaUniverso) => boolean)[] = [
+	(fila, query) =>
+		!query.search ||
+		fila.name.toLocaleLowerCase('es').includes(query.search.toLocaleLowerCase('es')),
+	(fila, query) =>
+		!query.faction ||
+		(query.faction === FREE_SPACE
+			? fila.controllingFactionCode === ''
+			: fila.controllingFactionCode === query.faction),
+	(fila, query) => !query.region || fila.region === query.region,
+	(fila, query) => !query.government || fila.governmentCode === query.government
+];
+
+/**
+ * Cómo se pide «los que no tiene nadie» en el filtro de facción.
+ *
+ * El catálogo del constructor ya usa la cadena vacía para «espacio libre», y en
+ * un filtro el vacío significa «todas». Hacen falta las dos cosas, así que el
+ * espacio libre se pide con un centinela y el vacío queda para no filtrar. Vive
+ * en `$lib/admin` porque lo leen los dos lados: el servidor para filtrar y la
+ * pantalla para armar el desplegable.
+ */
+
+/** Cuántos sistemas entran en una página del listado. */
+export const SYSTEMS_PER_PAGE = 25;
+
+/** Por qué se puede pintar el mapa. Otra tabla que crece con una fila. */
+export const MAP_PAINTS = ['faccion', 'region', 'seguridad', 'gobierno'] as const;
+
+/**
+ * Lee la consulta de la URL, con todo validado contra los catálogos.
+ *
+ * Nada de confiar en el parámetro: una columna de orden inventada o una página
+ * negativa entran igual de fácil que las buenas, y el borde es acá.
+ */
+export function readUniverseQuery(params: URLSearchParams): ConsultaUniverso {
+	const sort = params.get('orden') ?? '';
+	const paint = params.get('pintar') ?? '';
+
+	return {
+		search: (params.get('buscar') ?? '').trim().slice(0, 60),
+		faction: params.get('faccion') ?? '',
+		region: params.get('region') ?? '',
+		government: params.get('gobierno') ?? '',
+		sort: sort in SYSTEM_SORTS ? sort : 'nombre',
+		dir: params.get('dir') === 'desc' ? 'desc' : 'asc',
+		page: Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1),
+		paint: MAP_PAINTS.includes(paint as (typeof MAP_PAINTS)[number]) ? paint : ''
+	};
+}
+
 /**
  * La galaxia puesta en la grilla, lista para dibujar.
  *
@@ -271,7 +349,7 @@ function buildMapa(
 	};
 }
 
-export function buildUniverso(db: Db): Universo {
+export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchParams())): Universo {
 	const sistemas = db.select().from(system).orderBy(system.name).all();
 	const constelaciones = new Map(
 		db
@@ -310,6 +388,8 @@ export function buildUniverso(db: Db): Universo {
 			constellation: suConstelacion?.name ?? '',
 			region: suConstelacion ? (regiones.get(suConstelacion.regionId)?.name ?? '') : '',
 			government: governmentLabel(fila.government),
+			governmentCode: fila.government,
+			controllingFactionCode: fila.controllingFaction,
 			security: fila.security,
 			securityLevel: securityLabel(securityLevel(fila.security)),
 			controlledBy: factionLabel(fila.controllingFaction),
@@ -321,13 +401,36 @@ export function buildUniverso(db: Db): Universo {
 		};
 	});
 
+	// Los que pasan todos los filtros. El mapa recibe la galaxia entera igual: lo
+	// que el filtro hace es apagar el resto, no borrarlo, porque un mapa que sólo
+	// dibuja lo filtrado pierde la forma del conjunto.
+	const pasan = filas.filter((fila) => SYSTEM_FILTERS.every((cumple) => cumple(fila, query)));
+
+	const clave = SYSTEM_SORTS[query.sort] ?? SYSTEM_SORTS.nombre;
+	const vuelta = query.dir === 'desc' ? -1 : 1;
+	const ordenadas = [...pasan].sort((a, b) => {
+		const izquierda = clave(a);
+		const derecha = clave(b);
+		if (izquierda === derecha) return a.name.localeCompare(b.name, 'es');
+		return (izquierda > derecha ? 1 : -1) * vuelta;
+	});
+
+	const paginas = Math.max(1, Math.ceil(ordenadas.length / SYSTEMS_PER_PAGE));
+	const pagina = Math.min(query.page, paginas);
+	const desde = (pagina - 1) * SYSTEMS_PER_PAGE;
+
 	return {
-		systems: filas,
+		systems: ordenadas.slice(desde, desde + SYSTEMS_PER_PAGE),
 		options: buildOptions(db),
 		totalBodies: cuerpos.length,
 		totalGates: puertas.length,
 		totalLoose: puertas.filter((una) => una.destinationId === null).length,
-		map: buildMapa(db, sistemas, filas)
+		map: buildMapa(db, sistemas, filas),
+		matches: pasan.map((fila) => fila.code),
+		query: { ...query, page: pagina },
+		total: filas.length,
+		found: pasan.length,
+		pages: paginas
 	};
 }
 

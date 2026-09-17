@@ -1217,6 +1217,15 @@ export interface FilaSistema {
 	readonly constellation: string;
 	readonly region: string;
 	readonly government: string;
+	/**
+	 * Los códigos, además de los rótulos.
+	 *
+	 * El rótulo es para leer y el código para filtrar: comparar por el texto
+	 * visible ata el filtro al idioma, y rompe el día que «Corporativo» se escriba
+	 * distinto.
+	 */
+	readonly governmentCode: string;
+	readonly controllingFactionCode: string;
 	readonly security: number;
 	readonly securityLevel: string;
 	/** Quién lo controla, o «Espacio libre». */
@@ -1239,6 +1248,34 @@ export interface Universo {
 	readonly totalLoose: number;
 	/** El mapa: los mismos sistemas, puestos en la grilla. */
 	readonly map: MapaGalaxia;
+	/**
+	 * Los códigos que pasan el filtro.
+	 *
+	 * **El mapa recibe la galaxia entera igual.** Un mapa que sólo dibuja lo
+	 * filtrado deja de ser un mapa: se pierde la forma del conjunto, que es lo
+	 * único que no da la tabla. Lo que el filtro hace es apagar el resto, no
+	 * borrarlo.
+	 */
+	readonly matches: readonly string[];
+	/** Cómo quedó la consulta, para que la pantalla dibuje sus controles. */
+	readonly query: ConsultaUniverso;
+	/** Cuántos sistemas hay en total y cuántos pasan el filtro. */
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+}
+
+/** Lo que se pidió del listado de sistemas: filtros, orden y página. */
+export interface ConsultaUniverso {
+	readonly search: string;
+	readonly faction: string;
+	readonly region: string;
+	readonly government: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+	/** Por qué criterio pinta el mapa. */
+	readonly paint: string;
 }
 
 /**

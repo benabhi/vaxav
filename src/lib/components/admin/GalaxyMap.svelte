@@ -42,6 +42,14 @@
 	const HEX = 52;
 	/** Debajo de este acercamiento no se escriben los nombres: serían manchas. */
 	const LABEL_FROM = 0.55;
+	/**
+	 * A qué distancia queda la cámara al centrar en un sistema.
+	 *
+	 * Bastante más cerca que el encuadre general: quien aprieta la mira no quiere
+	 * ver dónde cae el sistema en la galaxia entera —eso ya lo veía— sino mirarlo
+	 * de cerca, con sus vecinos y sus salidas legibles alrededor.
+	 */
+	const CERCA = 1.8;
 
 	let lienzo = $state<HTMLCanvasElement>();
 	let caja = $state<HTMLDivElement>();
@@ -287,6 +295,24 @@
 	/** Vuelve a encuadrar todo lo que hay. La usa el botón de la pantalla. */
 	export function encuadrar() {
 		camara = fit([...puntos.values()], viewport);
+	}
+
+	/**
+	 * Lleva la cámara a un sistema, sin cambiar el acercamiento si ya es útil.
+	 *
+	 * Es lo que hace que la tabla y el mapa sean dos vistas de lo mismo en vez de
+	 * dos pantallas que no se hablan: se busca un sistema en la lista, que es donde
+	 * se busca bien, y el mapa va a mostrarlo en su lugar del conjunto.
+	 *
+	 * **Acerca, pero nunca aleja.** Quien aprieta la mira quiere ver el sistema de
+	 * cerca; si ya estaba más cerca todavía, quedarse donde estaba es lo correcto:
+	 * mover la cámara es ayudar, sacarle el encuadre a quien lo eligió es
+	 * arrebatarle el control.
+	 */
+	export function centrar(code: string) {
+		const punto = puntos.get(code);
+		if (!punto) return;
+		camara = { center: punto, scale: Math.max(camara.scale, CERCA) };
 	}
 
 	$effect(() => {
