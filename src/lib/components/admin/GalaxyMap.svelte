@@ -20,7 +20,14 @@
 	sigue a la paleta sin que haya que acordarse de él.
 -->
 <script lang="ts">
-	import { hexCorners, hexToPixel, neighbourOf, BEARING_VECTORS, type Hex } from '$lib/game/galaxy';
+	import {
+		hexCorners,
+		hexToPixel,
+		neighbourOf,
+		BEARING_VECTORS,
+		SIDE_BEARINGS,
+		type Hex
+	} from '$lib/game/galaxy';
 	import { fit, pan, toScreen, toWorld, zoomAt, type Camara, type Punto } from '$lib/camera';
 	import type { GateBearing } from '$lib/game/universe';
 	import Icon from '../Icon.svelte';
@@ -140,16 +147,6 @@
 	/** Si hay un recorte puesto que deje afuera a alguien. */
 	let filtrando = $derived(visible.size > 0 && visible.size < map.systems.length);
 
-	/**
-	 * Los rumbos en el orden de los vértices del hexágono.
-	 *
-	 * `hexCorners` arranca a la derecha y gira como el reloj, así que el lado que va
-	 * del vértice `i-1` al `i` separa de la vecina del rumbo que está en esta lista
-	 * en la posición `i`. Escrito acá para no tener que deducirlo cada vez que
-	 * alguien lea el dibujo de las fronteras.
-	 */
-	const LADOS: GateBearing[] = ['ne', 'n', 'nw', 'sw', 's', 'se'];
-
 	/** Lee un color del tema. El mapa no inventa paleta. */
 	function token(name: string): string {
 		if (!lienzo) return '#ff7a1a';
@@ -178,6 +175,7 @@
 		const danger = token('--color-danger');
 		const muted = token('--color-text-muted');
 		const strong = token('--color-text-strong');
+		const fondo = token('--color-background');
 
 		// --- Los territorios, debajo de todo ------------------------------------
 		//
@@ -209,12 +207,12 @@
 				ctx.fill();
 				ctx.globalAlpha = 1;
 
-				// Los seis lados, uno por uno. El lado `i` del hexágono de tapa plana
-				// separa de la vecina que está en el rumbo `i`, y el orden de
-				// `GATE_BEARINGS` es el mismo que el de los vértices: los dos arrancan
-				// arriba y giran como el reloj.
+				// Los seis lados, uno por uno. Qué vecina separa cada uno lo dice
+				// `SIDE_BEARINGS`, que vive en la grilla y tiene su test: escrita a ojo
+				// salían **cuatro de los seis mal**, y el mapa seguía pareciendo un mapa
+				// —dibujaba lados de adentro en vez de la frontera— sin que nada fallara.
 				for (let i = 0; i < 6; i++) {
-					const vecina = neighbourOf(nodo.hex as Hex, LADOS[i]);
+					const vecina = neighbourOf(nodo.hex as Hex, SIDE_BEARINGS[i]);
 					const suyo = dueno[`${vecina.x},${vecina.y},${vecina.z}`];
 					if (suyo === mio) continue;
 
@@ -260,9 +258,15 @@
 				// no se lee ninguno de los dos. Se dibujan de mayor a menor, así que el
 				// que se queda afuera es siempre el más chico, que es el que menos falta
 				// hace nombrar.
-				ctx.font = '700 13px ui-monospace, monospace';
+				// **Con halo detrás.** El rótulo va en el color de su territorio, que es
+				// un tono claro sobre un fondo casi negro con un relleno translúcido
+				// encima: sin un contorno del color del fondo, el texto se funde con lo
+				// que tiene atrás y justo el nombre —que es lo que se vino a leer de
+				// lejos— es lo que no se lee.
+				ctx.font = '700 14px ui-monospace, monospace';
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
+				ctx.lineJoin = 'round';
 
 				const puestos: { x: number; y: number; ancho: number }[] = [];
 				for (const junta of Object.values(centros).sort((a, b) => b.n - a.n)) {
@@ -278,10 +282,14 @@
 					);
 					if (choca) continue;
 
+					ctx.strokeStyle = fondo;
+					ctx.lineWidth = 4;
+					ctx.globalAlpha = 0.85;
+					ctx.strokeText(texto, donde.x, donde.y);
+
 					ctx.fillStyle = junta.color;
-					ctx.globalAlpha = 0.65;
-					ctx.fillText(texto, donde.x, donde.y);
 					ctx.globalAlpha = 1;
+					ctx.fillText(texto, donde.x, donde.y);
 					puestos.push({ x: donde.x, y: donde.y, ancho });
 				}
 			}

@@ -25,6 +25,38 @@ cinco tablas y cada tipo nuevo obligaría a tocar el esquema.
 **Toda estación es orbital.** Cuelga de un planeta, de una luna o de un cinturón;
 no hay bases en superficie.
 
+### La taxonomía es estricta
+
+**Una constelación pertenece a una sola región, y un sistema a una sola
+constelación.** Ninguna constelación tiene parte de sus sistemas en otra región.
+
+No es una convención que haya que recordar: **la base no permite otra cosa.**
+`constellation.region_id` es obligatorio y apunta a una región; `system` guarda su
+constelación y **no guarda región alguna**, así que la región de un sistema se
+deriva de su constelación y no hay dónde escribir una contradicción.
+
+Esa es la razón de que no exista `system.region_id`, y conviene que siga sin
+existir: dos caminos para la misma respuesta son dos que en algún momento dicen
+cosas distintas.
+
+### La taxonomía es un árbol; la posición, un grafo
+
+Son dos cosas separadas y **nada obliga a que coincidan**. Dónde cae un sistema en
+la grilla lo decide el rumbo de las puertas que lo unen al mapa; a qué
+constelación pertenece lo decide quien lo crea. Se puede conectar un sistema de
+una constelación a uno de otra sin problema, y así es como se arma una galaxia
+interesante.
+
+De ahí sale una **convención, ésta sí de las que hay que sostener a mano**: un
+territorio debería ser un continente y no un archipiélago. Una constelación
+desparramada en tres parches se dibuja como tres manchas del mismo color y deja de
+significar algo mirando el mapa.
+
+El constructor **no lo impide** —hacerlo ataría las manos al construir— pero el
+sembrador de prueba lo respeta: cada constelación crece colgándose de los suyos, y
+como las constelaciones de una región van seguidas, la región queda de una pieza.
+El mapa es el que delata cuando esto se rompe.
+
 El piloto siempre está **en un cuerpo concreto** de un sistema concreto: atracado
 en una estación, en órbita de un planeta, dentro de un cinturón. Moverse entre
 cuerpos del mismo sistema es una acción de viaje corta; entre sistemas, un salto,

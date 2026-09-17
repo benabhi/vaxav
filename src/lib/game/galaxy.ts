@@ -131,6 +131,20 @@ export function hexToPixel(hex: Hex, size: number): Point {
 }
 
 /**
+ * Qué vecina separa cada lado del hexágono.
+ *
+ * `hexCorners` arranca a la derecha y gira como el reloj, y el lado `i` va del
+ * vértice `i-1` al `i`. Con eso, el lado 0 —del vértice de arriba a la derecha al
+ * de la derecha— es el que da al noreste, y de ahí siguen en orden.
+ *
+ * **Vive acá y con un test.** Es una tabla de seis entradas que no se puede
+ * verificar mirando: con el orden mal, un mapa de territorios dibuja los bordes
+ * de adentro en vez de los de la frontera y sigue pareciendo un mapa, sólo que
+ * uno que miente. Ya pasó.
+ */
+export const SIDE_BEARINGS: readonly GateBearing[] = ['ne', 'se', 's', 'sw', 'nw', 'n'];
+
+/**
  * Los seis vértices de una casilla, para dibujarla.
  *
  * Arranca a la derecha y gira como el reloj. Tapa plana quiere decir que el

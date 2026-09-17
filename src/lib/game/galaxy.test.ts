@@ -17,7 +17,8 @@ import {
 	hexToPixel,
 	isValidHex,
 	neighbourOf,
-	sameHex
+	sameHex,
+	SIDE_BEARINGS
 } from './galaxy';
 import { GATE_BEARINGS, oppositeBearing } from './universe';
 
@@ -116,6 +117,29 @@ describe('el dibujo', () => {
 		});
 
 		for (const distancia of distancias) expect(distancia).toBeCloseTo(distancias[0], 6);
+	});
+
+	it('cada lado da a la vecina que dice la tabla', () => {
+		// **La prueba que no se puede hacer a ojo.** Con el orden mal, un mapa de
+		// territorios dibuja los bordes de adentro en vez de los de la frontera y
+		// sigue pareciendo un mapa, sólo que uno que miente.
+		//
+		// Se verifica por geometría: el punto medio del lado `i` tiene que caer a
+		// mitad de camino entre el centro de la casilla y el de la vecina de ese
+		// rumbo, porque dos hexágonos vecinos comparten ese lado.
+		const size = 10;
+		const centro = hexToPixel(ORIGIN, size);
+		const vertices = hexCorners(centro, size);
+
+		SIDE_BEARINGS.forEach((rumbo, i) => {
+			const a = vertices[(i + 5) % 6];
+			const b = vertices[i];
+			const medio = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+
+			const vecina = hexToPixel(neighbourOf(ORIGIN, rumbo), size);
+			expect(medio.x).toBeCloseTo((centro.x + vecina.x) / 2, 6);
+			expect(medio.y).toBeCloseTo((centro.y + vecina.y) / 2, 6);
+		});
 	});
 
 	it('una casilla tiene seis vértices a un radio del centro', () => {
