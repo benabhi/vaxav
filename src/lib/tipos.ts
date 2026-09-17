@@ -1237,6 +1237,14 @@ export interface FilaSistema {
 	readonly capitalOf: string;
 	readonly bodies: number;
 	readonly stations: number;
+	/**
+	 * Los servicios que hay en el sistema, juntando todas sus estaciones.
+	 *
+	 * Sale del mismo lugar que los del mapa —una sola cuenta para las dos vistas—
+	 * y es lo que deja filtrar «los que tienen astillero» sin abrir sistema por
+	 * sistema a ver dónde quedó el único que hay.
+	 */
+	readonly services: readonly string[];
 	readonly gates: number;
 	/** Cuántas de sus puertas todavía no llevan a ninguna parte. */
 	readonly loose: number;
@@ -1300,6 +1308,8 @@ export interface ConsultaUniverso {
 	readonly region: string;
 	readonly constellation: string;
 	readonly government: string;
+	/** Código de un servicio de estación, o vacío para no filtrar por eso. */
+	readonly service: string;
 	readonly sort: string;
 	readonly dir: 'asc' | 'desc';
 	readonly page: number;

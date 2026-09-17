@@ -48,7 +48,8 @@ import {
 	securityLevel,
 	type BodyKind,
 	type GateBearing,
-	type Government
+	type Government,
+	type StationServiceKind
 } from '$lib/game/universe';
 import { buildGalaxyMap } from './galaxy';
 import { FREE_SPACE } from '$lib/filters';
@@ -198,7 +199,11 @@ const SYSTEM_FILTERS: readonly ((fila: FilaSistema, query: ConsultaUniverso) => 
 			: fila.controllingFactionCode === query.faction),
 	(fila, query) => !query.region || fila.region === query.region,
 	(fila, query) => !query.constellation || fila.constellation === query.constellation,
-	(fila, query) => !query.government || fila.governmentCode === query.government
+	(fila, query) => !query.government || fila.governmentCode === query.government,
+	// **Qué se puede hacer ahí**, que es la única pregunta de esta barra que no es
+	// sobre cómo es el lugar sino sobre para qué sirve. Con sesenta sistemas es la
+	// forma de encontrar el único que tiene astillero sin abrirlos de a uno.
+	(fila, query) => !query.service || fila.services.includes(query.service)
 ];
 
 /**
@@ -230,6 +235,7 @@ export function readUniverseQuery(params: URLSearchParams): ConsultaUniverso {
 	const sort = params.get('orden') ?? '';
 	const paint = params.get('pintar') ?? '';
 	const territorio = params.get('territorio') ?? '';
+	const servicio = params.get('servicio') ?? '';
 
 	return {
 		search: (params.get('buscar') ?? '').trim().slice(0, 60),
@@ -237,6 +243,10 @@ export function readUniverseQuery(params: URLSearchParams): ConsultaUniverso {
 		region: params.get('region') ?? '',
 		constellation: params.get('constelacion') ?? '',
 		government: params.get('gobierno') ?? '',
+		// Contra el catálogo y no contra lo que haya sembrado: un servicio que
+		// todavía no instaló nadie es un filtro que no encuentra nada, no uno
+		// inválido. Lo que no está en el catálogo, en cambio, no existe.
+		service: SERVICE_ORDER.includes(servicio as StationServiceKind) ? servicio : '',
 		sort: sort in SYSTEM_SORTS ? sort : 'nombre',
 		dir: params.get('dir') === 'desc' ? 'desc' : 'asc',
 		page: Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1),
@@ -306,6 +316,12 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 	);
 	const puertas = db.select().from(gate).all();
 
+	// El mapa se arma primero porque la tabla le pide prestado: los servicios de
+	// cada sistema ya los juntó él, y volver a contarlos acá serían dos cuentas de
+	// lo mismo que pueden dar distinto.
+	const map = buildGalaxyMap(db);
+	const servicios = new Map(map.systems.map((nodo) => [nodo.code, nodo.services]));
+
 	const filas: FilaSistema[] = sistemas.map((fila) => {
 		const suyos = cuerpos.filter((uno) => uno.systemId === fila.id);
 		const susPuertas = puertas.filter((una) => una.systemId === fila.id);
@@ -328,6 +344,7 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 			capitalOf: fila.capitalOf ? factionLabel(fila.capitalOf) : '',
 			bodies: suyos.length,
 			stations: suyos.filter((uno) => estaciones.has(uno.id)).length,
+			services: servicios.get(fila.code) ?? [],
 			gates: susPuertas.length,
 			loose: susPuertas.filter((una) => una.destinationId === null).length
 		};
@@ -357,7 +374,7 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 		totalBodies: cuerpos.length,
 		totalGates: puertas.length,
 		totalLoose: puertas.filter((una) => una.destinationId === null).length,
-		map: buildGalaxyMap(db),
+		map,
 		taxonomy: buildTaxonomia(db, filas),
 		matches: pasan.map((fila) => fila.code),
 		query: { ...query, page: pagina },

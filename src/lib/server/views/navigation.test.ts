@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { body, constellation, pilot, system } from '../db/schema';
 import { crearPiloto, moverPiloto, seededDb } from '../db/testing';
+import type { Db } from '../db/types';
 import { startTravel } from '../services/actions';
 import { bodyDetail, getBody, systemTree } from '../services/universe';
 import { SERVICES, allBodies } from '$lib/game/universe';
