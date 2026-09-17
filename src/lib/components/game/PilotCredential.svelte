@@ -26,6 +26,7 @@
 	import FamilyXpPanel from './FamilyXpPanel.svelte';
 	import Modal from '../ui/Modal.svelte';
 	import Label from '../typography/Label.svelte';
+	import Identicon from './Identicon.svelte';
 	import PortraitPicker from './PortraitPicker.svelte';
 	import SkillHexagon from './SkillHexagon.svelte';
 	import { factionCrest } from '$lib/format';
@@ -146,11 +147,20 @@
 					/>
 				{:else}
 					<!--
-						Sin foto va la silueta y no un rectángulo vacío: dice que ahí falta
-						algo, que es lo honesto, y que se puede hacer algo al respecto.
+						Sin foto va **su sello**, no una silueta gris.
+
+						La silueta decía «acá falta algo» y no decía nada más: todas iguales, la
+						del piloto y la de los otros mil. El sello sale del distintivo, así que
+						desde el primer segundo la credencial muestra algo que es suyo y de
+						nadie más, y el que no quiera subir foto no queda con un hueco.
 					-->
 					<div class="flex h-full w-full items-center justify-center">
-						<Icon name="identification-badge" weight="thin" size="3.5rem" class="text-accent-dim" />
+						<Identicon
+							name={pilot.callsign}
+							family="piloto"
+							size="100%"
+							title="Sello de {pilot.callsign}"
+						/>
 					</div>
 				{/if}
 

@@ -31,6 +31,7 @@ import {
 	system as systemTable
 } from '../src/lib/server/db/schema';
 import type { Db } from '../src/lib/server/db/types';
+import { seeded } from '../src/lib/random';
 import {
 	connectGates,
 	createBody,
@@ -62,21 +63,11 @@ const db = drizzle(sqlite, { schema }) as unknown as Db;
 
 // --- El azar, con semilla ----------------------------------------------------
 //
-// Mulberry32: cuatro líneas y alcanza. Lo que importa no es la calidad del azar
-// sino que sea **el mismo todas las veces**, o comparar el dibujo de hoy con el
-// de ayer deja de ser posible.
-function azar(semilla: number) {
-	let estado = semilla;
-	return () => {
-		estado |= 0;
-		estado = (estado + 0x6d2b79f5) | 0;
-		let t = Math.imul(estado ^ (estado >>> 15), 1 | estado);
-		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-	};
-}
-
-const dado = azar(20260917);
+// Lo que importa no es la calidad del azar sino que sea **el mismo todas las
+// veces**, o comparar el dibujo de hoy con el de ayer deja de ser posible. El
+// generador vive en `$lib/random` porque también lo usa el sello de las
+// corporaciones: dos copias del mismo mulberry32 son dos que se pueden desfasar.
+const dado = seeded(20260917);
 
 /** Un entero de `min` a `max`, los dos incluidos. */
 const entre = (min: number, max: number) => min + Math.floor(dado() * (max - min + 1));
