@@ -414,6 +414,11 @@ cuando la casilla vecina es de otro dueño, que es la definición de frontera.
 Contornear cada casilla convierte el mapa en un panal y se pierde la forma del
 territorio, que es justo lo que se vino a ver.
 
+Por el mismo motivo, **con territorios encendidos se apaga la retícula de cada
+sistema**. El relleno ya dice de quién es la casilla, y el hexágono tenue encima
+le devuelve la textura de panal a lo que se quiere leer como un continente: así el
+único contorno que queda es el que rodea la región entera.
+
 El nombre del territorio va en su centro y **sólo de lejos**: los dos rótulos se
 turnan, porque de lejos la pregunta es «dónde estoy en la galaxia» y de cerca «qué
 sistema es cada punto». Y el que chocaría con otro no se dibuja —se ordenan de

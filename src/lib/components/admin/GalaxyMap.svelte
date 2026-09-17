@@ -371,20 +371,28 @@
 			// una grilla sin competir con el punto—, pero **marcada cuando hay un filtro
 			// puesto**: desvanecer lo que no coincide dice cuál sobra y no cuál importa,
 			// y los que quedan siguen siendo puntos chiquitos en un campo vacío.
-			const vertices = hexCorners(donde, HEX * camara.scale * 0.92);
-			ctx.beginPath();
-			vertices.forEach((v, i) => (i === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)));
-			ctx.closePath();
-			if (filtrando && !apagado) {
-				ctx.fillStyle = paint ? paint(nodo) : accent;
-				ctx.globalAlpha = 0.14;
-				ctx.fill();
+			//
+			// **Con territorios encendidos no se dibuja.** El relleno ya dice de quién es
+			// la casilla, y el hexágono apagado encima le agrega textura de panal justo
+			// a lo que se quiere leer como un continente: así el único contorno que
+			// queda es el que rodea la región entera.
+			const conTerritorio = Boolean(territory) && Boolean(territory?.key(nodo));
+			if (!conTerritorio || (filtrando && !apagado)) {
+				const vertices = hexCorners(donde, HEX * camara.scale * 0.92);
+				ctx.beginPath();
+				vertices.forEach((v, i) => (i === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)));
+				ctx.closePath();
+				if (filtrando && !apagado) {
+					ctx.fillStyle = paint ? paint(nodo) : accent;
+					ctx.globalAlpha = 0.14;
+					ctx.fill();
+				}
+				ctx.strokeStyle = filtrando && !apagado ? (paint ? paint(nodo) : accent) : accentDim;
+				ctx.globalAlpha = apagado ? 0.05 : filtrando ? 0.8 : 0.16;
+				ctx.lineWidth = filtrando && !apagado ? 1.5 : 1;
+				ctx.stroke();
+				ctx.globalAlpha = 1;
 			}
-			ctx.strokeStyle = filtrando && !apagado ? (paint ? paint(nodo) : accent) : accentDim;
-			ctx.globalAlpha = apagado ? 0.05 : filtrando ? 0.8 : 0.16;
-			ctx.lineWidth = filtrando && !apagado ? 1.5 : 1;
-			ctx.stroke();
-			ctx.globalAlpha = 1;
 
 			// El punto del sistema. El color lo decide el filtro activo; sin filtro,
 			// el naranja del HUD.
