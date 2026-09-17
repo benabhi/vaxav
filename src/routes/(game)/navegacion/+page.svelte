@@ -12,7 +12,11 @@
 -->
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
+	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import PanelTabs, { type Solapa } from '$lib/components/ui/PanelTabs.svelte';
+	import Identicon from '$lib/components/game/Identicon.svelte';
+	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
 	import GateRing from '$lib/components/game/GateRing.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
@@ -51,8 +55,25 @@
 		if (lastPlace !== place.name) {
 			lastPlace = place.name;
 			selected = '';
+			solapa = 'ficha';
 		}
 	});
+
+	/**
+	 * Qué solapa de la columna angosta está abierta.
+	 *
+	 * Arranca en la ficha: lo primero que uno quiere de un lugar es qué es. Se
+	 * reinicia al cambiar de lugar por lo mismo que el módulo elegido —abajo—, y
+	 * vive acá y no en el servidor porque cambiar de solapa no cambia la partida.
+	 */
+	let solapa = $state('ficha');
+
+	/** Las tres, con su cuenta al lado para no tener que abrirlas para saber. */
+	let solapas = $derived<Solapa[]>([
+		{ code: 'ficha', label: 'Información' },
+		{ code: 'agentes', label: 'Agentes', detail: place.agentCount },
+		{ code: 'pilotos', label: 'Pilotos', detail: String(place.pilots.length + place.pilotsBeyond) }
+	]);
 
 	let chosen = $derived(
 		place.modules.find((module) => module.code === selected && module.available)
@@ -80,6 +101,26 @@
 		>
 			{value}
 		</p>
+	</div>
+{/snippet}
+
+<!--
+	Qué es este lugar, dónde está y en qué estado. Escrita una sola vez porque la
+	piden dos: la solapa de una estación y el panel suelto de todo lo demás.
+-->
+{#snippet ficha()}
+	<div class="flex w-full min-w-0 flex-col items-start gap-4">
+		<div class="flex w-full items-start gap-[0.9rem]">
+			<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
+			<BodyText>{place.description}</BodyText>
+		</div>
+		<div class="grid w-full grid-cols-2 gap-4">
+			{@render reading('Tipo', place.kind)}
+			{@render reading('Sistema', place.system)}
+			{@render reading('Orbita a', place.parent)}
+			{@render reading('Distancia', place.distance, true)}
+			{@render reading('Estado', place.exploration)}
+		</div>
 	</div>
 {/snippet}
 
@@ -214,21 +255,6 @@
 						<p class="mt-[0.9rem] text-1 text-text-muted">Elegí un módulo para ver qué ofrece.</p>
 					{/if}
 				</TitledPanel>
-
-				<!--
-					Los agentes de la estación. No toda estación tiene: hacen falta
-					Contactos para recibir a alguien. Cuando no hay, el panel no se dibuja
-					en vez de anunciar un vacío.
-				-->
-				{#if place.agents.length}
-					<TitledPanel title="Agentes" detail={place.agentCount} class="w-full">
-						<div class="flex w-full flex-col gap-3">
-							{#each place.agents as agent (agent.code)}
-								<AgentCard {agent} />
-							{/each}
-						</div>
-					</TitledPanel>
-				{/if}
 			</div>
 		</div>
 	{/if}
@@ -624,36 +650,117 @@
 	-->
 	{#if !place.inTransit && !place.gate}
 		<div class="w-full min-w-0 flex-[1_1_0]">
-			<div class="flex w-full min-w-0 flex-col gap-4">
-				<TitledPanel title="Ficha del lugar" class="w-full">
-					<div class="flex w-full min-w-0 flex-col items-start gap-4">
-						<div class="flex w-full items-start gap-[0.9rem]">
-							<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
-							<BodyText>{place.description}</BodyText>
-						</div>
-						<div class="grid w-full grid-cols-2 gap-4">
-							{@render reading('Tipo', place.kind)}
-							{@render reading('Sistema', place.system)}
-							{@render reading('Orbita a', place.parent)}
-							{@render reading('Distancia', place.distance, true)}
-							{@render reading('Estado', place.exploration)}
-						</div>
-					</div>
-				</TitledPanel>
+			{#if place.isStation}
+				<!--
+					**Una estación contesta tres preguntas y no una**, y las tres son listas
+					largas que no entran juntas en una columna fina: qué es este lugar,
+					quién atiende acá y quién más está parado acá. Apiladas, la ficha
+					quedaba arriba de todo y a los pilotos había que buscarlos scrolleando.
 
-				{#if place.isStation}
-					<TitledPanel title="Operador" class="w-full">
-						<div class="flex w-full flex-col items-start gap-2">
-							<HudValue>{place.corporation}</HudValue>
-							<div class="flex flex-wrap items-center gap-[0.4rem]">
-								<Label>{place.corporationKind}</Label>
-								<span class="text-accent-dim">·</span>
-								<Label>{place.owner}</Label>
+					Los agentes se mudaron acá desde la columna ancha por lo mismo: son una
+					lista de gente, igual que los pilotos, y estaban del otro lado de la
+					pantalla que sus pares.
+				-->
+				<Panel class="w-full">
+					<PanelTabs tabs={solapas} bind:active={solapa} />
+
+					<div class="w-full pt-4">
+						{#if solapa === 'ficha'}
+							{@render ficha()}
+
+							<div class="mt-4 w-full border-t border-border-soft pt-4">
+								<Label>Operador</Label>
+								<div class="mt-2 flex w-full flex-col items-start gap-2">
+									<HudValue>{place.corporation}</HudValue>
+									<div class="flex flex-wrap items-center gap-[0.4rem]">
+										<Label>{place.corporationKind}</Label>
+										<span class="text-accent-dim">·</span>
+										<Label>{place.owner}</Label>
+									</div>
+								</div>
 							</div>
-						</div>
-					</TitledPanel>
-				{/if}
-			</div>
+						{:else if solapa === 'agentes'}
+							{#if place.agents.length}
+								<div class="flex w-full flex-col gap-3">
+									{#each place.agents as agent (agent.code)}
+										<AgentCard {agent} />
+									{/each}
+								</div>
+							{:else}
+								<!-- Hacen falta Contactos para recibir a alguien. -->
+								<p class="text-1 text-text-muted">
+									Acá no atiende nadie. Esta estación no tiene Contactos, que es el módulo que hace
+									falta para alojar agentes.
+								</p>
+							{/if}
+						{:else if place.pilots.length}
+							<!--
+								Quién más está atracado. **Un puerto es público**: quien atraca
+								acepta que lo vean, y de eso vive un hub. En espacio abierto esta
+								lista no existe y va a haber que escanear.
+							-->
+							<div class="flex w-full flex-col gap-3">
+								{#each place.pilots as piloto (piloto.callsign)}
+									<div
+										class="flex w-full min-w-0 items-center gap-3 border border-border-soft
+											bg-surface p-[0.6rem]"
+									>
+										<Identicon
+											name={piloto.callsign}
+											family="piloto"
+											size="2.25rem"
+											title="Sello de {piloto.callsign}"
+											class="shrink-0"
+										/>
+										<div class="flex min-w-0 flex-col items-start gap-[0.15rem]">
+											<span class="truncate font-display text-2 tracking-display text-text-strong">
+												{piloto.callsign}
+											</span>
+											<span class="truncate text-[0.68rem] text-text-muted">
+												{piloto.corporation || 'Independiente'}
+											</span>
+											<span
+												class="truncate text-[0.62rem] tracking-label uppercase"
+												style="color: {piloto.factionColor}"
+											>
+												{piloto.faction}
+											</span>
+										</div>
+										<div class="grow"></div>
+										<!--
+											Lo único que se puede hacer hoy con alguien que está al lado.
+											Agregarlo a contactos y comerciar llegan cuando existan; un
+											botón que no hace nada es peor que no ofrecerlo.
+										-->
+										<HudLink
+											href="/mensajes?para={encodeURIComponent(piloto.callsign)}"
+											variant="outline"
+											size="1"
+											class="shrink-0"
+										>
+											<Icon name="envelope-simple" weight="bold" size="0.7rem" />
+											<span class="hidden xs:inline">Escribirle</span>
+										</HudLink>
+									</div>
+								{/each}
+
+								{#if place.pilotsBeyond > 0}
+									<p class="text-1 text-text-muted">y {place.pilotsBeyond} más.</p>
+								{/if}
+							</div>
+						{:else}
+							<p class="text-1 text-text-muted">
+								No hay nadie más atracado acá. Los puertos grandes juntan gente; éste, por ahora, es
+								todo tuyo.
+							</p>
+						{/if}
+					</div>
+				</Panel>
+			{:else}
+				<TitledPanel title="Ficha del lugar" class="w-full">
+					{@render ficha()}
+				</TitledPanel>
+			{/if}
 		</div>
 	{/if}
 </div>

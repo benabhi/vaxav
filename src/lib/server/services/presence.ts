@@ -52,6 +52,9 @@ export interface Presencia {
 	readonly total: number;
 }
 
+/** Nadie: lo que devuelve un lugar donde la lista no existe. */
+export const NADIE: Presencia = { pilots: [], total: 0 };
+
 /**
  * Los pilotos atracados en ese cuerpo, sin contar a uno.
  *

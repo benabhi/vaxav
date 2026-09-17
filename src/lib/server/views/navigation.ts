@@ -16,9 +16,11 @@ import { asteroidsAt } from '../services/asteroids';
 import { surveyPlan, surveysOf } from '../services/prospecting';
 import { activeShip, pilotSkillLevels, shipFit, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
+import { NADIE, pilotsAt } from '../services/presence';
 import { SURVEY_REFINE_SKILL, SURVEY_SKILL, depthLabel, surveyAge } from '$lib/game/prospecting';
 import { grantingModules, leversFor, type Fitted, type Lever, type Need } from '$lib/game/sourcing';
 import { getSkill } from '$lib/game/skills';
+import { getProfession } from '$lib/game/professions';
 import type { SkillLevels } from '$lib/game/fitting';
 import type { BonusTarget } from '$lib/game/hulls';
 import {
@@ -257,6 +259,9 @@ function transit(db: Db, row: Pilot): Ubicacion {
 		moduleCount: '',
 		agents: [],
 		agentCount: '',
+		pilots: [],
+		pilotCount: '',
+		pilotsBeyond: 0,
 		field: SIN_CAMPO,
 		asteroids: [],
 		gate: null,
@@ -291,6 +296,9 @@ function nowhere(): Ubicacion {
 		moduleCount: '',
 		agents: [],
 		agentCount: '',
+		pilots: [],
+		pilotCount: '',
+		pilotsBeyond: 0,
 		field: SIN_CAMPO,
 		asteroids: [],
 		gate: null,
@@ -332,6 +340,10 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 	const agents = isStation ? buildAgentRows(detail.agents, pilotStandings(db, row.id)) : [];
 	const abiertos = agents.filter((agent) => agent.open).length;
 
+	// Quién más está atracado acá. **Sólo en estaciones**: en espacio abierto no hay
+	// lista, hay que escanear, y eso es lo que hace que esconderse signifique algo.
+	const presentes = isStation ? pilotsAt(db, detail.body.id, row.id) : NADIE;
+
 	return {
 		name: detail.body.name,
 		kind: bodyKindLabel(detail.body.kind),
@@ -350,6 +362,20 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		moduleCount: isStation ? `${detail.services.length} de ${Object.keys(SERVICES).length}` : '',
 		agents,
 		agentCount: isStation ? `${abiertos} de ${agents.length}` : '',
+		pilots: presentes.pilots.map((uno) => ({
+			callsign: uno.callsign,
+			faction: factionName(uno.faction),
+			factionColor:
+				FACTIONS[uno.faction as keyof typeof FACTIONS]?.color ?? 'var(--color-text-muted)',
+			profession: getProfession(uno.profession).name,
+			corporation: uno.corporation
+		})),
+		pilotCount: isStation
+			? presentes.total === 1
+				? '1 piloto'
+				: `${presentes.total} pilotos`
+			: '',
+		pilotsBeyond: Math.max(0, presentes.total - presentes.pilots.length),
 		field: cinturon.field,
 		asteroids: cinturon.asteroids,
 		gate: buildSalida(db, row, detail.body),

@@ -273,6 +273,43 @@ El aviso del Neocom tiene una vuelta propia: **abrir la bandeja no marca nada**,
 marca abrir un mensaje. Así que la pestaña sigue avisando mientras quede uno sin
 abrir, aunque el jugador ya esté parado ahí.
 
+### La columna angosta de una estación
+
+**Una estación contesta tres preguntas y no una**, y las tres son listas largas
+que no entran juntas en una columna fina: qué es este lugar, quién atiende acá y
+quién más está parado acá. Apiladas, la ficha quedaba arriba de todo y a los
+pilotos había que buscarlos scrolleando. Así que la columna lleva **solapas**:
+Información, Agentes, Pilotos.
+
+Los agentes se mudaron ahí desde la columna ancha por lo mismo: son una lista de
+gente, igual que los pilotos, y estaban del otro lado de la pantalla que sus
+pares.
+
+Las solapas de un panel **no son las pestañas del módulo**, aunque hablen el
+mismo idioma: aquéllas navegan —cada una es una URL y el servidor decide qué
+carga— y éstas reparten lo que la pantalla ya tiene en la mano. Dos
+comportamientos distintos, dos piezas: `PanelTabs` y `TabBar`. Y cambiar de
+solapa no cambia la partida, así que el estado vive en el navegador.
+
+#### Quién más está acá
+
+**En un idle no hay conectado y desconectado.** El piloto está en el sector
+aunque el jugador no esté mirando la pantalla, así que la presencia no es una
+sesión abierta: es dónde está parado. El que salió de viaje no cuenta —sigue
+teniendo guardado el cuerpo del que salió, y sin ese filtro aparecería atracado
+en un lugar del que ya se fue—, que es la misma verdad que dice la pantalla:
+**en tránsito no estás en ningún lado**.
+
+**Y sólo en estaciones.** Una estación es un puerto: es pública, no se puede
+atacar, y quien atraca acepta que lo vean. En espacio abierto —un cinturón, una
+órbita, una puerta— la lista no existe: va a haber que escanear, y eso pedirá
+módulo y tiempo, que es lo que hace que esconderse signifique algo. Esa mecánica
+no está construida y la pantalla no la anuncia.
+
+Lo único que se puede hacer hoy con alguien que está al lado es **escribirle**.
+Agregarlo a contactos y comerciar llegan cuando existan: un botón que no hace
+nada es peor que no ofrecerlo.
+
 ### La pantalla parado en una puerta
 
 Una puerta era, hasta acá, un panel de texto con cuatro cifras: lo único que la

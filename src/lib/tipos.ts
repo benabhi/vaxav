@@ -366,6 +366,19 @@ export interface Ubicacion {
 	readonly agents: readonly FilaAgente[];
 	readonly agentCount: string;
 	/**
+	 * Quién más está atracado acá.
+	 *
+	 * **Sólo en estaciones.** Una estación es un puerto: es pública, no se puede
+	 * atacar, y quien atraca acepta que lo vean. En espacio abierto la lista no
+	 * existe —habrá que escanear—, que es lo que hace que esconderse signifique
+	 * algo.
+	 */
+	readonly pilots: readonly PilotoAqui[];
+	/** «Tres pilotos», o vacío si no hay nadie ni es una estación. */
+	readonly pilotCount: string;
+	/** Cuántos quedaron sin listar, si son más de los que entran. */
+	readonly pilotsBeyond: number;
+	/**
 	 * Qué se puede extraer acá, si es un cinturón.
 	 *
 	 * Va en Ubicación y no en el árbol del sistema porque **minar es algo que se
@@ -754,6 +767,23 @@ export interface Bandeja {
 	readonly total: number;
 	/** Cuántos sin abrir, que es el mismo número que enciende el Neocom. */
 	readonly unread: number;
+}
+
+/**
+ * Un piloto parado en el mismo lugar que vos.
+ *
+ * Lo justo para reconocerlo y para poder escribirle, que es lo único que se puede
+ * hacer con alguien hoy. Agregarlo a contactos y comerciar van a sumar campos
+ * acá cuando existan.
+ */
+export interface PilotoAqui {
+	readonly callsign: string;
+	/** La bandera, ya escrita, y su color. */
+	readonly faction: string;
+	readonly factionColor: string;
+	readonly profession: string;
+	/** La corporación a la que responde, o vacío si vuela por su cuenta. */
+	readonly corporation: string;
 }
 
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */
