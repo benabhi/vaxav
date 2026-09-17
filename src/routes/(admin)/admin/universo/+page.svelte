@@ -14,8 +14,9 @@
 <script lang="ts">
 	import { submitting } from '$lib/forms.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import GalaxyMap from '$lib/components/admin/GalaxyMap.svelte';
-	import SelectField from '$lib/components/admin/SelectField.svelte';
+	import GalaxyMap from '$lib/components/game/GalaxyMap.svelte';
+	import GalaxyStage from '$lib/components/game/GalaxyStage.svelte';
+	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
@@ -34,7 +35,7 @@
 	import { page } from '$app/state';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { ADMIN_ROUTE } from '$lib/admin';
-	import { FREE_SPACE } from '$lib/admin';
+	import { FREE_SPACE } from '$lib/filters';
 	import { bearingLabel } from '$lib/format';
 	import { getFaction } from '$lib/game/factions';
 	import { colorFor } from '$lib/palette';
@@ -231,29 +232,6 @@
 		evento.currentTarget.form?.requestSubmit();
 	}
 
-	/**
-	 * Los campos vacíos no viajan en la URL.
-	 *
-	 * Un formulario `GET` manda todo, incluso lo que no se llenó, y la barra queda
-	 * con `?buscar=&faccion=&region=&pintar=` colgando. No rompe nada —el servidor
-	 * lee el vacío como «sin filtro»— pero una URL que se comparte tiene que poder
-	 * leerse, y ahí el recorte real se pierde entre la paja.
-	 *
-	 * Se apagan antes de mandar y se vuelven a prender enseguida, porque la página
-	 * no se recarga entera: sin eso quedarían deshabilitados en pantalla.
-	 */
-	function alEnviar(evento: SubmitEvent & { currentTarget: HTMLFormElement }) {
-		const vacios = [...evento.currentTarget.elements].filter(
-			(campo): campo is HTMLInputElement | HTMLSelectElement =>
-				(campo instanceof HTMLInputElement || campo instanceof HTMLSelectElement) &&
-				campo.value === ''
-		);
-		for (const campo of vacios) campo.disabled = true;
-		setTimeout(() => {
-			for (const campo of vacios) campo.disabled = false;
-		});
-	}
-
 	/** Cuántos recortes hay puestos, para decirlo en el botón. */
 	let cuantosFiltros = $derived(
 		[consulta.search, consulta.faction, consulta.region, consulta.government].filter(Boolean).length
@@ -361,7 +339,7 @@
 	function mostrarEnMapa(code: string) {
 		elegido = code;
 		mapa?.centrar(code);
-		panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		escenario?.scrollIntoView();
 	}
 
 	/** El rumbo, escrito. Viene como código del servidor y se lee como palabra. */
@@ -370,7 +348,7 @@
 	/** El sistema elegido en el mapa, que la barra lateral describe. */
 	let elegido = $state('');
 	let mapa = $state<GalaxyMap>();
-	let panel = $state<HTMLDivElement>();
+	let escenario = $state<GalaxyStage>();
 
 	/**
 	 * El mapa a pantalla casi completa.
@@ -610,26 +588,11 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 		sólo sirve el mapa.
 	-->
 	<!--
-		Los filtros, arriba del mapa y de la tabla porque valen para los dos: el mismo
-		recorte apaga sistemas en el mapa y quita filas de la lista. Dos filtros
-		separados serían dos pantallas que no se hablan.
-
-		Es un formulario `GET`: los filtros viajan en la URL, así que un recorte se
-		puede compartir, se vuelve con el botón de atrás y se recarga sin perderlo.
-	-->
-	<!--
-		Los filtros, arriba del mapa y de la tabla porque valen para los dos: el mismo
-		recorte apaga sistemas en el mapa y quita filas de la lista. Dos filtros
-		separados serían dos pantallas que no se hablan.
-
-		Es un formulario `GET`: los filtros viajan en la URL, así que un recorte se
-		puede compartir, se vuelve con el botón de atrás y se recarga sin perderlo.
-
-		**Dos filas, y siempre dos.** Con siete controles, dejar que envuelvan solos
-		manda los botones a una tercera fila o los deja colgando al final de la
-		segunda según cuánto mida la pantalla. Separar los campos de las acciones con
-		una línea los deja siempre en el mismo lugar, que es lo que hace que se
-		encuentren sin mirar.
+		**Dos filas de filtros, y siempre dos.** Con siete controles, dejar que
+		envuelvan solos manda los botones a una tercera fila o los deja colgando al
+		final de la segunda según cuánto mida la pantalla. Separar los campos de las
+		acciones con una línea los deja siempre en el mismo lugar, que es lo que hace
+		que se encuentren sin mirar.
 	-->
 	<!--
 		Las cuatro piezas de la pantalla, en snippets, porque se dibujan en **dos
@@ -924,106 +887,37 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 	{/snippet}
 
 	<!--
-		**La capa de pantalla completa: la galaxia y nada más.**
-
-		Sin el marco del panel, sin la tabla, sin los filtros ocupando lugar. Lo que
-		hace falta ahí —la ficha, las leyendas, los filtros— flota encima del lienzo y
-		se pliega, porque agrandar el mapa es para mirar el mapa.
-
-		Se dibuja **una sola de las dos versiones**, nunca las dos: dejar la de abajo
-		escondida repetiría los identificadores de cada campo del filtro, y dos
-		controles con el mismo `id` rompen las etiquetas de los dos. Por eso la cámara
-		vive en esta pantalla y no en el mapa: cambiar de versión lo vuelve a montar.
+		Las acciones que acompañan a los filtros cuando el mapa ocupa la pantalla:
+		cuánto quedó recortado y cómo se vuelve atrás.
 	-->
-	{#if agrandado}
-		<div class="fixed inset-0 z-50 bg-background">
-			<div class="absolute inset-0">
-				{@render lienzoDelMapa()}
-			</div>
-
-			<div class="absolute top-2 left-2 z-10 flex flex-col items-start gap-2">
-				<div class="flex flex-wrap items-center gap-2">
-					<HudButton
-						type="button"
-						size="1"
-						variant={filtrosAbiertos ? 'primary' : 'outline'}
-						onclick={() => (filtrosAbiertos = !filtrosAbiertos)}
-					>
-						<Icon name="magnifying-glass" weight="bold" size="0.7rem" />
-						Filtros
-					</HudButton>
-					{#if hayFiltro}
-						<HudLink href="?" size="1" variant="outline">
-							<Icon name="x" weight="bold" size="0.7rem" />
-							Quitar
-						</HudLink>
-					{/if}
-					<span
-						class="border border-border-soft bg-well px-[0.45rem] py-[0.3rem] font-mono
-							text-[0.68rem] whitespace-nowrap text-text-muted"
-					>
-						{universo.found} de {universo.total}
-					</span>
-				</div>
-
-				{#if filtrosAbiertos}
-					<form
-						method="GET"
-						onsubmit={alEnviar}
-						class="flex w-[min(21rem,calc(100vw-2rem))] flex-col gap-3 border border-border-soft
-							bg-well p-[0.8rem]"
-					>
-						{@render camposDeFiltro()}
-					</form>
-				{/if}
-			</div>
-
-			{#if elegidoNodo}
-				<div
-					class="absolute top-2 right-2 bottom-[4.5rem] z-10 flex w-[min(20rem,calc(100vw-2rem))]
-						flex-col pt-9"
-				>
-					{@render fichaDelMapa()}
-				</div>
-			{/if}
-
-			<div
-				class="absolute right-2 bottom-2 left-2 z-10 flex flex-col gap-2 border border-border-soft
-					bg-well px-[0.7rem] py-[0.5rem]"
-			>
-				{@render leyendasDelMapa()}
-			</div>
-		</div>
-	{:else}
-		<form
-			method="GET"
-			onsubmit={alEnviar}
-			class="flex w-full flex-col gap-3 border border-border-soft bg-surface px-[0.9rem]
-				py-[0.7rem]"
+	{#snippet accionesDeFiltro()}
+		{#if hayFiltro}
+			<HudLink href="?" size="1" variant="outline">
+				<Icon name="x" weight="bold" size="0.7rem" />
+				Quitar
+			</HudLink>
+		{/if}
+		<span
+			class="border border-border-soft bg-well px-[0.45rem] py-[0.3rem] font-mono
+				text-[0.68rem] whitespace-nowrap text-text-muted"
 		>
-			{@render camposDeFiltro()}
-		</form>
+			{universo.found} de {universo.total}
+		</span>
+	{/snippet}
 
-		<div bind:this={panel} class="w-full scroll-mt-4">
-			<TitledPanel title="Mapa de la galaxia" detail={detalleMapa} class="w-full">
-				<div class="flex w-full flex-col items-start gap-[1.25rem] lg:h-[28rem] lg:flex-row">
-					<div class="flex h-[26rem] w-full min-w-0 flex-col gap-2 lg:h-full lg:flex-[3_1_0]">
-						{@render lienzoDelMapa()}
-						{@render leyendasDelMapa()}
-					</div>
-
-					<!--
-						La barra lateral y no un globo flotante: lo que va a crecer acá son
-						acciones —ir al constructor, plantar una puerta, cerrar un paso— y un
-						globo con seis botones es un menú disfrazado.
-					-->
-					<div class="w-full min-w-0 lg:h-full lg:flex-[1_1_0]">
-						{@render fichaDelMapa()}
-					</div>
-				</div>
-			</TitledPanel>
-		</div>
-	{/if}
+	<GalaxyStage
+		bind:this={escenario}
+		bind:filtersOpen={filtrosAbiertos}
+		title="Mapa de la galaxia"
+		detail={detalleMapa}
+		expanded={agrandado}
+		showCard={elegidoNodo !== null}
+		map={lienzoDelMapa}
+		filters={camposDeFiltro}
+		filterActions={accionesDeFiltro}
+		card={fichaDelMapa}
+		legend={leyendasDelMapa}
+	/>
 
 	<TitledPanel
 		title="Sistemas"

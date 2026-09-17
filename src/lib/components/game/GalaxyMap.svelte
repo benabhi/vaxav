@@ -31,7 +31,7 @@
 	import { fit, pan, toScreen, toWorld, zoomAt, type Camara, type Punto } from '$lib/camera';
 	import type { GateBearing } from '$lib/game/universe';
 	import Icon from '../Icon.svelte';
-	import type { MapaGalaxia, NodoGalaxia } from '$lib/tipos';
+	import type { EnlaceGalaxia, MapaGalaxia, NodoGalaxia, PilotoEnElMapa } from '$lib/tipos';
 
 	interface Props {
 		map: MapaGalaxia;
@@ -78,6 +78,33 @@
 		 */
 		camera?: Camara | null;
 		fitted?: boolean;
+		/**
+		 * Dónde está el piloto y qué puede cruzar, si lo está mirando un jugador.
+		 *
+		 * Va aparte y no adentro de `map` porque **no es del mapa: es de quien lo
+		 * mira**. Dos pilotos abren la misma galaxia y ven cosas distintas —uno puede
+		 * saltar una puerta que al otro no le alcanza el tanque— y meter eso en el
+		 * dato del mapa obligaría a rearmarlo por piloto.
+		 */
+		pilot?: PilotoEnElMapa;
+		/**
+		 * A qué sistema mira al abrirse, en vez de encuadrar toda la galaxia.
+		 *
+		 * El cuartel abre encuadrando: la pregunta de quien construye es «cómo está
+		 * la galaxia». La del piloto es **«dónde estoy»**, y encuadrar sesenta
+		 * sistemas para contestarla lo deja buscándose a sí mismo en un plano. El
+		 * botón de encuadrar queda al lado para la otra pregunta.
+		 */
+		focus?: string;
+		/**
+		 * Si se dibuja la deuda de obra: ramales sueltos y puertas sin conectar.
+		 *
+		 * Encendida en el cuartel, donde es media razón de ser del mapa. **Apagada en
+		 * el juego**, porque no es contenido: un sistema a la deriva no es un lugar
+		 * misterioso, es uno que nadie terminó de conectar, y para el piloto
+		 * sencillamente no se puede llegar.
+		 */
+		debt?: boolean;
 	}
 
 	let {
@@ -90,6 +117,9 @@
 		onToggleExpand,
 		camera = $bindable(null),
 		fitted = $bindable(false),
+		pilot,
+		focus = '',
+		debt = true,
 		onSelect
 	}: Props = $props();
 
@@ -142,6 +172,16 @@
 	/** Si el filtro deja ver este sistema. Sin filtro, todos. */
 	function seVe(code: string): boolean {
 		return visible.size === 0 || visible.has(code);
+	}
+
+	/** Si esa puerta sale del sistema donde está el piloto. */
+	function esMia(enlace: EnlaceGalaxia): boolean {
+		return Boolean(pilot) && (enlace.from === pilot!.system || enlace.to === pilot!.system);
+	}
+
+	/** El código del otro extremo, visto desde donde está el piloto. */
+	function otroLado(enlace: EnlaceGalaxia): string {
+		return enlace.from === pilot?.system ? enlace.to : enlace.from;
 	}
 
 	/** Si hay un recorte puesto que deje afuera a alguien. */
@@ -245,16 +285,27 @@
 			ctx.lineTo(b.x, b.y);
 			// **El atajo se dibuja punteado.** No es un error: es un pasaje que se
 			// saltea el camino largo, y verlo distinto es toda la gracia de marcarlo.
-			ctx.setLineDash(enlace.shortcut ? [6, 5] : []);
+			// **Las salidas del sistema donde está el piloto se leen distinto**, y en
+			// tres estados: la que puede cruzar va encendida y gruesa, la que sale de acá
+			// pero no alcanza va punteada, y el resto de la galaxia queda de fondo. La
+			// línea no dice sólo que hay un pasaje: dice si **vos** podés usarlo.
+			const mia = esMia(enlace);
+			const motivo = mia ? (pilot?.reach[otroLado(enlace)] ?? '') : '';
+
+			ctx.setLineDash(enlace.shortcut || (mia && motivo) ? [6, 5] : []);
 			ctx.strokeStyle = apagado
 				? muted
 				: enlace.closed
 					? danger
-					: enlace.shortcut
-						? data
-						: accentDim;
-			ctx.globalAlpha = apagado ? 0.25 : enlace.closed ? 0.55 : 1;
-			ctx.lineWidth = enlace.shortcut ? 1 : 1.5;
+					: mia
+						? motivo
+							? muted
+							: accent
+						: enlace.shortcut
+							? data
+							: accentDim;
+			ctx.globalAlpha = apagado ? 0.25 : enlace.closed ? 0.55 : mia && motivo ? 0.5 : 1;
+			ctx.lineWidth = mia && !motivo ? 2.5 : enlace.shortcut ? 1 : 1.5;
 			ctx.stroke();
 			ctx.setLineDash([]);
 			ctx.globalAlpha = 1;
@@ -297,7 +348,7 @@
 			// El muñón: una puerta plantada que no lleva a ninguna parte. Sale del
 			// hexágono hacia su rumbo, y es lo que hace visible el trabajo a medio
 			// hacer que el contador de arriba cuenta sin decir dónde.
-			for (const rumbo of nodo.looseBearings) {
+			for (const rumbo of debt ? nodo.looseBearings : []) {
 				const paso = BEARING_VECTORS[rumbo as GateBearing];
 				if (!paso) continue;
 				const vecino = hexToPixel(
@@ -354,12 +405,32 @@
 			// **El ramal suelto va anillado en rojo.** Tiene casilla pero no tiene
 			// lugar: no llega caminando hasta la semilla, y su posición no significa
 			// nada hasta que alguien lo enganche.
-			if (nodo.adrift && !apagado) {
+			if (debt && nodo.adrift && !apagado) {
 				ctx.beginPath();
 				ctx.arc(donde.x, donde.y, radio + 4, 0, Math.PI * 2);
 				ctx.strokeStyle = danger;
 				ctx.lineWidth = 1.5;
 				ctx.stroke();
+			}
+
+			// **Estás acá**, y no se apaga nunca. Es lo primero que se busca al abrir el
+			// mapa, y un marcador que un filtro puede esconder es uno que falla justo
+			// cuando hace falta. Va con un aro doble, distinto del de la selección.
+			if (pilot && nodo.code === pilot.system) {
+				ctx.beginPath();
+				ctx.arc(donde.x, donde.y, radio + 6, 0, Math.PI * 2);
+				ctx.strokeStyle = data;
+				ctx.lineWidth = 2;
+				ctx.globalAlpha = 1;
+				ctx.stroke();
+
+				ctx.beginPath();
+				ctx.arc(donde.x, donde.y, radio + 10, 0, Math.PI * 2);
+				ctx.strokeStyle = data;
+				ctx.lineWidth = 1;
+				ctx.globalAlpha = 0.5;
+				ctx.stroke();
+				ctx.globalAlpha = 1;
 			}
 
 			if (elegido || senalado) {
@@ -570,7 +641,8 @@
 	// re-encuadrar en cada cambio le sacaría el mapa de las manos al que lo movió.
 	$effect(() => {
 		if (fitted || viewport.x === 0 || puntos.size === 0) return;
-		mover(fit([...puntos.values()], viewport));
+		const mirado = focus ? puntos.get(focus) : undefined;
+		mover(mirado ? { center: mirado, scale: CERCA } : fit([...puntos.values()], viewport));
 		fitted = true;
 	});
 

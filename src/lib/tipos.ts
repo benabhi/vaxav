@@ -1332,6 +1332,103 @@ export interface MapaGalaxia {
 	readonly adrift: number;
 }
 
+/**
+ * La pestaña Galaxia: el mapa, dónde estás y adónde podés ir.
+ *
+ * Es el tercer nivel de acercamiento de Navegación —cuerpo, sistema, galaxia— y
+ * contesta una sola pregunta que las otras dos no pueden: **dónde queda esto que
+ * estoy mirando, y qué hay alrededor**.
+ */
+export interface Galaxia {
+	readonly map: MapaGalaxia;
+	readonly pilot: PilotoEnElMapa;
+	/** El sistema donde está, ya resuelto, para la ficha de entrada. */
+	readonly here: NodoGalaxia | null;
+	/** Las salidas del sistema donde está, con lo que cuesta cada una. */
+	readonly exits: readonly SalidaGalaxia[];
+	/** Los códigos que pasan el filtro. Vacío si no hay filtro puesto. */
+	readonly matches: readonly string[];
+	readonly query: ConsultaGalaxia;
+	readonly total: number;
+	readonly found: number;
+	/**
+	 * De dónde sale el verbo del mapa, que es **viajar** y no saltar.
+	 *
+	 * Desde el mapa no se cruza una puerta: para eso hay que estar parado en ella.
+	 * Lo que el mapa ofrece es la orden de ir hasta la puerta, y como cualquier otra
+	 * acción del juego dice qué la habilita y por qué no se puede.
+	 */
+	readonly travelSource: Procedencia;
+}
+
+/** Una salida del sistema donde está el piloto, vista desde el mapa. */
+export interface SalidaGalaxia {
+	/** Adónde lleva: el código y el nombre del sistema del otro lado. */
+	readonly code: string;
+	readonly name: string;
+	/** La puerta de este lado, que es adonde hay que viajar para cruzar. */
+	readonly gate: string;
+	readonly gateCode: string;
+	readonly bearing: string;
+	/**
+	 * Qué cuesta llegar hasta la puerta, que es lo que el mapa ordena.
+	 *
+	 * **Es un viaje dentro del sistema, no el salto.** Van los dos porque son dos
+	 * cosas distintas y las dos se pagan: primero se cruza medio sistema hasta la
+	 * puerta, y recién ahí se salta.
+	 */
+	readonly travelDistance: string;
+	readonly travelDuration: string;
+	/** Qué cuesta el salto, ya escrito. */
+	readonly distance: string;
+	readonly duration: string;
+	readonly fuel: string;
+	/** Si el piloto ya está parado en esa puerta. */
+	readonly standingThere: boolean;
+	/** Por qué no se puede cruzar, o vacío. */
+	readonly blocked: string;
+}
+
+/** Lo que se pidió del mapa: los filtros del jugador. */
+export interface ConsultaGalaxia {
+	readonly search: string;
+	readonly faction: string;
+	readonly region: string;
+	readonly security: string;
+	readonly service: string;
+	readonly paint: string;
+	readonly territory: string;
+}
+
+/**
+ * Lo que el mapa sabe del piloto que lo está mirando.
+ *
+ * **Va aparte del mapa porque no es del mapa: es de quien lo mira.** Dos pilotos
+ * abren la misma galaxia y ven cosas distintas —uno puede cruzar una puerta que al
+ * otro no le alcanza el tanque— y meter eso en el dato del mapa obligaría a
+ * rearmarlo entero por piloto.
+ */
+export interface PilotoEnElMapa {
+	/** El código del sistema donde está parado. */
+	readonly system: string;
+	/**
+	 * A cuántos saltos queda cada sistema, por código.
+	 *
+	 * Lo que no está **no se puede alcanzar**, que es distinto de estar lejos: una
+	 * cifra grande diría que hay camino, y a veces no lo hay.
+	 */
+	readonly jumps: Readonly<Record<string, number>>;
+	/**
+	 * Por qué no se puede saltar a cada vecino, o vacío si se puede.
+	 *
+	 * Sólo tiene entradas para los vecinos del sistema donde está: saltar es de a
+	 * una puerta por vez. El motivo sale de `jumpProblem`, la misma función pura que
+	 * apaga el botón en la pestaña Ubicación y que usa el servicio para rechazar la
+	 * orden, así que el mapa, la pantalla y el servidor dicen exactamente lo mismo.
+	 */
+	readonly reach: Readonly<Record<string, string>>;
+}
+
 /** Un sistema en su casilla de la grilla. */
 export interface NodoGalaxia {
 	readonly code: string;
@@ -1357,6 +1454,14 @@ export interface NodoGalaxia {
 	readonly constellationColor: string;
 	readonly bodies: number;
 	readonly stations: number;
+	/**
+	 * Los servicios que hay en el sistema, juntando todas sus estaciones.
+	 *
+	 * **Del sistema y no de cada estación**: desde el mapa la pregunta es «¿dónde
+	 * refino?», y en cuál de las tres estaciones está la refinería lo contesta la
+	 * pestaña Sistema una vez que llegaste.
+	 */
+	readonly services: readonly string[];
 	/** Cuántas salidas tiene. */
 	readonly gates: number;
 	/**
