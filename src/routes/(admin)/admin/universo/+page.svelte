@@ -16,6 +16,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import GalaxyMap from '$lib/components/game/GalaxyMap.svelte';
 	import GalaxyStage from '$lib/components/game/GalaxyStage.svelte';
+	import GalaxyLegend from '$lib/components/game/GalaxyLegend.svelte';
 	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
@@ -36,11 +37,16 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { ADMIN_ROUTE } from '$lib/admin';
 	import { FREE_SPACE } from '$lib/filters';
-	import { bearingLabel } from '$lib/format';
+	import { bearingLabel, serviceLabel } from '$lib/format';
 	import { getFaction } from '$lib/game/factions';
 	import { colorFor } from '$lib/palette';
 	import ColorField from '$lib/components/forms/ColorField.svelte';
-	import { oppositeBearing, type GateBearing } from '$lib/game/universe';
+	import {
+		SERVICE_ORDER,
+		oppositeBearing,
+		type GateBearing,
+		type StationServiceKind
+	} from '$lib/game/universe';
 	import type { NodoGalaxia } from '$lib/tipos';
 	import type { Camara } from '$lib/camera';
 	import type { PageProps } from './$types';
@@ -188,6 +194,19 @@
 		...universo.options.governments.map((una) => ({ value: una.value, label: una.label }))
 	]);
 
+	/**
+	 * Los servicios, del catálogo entero y no de los que haya sembrados.
+	 *
+	 * Es la lista que crece sola: agregar un servicio al juego lo agrega a los dos
+	 * filtros —el del cuartel y el del piloto— sin tocar ninguna pantalla. Y uno que
+	 * todavía no instaló nadie aparece igual: que no encuentre nada **es** la
+	 * respuesta, y es la que dice qué falta construir.
+	 */
+	const OPCIONES_SERVICIO = [
+		{ value: '', label: 'Todos' },
+		...SERVICE_ORDER.map((code) => ({ value: code, label: serviceLabel(code) }))
+	];
+
 	/** Por que criterio se puede pintar el mapa. Otra tabla que crece con una fila. */
 	const PINTAR = [
 		{ value: '', label: 'Nada' },
@@ -212,6 +231,7 @@
 			consulta.region ||
 			consulta.constellation ||
 			consulta.government ||
+			consulta.service ||
 			consulta.paint ||
 			consulta.territory ||
 			consulta.page > 1 ||
@@ -234,7 +254,14 @@
 
 	/** Cuántos recortes hay puestos, para decirlo en el botón. */
 	let cuantosFiltros = $derived(
-		[consulta.search, consulta.faction, consulta.region, consulta.government].filter(Boolean).length
+		[
+			consulta.search,
+			consulta.faction,
+			consulta.region,
+			consulta.constellation,
+			consulta.government,
+			consulta.service
+		].filter(Boolean).length
 	);
 
 	/** Los que pasan el filtro, para que el mapa apague el resto. */
@@ -439,6 +466,7 @@
 	 * no tener leyenda.
 	 */
 	const LEYENDA = [
+		{ label: 'Salida del elegido', color: 'var(--color-accent-bright)' },
 		{ label: 'Conexión', color: 'var(--color-accent-dim)' },
 		{ label: 'Atajo', color: 'var(--color-data)' },
 		{ label: 'Paso cerrado', color: 'var(--color-danger)' },
@@ -655,6 +683,22 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 					options={opcionesGobierno}
 				/>
 			</div>
+
+			<!--
+				El único filtro que pregunta **para qué sirve** un sistema y no cómo es.
+				Con sesenta, es la forma de encontrar el que tiene astillero sin abrirlos
+				de a uno, y de ver de un vistazo qué le falta a una región entera.
+			-->
+			<div class="w-full min-w-0 xs:w-[9.5rem]">
+				<SelectField
+					label="Servicio"
+					name="servicio"
+					size="1"
+					onchange={alCambiar}
+					value={consulta.service}
+					options={OPCIONES_SERVICIO}
+				/>
+			</div>
 		</div>
 
 		<div class="flex w-full flex-wrap items-end gap-3 border-t border-border-soft/60 pt-[0.6rem]">
@@ -736,52 +780,7 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 	{/snippet}
 
 	{#snippet leyendasDelMapa()}
-		{#if leyendaPintura.length > 0}
-			<!--
-		Qué dice el color, cuando el mapa está pintado. Va arriba de la del
-		trazo porque es la que cambia: la del trazo es siempre la misma y se
-		aprende una sola vez.
-	-->
-			<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
-				{#each leyendaPintura as entrada (entrada.label)}
-					<span class="flex items-center gap-[0.4rem]">
-						<span
-							class="inline-block h-[0.55rem] w-[0.55rem] shrink-0 rounded-full"
-							style="background: {entrada.color}"
-						></span>
-						<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
-							{entrada.label}
-						</span>
-					</span>
-				{/each}
-			</div>
-		{/if}
-
-		<!--
-	La leyenda. Un mapa que codifica cinco cosas en el trazo y no dice
-	cuáles es un mapa que hay que adivinar.
--->
-		<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
-			{#each LEYENDA as entrada (entrada.label)}
-				<span class="flex items-center gap-[0.4rem]">
-					<span class="inline-block h-[2px] w-[1.1rem] shrink-0" style="background: {entrada.color}"
-					></span>
-					<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
-						{entrada.label}
-					</span>
-				</span>
-			{/each}
-			<div class="grow"></div>
-			<!--
-				Ícono distinto del de agrandar, aunque los dos hablen de tamaño: agrandar
-				cambia **la ventana** y encuadrar cambia **lo que se ve adentro**. Con el
-				mismo dibujo, dos botones cerca parecen el mismo botón puesto dos veces.
-			-->
-			<HudButton size="1" variant="ghost" onclick={() => mapa?.encuadrar()}>
-				<Icon name="arrows-out-cardinal" weight="bold" size="0.7rem" />
-				Encuadrar
-			</HudButton>
-		</div>
+		<GalaxyLegend paint={leyendaPintura} strokes={LEYENDA} />
 	{/snippet}
 
 	{#snippet fichaDelMapa()}
@@ -818,6 +817,19 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 					{@render lectura(
 						'Contenido',
 						`${elegidoNodo.bodies} cuerpos · ${elegidoNodo.stations} estaciones`
+					)}
+					<!--
+						Qué se puede hacer ahí, dicho en la ficha: es lo que vuelve legible el
+						filtro de servicios, y lo que muestra el agujero cuando una región
+						entera no tiene dónde refinar.
+					-->
+					{@render lectura(
+						'Servicios',
+						elegidoNodo.services.length > 0
+							? elegidoNodo.services
+									.map((uno) => serviceLabel(uno as StationServiceKind))
+									.join(' · ')
+							: 'Ninguno'
 					)}
 					{@render lectura('Salidas', `${elegidoNodo.gates} de 6`)}
 					{#if elegidoNodo.looseBearings.length > 0}

@@ -26,6 +26,7 @@
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
 	import GalaxyMap from '$lib/components/game/GalaxyMap.svelte';
 	import GalaxyStage from '$lib/components/game/GalaxyStage.svelte';
+	import GalaxyLegend from '$lib/components/game/GalaxyLegend.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
 	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
@@ -231,6 +232,7 @@
 	 */
 	const LEYENDA = [
 		{ label: 'Podés cruzarla', color: 'var(--color-accent)' },
+		{ label: 'Salida del elegido', color: 'var(--color-accent-bright)' },
 		{ label: 'Otra conexión', color: 'var(--color-accent-dim)' },
 		{ label: 'Atajo', color: 'var(--color-data)' },
 		{ label: 'Paso cerrado', color: 'var(--color-danger)' }
@@ -509,13 +511,6 @@
 				Quitar filtros
 			</HudLink>
 		{/if}
-
-		<div class="grow"></div>
-
-		<HudButton size="1" variant="ghost" onclick={() => mostrarEnMapa(galaxia.pilot.system)}>
-			<Icon name="crosshair" weight="bold" size="0.7rem" />
-			Dónde estoy
-		</HudButton>
 	</div>
 {/snippet}
 
@@ -554,42 +549,7 @@
 {/snippet}
 
 {#snippet leyendasDelMapa()}
-	{#if leyendaPintura.length > 0}
-		<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
-			{#each leyendaPintura as entrada (entrada.label)}
-				<span class="flex items-center gap-[0.4rem]">
-					<span
-						class="inline-block h-[0.55rem] w-[0.55rem] shrink-0 rounded-full"
-						style="background: {entrada.color}"
-					></span>
-					<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
-						{entrada.label}
-					</span>
-				</span>
-			{/each}
-		</div>
-	{/if}
-
-	<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-2">
-		{#each LEYENDA as entrada (entrada.label)}
-			<span class="flex items-center gap-[0.4rem]">
-				<span class="inline-block h-[2px] w-[1.1rem] shrink-0" style="background: {entrada.color}"
-				></span>
-				<span class="text-[0.62rem] tracking-label text-text-muted uppercase">
-					{entrada.label}
-				</span>
-			</span>
-		{/each}
-		<div class="grow"></div>
-		<!--
-			Ícono distinto del de agrandar, aunque los dos hablen de tamaño: agrandar
-			cambia **la ventana** y encuadrar cambia **lo que se ve adentro**.
-		-->
-		<HudButton size="1" variant="ghost" onclick={() => mapa?.encuadrar()}>
-			<Icon name="arrows-out-cardinal" weight="bold" size="0.7rem" />
-			Encuadrar
-		</HudButton>
-	</div>
+	<GalaxyLegend paint={leyendaPintura} strokes={LEYENDA} />
 {/snippet}
 
 {#snippet fichaDelMapa()}
