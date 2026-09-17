@@ -190,6 +190,19 @@ export interface BaldosaModulo {
 }
 
 /** Un agente de la estación, listo para dibujar. */
+/**
+ * Lo que el piloto tiene con cada corporación y con cada facción, por código.
+ *
+ * Va como dos diccionarios y no como una lista porque quien lo consume pregunta
+ * siempre por uno: «¿cuánto tengo con ésta?». Lo que no está es cero —nadie
+ * empieza con una fila por cada corporación del sector—, y ésa es la razón de que
+ * el que lee use un valor por omisión en vez de asumir que la clave existe.
+ */
+export interface ReputacionDelPiloto {
+	readonly corporations: Readonly<Record<string, number>>;
+	readonly factions: Readonly<Record<string, number>>;
+}
+
 export interface FilaAgente {
 	readonly code: string;
 	readonly name: string;
@@ -1427,9 +1440,23 @@ export interface ConsultaUniverso {
  * unos cientos de sistemas pesa menos que una pantalla de mercado. El día que no
  * entre, el recorte natural es por región, no por cercanía.
  */
+export interface CorporacionEnElMapa {
+	readonly code: string;
+	readonly name: string;
+}
+
 export interface MapaGalaxia {
 	readonly systems: readonly NodoGalaxia[];
 	readonly links: readonly EnlaceGalaxia[];
+	/**
+	 * Las corporaciones que operan **al menos un puesto** del mapa, por nombre.
+	 *
+	 * Van acá y no se deducen de los sistemas porque el desplegable necesita el
+	 * nombre y el nodo guarda códigos. Y son sólo las que tienen algo: un filtro
+	 * que ofrece cuarenta opciones de las que treinta y cinco no encuentran nada
+	 * hace perder el tiempo siete veces de cada ocho.
+	 */
+	readonly corporations: readonly CorporacionEnElMapa[];
 	/** Qué tan grande es el mapa, en casillas, para encuadrar el dibujo. */
 	readonly radius: number;
 	/** Cuántos sistemas quedaron fuera del mapa por no llegar a la semilla. */
@@ -1500,6 +1527,8 @@ export interface ConsultaGalaxia {
 	readonly region: string;
 	readonly security: string;
 	readonly service: string;
+	/** Código de la corporación cuyos puestos se quieren ver, o vacío. */
+	readonly corporation: string;
 	readonly paint: string;
 	readonly territory: string;
 }
@@ -1566,6 +1595,13 @@ export interface NodoGalaxia {
 	 * pestaña Sistema una vez que llegaste.
 	 */
 	readonly services: readonly string[];
+	/**
+	 * Las corporaciones con un puesto en el sistema, por código.
+	 *
+	 * Códigos y no nombres porque es con lo que se filtra; el nombre para leer lo
+	 * pone el mapa una sola vez, en su propia lista.
+	 */
+	readonly corporations: readonly string[];
 	/** Cuántas salidas tiene. */
 	readonly gates: number;
 	/**

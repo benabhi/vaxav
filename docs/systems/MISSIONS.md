@@ -42,8 +42,15 @@ la de tener un número más en la ficha.
 
 ## La reputación
 
-Escala entera de **0 a 100**, sin decimales: dos pilotos nunca tienen que poder
-calcular distinto por un redondeo.
+Escala de **0 a 100**, **guardada en milésimas enteras**. Los decimales se ven —la
+pantalla dice `12,40`— pero adentro no hay un solo número con coma flotante: dos
+pilotos nunca tienen que poder calcular distinto por un redondeo, que es la misma
+razón por la que los créditos son enteros.
+
+Hay decimales porque **hacen falta**. Lo que se gana es una fracción de lo que
+falta, así que cerca del último escalón una misión mueve dos décimas de punto: con
+una escala entera eso se redondearía a cero y la escalera se moriría justo donde
+tenía que ponerse interesante.
 
 | Escalón     | Reputación | Abre      |
 | ----------- | ---------- | --------- |
@@ -56,16 +63,57 @@ calcular distinto por un redondeo.
 Son **datos de balance**: los números se van a mover cuando haya misiones que los
 pongan a prueba, y moverlos tiene que ser cambiar esa tabla y nada más.
 
+### Cuánto cuesta subir
+
+**Se gana una fracción de lo que falta, no una cantidad fija**, como en EVE:
+
+```
+ganancia = (100 − actual) × 0,25 % × nivel de la misión
+```
+
+Es lo que hace que el sistema aguante un juego largo sin números gigantes. El
+primer punto sale casi gratis; el tramo de Aliado a Leal cuesta cinco veces más; y
+**nunca se llega a cien**. Un tope que se alcanza deja de significar algo, una
+asíntota no.
+
+De cero a Leal con una corporación son **doscientas veinticinco misiones**,
+subiendo de nivel al tocar cada escalón:
+
+| Tramo                  | Con misiones de | Misiones | Acumulado |
+| ---------------------- | --------------- | -------- | --------- |
+| Desconocido → Conocido | Nivel I         | 43       | 43        |
+| Conocido → Confiable   | Nivel II        | 36       | 79        |
+| Confiable → Aliado     | Nivel III       | 54       | 133       |
+| Aliado → Leal          | Nivel IV        | 92       | 225       |
+
+Cada tramo es del orden del anterior y el último es el doble que el primero:
+ninguno es un muro, y el final se siente como un final. La constante —veinticinco
+diezmilésimas por nivel— es un dato de balance más, y un test recorre las
+doscientas veinticinco para que moverla sea una decisión y no un descuido.
+
 ### Se sube con tres cosas a la vez
 
 Terminar una misión sube la reputación con **el agente que la dio, su corporación
-y la facción de esa corporación**.
+y la facción de esa corporación**. La del agente se guarda para cuando tenga algo
+que ofrecer; **las otras dos abren trabajo, y son dos escaleras distintas**.
 
-**Por ahora sólo la de facción abre misiones.** Las otras dos se guardan para
-cuando haya algo que quieran comprar: precios distintos en un mercado, acceso a
-una estación cerrada, un contrato que no se publica. Definir tres monedas de
-confianza y usar una sola es prematuro; definir una sola y necesitar tres después
-es peor.
+| Escalera           | Qué abre                                                       | Qué cuesta           |
+| ------------------ | -------------------------------------------------------------- | -------------------- |
+| **La corporación** | Los agentes **de esa corporación**                             | Lo que dice la tabla |
+| **La facción**     | Ese nivel en **todas** las corporaciones que llevan su bandera | Mucho más            |
+
+Al agente le alcanza con que **una de las dos** llegue: vale la que esté más
+arriba, y no se suman. Sumarlas haría que ninguna significara nada por sí sola —dos
+escalones a medio subir no hacen uno entero—.
+
+Que sean dos es lo que convierte a la reputación en una decisión en vez de una
+barra que sube. La de la corporación es la barata y hace que **elegir para quién
+trabajar importe**; la de la facción es el atajo del que ya se ganó el nombre en
+todo el sector, y por eso cuesta lo que cuesta.
+
+Y abre lo que abre **y nada más**: en Puerto Ánfora hay una agente de la Extractora
+Anillo, que es concorde, sentada en un puerto del Dominio. Con el Dominio al tope,
+ella sigue sin atender.
 
 ### Sin bandera no hay papeles
 

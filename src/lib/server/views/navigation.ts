@@ -40,7 +40,7 @@ import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
-import { MIN_REPUTATION, canBeHired, requiredReputation } from '$lib/game/reputation';
+import { canBeHired, requiredReputation } from '$lib/game/reputation';
 import {
 	SECURITY_LEVELS,
 	SERVICES,
@@ -80,6 +80,7 @@ import type {
 	Lectura,
 	Palanca,
 	Procedencia,
+	ReputacionDelPiloto,
 	PuntaTramo,
 	SalidaPuerta,
 	Tramo,
@@ -93,11 +94,13 @@ import type {
 } from '$lib/tipos';
 
 /**
- * La reputación del piloto con cada facción todavía no se guarda: la escriben
- * las misiones, que llegan en F9. Hasta entonces todos empiezan de cero, y la
- * pantalla muestra qué agentes se abren con eso y cuáles no.
+ * Un piloto del que no se sabe nada todavía.
+ *
+ * Lo que no está en el diccionario es cero, así que esto no es un caso especial:
+ * es el mismo camino con el diccionario vacío. Sirve de valor por omisión para
+ * los tests y para cualquier pantalla que todavía no cargue la reputación.
  */
-export const PILOT_REPUTATION = MIN_REPUTATION;
+export const SIN_REPUTACION: ReputacionDelPiloto = { corporations: {}, factions: {} };
 
 /** Nombre de la facción dueña, o el rótulo de las que no tienen bandera. */
 function factionName(code: string): string {
@@ -131,12 +134,15 @@ export function buildModuleTiles(
  */
 export function buildAgentRows(
 	agents: readonly AgentInfo[],
-	reputation: number = PILOT_REPUTATION
+	reputation: ReputacionDelPiloto = SIN_REPUTACION
 ): readonly FilaAgente[] {
 	return agents.map(({ agent, corporation }) => {
 		const faction = corporation.faction;
 		const name = faction ? factionName(faction) : 'Sin bandera';
 		const needed = requiredReputation(agent.level, faction);
+		// Las dos escaleras que pueden abrirlo: la suya y la de su bandera.
+		const suya = reputation.corporations[corporation.code] ?? 0;
+		const deLaBandera = faction ? (reputation.factions[faction] ?? 0) : 0;
 		return {
 			code: agent.code,
 			name: agent.name,
@@ -147,8 +153,10 @@ export function buildAgentRows(
 			portrait: portraitFor(agent.code, agent.appearance),
 			level: roman(agent.level),
 			description: agent.description,
-			open: canBeHired(agent.level, faction, reputation),
-			requirement: `Requiere ${needed} de reputación con ${name}`
+			open: canBeHired(agent.level, faction, suya, deLaBandera),
+			// Las dos puertas, dichas: con la corporación alcanza para los suyos, y
+			// con la bandera se abren los de todas las corporaciones que la llevan.
+			requirement: `Requiere ${needed} de reputación con ${corporation.name} o con ${name}`
 		};
 	});
 }
@@ -855,6 +863,7 @@ export function readGalaxyQuery(params: URLSearchParams): ConsultaGalaxia {
 		search: (params.get('buscar') ?? '').trim().slice(0, 60),
 		faction: params.get('faccion') ?? '',
 		region: params.get('region') ?? '',
+		corporation: params.get('corporacion') ?? '',
 		security: SECURITY_LEVELS.includes(seguridad as SecurityLevel) ? seguridad : '',
 		service: SERVICE_ORDER.includes(servicio as StationServiceKind) ? servicio : '',
 		paint: GALAXY_PAINTS.includes(pintar as (typeof GALAXY_PAINTS)[number]) ? pintar : '',
@@ -872,8 +881,12 @@ export function readGalaxyQuery(params: URLSearchParams): ConsultaGalaxia {
  * desplegable en la pantalla, sin tocar nada más.
  *
  * Son **los del piloto y no los del constructor**: buscar, bandera, región,
- * cuánta ley hay y qué servicios ofrece. Ninguno pregunta por algo que no se
- * pueda mirar desde la cabina.
+ * cuánta ley hay, qué servicios ofrece y quién tiene puesto ahí. Ninguno
+ * pregunta por algo que no se pueda mirar desde la cabina.
+ *
+ * El de la corporación entra por la puerta de al lado: lo pone el botón «ver en
+ * el mapa» de la pestaña Corporación, que es el único lugar donde la pregunta
+ * «¿dónde está la mía?» ya está hecha.
  */
 const GALAXY_FILTERS: readonly ((nodo: NodoGalaxia, query: ConsultaGalaxia) => boolean)[] = [
 	(nodo, query) =>
@@ -884,7 +897,8 @@ const GALAXY_FILTERS: readonly ((nodo: NodoGalaxia, query: ConsultaGalaxia) => b
 		(query.faction === FREE_SPACE ? nodo.faction === '' : nodo.faction === query.faction),
 	(nodo, query) => !query.region || nodo.region === query.region,
 	(nodo, query) => !query.security || securityLevel(nodo.security) === query.security,
-	(nodo, query) => !query.service || nodo.services.includes(query.service)
+	(nodo, query) => !query.service || nodo.services.includes(query.service),
+	(nodo, query) => !query.corporation || nodo.corporations.includes(query.corporation)
 ];
 
 /**
