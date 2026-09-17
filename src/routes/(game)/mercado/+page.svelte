@@ -954,7 +954,7 @@
 			</div>
 
 			<div class="flex w-full flex-wrap items-center gap-3">
-				<Label>Dura</Label>
+				<Label>Duración</Label>
 				<select
 					bind:value={days}
 					aria-label="Cuánto dura la orden"
@@ -982,7 +982,7 @@
 				{/if}
 
 				{#if side === 'sell' && book}
-					<Label>Sale de</Label>
+					<Label>Origen</Label>
 					{#each [{ code: 'ship' as const, label: 'La nave', units: book.inShip }, { code: 'station' as const, label: 'Acá', units: book.inStation }] as origen (origen.code)}
 						<HudButton
 							size="2"

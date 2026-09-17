@@ -124,7 +124,7 @@
 		<span class="font-display text-[0.8rem] text-text-strong">{ficha.profession}</span>
 	</div>
 	<div class="flex flex-col items-start gap-1">
-		<Label>Dónde está</Label>
+		<Label>Ubicación</Label>
 		<span class="font-display text-[0.8rem] text-text-strong">
 			{ficha.location}{ficha.system ? ` · ${ficha.system}` : ''}
 		</span>
@@ -135,7 +135,7 @@
 		<span class="font-mono text-[0.9rem] text-data">{ficha.credits}</span>
 	</div>
 	<div class="flex flex-col items-start gap-1">
-		<Label>Piloto desde</Label>
+		<Label>Antigüedad</Label>
 		<span class="font-mono text-[0.85rem] text-text-body">{dia(ficha.createdAt)}</span>
 	</div>
 </div>

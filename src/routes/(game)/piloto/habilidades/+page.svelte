@@ -263,7 +263,7 @@
 							px-[0.9rem] py-[0.8rem]"
 					>
 						<div class="flex w-full flex-col gap-1">
-							<Label>Qué mejora</Label>
+							<Label>Mejora</Label>
 							<BodyText>{skill.governs}</BodyText>
 						</div>
 

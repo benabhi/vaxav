@@ -307,7 +307,7 @@
 				{@render lectura('Sistema', pilot.system || '—')}
 				{@render lectura('Créditos', pilot.creditsLabel)}
 				{@render lectura('Nave', pilot.ship?.name ?? 'Sin nave', !pilot.ship)}
-				{@render lectura('Piloto desde', desde)}
+				{@render lectura('Antigüedad', desde)}
 			</div>
 
 			<!--

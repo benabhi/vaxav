@@ -179,7 +179,7 @@
 				{/if}
 
 				<div class="flex flex-col items-start gap-1">
-					<Label>Tarda</Label>
+					<Label>Duración</Label>
 					<span class="font-mono text-[0.88rem] whitespace-nowrap text-accent-bright">
 						{place.leg.duration}
 					</span>
@@ -325,7 +325,7 @@
 								<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
 							</div>
 							<div class="flex flex-col items-start gap-1">
-								<Label>Tarda</Label>
+								<Label>Duración</Label>
 								<span class="font-mono text-[0.85rem] text-accent-bright">
 									{place.gate.duration}
 								</span>
@@ -426,12 +426,12 @@
 						</span>
 					</span>
 					<span class="flex items-baseline gap-2">
-						<Label>Tarda</Label>
+						<Label>Duración</Label>
 						<span class="font-mono text-[0.78rem] text-accent-bright">{place.field.duration}</span>
 					</span>
 					{#if place.field.regen}
 						<span class="flex items-baseline gap-2">
-							<Label>Repone</Label>
+							<Label>Reposición</Label>
 							<span class="font-mono text-[0.78rem] text-data">{place.field.regen}</span>
 						</span>
 					{/if}
@@ -484,7 +484,7 @@
 								<div class="grow"></div>
 								{#if roca.remaining}
 									<span class="flex shrink-0 items-baseline gap-2">
-										<Label>Queda</Label>
+										<Label>Restante</Label>
 										<span class="font-mono text-[0.78rem] text-accent-bright">{roca.remaining}</span
 										>
 									</span>
@@ -503,17 +503,17 @@
 									<span class="text-1 text-warning">{roca.blocked}</span>
 								{:else}
 									<span class="flex items-baseline gap-2">
-										<Label>Extraés</Label>
+										<Label>Extracción</Label>
 										<span class="font-mono text-[0.8rem] text-data">
 											{roca.units} u · {roca.volume} m³
 										</span>
 									</span>
 									<span class="flex items-baseline gap-2">
-										<Label>Tarda</Label>
+										<Label>Duración</Label>
 										<span class="font-mono text-[0.8rem] text-accent-bright">{roca.duration}</span>
 									</span>
 									<span class="flex items-baseline gap-2">
-										<Label>Vale</Label>
+										<Label>Valor</Label>
 										<span class="font-mono text-[0.8rem] text-data">{roca.value} CR</span>
 									</span>
 								{/if}
@@ -636,7 +636,7 @@
 				</TitledPanel>
 
 				{#if place.isStation}
-					<TitledPanel title="Operada por" class="w-full">
+					<TitledPanel title="Operador" class="w-full">
 						<div class="flex w-full flex-col items-start gap-2">
 							<HudValue>{place.corporation}</HudValue>
 							<div class="flex flex-wrap items-center gap-[0.4rem]">

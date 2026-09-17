@@ -101,7 +101,7 @@
 			</span>
 			<div class="grow"></div>
 			<span class="flex items-center gap-2">
-				<span class="hidden xs:block"><Label>Firmás como</Label></span>
+				<span class="hidden xs:block"><Label>Sesión</Label></span>
 				<span class="font-mono text-[0.8rem] whitespace-nowrap text-text-strong">{callsign}</span>
 			</span>
 		</div>
