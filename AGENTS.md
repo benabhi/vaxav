@@ -14,6 +14,11 @@ botón, una que existe gracias a un módulo nombra ese módulo, y una que no se 
 hacer dice por qué no. Una cadena que sólo conoce el código se siente igual que el
 azar. Ver «La cadena» en `docs/DESIGN.md`.
 
+**El juego se escribe en una sola voz.** Castellano rioplatense con voseo, seco,
+sin jerga de oficio ni chistes: informa, no conversa. Cada clase de texto tiene su
+registro —aviso, rótulo, ambientación, informe— y no se mezclan. Ver «La voz» en
+`docs/DESIGN.md` antes de escribir una frase que vaya a pantalla.
+
 ## Entorno
 
 Proyecto SvelteKit plano, **sin Docker**. Hace falta **Node 22.12+, 24 o 26**: la

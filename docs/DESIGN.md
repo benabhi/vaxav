@@ -191,6 +191,64 @@ El juego es de estilo viejo; **la página no**. Lo retro es la mecánica —text
 números, esperar—, no la ejecución: espaciado generoso, jerarquía clara, grilla
 responsiva, foco visible y contraste accesible.
 
+## La voz
+
+Vaxav es un juego **textual**: casi todo lo que el jugador recibe es una frase.
+La identidad visual está resuelta y escrita; la verbal no lo estaba, y eso deja
+que cada pantalla se escriba con el tono del día en que se hizo.
+
+**El castellano es rioplatense, y se trata de vos.** «Necesitás una nave»,
+«Ya estás ahí», «Escribí el motivo del ajuste». No es una licencia: es de dónde salió el
+juego, y mezclarlo con tuteo o con un neutro de doblaje suena a traducción.
+
+**El tono es seco.** El juego informa, no conversa ni hace chistes. No tiene
+personalidad propia ni le habla al jugador como si fueran amigos: es el panel de
+una nave, y un panel no bromea. Dos frases, misma información:
+
+| ✗                                                 | ✓                                                                           |
+| ------------------------------------------------- | --------------------------------------------------------------------------- |
+| «Escaneala antes de picarla: no sabés qué tiene.» | «Hay que escanearla antes de extraer: sin lectura no se sabe qué contiene.» |
+
+Lo que sobra en la primera no es el voseo, es el codazo: la jerga de oficio
+(«picarla») y el tono de charla («no sabés qué tiene») fingen una complicidad que
+el juego no tiene con nadie.
+
+### Cada clase de texto tiene su registro
+
+| Clase                 | Quién habla          | Cómo suena                                                                         | Ejemplo                                                                   |
+| --------------------- | -------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Aviso del sistema** | La nave, el servidor | Seco, presente, sin adorno. Dice qué pasa o qué falta, nunca por qué te lo merecés | «Acá no hay nada que extraer.»                                            |
+| **Rótulo**            | La interfaz          | Un sustantivo. Ni una frase ni un verbo conjugado                                  | «Combustible», «Alcance», «Tarda»                                         |
+| **Ambientación**      | El mundo             | Acá sí hay prosa: describe cosas, no le habla al jugador                           | «Roca gris con vetas de hierro. El pan de todos los días en los Anillos.» |
+| **Informe**           | La bitácora          | Casi no es prosa: un sustantivo y filas de dato y cifra, con su unidad             | «Salto · Llegada: Puerta Sur · Combustible: −7 u»                         |
+
+La confusión más fácil es meter ambientación en un aviso. La descripción de un
+mineral puede tener imagen y ritmo porque describe **una cosa**; un aviso que se
+pone literario está adornando **un problema que el jugador tiene que resolver
+ahora**, y estorba.
+
+### Reglas que se aplican al escribir una frase
+
+- **Corto.** Un aviso es una oración. Si necesita dos, la segunda dice qué hacer.
+- **Decir qué falta, no qué salió mal.** «Necesitás una nave para saltar» sirve;
+  «Error: nave no encontrada» no le dice a nadie qué hacer después.
+- **Sin jerga de oficio ni guiños.** Si una palabra sólo la entiende quien ya
+  juega, no va en un aviso. En una descripción de ambientación, sí.
+- **Sin signos de exclamación, sin emoji, sin mayúsculas para gritar.** El énfasis
+  lo pone la tipografía, que para eso está diseñada.
+- **Sin disculpas ni cortesías de formulario.** Nada de «lo sentimos», «por
+  favor», «¡ups!». El juego no se disculpa: informa.
+- **El mismo hecho se dice con las mismas palabras en todos lados.** Si el botón
+  apagado y el rechazo del servidor explican lo mismo, explican lo mismo con la
+  misma frase, que es la otra cara de
+  [«la cadena se muestra»](#la-cadena-se-muestra-o-no-existe).
+- **Nada de jerga de programación en pantalla.** Ni códigos, ni nombres de
+  tablas, ni «null». Eso vive en el registro, no en la cara del jugador.
+
+**Y nada de anunciar el futuro.** Un texto que dice «próximamente» o «en
+desarrollo» es el mismo cartel de fase que ya sacamos de la interfaz, escrito con
+palabras en vez de con un panel.
+
 ## Glosario inicial
 
 - **Piloto** — la cuenta del jugador. Tiene nombre, facción, créditos,

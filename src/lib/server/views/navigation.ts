@@ -532,7 +532,7 @@ function buildBelt(
 				// leer para saber qué hacer.
 				blocked: identificada
 					? orderBlocked || orden?.blocked || ''
-					: 'Escaneala antes de picarla: no sabés qué tiene.',
+					: 'Hay que escanearla antes de extraer: sin lectura no se sabe qué contiene.',
 				scanBlocked: orderBlocked || plan.blocked
 			};
 		})

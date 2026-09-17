@@ -419,7 +419,9 @@ export function startMining(db: Db, row: Pilot, asteroidId: number): PilotAction
 	// tiene, y encenderle el láser a una piedra desconocida es apostar. Es lo que
 	// le da trabajo al escáner.
 	if (!hasFreshSurvey(db, row.id, asteroidId)) {
-		throw new ActionError('Escaneá la roca antes de picarla: no sabés qué tiene.');
+		throw new ActionError(
+			'Hay que escanear la roca antes de extraer: sin lectura no se sabe qué contiene.'
+		);
 	}
 
 	const plan = miningPlan(db, row, asteroidId);

@@ -469,6 +469,9 @@ toca a la interfaz hacer con ella:
 - **La forma la decide el contenido**, no una plantilla: una estación se dibuja
   como un mosaico y un sistema como un árbol, porque son cosas distintas.
 - **Que funcione en un teléfono.** El Neocom plegado a íconos es justamente eso.
+- **Las frases se escriben con la voz del juego**: voseo rioplatense, seco, sin
+  jerga ni chistes, y cada clase de texto en su registro. Está entera en
+  [«La voz»](../DESIGN.md#la-voz).
 
 ## Por decidir
 
