@@ -84,6 +84,14 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/navegacion/sistema',
 				label: 'Sistema'
+			},
+			// Las tres pestañas son **tres acercamientos de lo mismo**, del más cerca
+			// al más lejos: el cuerpo donde estás parado, el sistema que lo contiene y
+			// la galaxia que contiene al sistema. Ése es el orden, y por eso Galaxia va
+			// última: nadie abre el mapa de la galaxia para saber si puede atracar.
+			{
+				route: '/navegacion/galaxia',
+				label: 'Galaxia'
 			}
 		]
 	},

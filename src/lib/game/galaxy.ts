@@ -157,3 +157,40 @@ export function hexCorners(center: Point, size: number): readonly Point[] {
 		return { x: center.x + size * Math.cos(angulo), y: center.y + size * Math.sin(angulo) };
 	});
 }
+
+/**
+ * A cuántos saltos queda cada sistema, caminando puertas.
+ *
+ * **Saltos y no distancia de casillas.** Dos sistemas pegados en el mapa pueden
+ * estar a seis puertas si no hay pasaje entre ellos, y dos que se ven lejísimos
+ * pueden estar a uno si los une un atajo. Lo que le importa a un piloto es cuántas
+ * veces tiene que saltar, no cuánto mide la línea.
+ *
+ * Es un recorrido en anchura sobre el grafo, así que el primer camino que llega es
+ * el más corto. Devuelve sólo lo alcanzable: lo que no está en el resultado no se
+ * puede alcanzar desde ahí, que es distinto de estar a muchos saltos.
+ *
+ * Puro y sobre una lista de adyacencia: quién arma esa lista —la base, un plano,
+ * un test— no es asunto de esta cuenta.
+ */
+export function hopsFrom<T extends string | number>(
+	neighbours: ReadonlyMap<T, readonly T[]>,
+	start: T
+): Map<T, number> {
+	const saltos = new Map<T, number>([[start, 0]]);
+	let frente: T[] = [start];
+
+	while (frente.length > 0) {
+		const siguiente: T[] = [];
+		for (const actual of frente) {
+			for (const vecino of neighbours.get(actual) ?? []) {
+				if (saltos.has(vecino)) continue;
+				saltos.set(vecino, saltos.get(actual)! + 1);
+				siguiente.push(vecino);
+			}
+		}
+		frente = siguiente;
+	}
+
+	return saltos;
+}

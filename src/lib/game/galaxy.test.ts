@@ -16,6 +16,7 @@ import {
 	hexDistance,
 	hexToPixel,
 	isValidHex,
+	hopsFrom,
 	neighbourOf,
 	sameHex,
 	SIDE_BEARINGS
@@ -147,5 +148,46 @@ describe('el dibujo', () => {
 
 		expect(vertices).toHaveLength(6);
 		for (const vertice of vertices) expect(Math.hypot(vertice.x, vertice.y)).toBeCloseTo(10);
+	});
+});
+
+describe('a cuántos saltos queda cada sistema', () => {
+	/** Una galaxia de juguete: A—B—C, y D colgando de B. */
+	const grafo = new Map<string, string[]>([
+		['a', ['b']],
+		['b', ['a', 'c', 'd']],
+		['c', ['b']],
+		['d', ['b']]
+	]);
+
+	it('cuenta puertas, no casillas', () => {
+		const desde = hopsFrom(grafo, 'a');
+
+		expect(desde.get('a')).toBe(0);
+		expect(desde.get('b')).toBe(1);
+		expect(desde.get('c')).toBe(2);
+		expect(desde.get('d')).toBe(2);
+	});
+
+	it('el primero que llega es el más corto', () => {
+		// Con un atajo de A a C, ese camino gana sobre el de dos saltos.
+		const conAtajo = new Map(grafo);
+		conAtajo.set('a', ['b', 'c']);
+		conAtajo.set('c', ['b', 'a']);
+
+		expect(hopsFrom(conAtajo, 'a').get('c')).toBe(1);
+	});
+
+	it('lo que no llega no aparece', () => {
+		// **No estar es distinto de estar lejos.** Un ramal sin puertas hacia el resto
+		// no se alcanza nunca, y decir «a 99 saltos» sería mentir con un número.
+		const suelto = new Map(grafo);
+		suelto.set('z', []);
+
+		expect(hopsFrom(suelto, 'a').has('z')).toBe(false);
+	});
+
+	it('desde un sistema solo, sólo él mismo', () => {
+		expect([...hopsFrom(new Map([['a', []]]), 'a')]).toEqual([['a', 0]]);
 	});
 });
