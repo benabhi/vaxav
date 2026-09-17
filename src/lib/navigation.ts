@@ -113,6 +113,12 @@ export const MODULES: readonly Module[] = [
 				route: '/corporacion',
 				label: 'Ficha'
 			},
+			// Entre la ficha y los miembros a propósito: primero qué es, después qué
+			// piensa de vos, y al final quiénes son los otros.
+			{
+				route: '/corporacion/reputacion',
+				label: 'Reputación'
+			},
 			{
 				route: '/corporacion/miembros',
 				label: 'Miembros'

@@ -140,6 +140,26 @@ Lo que se recorta se asienta recortado. Un asiento de «+1,00» sobre un piloto 
 estaba a 0,30 del techo sería una mentira prolija, y además rompería la suma del
 libro contra el valor guardado.
 
+### Dónde se mira
+
+En **tres lugares distintos**, y cada uno contesta una pregunta que los otros no:
+
+| Dónde                    | Qué muestra                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| Corporación · Reputación | La escalera con **ésta**: dónde estás, qué abre el próximo escalón y el histórico de cómo llegaste |
+| Ubicación                | Cuál de los agentes **de esta estación** te atiende, y qué le falta al que no                      |
+| Piloto · Reputación      | El panorama: toda facción y toda corporación con la que tengas número                              |
+
+La tercera **todavía no existe**, y es a propósito: hoy sería una lista de una
+fila. Se gana el lugar cuando las misiones repartan números con varias, que es
+cuando aparece la pregunta que sólo ella contesta —«¿con quién me conviene seguir
+trabajando?»—. Va en Piloto y no en Corporación porque es del piloto: sobrevive a
+renunciar.
+
+Lo mismo con la **reputación con el agente**: el esquema le deja lugar y nadie la
+escribe. Cuando haga algo además de existir, su lugar es la ficha de la
+corporación, al lado de la gente que reparte trabajo.
+
 ### Todavía no la escribe nadie
 
 La máquina está puesta y **le falta la fuente**: la reputación la mueven las
