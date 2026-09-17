@@ -239,26 +239,30 @@
 	</div>
 
 	<!--
-		La leyenda. Dos figuras encimadas necesitan que se diga cuál es cuál una
-		vez; sin esto, el punteado cian es un adorno.
+		La leyenda. Dos figuras encimadas necesitan que se diga cuál es cuál una vez;
+		sin esto, el punteado cian es un adorno.
 
-		**Con una sola capa no va.** Una leyenda que explica lo único que hay en
-		pantalla no desambigua nada: ocupa un renglón para repetir lo que ya se ve.
+		**Se muestra sólo la de la capa dibujada, pero el renglón queda siempre.**
+		Sacarla entera al quedar una sola capa hacía que el dibujo saltara al
+		cambiar de vista, y con el interruptor al lado la leyenda sigue teniendo qué
+		decir: cuál de las dos estás mirando.
 	-->
-	{#if layers === 'both'}
-		<div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+	<div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+		{#if muestraInvertido}
 			<span class="flex items-center gap-[0.4rem]">
 				<span class="h-0 w-[0.9rem] border-t-2 border-accent"></span>
 				<span class="font-display text-[0.6rem] tracking-label text-text-muted uppercase">
 					Invertido
 				</span>
 			</span>
+		{/if}
+		{#if muestraPozo}
 			<span class="flex items-center gap-[0.4rem]">
 				<span class="h-0 w-[0.9rem] border-t-2 border-dashed border-data"></span>
 				<span class="font-display text-[0.6rem] tracking-label text-text-muted uppercase">
 					En el pozo
 				</span>
 			</span>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>

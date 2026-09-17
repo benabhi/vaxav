@@ -418,9 +418,7 @@
 				te podés convertir— y para compararlas, que es de lo que se trata la
 				figura doble.
 
-				**Van arriba y no abajo.** Con una sola capa la leyenda del hexágono
-				desaparece, y con los botones debajo el que acabás de apretar se corre
-				bajo el dedo justo al apretarlo.
+				Van arriba del dibujo: un control se lee antes que lo que cambia.
 			-->
 			<div class="flex flex-wrap items-center justify-center gap-2">
 				{#each CAPAS as opcion (opcion.value)}

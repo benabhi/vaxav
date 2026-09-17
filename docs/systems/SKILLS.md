@@ -274,11 +274,12 @@ haciendo esa pregunta.
   dos figuras encimadas piden una leyenda y un segundo de lectura para contestar
   algo que ahí nadie preguntó. Ahí alcanza con quién es el piloto hoy.
 - **Agrandada van las dos, con un interruptor** para ver una, la otra o ambas.
-  Los botones van arriba del dibujo: con una sola capa la leyenda desaparece, y
-  abajo el botón recién apretado se corre bajo el dedo.
+  Los botones van arriba del dibujo: un control se lee antes que lo que cambia.
 
-Y **la leyenda sólo aparece con las dos capas**: una que explica lo único que hay
-en pantalla no desambigua nada, ocupa un renglón para repetir lo que ya se ve.
+La leyenda **muestra sólo la capa dibujada, pero su renglón queda siempre**.
+Sacarla entera al quedar una sola hacía que el dibujo saltara al cambiar de
+vista, y con el interruptor al lado sigue teniendo qué decir: cuál de las dos
+estás mirando.
 
 ## El IPP
 
