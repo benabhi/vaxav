@@ -28,6 +28,10 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import { kitSummary, professionIcon, skillsSummary } from '$lib/format';
 	import { FACTION_LIST, GOVERNED_SYSTEMS } from '$lib/game/factions';
+	import { corporationsOf } from '$lib/game/corporations';
+	import { corporationKindIcon, corporationKindLabel } from '$lib/format';
+	import Identicon from '$lib/components/game/Identicon.svelte';
+	import Icon from '$lib/components/Icon.svelte';
 	import { PLAYABLE_PROFESSIONS } from '$lib/game/professions';
 	import { LOGIN_ROUTE } from '$lib/routes';
 	import type { PageData } from './$types';
@@ -35,12 +39,13 @@
 	let { data }: { data: PageData } = $props();
 
 	/** Los pasos, en orden. El último es el resumen antes de firmar. */
-	const STEP_LABELS = ['Cuenta', 'Oficio', 'Origen', 'Confirmar'];
+	const STEP_LABELS = ['Cuenta', 'Oficio', 'Origen', 'Corporación', 'Confirmar'];
 
 	const ACCOUNT_STEP = 0;
 	const PROFESSION_STEP = 1;
 	const FACTION_STEP = 2;
-	const CONFIRM_STEP = 3;
+	const CORPORATION_STEP = 3;
+	const CONFIRM_STEP = 4;
 
 	let step = $state(ACCOUNT_STEP);
 	let error = $state('');
@@ -53,6 +58,7 @@
 	let confirmation = $state('');
 	let profession = $state('');
 	let faction = $state('');
+	let corporation = $state('');
 
 	// Se busca en la lista en vez de indexar el catálogo: acá el código puede
 	// estar vacío —todavía no se eligió— y una búsqueda lo resuelve sin hacerle
@@ -65,6 +71,32 @@
 	 */
 	const OFICIOS_EN_GRILLA = PLAYABLE_PROFESSIONS.length > 1 ? 'sm:grid-cols-2 lg:grid-cols-3' : '';
 	let chosenFaction = $derived(FACTION_LIST.find((item) => item.code === faction));
+
+	/**
+	 * Las corporaciones que reciben pilotos de ese origen.
+	 *
+	 * Salen del catálogo y no del servidor: son datos puros y el navegador puede
+	 * importarlos, así que pedírselos a un `load` sería un viaje para traer algo que
+	 * ya está del lado de acá.
+	 *
+	 * **Sólo las de su facción.** Alistarse en una del Dominio habiendo nacido en el
+	 * Pacto no es una elección interesante: es una contradicción, y el servicio la
+	 * rechaza igual.
+	 */
+	let corporationOptions = $derived(faction ? corporationsOf(faction) : []);
+	let chosenCorporation = $derived(corporationOptions.find((item) => item.code === corporation));
+
+	/**
+	 * Cambiar de origen borra la corporación elegida.
+	 *
+	 * Sin esto, volver atrás y elegir otra facción dejaría puesta una corporación
+	 * que ya no pertenece a ninguna de las ofrecidas, y el rechazo llegaría recién
+	 * al final, con el formulario entero cargado.
+	 */
+	function chooseFactionAndReset(code: string) {
+		if (code !== faction) corporation = '';
+		chooseFaction(code);
+	}
 	let professionDetail = $derived(profession ? skillsSummary(profession) : '');
 
 	let isFirstStep = $derived(step <= ACCOUNT_STEP);
@@ -94,6 +126,10 @@
 		}
 		if (step === FACTION_STEP && !faction) {
 			error = 'Elegí de dónde venís.';
+			return;
+		}
+		if (step === CORPORATION_STEP && !corporation) {
+			error = 'Elegí en qué corporación te alistás.';
 			return;
 		}
 		error = '';
@@ -190,8 +226,55 @@
 									selected={faction === item.code}
 									pilots={data.factionPilots[item.code] ?? 0}
 									systems={GOVERNED_SYSTEMS}
-									onChoose={() => chooseFaction(item.code)}
+									onChoose={() => chooseFactionAndReset(item.code)}
 								/>
+							{/each}
+						</div>
+					</AuthPanel>
+				{:else if step === CORPORATION_STEP}
+					<AuthPanel
+						title="La corporación"
+						subtitle="Nadie vuela solo del todo. La corporación es quien te da trabajo y a quien le rendís cuentas: elegí por el rubro, que es lo que dice qué clase de encargos vas a recibir. Se puede cambiar más adelante."
+					>
+						<div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+							{#each corporationOptions as item (item.code)}
+								<!--
+									Cada una con su sello, que sale de su nombre: es lo que hace que
+									once opciones se distingan de un vistazo en vez de ser once
+									párrafos.
+								-->
+								<button
+									type="button"
+									class="flex cursor-pointer flex-col items-start gap-2 border p-3 text-left
+										transition-colors
+										{corporation === item.code
+										? 'border-accent bg-surface-strong'
+										: 'border-border-soft hover:border-border hover:bg-surface'}"
+									onclick={() => {
+										corporation = item.code;
+										error = '';
+									}}
+								>
+									<div class="flex w-full items-center gap-3">
+										<Identicon name={item.name} size="2.75rem" />
+										<div class="flex min-w-0 flex-col">
+											<span
+												class="truncate font-display text-[0.85rem] font-bold tracking-display
+													text-text-strong uppercase"
+											>
+												{item.name}
+											</span>
+											<span
+												class="flex items-center gap-[0.3rem] text-[0.7rem] tracking-label
+													text-accent uppercase"
+											>
+												<Icon name={corporationKindIcon(item.kind)} weight="bold" size="0.7rem" />
+												{corporationKindLabel(item.kind)}
+											</span>
+										</div>
+									</div>
+									<p class="text-1 text-text-muted">{item.description}</p>
+								</button>
 							{/each}
 						</div>
 					</AuthPanel>
@@ -211,6 +294,11 @@
 										'Estación',
 										chosenFaction?.startingStationName ?? '',
 										FACTION_STEP
+									)}
+									{@render summaryRow(
+										'Corporación',
+										chosenCorporation?.name ?? '',
+										CORPORATION_STEP
 									)}
 								</div>
 							</Panel>
@@ -275,6 +363,7 @@
 					que no abre un hueco entre el paso y el aviso.
 				-->
 				{#if step !== ACCOUNT_STEP}
+					<input type="hidden" name="corporacion" value={corporation} />
 					<input type="hidden" name="callsign" value={callsign} />
 					<input type="hidden" name="email" value={email} />
 					<input type="hidden" name="password" value={password} />

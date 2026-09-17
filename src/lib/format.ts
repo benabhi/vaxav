@@ -263,6 +263,28 @@ export function securityLabel(level: SecurityLevel): string {
 	return SECURITY[level] ?? level;
 }
 
+/**
+ * El ícono de cada rubro.
+ *
+ * Una tabla y no un `switch` por el mismo motivo que la de los servicios: agregar
+ * un rubro tiene que ser agregar una fila. El rubro es lo que dice de un vistazo
+ * qué clase de trabajo reparte una corporación, y en una lista de treinta el ícono
+ * se lee antes que la palabra.
+ */
+const CORPORATION_ICONS: Record<CorporationKind, IconName> = {
+	mining: 'mountains',
+	industry: 'factory',
+	trade: 'storefront',
+	exploration: 'compass',
+	security: 'shield',
+	logistics: 'truck'
+};
+
+/** A qué se dedica una corporación, en un ícono. */
+export function corporationKindIcon(kind: CorporationKind): IconName {
+	return CORPORATION_ICONS[kind] ?? 'buildings';
+}
+
 /** A qué se dedica una corporación, en palabras. */
 export function corporationKindLabel(kind: CorporationKind): string {
 	return CORPORATION_KINDS[kind] ?? kind;

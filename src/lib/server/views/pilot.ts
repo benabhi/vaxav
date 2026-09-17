@@ -8,7 +8,7 @@
 
 import { portraitVersion } from '../services/portraits';
 import { eq } from 'drizzle-orm';
-import { body, system, type Pilot } from '../db/schema';
+import { body, corporation, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
@@ -74,6 +74,17 @@ export function creditsLabel(credits: number): string {
 }
 
 /** Dónde está el piloto: estación y sistema, de mayor a menor detalle. */
+/**
+ * El nombre de su corporación, o vacío si no pertenece a ninguna.
+ *
+ * Una consulta por credencial, y sólo cuando hay a quién preguntarle: un
+ * independiente no cuesta un viaje a la base.
+ */
+function corporationName(db: Db, id: number | null): string {
+	if (id === null) return '';
+	return db.select().from(corporation).where(eq(corporation.id, id)).get()?.name ?? '';
+}
+
 export function locationLabel(station: string, systemName: string): string {
 	if (station && systemName) return `${station} · ${systemName}`;
 	return station || systemName;
@@ -137,9 +148,10 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		locationLabel: locationLabel(station, systemName),
 		families: buildFamilyXp(xp, pozos),
 		since: row.createdAt.getTime(),
-		// Las corporaciones de jugadores llegan en F12: hoy no hay ninguna a la
-		// que pertenecer, y decirlo es mejor que esconder el renglón.
-		corporation: '',
+		// A quién le rinde cuentas. **Vacío quiere decir independiente**, que es un
+		// estado legítimo: la credencial lo dice con esa palabra en vez de dejar el
+		// renglón en blanco.
+		corporation: corporationName(db, row.corporationId),
 		statusLabel: ahora.inTransit ? 'En tránsito' : 'Atracado',
 		inTransit: ahora.inTransit,
 		ship

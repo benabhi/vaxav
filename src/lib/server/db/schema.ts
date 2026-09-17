@@ -24,13 +24,8 @@ import {
 import { ACTION_KINDS } from '$lib/game/actions';
 import { CONTAINER_KINDS } from '$lib/game/items';
 import { APPEARANCES, MISSION_KINDS } from '$lib/game/agents';
-import {
-	BODY_KINDS,
-	CORPORATION_KINDS,
-	GATE_BEARINGS,
-	GOVERNMENTS,
-	STATION_SERVICES
-} from '$lib/game/universe';
+import { BODY_KINDS, GATE_BEARINGS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
+import { CORPORATION_KINDS } from '$lib/game/corporations';
 import { SANCTION_KINDS } from '$lib/sanctions';
 
 /** Ahora, en segundos desde la época. */
@@ -70,13 +65,27 @@ export const pilot = sqliteTable(
 			.notNull()
 			.references(() => body.id),
 
+		/**
+		 * A qué corporación pertenece, o `null` si no pertenece a ninguna.
+		 *
+		 * **Nulo es un estado legítimo y no un dato que falte**: un piloto puede
+		 * renunciar y quedarse por su cuenta, y el día que existan las corporaciones
+		 * de jugadores va a haber gente entre una y otra. La pantalla lo dice como
+		 * «independiente», que es lo que significa.
+		 *
+		 * Apunta a la misma tabla que las del mundo: una corporación de jugadores es
+		 * una fila más, así que afiliarse a una o a otra es la misma columna.
+		 */
+		corporationId: integer('corporation_id').references(() => corporation.id),
+
 		credits: integer('credits').notNull().default(0),
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
 	},
 	(table) => [
 		uniqueIndex('pilot_callsign_idx').on(table.callsign),
 		uniqueIndex('pilot_email_idx').on(table.email),
-		index('pilot_location_idx').on(table.locationId)
+		index('pilot_location_idx').on(table.locationId),
+		index('pilot_corporation_idx').on(table.corporationId)
 	]
 );
 
