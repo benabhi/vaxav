@@ -213,6 +213,15 @@ la siguiente:
   entre origen y destino animada y de otro color; es la base de lo que va a
   necesitar el autopiloto para mostrar un recorrido de varios saltos. Y en el
   árbol del sistema, el cuerpo de destino destacado mientras se va hacia él.
+- **Cada ubicación visitable con identidad propia.** La de viaje ya la tiene —la
+  banda con la nave avanzando—, y falta que la tengan las otras: una puerta, una
+  estación, un cinturón y un planeta no pueden verse como la misma pantalla con
+  otro texto. Cada una con su dibujo, como toda figura del juego: hecho a mano y
+  sin librerías.
+- **Y después, `Piloto · Reputación`.** La pestaña donde se ve el panorama
+  completo: toda facción, corporación y agente con el que haya número. Va en
+  Piloto porque es del piloto y sobrevive a renunciar, y va **después** de lo de
+  arriba. Ver «Dónde se mira» en [misiones](systems/MISSIONS.md).
 - **La ficha de tránsito tiene que variar según a dónde se va.** Hoy cuenta igual
   un salto a otro sistema, un viaje a un cinturón y uno a una estación, y no son
   el mismo viaje.

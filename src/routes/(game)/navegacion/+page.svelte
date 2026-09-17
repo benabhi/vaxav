@@ -27,7 +27,6 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
-	import type { PuntaTramo } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
