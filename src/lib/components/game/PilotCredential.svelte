@@ -30,12 +30,12 @@
 	import FloatingPanel from '../cards/FloatingPanel.svelte';
 	import Popover from '../ui/Popover.svelte';
 	import Identicon from './Identicon.svelte';
-	import PortraitPicker from './PortraitPicker.svelte';
 	import SkillHexagon from './SkillHexagon.svelte';
+	import SealHint from './SealHint.svelte';
+	import SegmentBar from '../meters/SegmentBar.svelte';
 	import HudButton from '../buttons/HudButton.svelte';
 	import type { CapasHexagono } from './SkillHexagon.svelte';
 	import { factionCrest } from '$lib/format';
-	import { PORTRAIT_ASPECT } from '$lib/game/portraits';
 	import type { PilotoConectado } from '$lib/tipos';
 
 	/**
@@ -167,32 +167,29 @@
 	-->
 	<div class="relative z-[1] flex w-full flex-col items-stretch gap-4 p-4 md:flex-row md:gap-5">
 		<!--
-			La foto. Proporción de carnet y `cover`, que es la misma con la que se
-			guarda: recortada una vez, al subirla, para que se vea igual en todas
-			partes.
-		-->
-		<div class="relative shrink-0 self-center md:self-stretch">
-			<div
-				class="relative h-full w-[9rem] overflow-hidden border border-border bg-well xs:w-[11rem]
-					md:w-[10rem] lg:w-[11.5rem]"
-				style="aspect-ratio: {PORTRAIT_ASPECT}"
-			>
-				{#if pilot.portrait}
-					<img
-						src={pilot.portrait}
-						alt="Retrato de {pilot.callsign}"
-						class="h-full w-full object-cover"
-					/>
-				{:else}
-					<!--
-						Sin foto va **su sello**, no una silueta gris.
+			**El sello, y no una foto.** Que cada piloto subiera la suya sonaba bien y
+			resolvía poco: el que no subía ninguna quedaba con una silueta gris igual a
+			las otras mil, y el que subía una traía una imagen de afuera al medio de un
+			HUD que es todo trazo fino. El sello sale del distintivo, así que **desde el
+			primer segundo la credencial muestra algo que es suyo y de nadie más**, y se
+			ve igual en la ficha, en el listado de miembros y en el chat.
 
-						La silueta decía «acá falta algo» y no decía nada más: todas iguales, la
-						del piloto y la de los otros mil. El sello sale del distintivo, así que
-						desde el primer segundo la credencial muestra algo que es suyo y de
-						nadie más, y el que no quiera subir foto no queda con un hueco.
-					-->
-					<div class="flex h-full w-full items-center justify-center">
+			**El marco es cuadrado y no de carnet.** La proporción alta venía de que
+			adentro iba una foto; con un sello cuadrado dejaba dos franjas muertas
+			arriba y abajo, y en un teléfono —donde el marco va arriba de todo y a lo
+			ancho— eso era media pantalla de nada. Cuadrado, el sello ocupa lo que
+			ocupa y la credencial arranca antes.
+		-->
+		<div
+			class="flex shrink-0 flex-col items-center gap-3 self-center
+				md:w-[9.5rem] md:self-start lg:w-[11rem]"
+		>
+			<div class="relative">
+				<div
+					class="relative aspect-square w-[7.5rem] overflow-hidden border border-border bg-well
+						xs:w-[9rem] md:w-[9.5rem] lg:w-[11rem]"
+				>
+					<div class="flex h-full w-full items-center justify-center p-2">
 						<Identicon
 							name={pilot.callsign}
 							family="piloto"
@@ -200,16 +197,70 @@
 							title="Sello de {pilot.callsign}"
 						/>
 					</div>
-				{/if}
 
-				<PortraitPicker hasPortrait={pilot.portrait !== ''} />
+					<!--
+						Un dibujo que aparece solo y no se puede tocar necesita decir de dónde
+						vino: sin esto el jugador se queda buscando dónde cambiarlo.
+					-->
+					<SealHint class="top-[0.4rem] right-[0.4rem]" />
+				</div>
+
+				<!-- Las escuadras del visor, fuera del recorte para que se vean enteras. -->
+				{@render escuadra('top-[-2px] left-[-2px] border-t-2 border-l-2')}
+				{@render escuadra('top-[-2px] right-[-2px] border-t-2 border-r-2')}
+				{@render escuadra('bottom-[-2px] left-[-2px] border-b-2 border-l-2')}
+				{@render escuadra('bottom-[-2px] right-[-2px] border-b-2 border-r-2')}
 			</div>
 
-			<!-- Las escuadras del visor, fuera del recorte para que se vean enteras. -->
-			{@render escuadra('top-[-2px] left-[-2px] border-t-2 border-l-2')}
-			{@render escuadra('top-[-2px] right-[-2px] border-t-2 border-r-2')}
-			{@render escuadra('bottom-[-2px] left-[-2px] border-b-2 border-l-2')}
-			{@render escuadra('bottom-[-2px] right-[-2px] border-b-2 border-r-2')}
+			<!--
+				El IPP, debajo del sello: es lo que llena el alto que el marco cuadrado
+				dejó libre, y está bien que sea eso lo que lo llene. El sello dice quién
+				sos y el índice qué tan lejos llegaste; juntos son la mitad de una
+				credencial.
+
+				**El rango se enciende cada vez más.** Un número que sube no se siente
+				como progreso; cruzar un umbral y pasar de Veterano a Experto, sí. La
+				cifra se queda en cian, que es el color de toda lectura del juego, y lo
+				que cambia es el nombre.
+			-->
+			<div class="flex w-full flex-col items-center gap-[0.35rem]">
+				<span class="flex items-center gap-[0.35rem]">
+					<Label>IPP</Label>
+					<Popover label="Qué es el IPP">
+						{#snippet trigger()}
+							<Icon
+								name="question"
+								weight="bold"
+								size="0.65rem"
+								class="text-text-muted transition-colors hover:text-accent-bright"
+							/>
+						{/snippet}
+						<FloatingPanel class="flex max-w-[20rem] flex-col gap-1 p-3">
+							<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+								Índice de Pericia del Piloto
+							</span>
+							<BodyText>
+								Toda la experiencia que tenés invertida en habilidades, sumada. Dice qué tan lejos
+								llegaste sin tener que leer el árbol entero, y sube sola cuando aprendés cualquier
+								cosa. Lo que está en el pozo sin gastar no cuenta: es potencial, no pericia.
+							</BodyText>
+						</FloatingPanel>
+					</Popover>
+				</span>
+
+				<span class="font-mono text-5 leading-none text-data">{pilot.rating.value}</span>
+				<span class="font-display text-1 tracking-label uppercase {intensidad}">
+					{pilot.rating.rank}
+				</span>
+				<SegmentBar
+					filled={pilot.rating.step + 1}
+					total={pilot.rating.steps}
+					class="w-full max-w-[9rem]"
+				/>
+				{#if pilot.rating.next}
+					<span class="text-[0.66rem] text-text-muted">{pilot.rating.next}</span>
+				{/if}
+			</div>
 		</div>
 
 		<!--
@@ -257,52 +308,6 @@
 				{@render lectura('Créditos', pilot.creditsLabel)}
 				{@render lectura('Nave', pilot.ship?.name ?? 'Sin nave', !pilot.ship)}
 				{@render lectura('Piloto desde', desde)}
-
-				<!--
-					El índice es una lectura más y no un bloque aparte: puesto debajo del
-					hexágono estiraba la credencial a lo alto para decir tres cosas cortas.
-
-					**El rango se enciende cada vez más.** Un número que sube no se siente
-					como progreso; cruzar un umbral y pasar de Veterano a Experto, sí. La
-					cifra se queda en cian, que es el color de toda lectura del juego, y lo
-					que cambia es el nombre.
-				-->
-				<div class="flex flex-col items-start gap-[0.15rem]">
-					<!--
-						Con su «?» al lado, como el casco de la nave: una sigla que nadie vio
-						antes necesita decir qué mide, y no hay lugar en la grilla para el
-						nombre entero.
-					-->
-					<span class="flex items-center gap-[0.35rem]">
-						<Label>IPP</Label>
-						<Popover label="Qué es el IPP">
-							{#snippet trigger()}
-								<Icon
-									name="question"
-									weight="bold"
-									size="0.65rem"
-									class="text-text-muted transition-colors hover:text-accent-bright"
-								/>
-							{/snippet}
-							<FloatingPanel class="flex max-w-[20rem] flex-col gap-1 p-3">
-								<span class="font-display text-1 tracking-label text-accent-dim uppercase">
-									Índice de Pericia del Piloto
-								</span>
-								<BodyText>
-									Toda la experiencia que tenés invertida en habilidades, sumada. Dice qué tan lejos
-									llegaste sin tener que leer el árbol entero, y sube sola cuando aprendés cualquier
-									cosa. Lo que está en el pozo sin gastar no cuenta: es potencial, no pericia.
-								</BodyText>
-							</FloatingPanel>
-						</Popover>
-					</span>
-					<span class="flex items-baseline gap-2">
-						<span class="font-mono text-[0.78rem] text-data">{pilot.rating.value}</span>
-						<span class="font-display text-[0.7rem] tracking-label uppercase {intensidad}">
-							{pilot.rating.rank}
-						</span>
-					</span>
-				</div>
 			</div>
 
 			<!--

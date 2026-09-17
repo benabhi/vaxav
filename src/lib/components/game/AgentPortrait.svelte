@@ -18,6 +18,7 @@
 -->
 <script lang="ts">
 	import Identicon from './Identicon.svelte';
+	import SealHint from './SealHint.svelte';
 
 	interface Props {
 		/** De quién es el sello. */
@@ -40,4 +41,5 @@
 		title="Sello de {name}"
 		class={open ? '' : 'opacity-45 saturate-[0.35]'}
 	/>
+	<SealHint />
 </div>

@@ -21,6 +21,7 @@
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import Identicon from '$lib/components/game/Identicon.svelte';
 	import CorporationChoice from '$lib/components/game/CorporationChoice.svelte';
+	import SealHint from '$lib/components/game/SealHint.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import FloatingPanel from '$lib/components/cards/FloatingPanel.svelte';
@@ -111,8 +112,9 @@
 		<div class="w-full min-w-0 lg:flex-[2_1_0]">
 			<TitledPanel title="Información" detail={corp.members} class="w-full">
 				<div class="flex w-full flex-col items-start gap-4 xs:flex-row">
-					<div class="w-[8rem] shrink-0 self-center xs:self-start">
+					<div class="relative w-[8rem] shrink-0 self-center xs:self-start">
 						<Identicon name={corp.name} size="100%" title="Sello de {corp.name}" />
+						<SealHint />
 					</div>
 
 					<div class="flex min-w-0 grow flex-col gap-3">

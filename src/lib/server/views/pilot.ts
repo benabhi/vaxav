@@ -6,7 +6,6 @@
  * sin levantar nada, igual que las reglas del juego.
  */
 
-import { portraitVersion } from '../services/portraits';
 import { eq } from 'drizzle-orm';
 import { body, corporation, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
@@ -128,11 +127,6 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 			}
 		: null;
 
-	// El retrato, si subió uno. La marca de tiempo va en la consulta porque el
-	// archivo se llama siempre igual: sin algo que cambie, el navegador se queda
-	// con el anterior en la caché y el jugador cree que la subida no funcionó.
-	const version = portraitVersion(row.id);
-
 	// El índice sale de lo que ya se calculó por rama: recorrer el árbol de nuevo
 	// sería recorrerlo dos veces para llegar al mismo número.
 	const familias = buildFamilyXp(xp, pozos);
@@ -142,7 +136,6 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 
 	return {
 		callsign: row.callsign,
-		portrait: version > 0 ? `/retratos/${row.id}?v=${version}` : '',
 		professionName: getProfession(row.profession).name,
 		factionName: faction.name,
 		factionCode: faction.code,
