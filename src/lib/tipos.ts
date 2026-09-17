@@ -6,6 +6,7 @@
  */
 
 import type { IconName } from '$lib/icons';
+import type { GateBearing } from '$lib/game/universe';
 
 /**
  * La orden que el piloto tiene en curso.
@@ -365,6 +366,19 @@ export interface Ubicacion {
 	readonly agents: readonly FilaAgente[];
 	readonly agentCount: string;
 	/**
+	 * Quién más está atracado acá.
+	 *
+	 * **Sólo en estaciones.** Una estación es un puerto: es pública, no se puede
+	 * atacar, y quien atraca acepta que lo vean. En espacio abierto la lista no
+	 * existe —habrá que escanear—, que es lo que hace que esconderse signifique
+	 * algo.
+	 */
+	readonly pilots: readonly PilotoAqui[];
+	/** «Tres pilotos», o vacío si no hay nadie ni es una estación. */
+	readonly pilotCount: string;
+	/** Cuántos quedaron sin listar, si son más de los que entran. */
+	readonly pilotsBeyond: number;
+	/**
 	 * Qué se puede extraer acá, si es un cinturón.
 	 *
 	 * Va en Ubicación y no en el árbol del sistema porque **minar es algo que se
@@ -376,6 +390,8 @@ export interface Ubicacion {
 	readonly asteroids: readonly Roca[];
 	/** Adónde lleva y qué cuesta, si es una puerta. */
 	readonly gate: SalidaPuerta | null;
+	/** El vecindario, si es un cuerpo que orbita: planeta, luna o estrella. */
+	readonly orbit: Orbita | null;
 	/** El tramo que está haciendo, si va en camino. */
 	readonly leg: Tramo | null;
 }
@@ -437,8 +453,24 @@ export interface PuntaTramo {
  * un juego de naves.
  */
 export interface SalidaPuerta {
+	/**
+	 * Por qué lado del hexágono se sale, y cómo se llama ese lado.
+	 *
+	 * **Es la identidad de la puerta**: la Noreste no es la Sur, y hasta que el
+	 * dibujo lo mostró eso vivía solamente en el nombre. Viaja el valor y su
+	 * rótulo porque la figura necesita el ángulo y la lista de al lado la palabra.
+	 */
+	readonly bearing: GateBearing;
+	readonly bearingLabel: string;
 	/** El sistema del otro lado, o vacío si todavía no lleva a ninguna parte. */
 	readonly destination: string;
+	/**
+	 * Si el paso está cerrado.
+	 *
+	 * Va aparte de `blocked` —que ya lo dice con palabras— porque el dibujo no
+	 * puede leer una frase: necesita saber si cruza el tajo o no.
+	 */
+	readonly closed: boolean;
 	/** La puerta gemela, que es donde se aparece. */
 	readonly arrival: string;
 	/** La distancia, ya escrita: `1,4 al`. */
@@ -640,6 +672,15 @@ export interface FilaCuerpo {
 	readonly services: readonly string[];
 	/** Marca dónde está parado el piloto ahora mismo. */
 	readonly isHere: boolean;
+	/**
+	 * Y adónde va, si está viajando.
+	 *
+	 * Aparte de `isHere` y no en su lugar: mientras la nave está en camino el
+	 * piloto **sigue teniendo guardado el cuerpo del que salió**, así que las dos
+	 * marcas conviven en el mismo árbol —de dónde saliste y adónde venís—, que es
+	 * justamente lo que hay que ver mientras se espera.
+	 */
+	readonly isDestination: boolean;
 }
 
 /** El sistema donde está el piloto, con todos sus cuerpos. */
@@ -667,6 +708,126 @@ export interface Sistema {
 	 * explicación tiene que estar donde está el botón.
 	 */
 	readonly travelSource: Procedencia;
+}
+
+/** Cuál de las tres bandejas se está mirando. */
+export type Buzon = 'recibidos' | 'enviados' | 'archivados';
+
+/** Una fila de una bandeja: lo que alcanza para decidir si abrirla o no. */
+export interface FilaMensaje {
+	readonly id: number;
+	readonly subject: string;
+	/** El otro: quién lo mandó, o a quién se lo mandaste. */
+	readonly counterpart: string;
+	/** Milisegundos desde la época, en UTC. */
+	readonly at: number;
+	/**
+	 * Si todavía no lo abriste.
+	 *
+	 * **Sólo puede ser cierto en Recibidos**: `readAt` dice cuándo lo abrió quien
+	 * lo recibió, así que del otro lado hablaría del otro y no de vos.
+	 */
+	readonly unread: boolean;
+	/** Si es el que está abierto al lado. */
+	readonly open: boolean;
+}
+
+/** El mensaje abierto, al lado de la lista. */
+export interface MensajeAbierto {
+	readonly id: number;
+	readonly subject: string;
+	readonly from: string;
+	readonly to: string;
+	readonly body: string;
+	readonly at: number;
+	/** Si lo mandaste vos. */
+	readonly mine: boolean;
+	/** Y si lo mandaste vos, si el otro ya lo abrió. */
+	readonly seen: boolean;
+	/** Si lo tenés guardado en archivados. */
+	readonly archived: boolean;
+}
+
+/**
+ * Una bandeja entera: la lista, lo abierto y por dónde va la paginación.
+ *
+ * Recibidos y enviados comparten esta forma porque **son la misma lista mirada
+ * desde el otro lado**. Lo que cambia viaja adentro —de qué lado está el otro,
+ * qué decir cuando no hay nada— en vez de partir la pantalla en dos.
+ */
+export interface Bandeja {
+	readonly box: Buzon;
+	/** La ruta de esta bandeja, para armar los enlaces. */
+	readonly base: string;
+	/**
+	 * Cómo se llama el panel de la lista.
+	 *
+	 * Viaja con el dato y no se decide en la pantalla: con dos bandejas un ternario
+	 * alcanzaba, con la tercera el ternario se olvidó de un caso y el panel de
+	 * Archivados se titulaba «Enviados». Una tabla no se olvida de una fila.
+	 */
+	readonly title: string;
+	/** Cómo se llama la columna del otro: «De» o «Para». */
+	readonly counterpartLabel: string;
+	/** Qué decir cuando no hay nada, que no es lo mismo en las dos. */
+	readonly empty: string;
+	readonly rows: readonly FilaMensaje[];
+	readonly open: MensajeAbierto | null;
+	readonly page: number;
+	readonly pages: number;
+	readonly total: number;
+	/** Cuántos sin abrir, que es el mismo número que enciende el Neocom. */
+	readonly unread: number;
+}
+
+/**
+ * Un piloto parado en el mismo lugar que vos.
+ *
+ * Lo justo para reconocerlo y para poder escribirle, que es lo único que se puede
+ * hacer con alguien hoy. Agregarlo a contactos y comerciar van a sumar campos
+ * acá cuando existan.
+ */
+export interface PilotoAqui {
+	readonly callsign: string;
+	/** La bandera, ya escrita, y su color. */
+	readonly faction: string;
+	readonly factionColor: string;
+	readonly profession: string;
+	/** La corporación a la que responde, o vacío si vuela por su cuenta. */
+	readonly corporation: string;
+}
+
+/** Un cuerpo del vecindario, con lo justo para ponerle un punto y un nombre. */
+export interface CuerpoVecino {
+	readonly name: string;
+	readonly icon: IconName;
+	/** Si ése sos vos. */
+	readonly here: boolean;
+}
+
+/**
+ * El vecindario de un cuerpo: alrededor de qué da vueltas y qué le da vueltas.
+ *
+ * **Es lo único que un planeta tiene para decir de sí mismo.** Una puerta tiene su
+ * salto y un cinturón sus rocas; un planeta no tiene verbos, tiene **lugar**: de
+ * quién cuelga, qué tan afuera está y qué le cuelga a él. Dicho con palabras son
+ * tres renglones iguales a los de cualquier otro cuerpo; dibujado, un planeta
+ * interior con tres lunas no se parece en nada a una luna pelada del borde.
+ *
+ * Sirve igual para los tres casos y por eso es uno solo: para un planeta el
+ * centro es su estrella, para una luna es su planeta, y para una estrella el
+ * centro es ella misma y el anillo son sus planetas.
+ */
+export interface Orbita {
+	/** Lo que está en el centro, y con qué ícono se dibuja. */
+	readonly center: string;
+	readonly centerIcon: IconName;
+	/** Si el centro sos vos, que es el caso de estar parado en una estrella. */
+	readonly centerIsHere: boolean;
+	/** Lo que da vueltas alrededor del centro, de más cerca a más lejos. */
+	readonly ring: readonly CuerpoVecino[];
+	/** Y lo que te da vueltas a vos. */
+	readonly satellites: readonly CuerpoVecino[];
 }
 
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */

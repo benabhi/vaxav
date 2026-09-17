@@ -412,13 +412,7 @@
 						Estás en la puerta: saltar
 					</HudLink>
 				{:else}
-					<HudButton
-						type="button"
-						variant="primary"
-						size="1"
-						disabled
-						class="mt-1 cursor-not-allowed opacity-45"
-					>
+					<HudButton type="button" variant="primary" size="1" disabled class="mt-1">
 						<Icon name="rocket-launch" weight="bold" size="0.7rem" />
 						Estás en la puerta: saltar
 					</HudButton>
@@ -447,7 +441,7 @@
 							size="1"
 							disabled={!puedeViajar}
 							onclick={abrir}
-							class="mt-1 {puedeViajar ? '' : 'cursor-not-allowed opacity-45'}"
+							class="mt-1"
 						>
 							<Icon name="rocket-launch" weight="bold" size="0.7rem" />
 							Viajar a {salida.gate}

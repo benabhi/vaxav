@@ -1491,6 +1491,61 @@ export const standingEntry = sqliteTable(
 	]
 );
 
+/**
+ * Un mensaje privado de un piloto a otro.
+ *
+ * **Es la única forma de hablarle a alguien que no está donde estás vos.** Vaxav
+ * es un juego de esperar: el otro no va a estar mirando la pantalla cuando vos
+ * escribís, así que lo que hace falta no es un chat sino algo que quede guardado
+ * hasta que lo abra.
+ *
+ * Los dos extremos son pilotos y no cuentas: en el sector te conoce tu piloto, y
+ * una cuenta con dos pilotos no es una sola persona a la que escribirle.
+ *
+ * `readAt` es lo que apaga el aviso del Neocom, igual que en la bitácora. Nulo
+ * quiere decir que todavía no lo abrió.
+ *
+ * **Una fila y no dos.** Un mensaje enviado y uno recibido son el mismo hecho
+ * mirado desde dos lados, y guardarlo dos veces es la manera segura de que un
+ * día digan cosas distintas. Las dos bandejas son dos consultas sobre esta tabla.
+ */
+export const message = sqliteTable(
+	'message',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		senderId: integer('sender_id')
+			.notNull()
+			.references(() => pilot.id),
+		recipientId: integer('recipient_id')
+			.notNull()
+			.references(() => pilot.id),
+
+		subject: text('subject').notNull(),
+		body: text('body').notNull(),
+
+		sentAt: integer('sent_at', { mode: 'timestamp' }).notNull().default(NOW),
+		/** Cuándo lo abrió quien lo recibió. Nulo mientras siga sin leer. */
+		readAt: integer('read_at', { mode: 'timestamp' }),
+
+		/**
+		 * Si cada lado lo guardó en archivados.
+		 *
+		 * **Dos banderas y no una**, porque la fila es una sola y los dos extremos
+		 * deciden por separado: que el que lo mandó lo saque de su bandeja no tiene
+		 * por qué sacarlo de la del otro. Archivar es mover de lugar y no borrar; lo
+		 * archivado sigue entero y se puede devolver.
+		 */
+		senderArchived: integer('sender_archived', { mode: 'boolean' }).notNull().default(false),
+		recipientArchived: integer('recipient_archived', { mode: 'boolean' }).notNull().default(false)
+	},
+	(table) => [
+		// Uno por bandeja: recibidos y enviados son dos consultas distintas sobre la
+		// misma tabla, y las dos ordenan por fecha.
+		index('message_recibidos_idx').on(table.recipientId, table.sentAt),
+		index('message_enviados_idx').on(table.senderId, table.sentAt)
+	]
+);
+
 // --- Tipos que usa el resto de la aplicación ---------------------------------
 
 export type Pilot = typeof pilot.$inferSelect;
@@ -1504,6 +1559,7 @@ export type Body = typeof body.$inferSelect;
 export type Corporation = typeof corporation.$inferSelect;
 export type Standing = typeof standing.$inferSelect;
 export type StandingEntry = typeof standingEntry.$inferSelect;
+export type Message = typeof message.$inferSelect;
 export type Station = typeof station.$inferSelect;
 export type StationService = typeof stationService.$inferSelect;
 export type Gate = typeof gate.$inferSelect;

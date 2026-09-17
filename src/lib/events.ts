@@ -180,6 +180,15 @@ export const EVENT_KINDS: readonly EventKind[] = [
 	}),
 
 	define(
+		'account.rushed',
+		'accounts',
+		'Orden terminada a mano',
+		'notable',
+		(payload) =>
+			`Se terminó al instante ${texto(payload, 'action')} de ${texto(payload, 'callsign')}.`
+	),
+
+	define(
 		'role.created',
 		'roles',
 		'Rol creado',

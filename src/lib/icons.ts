@@ -27,6 +27,8 @@ export const ICON_NAMES = [
 	'address-book',
 	'anchor',
 	'arrows-out',
+	'archive',
+	'arrow-arc-left',
 	'arrow-circle-right',
 	'arrows-out-cardinal',
 	'atom',

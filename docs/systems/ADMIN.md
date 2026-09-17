@@ -36,6 +36,7 @@ siempre el servidor.
 | **Pilotos**          | `pilots.read`       | Buscar cuentas y abrir su ficha                        |
 |                      | `pilots.edit`       | Cambiar los datos de una cuenta y lo que tiene         |
 |                      | `pilots.delete` ⚠   | Borrar una cuenta y todo lo que colgaba de ella        |
+|                      | `pilots.rush` ⚠     | Terminar al instante la orden en curso, sin esperar    |
 | **Universo**         | `universe.read`     | Abrir sistemas, cuerpos y estaciones                   |
 |                      | `universe.edit`     | Crear y editar sistemas, cuerpos, estaciones y puertas |
 |                      | `universe.delete` ⚠ | Eliminar sistemas o cuerpos, con lo que tengan encima  |
@@ -43,6 +44,30 @@ siempre el servidor.
 |                      | `roles.edit` ⚠      | Crear roles, cambiar permisos y asignarlos             |
 | **Vigilancia**       | `events.read`       | Leer el registro                                       |
 |                      | `stats.read`        | Mirar los números agregados del juego                  |
+
+### Terminar una orden, para probar
+
+`pilots.rush` es la única llave del catálogo que **no abre una herramienta del
+cuartel**: dibuja un botón en la barra de estado del juego, al lado de la barra
+de progreso, que termina la orden en curso al instante.
+
+Está para poder mirar pantallas sin esperar diez minutos a que llegue una nave, y
+tiene llave propia en vez de colarse con la de editar pilotos porque es una
+capacidad distinta —saltea el reloj, que es la moneda de este juego— y un permiso
+que hace dos cosas es uno que nadie puede dar a medias. Va marcada como peligrosa
+por lo mismo.
+
+**No resuelve nada por su cuenta.** Le corre el arranque hacia atrás a la orden y
+deja que la resuelva el camino de siempre, el que corre en `hooks` antes de cada
+`load`. Así el resultado es idéntico al de haber esperado —el mismo informe, la
+misma experiencia, el mismo movimiento— en vez de ser un segundo camino que hay
+que mantener al día y que el día que se desfase va a mentir justo cuando se lo
+esté usando para probar.
+
+El botón vive en la barra del juego y no en el cuartel porque se usa **mirando la
+pantalla que se está probando**: mandar a otra sección a saltear el viaje y
+volver es el camino largo de lo único que esto viene a acortar. Y deja constancia
+en el registro, como todo lo que hace una llave peligrosa.
 
 Las reglas del catálogo:
 
@@ -161,6 +186,7 @@ podría necesitar reconstruir después.
 | Cuentas   | `account.registered`       | neutral |
 |           | `account.password_changed` | notable |
 |           | `account.deleted`          | grave   |
+|           | `account.rushed`           | notable |
 | Roles     | `role.created`             | notable |
 |           | `role.updated`             | notable |
 |           | `role.deleted`             | grave   |

@@ -18,6 +18,7 @@
 -->
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { page as pagina } from '$app/state';
 	import Icon from '../Icon.svelte';
 	import ChargeBar from '../meters/ChargeBar.svelte';
 	import { remainingLabel } from '$lib/format';
@@ -25,9 +26,18 @@
 
 	interface Props {
 		action: AccionEnCurso | null;
+		/**
+		 * Si se dibuja el botón de terminar la orden al instante.
+		 *
+		 * Lo decide el servidor —mirando la llave `pilots.rush`— y no este
+		 * componente: que el botón no se dibuje no es la protección, la protección
+		 * está en el endpoint. Acá sólo se evita ofrecerle una puerta cerrada a
+		 * quien no puede abrirla.
+		 */
+		canRush?: boolean;
 	}
 
-	let { action }: Props = $props();
+	let { action, canRush = false }: Props = $props();
 
 	/** El reloj local. Avanza una vez por segundo mientras haya algo que contar. */
 	let ahora = $state(Date.now());
@@ -100,6 +110,34 @@
 			</div>
 			<ChargeBar {percent} />
 		</div>
+
+		<!--
+			**Terminar la orden ahora. Herramienta de pruebas, no del juego.**
+
+			Está acá y no en el cuartel porque se usa mirando la pantalla que se está
+			probando: mandar a otra sección a saltear diez minutos de viaje y volver
+			es el camino largo de lo único que esto viene a acortar.
+
+			No resuelve nada por su cuenta —le vence la orden y la resuelve el camino
+			de siempre—, así que el informe salta igual que si se hubiera esperado.
+			Ver `src/routes/(game)/terminar/+server.ts`.
+		-->
+		{#if canRush}
+			<form method="POST" action="/terminar" class="shrink-0">
+				<input type="hidden" name="volver" value={pagina.url.pathname + pagina.url.search} />
+				<button
+					type="submit"
+					title="Terminar la orden ahora · herramienta de pruebas"
+					class="flex h-[1.5rem] cursor-pointer items-center gap-[0.3rem] border border-dashed
+						border-border-soft bg-transparent px-[0.45rem] font-display text-[0.6rem]
+						tracking-label text-text-muted uppercase transition-colors hover:border-warning
+						hover:text-warning"
+				>
+					<Icon name="lightning" weight="bold" size="0.65rem" />
+					<span class="hidden md:inline">Terminar</span>
+				</button>
+			</form>
+		{/if}
 	</div>
 {:else}
 	<span

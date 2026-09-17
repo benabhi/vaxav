@@ -131,6 +131,39 @@ export const MODULES: readonly Module[] = [
 			}
 		]
 	},
+	/**
+	 * Mensajes.
+	 *
+	 * **Vuelve al Neocom después de haber estado afuera**, y vuelve ganado. Estuvo
+	 * declarado como pantalla cartel hasta que se sacaron las trece que anunciaban
+	 * una fase futura, con el motivo que sigue vigente: una entrada de menú que
+	 * lleva a una puerta cerrada con el nombre puesto es peor que no ofrecer nada.
+	 * Ahora hay algo detrás.
+	 *
+	 * Entre Corporación y Mercado: primero con quiénes andás, después con quiénes
+	 * hablás, y recién ahí lo que comprás y vendés.
+	 */
+	{
+		code: 'messages',
+		label: 'Mensajes',
+		icon: 'envelope-simple',
+		tabs: [
+			{
+				route: '/mensajes',
+				label: 'Recibidos'
+			},
+			{
+				route: '/mensajes/enviados',
+				label: 'Enviados'
+			},
+			// El archivo va último: es adonde se va lo que ya no está en curso, y es
+			// la pestaña que menos se abre de las tres.
+			{
+				route: '/mensajes/archivados',
+				label: 'Archivados'
+			}
+		]
+	},
 	{
 		code: 'market',
 		label: 'Mercado',
@@ -208,6 +241,14 @@ export const OPTIONS_MODULE: Module = {
  * solos.
  */
 export const LOG_TAB = '/piloto/bitacora';
+
+/**
+ * Y la que se enciende cuando te escribieron.
+ *
+ * Es la segunda ruta que avisa, y la que convirtió el aviso en una lista en vez
+ * de un caso: hasta acá el Neocom sabía de la bitácora y de nada más.
+ */
+export const MESSAGES_TAB = '/mensajes';
 
 /**
  * Si alguna de las pantallas de un módulo tiene un aviso pendiente.

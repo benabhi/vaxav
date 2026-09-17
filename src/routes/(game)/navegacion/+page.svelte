@@ -12,8 +12,15 @@
 -->
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
+	import Panel from '$lib/components/cards/Panel.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
+	import PanelTabs, { type Solapa } from '$lib/components/ui/PanelTabs.svelte';
+	import Identicon from '$lib/components/game/Identicon.svelte';
+	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import TransitTrack from '$lib/components/game/TransitTrack.svelte';
+	import GateRing from '$lib/components/game/GateRing.svelte';
+	import BeltField from '$lib/components/game/BeltField.svelte';
+	import BodyOrbit from '$lib/components/game/BodyOrbit.svelte';
 	import ActionSource from '$lib/components/game/ActionSource.svelte';
 	import AgentCard from '$lib/components/game/AgentCard.svelte';
 	import ConfirmAction from '$lib/components/game/ConfirmAction.svelte';
@@ -50,8 +57,25 @@
 		if (lastPlace !== place.name) {
 			lastPlace = place.name;
 			selected = '';
+			solapa = 'ficha';
 		}
 	});
+
+	/**
+	 * Qué solapa de la columna angosta está abierta.
+	 *
+	 * Arranca en la ficha: lo primero que uno quiere de un lugar es qué es. Se
+	 * reinicia al cambiar de lugar por lo mismo que el módulo elegido —abajo—, y
+	 * vive acá y no en el servidor porque cambiar de solapa no cambia la partida.
+	 */
+	let solapa = $state('ficha');
+
+	/** Las tres, con su cuenta al lado para no tener que abrirlas para saber. */
+	let solapas = $derived<Solapa[]>([
+		{ code: 'ficha', label: 'Información' },
+		{ code: 'agentes', label: 'Agentes', detail: place.agentCount },
+		{ code: 'pilotos', label: 'Pilotos', detail: String(place.pilots.length + place.pilotsBeyond) }
+	]);
 
 	let chosen = $derived(
 		place.modules.find((module) => module.code === selected && module.available)
@@ -79,6 +103,26 @@
 		>
 			{value}
 		</p>
+	</div>
+{/snippet}
+
+<!--
+	Qué es este lugar, dónde está y en qué estado. Escrita una sola vez porque la
+	piden dos: la solapa de una estación y el panel suelto de todo lo demás.
+-->
+{#snippet ficha()}
+	<div class="flex w-full min-w-0 flex-col items-start gap-4">
+		<div class="flex w-full items-start gap-[0.9rem]">
+			<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
+			<BodyText>{place.description}</BodyText>
+		</div>
+		<div class="grid w-full grid-cols-2 gap-4">
+			{@render reading('Tipo', place.kind)}
+			{@render reading('Sistema', place.system)}
+			{@render reading('Orbita a', place.parent)}
+			{@render reading('Distancia', place.distance, true)}
+			{@render reading('Estado', place.exploration)}
+		</div>
 	</div>
 {/snippet}
 
@@ -213,21 +257,6 @@
 						<p class="mt-[0.9rem] text-1 text-text-muted">Elegí un módulo para ver qué ofrece.</p>
 					{/if}
 				</TitledPanel>
-
-				<!--
-					Los agentes de la estación. No toda estación tiene: hacen falta
-					Contactos para recibir a alguien. Cuando no hay, el panel no se dibuja
-					en vez de anunciar un vacío.
-				-->
-				{#if place.agents.length}
-					<TitledPanel title="Agentes" detail={place.agentCount} class="w-full">
-						<div class="flex w-full flex-col gap-3">
-							{#each place.agents as agent (agent.code)}
-								<AgentCard {agent} />
-							{/each}
-						</div>
-					</TitledPanel>
-				{/if}
 			</div>
 		</div>
 	{/if}
@@ -260,113 +289,229 @@
 			>
 				<div class="flex w-full flex-col gap-4">
 					<!--
+						La figura y su lista: el aro a la izquierda y lo que cuesta cruzarlo a
+						la derecha. Apiladas en un teléfono —con el dibujo arriba, que es lo
+						que dice de un vistazo dónde estás parado— y lado a lado recién
+						cuando hay ancho, como todas las figuras del juego.
+					-->
+					<div class="flex w-full flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-6">
+						<div class="flex w-full justify-center lg:w-auto lg:shrink-0">
+							<GateRing
+								bearing={place.gate.bearing}
+								destination={place.gate.destination}
+								closed={place.gate.closed}
+								reachable={place.gate.blocked === ''}
+							/>
+						</div>
+
+						<div class="flex w-full min-w-0 flex-col gap-4">
+							<!--
 						La ambientación de la puerta, acá adentro y no en una ficha aparte: en
 						una puerta no hay nada más que contar del lugar, y lo que importa es el
 						salto que sigue.
 					-->
-					<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
-					{#if place.description}
-						<div class="flex w-full items-start gap-[0.9rem]">
-							<Icon
-								name={place.icon}
-								weight="thin"
-								size="2.25rem"
-								class="shrink-0 text-accent-dim"
-							/>
-							<BodyText>{place.description}</BodyText>
-						</div>
-					{/if}
+							<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
+							{#if place.description}
+								<div class="flex w-full items-start gap-[0.9rem]">
+									<Icon
+										name={place.icon}
+										weight="thin"
+										size="2.25rem"
+										class="shrink-0 text-accent-dim"
+									/>
+									<BodyText>{place.description}</BodyText>
+								</div>
+							{/if}
 
-					{#if place.gate.destination}
-						<div class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4">
-							<Icon name="arrow-circle-right" weight="duotone" size="1.3rem" class="text-accent" />
-							<div class="flex min-w-0 flex-col gap-[0.1rem]">
-								<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
-								<Label>llegás a {place.gate.arrival}</Label>
-							</div>
-						</div>
+							{#if place.gate.destination}
+								<div
+									class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4"
+								>
+									<Icon
+										name="arrow-circle-right"
+										weight="duotone"
+										size="1.3rem"
+										class="text-accent"
+									/>
+									<div class="flex min-w-0 flex-col gap-[0.1rem]">
+										<HudValue class="text-[0.9rem]">{place.gate.destination}</HudValue>
+										<Label>llegás a {place.gate.arrival}</Label>
+									</div>
+								</div>
 
-						<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
-							<div class="flex flex-col items-start gap-1">
-								<Label>Distancia</Label>
-								<span class="font-mono text-[0.85rem] text-data">{place.gate.distance}</span>
-							</div>
-							<div class="flex flex-col items-start gap-1">
-								<Label>Alcance</Label>
-								<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
-							</div>
-							<div class="flex flex-col items-start gap-1">
-								<Label>Duración</Label>
-								<span class="font-mono text-[0.85rem] text-accent-bright">
-									{place.gate.duration}
-								</span>
-							</div>
-							<div class="flex flex-col items-start gap-1">
-								<Label>Combustible</Label>
-								<!--
+								<div class="flex w-full flex-wrap items-start gap-x-6 gap-y-3">
+									<div class="flex flex-col items-start gap-1">
+										<Label>Rumbo</Label>
+										<span class="text-[0.85rem] text-text-body">{place.gate.bearingLabel}</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Distancia</Label>
+										<span class="font-mono text-[0.85rem] text-data">{place.gate.distance}</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Alcance</Label>
+										<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Duración</Label>
+										<span class="font-mono text-[0.85rem] text-accent-bright">
+											{place.gate.duration}
+										</span>
+									</div>
+									<div class="flex flex-col items-start gap-1">
+										<Label>Combustible</Label>
+										<!--
 									Lo que cuesta sobre lo que hay: la resta es la pregunta, y
 									hacerla de memoria entre dos pantallas es lo que hace que un
 									juego se sienta incómodo.
 								-->
-								<span
-									class="font-mono text-[0.85rem] {place.gate.fuel > place.gate.fuelInTank
-										? 'text-danger'
-										: 'text-data'}"
-								>
-									{place.gate.fuel} de {place.gate.fuelInTank} u
-								</span>
-							</div>
-						</div>
-					{:else}
-						<BodyText>
-							Esta puerta todavía no lleva a ninguna parte. Alguien la plantó y nadie la conectó del
-							otro lado.
-						</BodyText>
-					{/if}
+										<span
+											class="font-mono text-[0.85rem] {place.gate.fuel > place.gate.fuelInTank
+												? 'text-danger'
+												: 'text-data'}"
+										>
+											{place.gate.fuel} de {place.gate.fuelInTank} u
+										</span>
+									</div>
+								</div>
+							{:else}
+								<BodyText>
+									Esta puerta todavía no lleva a ninguna parte. Alguien la plantó y nadie la conectó
+									del otro lado.
+								</BodyText>
+							{/if}
+							<!--
+								El motivo, salvo cuando ya lo dijo el párrafo de arriba: una puerta sin
+								conectar lo explica mejor y con más palabras, y repetirlo en rojo dos
+								renglones más abajo es decir dos veces lo mismo.
+							-->
+							{#if place.gate.blocked && place.gate.destination}
+								<p class="text-2 text-danger">{place.gate.blocked}</p>
+							{/if}
 
-					{#if place.gate.blocked}
-						<p class="text-2 text-danger">{place.gate.blocked}</p>
-					{/if}
-
-					<!--
+							<!--
 						Con confirmación, como toda orden: un salto compromete tiempo real y
 						además **gasta combustible que no vuelve**. El diálogo repite lo que
 						cuesta en vez de preguntar a secas, porque un aviso que sólo pregunta
 						se aprende a apretar sin leer.
 					-->
-					<ConfirmAction
-						formAction="?/saltar"
-						title="Saltar a {place.gate.destination}"
-						icon="arrow-circle-right"
-						confirmLabel="Saltar"
-						disabled={Boolean(place.gate.blocked)}
-						readings={[
-							{ label: 'Llegás a', value: place.gate.arrival },
-							{ label: 'Distancia', value: place.gate.distance },
-							{ label: 'Duración', value: place.gate.duration },
-							{
-								label: 'Combustible',
-								value: `${place.gate.fuel} de ${place.gate.fuelInTank} u`
-							}
-						]}
-						note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
-						source={place.gate.source}
-					>
-						{#snippet trigger(abrir)}
-							<ActionSource source={place.gate!.source}>
-								<HudButton
-									type="button"
-									variant="primary"
-									disabled={Boolean(place.gate?.blocked)}
-									onclick={abrir}
-								>
-									<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
-									Saltar
-								</HudButton>
-							</ActionSource>
-						{/snippet}
-						{#snippet fields()}{/snippet}
-					</ConfirmAction>
+							<ConfirmAction
+								formAction="?/saltar"
+								title="Saltar a {place.gate.destination}"
+								icon="arrow-circle-right"
+								confirmLabel="Saltar"
+								disabled={Boolean(place.gate.blocked)}
+								readings={[
+									{ label: 'Llegás a', value: place.gate.arrival },
+									{ label: 'Distancia', value: place.gate.distance },
+									{ label: 'Duración', value: place.gate.duration },
+									{
+										label: 'Combustible',
+										value: `${place.gate.fuel} de ${place.gate.fuelInTank} u`
+									}
+								]}
+								note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
+								source={place.gate.source}
+							>
+								{#snippet trigger(abrir)}
+									<ActionSource source={place.gate!.source}>
+										<HudButton
+											type="button"
+											variant="primary"
+											disabled={Boolean(place.gate?.blocked)}
+											onclick={abrir}
+										>
+											<Icon name="arrow-circle-right" weight="bold" size="0.85rem" />
+											Saltar
+										</HudButton>
+									</ActionSource>
+								{/snippet}
+								{#snippet fields()}{/snippet}
+							</ConfirmAction>
+						</div>
+					</div>
+				</div>
+			</TitledPanel>
+		</div>
+	{/if}
+
+	<!--
+		El vecindario, para los cuerpos que orbitan: planeta, luna y estrella.
+
+		**Ocupa la columna ancha**, que hasta acá quedaba vacía. Una estación tiene
+		su mosaico, una puerta su aro y un cinturón su campo; parado en un planeta no
+		había nada del lado ancho y la pantalla era una ficha angosta con dos tercios
+		de pantalla en negro al lado. No era que le faltara un dibujo: le faltaba
+		tener algo que decir, y lo que un planeta tiene para decir es su lugar.
+	-->
+	{#if place.orbit}
+		<div class="w-full min-w-0 flex-[2_1_0]">
+			<TitledPanel title="En órbita" detail={place.orbit.center} class="w-full">
+				<div class="flex w-full flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-6">
+					<div class="flex w-full justify-center lg:w-auto lg:shrink-0">
+						<BodyOrbit orbit={place.orbit} />
+					</div>
+
+					<!-- Y su lista al lado, como toda figura del juego. -->
+					<div class="flex w-full min-w-0 flex-col gap-4">
+						<div class="flex w-full flex-col items-start gap-1">
+							<Label>{place.orbit.centerIsHere ? 'Sos el centro' : 'Gira alrededor de'}</Label>
+							<span class="flex items-center gap-2">
+								<Icon
+									name={place.orbit.centerIcon}
+									weight="duotone"
+									size="1rem"
+									class="text-accent"
+								/>
+								<HudValue>{place.orbit.center}</HudValue>
+							</span>
+						</div>
+
+						<div class="flex w-full flex-col items-start gap-2">
+							<Label>
+								{place.orbit.centerIsHere ? 'Le dan vueltas' : 'En el mismo anillo'}
+							</Label>
+							<div class="grid w-full grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+								{#each place.orbit.ring as vecino (vecino.name)}
+									<span class="flex min-w-0 items-center gap-2">
+										<Icon
+											name={vecino.icon}
+											weight="bold"
+											size="0.7rem"
+											class="shrink-0 {vecino.here ? 'text-accent-bright' : 'text-accent-dim'}"
+										/>
+										<span
+											class="truncate text-1 {vecino.here
+												? 'text-accent-bright'
+												: 'text-text-body'}"
+										>
+											{vecino.name}
+										</span>
+									</span>
+								{/each}
+							</div>
+						</div>
+
+						<!-- Lo que te cuelga. Sin nada colgando, el bloque no se dibuja. -->
+						{#if place.orbit.satellites.length}
+							<div class="flex w-full flex-col items-start gap-2">
+								<Label>Te orbitan</Label>
+								<div class="flex w-full flex-wrap items-center gap-x-4 gap-y-1">
+									{#each place.orbit.satellites as satelite (satelite.name)}
+										<span class="flex min-w-0 items-center gap-2">
+											<Icon
+												name={satelite.icon}
+												weight="bold"
+												size="0.7rem"
+												class="shrink-0 text-text-muted"
+											/>
+											<span class="truncate text-1 text-text-body">{satelite.name}</span>
+										</span>
+									{/each}
+								</div>
+							</div>
+						{/if}
+					</div>
 				</div>
 			</TitledPanel>
 		</div>
@@ -375,6 +520,16 @@
 	{#if place.field.scannable}
 		<div class="w-full min-w-0 flex-[2_1_0]">
 			<TitledPanel title="Campo de rocas" detail={place.name} class="w-full">
+				<!--
+					**La figura de esta pantalla, arriba de todo.** La lista de abajo dice
+					qué tiene cada piedra; el dibujo dice cómo es el campo —cuántas hay,
+					qué les queda y cuánto conocés—, que es la pregunta que uno se hace al
+					llegar: si vale la pena quedarse.
+				-->
+				<div class="mb-3 w-full border-b border-border-soft pb-3">
+					<BeltField asteroids={place.asteroids} />
+				</div>
+
 				<!--
 					El instrumento y el campo, una sola vez arriba: cuántas rocas hay, qué
 					lectura sacaría el escáner montado y cuánto tarda. Repetirlo en cada
@@ -589,36 +744,117 @@
 	-->
 	{#if !place.inTransit && !place.gate}
 		<div class="w-full min-w-0 flex-[1_1_0]">
-			<div class="flex w-full min-w-0 flex-col gap-4">
-				<TitledPanel title="Ficha del lugar" class="w-full">
-					<div class="flex w-full min-w-0 flex-col items-start gap-4">
-						<div class="flex w-full items-start gap-[0.9rem]">
-							<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
-							<BodyText>{place.description}</BodyText>
-						</div>
-						<div class="grid w-full grid-cols-2 gap-4">
-							{@render reading('Tipo', place.kind)}
-							{@render reading('Sistema', place.system)}
-							{@render reading('Orbita a', place.parent)}
-							{@render reading('Distancia', place.distance, true)}
-							{@render reading('Estado', place.exploration)}
-						</div>
-					</div>
-				</TitledPanel>
+			{#if place.isStation}
+				<!--
+					**Una estación contesta tres preguntas y no una**, y las tres son listas
+					largas que no entran juntas en una columna fina: qué es este lugar,
+					quién atiende acá y quién más está parado acá. Apiladas, la ficha
+					quedaba arriba de todo y a los pilotos había que buscarlos scrolleando.
 
-				{#if place.isStation}
-					<TitledPanel title="Operador" class="w-full">
-						<div class="flex w-full flex-col items-start gap-2">
-							<HudValue>{place.corporation}</HudValue>
-							<div class="flex flex-wrap items-center gap-[0.4rem]">
-								<Label>{place.corporationKind}</Label>
-								<span class="text-accent-dim">·</span>
-								<Label>{place.owner}</Label>
+					Los agentes se mudaron acá desde la columna ancha por lo mismo: son una
+					lista de gente, igual que los pilotos, y estaban del otro lado de la
+					pantalla que sus pares.
+				-->
+				<Panel class="w-full">
+					<PanelTabs tabs={solapas} bind:active={solapa} />
+
+					<div class="w-full pt-4">
+						{#if solapa === 'ficha'}
+							{@render ficha()}
+
+							<div class="mt-4 w-full border-t border-border-soft pt-4">
+								<Label>Operador</Label>
+								<div class="mt-2 flex w-full flex-col items-start gap-2">
+									<HudValue>{place.corporation}</HudValue>
+									<div class="flex flex-wrap items-center gap-[0.4rem]">
+										<Label>{place.corporationKind}</Label>
+										<span class="text-accent-dim">·</span>
+										<Label>{place.owner}</Label>
+									</div>
+								</div>
 							</div>
-						</div>
-					</TitledPanel>
-				{/if}
-			</div>
+						{:else if solapa === 'agentes'}
+							{#if place.agents.length}
+								<div class="flex w-full flex-col gap-3">
+									{#each place.agents as agent (agent.code)}
+										<AgentCard {agent} />
+									{/each}
+								</div>
+							{:else}
+								<!-- Hacen falta Contactos para recibir a alguien. -->
+								<p class="text-1 text-text-muted">
+									Acá no atiende nadie. Esta estación no tiene Contactos, que es el módulo que hace
+									falta para alojar agentes.
+								</p>
+							{/if}
+						{:else if place.pilots.length}
+							<!--
+								Quién más está atracado. **Un puerto es público**: quien atraca
+								acepta que lo vean, y de eso vive un hub. En espacio abierto esta
+								lista no existe y va a haber que escanear.
+							-->
+							<div class="flex w-full flex-col gap-3">
+								{#each place.pilots as piloto (piloto.callsign)}
+									<div
+										class="flex w-full min-w-0 items-center gap-3 border border-border-soft
+											bg-surface p-[0.6rem]"
+									>
+										<Identicon
+											name={piloto.callsign}
+											family="piloto"
+											size="2.25rem"
+											title="Sello de {piloto.callsign}"
+											class="shrink-0"
+										/>
+										<div class="flex min-w-0 flex-col items-start gap-[0.15rem]">
+											<span class="truncate font-display text-2 tracking-display text-text-strong">
+												{piloto.callsign}
+											</span>
+											<span class="truncate text-[0.68rem] text-text-muted">
+												{piloto.corporation || 'Independiente'}
+											</span>
+											<span
+												class="truncate text-[0.62rem] tracking-label uppercase"
+												style="color: {piloto.factionColor}"
+											>
+												{piloto.faction}
+											</span>
+										</div>
+										<div class="grow"></div>
+										<!--
+											Lo único que se puede hacer hoy con alguien que está al lado.
+											Agregarlo a contactos y comerciar llegan cuando existan; un
+											botón que no hace nada es peor que no ofrecerlo.
+										-->
+										<HudLink
+											href="/mensajes?para={encodeURIComponent(piloto.callsign)}"
+											variant="outline"
+											size="1"
+											class="shrink-0"
+										>
+											<Icon name="envelope-simple" weight="bold" size="0.7rem" />
+											<span class="hidden xs:inline">Escribirle</span>
+										</HudLink>
+									</div>
+								{/each}
+
+								{#if place.pilotsBeyond > 0}
+									<p class="text-1 text-text-muted">y {place.pilotsBeyond} más.</p>
+								{/if}
+							</div>
+						{:else}
+							<p class="text-1 text-text-muted">
+								No hay nadie más atracado acá. Los puertos grandes juntan gente; éste, por ahora, es
+								todo tuyo.
+							</p>
+						{/if}
+					</div>
+				</Panel>
+			{:else}
+				<TitledPanel title="Ficha del lugar" class="w-full">
+					{@render ficha()}
+				</TitledPanel>
+			{/if}
 		</div>
 	{/if}
 </div>

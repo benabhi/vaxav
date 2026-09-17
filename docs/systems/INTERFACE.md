@@ -229,6 +229,190 @@ La respuesta es no fingir que sí. Mientras la nave está en camino:
 Es la misma idea que el indicador, un nivel más abajo: el título de la pantalla
 deja de ser dónde estás y pasa a ser **adónde vas**.
 
+### Mensajes
+
+**El módulo volvió al Neocom después de haber estado afuera.** Estuvo declarado
+como pantalla cartel hasta que se sacaron las trece que anunciaban una fase
+futura, con un motivo que sigue vigente: una entrada de menú que lleva a una
+puerta cerrada con el nombre puesto es peor que no ofrecer nada. Vuelve ahora
+porque ahora hay algo detrás, que es la condición que aquel commit dejó escrita.
+
+No es un chat. Vaxav es un juego de esperar: el otro no va a estar mirando la
+pantalla cuando vos escribís, así que lo que hace falta es algo que quede
+guardado hasta que lo abra. Un mensaje **no pide estar cerca**: llega a donde
+esté el otro. Lo que sí pide estar en el mismo lugar es enterarse de que el otro
+existe, y de eso se ocupa la lista de pilotos de una estación.
+
+Tres pestañas —Recibidos, Enviados y Archivados— sobre **una sola fila en la
+base**: un mensaje enviado y uno recibido son el mismo hecho mirado desde dos
+lados, y guardarlo dos veces es la manera segura de que un día digan cosas
+distintas.
+
+**Archivar no borra.** Un mensaje es la prueba de un trato, y un juego donde el
+otro puede hacer desaparecer lo que escribió es un juego donde la palabra no vale
+nada. Lo archivado sale de la bandeja, queda entero y vuelve con el mismo botón.
+Cada lado decide el suyo: que el que lo mandó lo guarde no lo saca de la bandeja
+del otro. Y el archivo es **uno solo para los dos lados**, porque quien busca algo
+viejo no se acuerda de si lo escribió o se lo escribieron: se acuerda de con
+quién fue. Por eso ahí la columna no dice «De» ni «Para» sino «Con».
+
+El que está abierto va **al lado de la lista y no en otra ruta**: el proyecto
+tiene dos niveles de navegación y nunca un tercero, y cuando un módulo necesita
+más profundidad se resuelve con el diseño de la pantalla. Cuál está abierto viaja
+en la URL, como todo recorte del juego. En pantalla chica el abierto va arriba:
+el jugador acaba de tocar una fila para leerlo, y hacerlo aparecer debajo de una
+tabla de quince es pedirle que busque lo que pidió.
+
+**Escribir es una acción y no un lugar**, así que vive en una ventana y no en una
+tercera pestaña que sólo se visita para eso. La ventana se abre sola cuando la
+URL trae destinatario —es como llega el jugador desde la lista de una estación— y
+cuando el envío vuelve con un motivo, o el motivo aparecería sobre un formulario
+cerrado y el jugador perdería lo que escribió sin saber por qué.
+
+El aviso del Neocom tiene una vuelta propia: **abrir la bandeja no marca nada**,
+marca abrir un mensaje. Así que la pestaña sigue avisando mientras quede uno sin
+abrir, aunque el jugador ya esté parado ahí.
+
+### La columna angosta de una estación
+
+**Una estación contesta tres preguntas y no una**, y las tres son listas largas
+que no entran juntas en una columna fina: qué es este lugar, quién atiende acá y
+quién más está parado acá. Apiladas, la ficha quedaba arriba de todo y a los
+pilotos había que buscarlos scrolleando. Así que la columna lleva **solapas**:
+Información, Agentes, Pilotos.
+
+Los agentes se mudaron ahí desde la columna ancha por lo mismo: son una lista de
+gente, igual que los pilotos, y estaban del otro lado de la pantalla que sus
+pares.
+
+Las solapas de un panel **no son las pestañas del módulo**, aunque hablen el
+mismo idioma: aquéllas navegan —cada una es una URL y el servidor decide qué
+carga— y éstas reparten lo que la pantalla ya tiene en la mano. Dos
+comportamientos distintos, dos piezas: `PanelTabs` y `TabBar`. Y cambiar de
+solapa no cambia la partida, así que el estado vive en el navegador.
+
+#### Quién más está acá
+
+**En un idle no hay conectado y desconectado.** El piloto está en el sector
+aunque el jugador no esté mirando la pantalla, así que la presencia no es una
+sesión abierta: es dónde está parado. El que salió de viaje no cuenta —sigue
+teniendo guardado el cuerpo del que salió, y sin ese filtro aparecería atracado
+en un lugar del que ya se fue—, que es la misma verdad que dice la pantalla:
+**en tránsito no estás en ningún lado**.
+
+**Y sólo en estaciones.** Una estación es un puerto: es pública, no se puede
+atacar, y quien atraca acepta que lo vean. En espacio abierto —un cinturón, una
+órbita, una puerta— la lista no existe: va a haber que escanear, y eso pedirá
+módulo y tiempo, que es lo que hace que esconderse signifique algo. Esa mecánica
+no está construida y la pantalla no la anuncia.
+
+Lo único que se puede hacer hoy con alguien que está al lado es **escribirle**.
+Agregarlo a contactos y comerciar llegan cuando existan: un botón que no hace
+nada es peor que no ofrecerlo.
+
+### La pantalla parado en una puerta
+
+Una puerta era, hasta acá, un panel de texto con cuatro cifras: lo único que la
+distinguía de una luna era lo que decían las palabras. **Un lugar al que se viaja
+tiene que verse distinto de los demás**, o el módulo entero se siente como una
+sola pantalla con el contenido cambiado.
+
+La figura es **el aro de salto**, y lo que dibuja no es adorno:
+
+| Se ve                                    | Quiere decir                                     |
+| ---------------------------------------- | ------------------------------------------------ |
+| El radio encendido sale por un lado      | El **rumbo**: seis lados, seis dibujos distintos |
+| Adentro, un túnel que se aclara al fondo | Lleva a alguna parte, y se puede cruzar          |
+| Todo el aro apagado                      | Lleva, pero **esta nave no llega**               |
+| El radio se corta antes del borde        | Un **muñón**: nadie la conectó del otro lado     |
+| Un tajo rojo al medio                    | El **paso está cerrado**                         |
+
+La casilla es un hexágono y el aro es un círculo, y no al revés. El hexágono es
+literal —la galaxia es una grilla de tapa plana y los seis rumbos son sus seis
+lados—, así que lo que se ve ahí es el mismo reparto que el mapa. Es la pregunta
+de al lado de la que contesta la roseta del cuartel, que mira un sistema **desde
+afuera**: cuántas salidas tiene. Ésta mira **una salida desde adentro**.
+
+Y se dibuja **radial**, de frente, mientras que la del viaje se dibuja lateral, de
+izquierda a derecha. Es a propósito: viajando hay un trayecto y parado hay una
+cosa enfrente. Dos pantallas del mismo módulo que se dibujan igual son dos
+pantallas que el jugador no distingue.
+
+**El dibujo no lleva ni una palabra**, ni siquiera el nombre del rumbo: se probó
+con el rótulo puesto sobre su propio radio y tapaba justo el muñón que tenía que
+dejar ver. La palabra va en la lista de al lado, que es donde va siempre.
+
+### La pantalla parado en un planeta, una luna o una estrella
+
+Eran las tres que no tenían nada, y el problema no era que les faltara un dibujo:
+**no tenían nada del lado ancho**. Una estación tiene su mosaico de módulos, una
+puerta su salto y un cinturón sus rocas; parado en un planeta la pantalla era una
+ficha angosta con dos tercios de pantalla en negro al lado.
+
+Lo que un cuerpo tiene para decir de sí mismo es **el lugar que ocupa**. Dicho con
+palabras son tres renglones iguales a los de cualquier otro —«orbita a Ánfora, a
+842 ud»—; dibujado, un planeta interior con tres lunas no se parece en nada a una
+luna pelada del borde.
+
+| Se ve                             | Quiere decir                               |
+| --------------------------------- | ------------------------------------------ |
+| Lo que está en el centro          | De quién colgás: tu estrella, o tu planeta |
+| Tu anillo entre todos los que hay | Qué tan afuera estás                       |
+| Los íconos de los otros puntos    | Qué clase de vecinos tenés, y cuántos      |
+| El anillito alrededor tuyo        | Lo que te cuelga: lunas y estaciones       |
+
+**Una sola figura para los tres casos**, porque son el mismo mirado desde otra
+altura: el centro es el padre y el anillo son sus hijos. Una estrella no tiene
+padre, así que el centro es ella misma y el anillo son sus planetas —parado en
+una estrella estás en el centro, y eso sale solo, sin caso especial—.
+
+**Y gira.** Los de afuera tardan más, con el exponente de la tercera ley de
+Kepler, así que la velocidad **también dice** qué tan lejos está cada uno. No es
+una simulación: la cuenta real reparte las velocidades mejor que cualquier número
+elegido a ojo. Despacio en serio —la vuelta más corta ronda el minuto— porque
+esta pantalla queda abierta mientras se espera, y algo que se mueve rápido al
+lado de un texto es algo que no deja leer. Quien pidió menos movimiento en su
+sistema ve el plano quieto.
+
+Los satélites **viajan con el cuerpo y no dan su propia vuelta**: dos giros
+encimados a escalas muy distintas convierten ese rincón en un remolino, y lo que
+hay que ver ahí es cuántos te cuelgan.
+
+### La pantalla parado en un cinturón
+
+La lista dice qué tiene cada piedra. La figura dice **cómo es el campo**, que es
+otra pregunta y la que uno se hace al llegar: si vale la pena quedarse.
+
+| Se ve                  | Quiere decir                                       |
+| ---------------------- | -------------------------------------------------- |
+| Cuántos bultos hay     | Cuántas rocas tiene el campo                       |
+| El tamaño de cada uno  | Lo que le **queda** de lo que traía al aparecer    |
+| Encendido, con silueta | Tiene lectura vigente: sabés qué es y cuánto tiene |
+| Contorno apagado       | **Un bulto y nada más**: le falta el escáner       |
+| Contorno punteado      | La lectura venció                                  |
+
+Así que **un campo trabajado se ve trabajado**: las piedras exprimidas quedan de
+guijarro al lado de una entera, y se lee de un vistazo si alguien pasó antes.
+
+Cada roca tiene su propia silueta, sacada de su número. No es azar de dibujo —el
+mismo número da siempre la misma piedra—, así que la que estabas mirando sigue
+estando donde estaba después de escanearla. Es el mismo criterio que el sello de
+un piloto: el dibujo sale del dato.
+
+Y lo que no tiene lectura se dibuja **entero**, no vacío: suponerlo agotado sería
+contar algo que el piloto no sabe.
+
+### El destino, marcado en el árbol
+
+Mientras la nave va en camino, el árbol del sistema muestra **las dos puntas del
+viaje**: naranja donde estás parado y cian adónde venís. Conviven porque el
+piloto en tránsito sigue teniendo guardado el cuerpo del que salió, y verlas
+juntas es justamente lo que uno quiere mientras espera.
+
+El cian no es una elección suelta: es el mismo que el mapa usa para el tramo en
+curso, y por la misma regla —en este juego el cian quiere decir **vos**, dónde
+estás y adónde vas—.
+
 ### El chat
 
 > **Sin construir.** Hubo una ventana con líneas inventadas y se sacó: una maqueta

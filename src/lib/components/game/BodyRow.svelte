@@ -38,6 +38,13 @@
 	se silencian las dos reglas: no hay nada que anunciarle a un lector de
 	pantalla acá que la flecha no diga mejor.
 -->
+<!--
+	**Dos marcas y no una.** El naranja dice dónde estás parado y el cian adónde
+	venís, y conviven: mientras la nave está en camino el piloto sigue teniendo
+	guardado el cuerpo del que salió, así que el árbol muestra las dos puntas del
+	viaje. Es el mismo cian que el mapa usa para el tramo en curso, y por la misma
+	regla: en este juego el cian quiere decir **vos** —dónde estás y adónde vas—.
+-->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
@@ -45,7 +52,9 @@
 		{body.hasChildren ? 'cursor-pointer' : 'cursor-default'}
 		{body.isHere
 		? 'border-l-accent bg-surface-strong'
-		: 'border-l-transparent bg-transparent hover:bg-surface-hover'}"
+		: body.isDestination
+			? 'border-l-data bg-data-wash'
+			: 'border-l-transparent bg-transparent hover:bg-surface-hover'}"
 	id={body.isHere ? 'vaxav-aqui' : undefined}
 	onclick={() => onToggle(body.code)}
 >
@@ -69,7 +78,9 @@
 					type="button"
 					class="flex cursor-pointer items-center {body.isHere
 						? 'text-accent-bright'
-						: 'text-accent-dim'}"
+						: body.isDestination
+							? 'text-data'
+							: 'text-accent-dim'}"
 					aria-expanded={expanded}
 					aria-label="{expanded ? 'Plegar' : 'Desplegar'} {body.name}"
 					onclick={(evento) => {
@@ -92,7 +103,7 @@
 			<span
 				class="min-w-[3rem] flex-[0_1_auto] overflow-hidden font-display text-[0.92rem] font-bold
 						tracking-display text-ellipsis whitespace-nowrap uppercase
-						{body.isHere ? 'text-accent-bright' : 'text-text-strong'}"
+						{body.isHere ? 'text-accent-bright' : body.isDestination ? 'text-data' : 'text-text-strong'}"
 			>
 				{body.name}
 			</span>

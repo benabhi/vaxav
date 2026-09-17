@@ -87,6 +87,15 @@ export const PERMISSIONS: readonly Permission[] = [
 		true
 	),
 
+	define(
+		'pilots.rush',
+		'pilots',
+		'Terminar órdenes',
+		'Terminar al instante la orden en curso, sin esperar el reloj. Es una ' +
+			'herramienta para probar el juego, no una del juego.',
+		true
+	),
+
 	define('universe.read', 'universe', 'Ver el universo', 'Abrir sistemas, cuerpos y estaciones.'),
 	define(
 		'universe.edit',
@@ -124,6 +133,15 @@ export const PERMISSIONS: readonly Permission[] = [
 	),
 	define('stats.read', 'oversight', 'Ver estadísticas', 'Mirar los números agregados del juego.')
 ];
+
+/**
+ * La llave de terminar una orden al instante.
+ *
+ * Tiene nombre porque la preguntan dos lugares —el layout del juego, para
+ * dibujar el botón, y el endpoint, para dejar pasar— y un código escrito a mano
+ * en dos archivos es el que un día queda mal escrito en uno solo.
+ */
+export const RUSH_PERMISSION = 'pilots.rush';
 
 /** El catálogo por código, para preguntar por uno. */
 const BY_CODE = new Map(PERMISSIONS.map((permission) => [permission.code, permission]));
