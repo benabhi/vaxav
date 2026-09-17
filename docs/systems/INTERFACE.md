@@ -337,7 +337,7 @@ carpeta; los archivos están en `src/lib/components/`.
 | `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                         |
 | `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                             |
 | `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                         |
-| `forms/`      | Campos y avisos de formulario                     | `TextField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`                                    |
+| `forms/`      | Campos y avisos de formulario                     | `TextField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`                      |
 | `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                        |
 | `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `PilotCredential`, `FittingRig`, `SkillHexagon`, `ModuleGrid` |
 | `admin/`      | Sólo del cuartel                                  | `GalaxyMap`, `GateRose`, `EventTrace`, `SelectField`                                           |

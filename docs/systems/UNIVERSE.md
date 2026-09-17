@@ -378,6 +378,7 @@ Las reglas, en orden:
 | El vecino es un **ramal** que no está en el mapa | Se muda el ramal entero con el mismo desplazamiento, así su geometría interna se conserva |
 | Los dos ya están puestos y cierran               | Nada que hacer: el mapa ya era coherente                                                  |
 | Los dos ya están puestos y **no** cierran        | Es un **atajo**. Se conecta igual y el mapa lo dibuja torcido                             |
+| La casilla de destino ya tiene dueño             | **Se rechaza.** Hay que elegir otro rumbo                                                 |
 
 Estar en el mapa quiere decir **llegar caminando desde el primer sistema
 sembrado**, que es el origen de la grilla. Tener una puerta conectada no alcanza:
@@ -385,6 +386,18 @@ un ramal armado aparte también las tiene y sigue sin estar en ningún lado.
 
 **Lo que ya tiene casilla no se mueve nunca.** Es la regla que sostiene a todas
 las demás.
+
+**Y dos sistemas no pueden compartir casilla.** Se comprueba antes de mover, sobre
+la isla entera y no sólo sobre el sistema que se conecta: un ramal se muda de una
+pieza, así que cualquiera de sus miembros puede caer encima de algo.
+
+Hace falta comprobarlo a mano porque **la base no lo impide**, ni podría: los
+sistemas sin colocar comparten el origen a propósito, así que un índice único
+sobre las coordenadas prohibiría justamente el estado normal de lo recién creado.
+Sin la comprobación los dos quedan en la misma casilla, el mapa dibuja uno sobre el
+otro y el de abajo desaparece sin que nada lo diga. Es el mismo error que el ramal
+a la deriva —una posición que no significa lo que dice— sólo que más difícil de
+ver.
 
 ### Los atajos
 
