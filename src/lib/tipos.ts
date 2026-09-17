@@ -91,6 +91,46 @@ export interface PilotoConectado {
  * **Sin corporación no es un hueco**: es un independiente, y la pantalla lo dice
  * con esas palabras. Va a ser el estado normal el día que se pueda renunciar.
  */
+/** Un escalón de la escalera, tal como lo dibuja la figura. */
+export interface EscalonReputacion {
+	/** Desconocido, Conocido, Confiable, Aliado, Leal. */
+	readonly name: string;
+	/** En qué punto de la escala de cien está, para ubicarlo en el dibujo. */
+	readonly at: number;
+	/** Qué nivel de agente abre, en romanos. */
+	readonly level: string;
+	readonly reached: boolean;
+}
+
+/**
+ * Lo que una corporación piensa del piloto, ya escrito para la pantalla.
+ *
+ * Viene con **las dos escaleras**: la suya y la de su bandera. No es un dato de
+ * más —la de la facción abre ese mismo nivel en todas las corporaciones que la
+ * llevan—, así que mostrar una sin la otra dejaría al jugador sin entender por
+ * qué un agente que debería estar cerrado lo atiende.
+ */
+export interface ReputacionCorporacion {
+	/** Lo que tiene con ella, con dos decimales. */
+	readonly value: string;
+	/** Lo mismo como número de cien, para dibujar. */
+	readonly percent: number;
+	readonly tier: string;
+	/** Cuántos escalones lleva y cuántos hay, para el medidor compacto. */
+	readonly reached: number;
+	readonly tiers: number;
+	/** Qué falta para el próximo, ya escrito. Vacío si ya está arriba de todo. */
+	readonly next: string;
+	/** El nombre de la bandera, y lo que tiene con ella. */
+	readonly faction: string;
+	readonly factionValue: string;
+	readonly factionPercent: number;
+	readonly factionTier: string;
+	/** El nivel de agente que le atiende hoy, en romanos: el mayor de los dos. */
+	readonly level: string;
+	readonly ladder: readonly EscalonReputacion[];
+}
+
 export interface Corporacion {
 	/** Si pertenece a alguna. Lo demás describe a cuál, o a la falta de una. */
 	readonly belongs: boolean;
@@ -109,6 +149,14 @@ export interface Corporacion {
 	readonly stations: readonly EstacionCorporacion[];
 	/** Dónde tiene gente sentada repartiendo trabajo. */
 	readonly agents: readonly AgenteCorporacion[];
+	/**
+	 * Lo que piensa de vos, o `null` si no respondés a ninguna.
+	 *
+	 * Es lo único de esta pantalla que habla del piloto y no de ella, y por eso va
+	 * aparte: un independiente no tiene reputación «con nadie», tiene reputación
+	 * con cada una por separado, y eso es otra pantalla.
+	 */
+	readonly reputation: ReputacionCorporacion | null;
 }
 
 /** Una estación que opera la corporación. */
@@ -866,6 +914,39 @@ export interface MovimientoBilletera {
 }
 
 /** La billetera del piloto: el saldo y el libro que lo explica. */
+/** Un asiento del libro de reputación, ya escrito para la tabla. */
+export interface MovimientoReputacion {
+	readonly id: number;
+	/** Con el signo escrito y no sólo pintado: `+1,00`. */
+	readonly amount: string;
+	readonly positive: boolean;
+	/** El valor que dejó, para poder seguir la escalera fila por fila. */
+	readonly valueAfter: string;
+	/** Por qué se movió, en palabras. */
+	readonly reason: string;
+	readonly icon: IconName;
+	readonly memo: string;
+	/** Cuándo, en milisegundos UTC: lo formatea el navegador. */
+	readonly at: number;
+}
+
+/**
+ * La pestaña Reputación: la escalera con tu corporación y cómo llegaste ahí.
+ *
+ * Es la única pantalla del juego que contesta «¿de dónde salió este número?», y
+ * por eso el histórico no es un adorno: es la mitad de la pantalla.
+ */
+export interface PaginaReputacion {
+	readonly belongs: boolean;
+	readonly name: string;
+	readonly code: string;
+	readonly reputation: ReputacionCorporacion | null;
+	readonly moves: readonly MovimientoReputacion[];
+	readonly page: number;
+	readonly pages: number;
+	readonly total: number;
+}
+
 export interface Billetera {
 	readonly balance: string;
 	/**

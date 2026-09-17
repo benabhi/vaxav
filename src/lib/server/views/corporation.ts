@@ -27,9 +27,18 @@ import {
 import type { Db } from '../db/types';
 import { FACTIONS } from '$lib/game/factions';
 import { SERVICE_ORDER, type StationServiceKind } from '$lib/game/universe';
-import { corporationKindIcon, corporationKindLabel, serviceLabel } from '$lib/format';
+import {
+	corporationKindIcon,
+	corporationKindLabel,
+	reputationLabel,
+	roman,
+	serviceLabel
+} from '$lib/format';
 import type { CorporationKind } from '$lib/game/corporations';
-import type { Corporacion, EstacionCorporacion } from '$lib/tipos';
+import { REPUTATION_SCALE, TIERS, effectiveMissionLevel, tierForRaw } from '$lib/game/reputation';
+import { pilotStandings } from '../services/reputation';
+import type { Corporacion, EscalonReputacion, ReputacionCorporacion } from '$lib/tipos';
+import type { EstacionCorporacion } from '$lib/tipos';
 
 /** Lo que se muestra cuando el piloto no pertenece a ninguna. */
 const INDEPENDIENTE: Corporacion = {
@@ -45,8 +54,50 @@ const INDEPENDIENTE: Corporacion = {
 		'no le debés explicaciones a nadie.',
 	members: '',
 	stations: [],
-	agents: []
+	agents: [],
+	reputation: null
 };
+
+/**
+ * La escalera del piloto con una corporación, escrita para la pantalla.
+ *
+ * Las **dos** escaleras juntas, y no sólo la de la corporación: la de la bandera
+ * abre ese mismo nivel en todas las que la llevan, así que mostrar una sin la
+ * otra dejaría sin explicación a un agente que atiende cuando no debería.
+ */
+export function buildReputacion(
+	corporationRaw: number,
+	factionRaw: number,
+	factionName: string
+): ReputacionCorporacion {
+	const escalon = tierForRaw(corporationRaw);
+	const siguiente = TIERS.find((uno) => uno.level === escalon.level + 1);
+
+	const ladder: EscalonReputacion[] = TIERS.map((uno) => ({
+		name: uno.name,
+		at: uno.reputation,
+		level: roman(uno.level),
+		reached: corporationRaw >= uno.reputation * REPUTATION_SCALE
+	}));
+
+	return {
+		value: reputationLabel(corporationRaw),
+		percent: corporationRaw / REPUTATION_SCALE,
+		tier: escalon.name,
+		reached: escalon.level,
+		tiers: TIERS.length,
+		// Lo que falta y **para qué**: un umbral sin su premio es un número más.
+		next: siguiente
+			? `${siguiente.name} a ${reputationLabel(siguiente.reputation * REPUTATION_SCALE)} · abre agentes de nivel ${roman(siguiente.level)}`
+			: '',
+		faction: factionName,
+		factionValue: reputationLabel(factionRaw),
+		factionPercent: factionRaw / REPUTATION_SCALE,
+		factionTier: tierForRaw(factionRaw).name,
+		level: roman(effectiveMissionLevel(corporationRaw, factionRaw)),
+		ladder
+	};
+}
 
 /**
  * La corporación del piloto, con lo que hace falta para reconocerla.
@@ -129,6 +180,14 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 
 	const bandera = FACTIONS[suya.faction as keyof typeof FACTIONS];
 
+	// Las dos escaleras, de la misma consulta que ya trae todo lo del piloto.
+	const suyas = pilotStandings(db, row.id);
+	const reputation = buildReputacion(
+		suyas.corporations[suya.code] ?? 0,
+		suya.faction ? (suyas.factions[suya.faction] ?? 0) : 0,
+		bandera?.name ?? 'Sin bandera'
+	);
+
 	return {
 		belongs: true,
 		name: suya.name,
@@ -140,6 +199,7 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 		description: suya.description,
 		members: cuantos === 1 ? '1 piloto' : `${cuantos} pilotos`,
 		stations,
-		agents
+		agents,
+		reputation
 	};
 }
