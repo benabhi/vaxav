@@ -369,13 +369,23 @@ quedarse con dos.
 
 ### El mapa de la galaxia y su marco
 
-Son dos piezas y conviene no confundirlas:
+Son tres piezas y conviene no confundirlas:
 
 - **`GalaxyMap`** es el lienzo: la grilla, las líneas, la cámara y el clic. No sabe
   qué hay alrededor.
 - **`GalaxyStage`** es el marco: acomoda el lienzo, los filtros, la ficha del
   costado y la leyenda, y resuelve el botón de agrandar —panel arriba, pantalla
   completa encima de todo—.
+- **`GalaxyLegend`** —sin botones: los controles de la cámara son del mapa y viven
+  en su esquina— dice qué significa lo que se ve, y ordena dos preguntas
+  distintas: qué dice el color —que cambia con el filtro— y qué dice la línea —que
+  es siempre la misma—. Cada fila lleva su rótulo a la izquierda, de ancho fijo,
+  porque esa alineación en columna es la mitad de lo que hace que trece entradas
+  dejen de parecer un amontonamiento. Los nombres propios van en caja normal y sólo
+  las etiquetas fijas en versalitas: «Marca de Ávila» espaciada en mayúsculas
+  cuesta el doble leerla. Y la lista de colores **se corta**: con veinte regiones
+  sería más alta que el mapa, así que se muestran unas pocas y el resto se pide —lo
+  que se esconde ahí ya está escrito sobre el propio mapa—.
 
 Las piezas de adentro entran como snippets, así que el marco no sabe qué son: el
 constructor filtra por gobierno y ofrece abrir el sistema, el piloto filtra por

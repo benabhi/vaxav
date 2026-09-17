@@ -444,6 +444,7 @@ Lo que el trazo codifica:
 | Se ve                              | Quiere decir                                         |
 | ---------------------------------- | ---------------------------------------------------- |
 | Línea llena                        | Una puerta que sigue la grilla                       |
+| Línea gruesa, naranja claro        | Una **salida del sistema elegido**                   |
 | Línea punteada, en cian            | Un **atajo**: sus puntas no son vecinas              |
 | Línea roja con un tajo al medio    | El **paso está cerrado**                             |
 | Un brazo corto amarillo            | Una **puerta sin conectar**, saliendo hacia su rumbo |
@@ -452,9 +453,30 @@ Lo que el trazo codifica:
 Los tres últimos son trabajo a medio hacer que sólo se ve mirando el conjunto: el
 contador de arriba dice **cuántos** hay, el mapa dice **dónde**.
 
+La leyenda no es un adorno: un mapa que codifica cinco cosas en el trazo y ocho
+en el color y no dice cuáles es un mapa que hay que adivinar. Cómo se ordena para
+que trece entradas se lean está en [interfaz](INTERFACE.md#el-mapa-de-la-galaxia-y-su-marco).
+
+**Elegir un sistema resalta sus salidas**, en las dos pantallas. Elegir es
+preguntar «¿y desde acá adónde se va?», y sin resaltarlas hay que seguir la línea
+con el dedo entre todas las demás. Se resaltan **las directas y nada más**: el
+camino completo hasta el otro extremo de la galaxia es otra pregunta, y pintarlo
+entero dejaría el mapa iluminado de punta a punta.
+
+Y se dibujan **al final**. En un lienzo el orden de dibujo es la profundidad, así
+que una línea resaltada pintada en su turno queda debajo de la maraña de las
+normales, que es justo lo que se estaba tratando de leer. Cuando la salida es
+además del sistema donde está el piloto, gana esa lectura: dice si la podés
+cruzar, que es más de lo que dice estar elegida.
+
 Se dibuja en Canvas 2D **sin biblioteca**, como todas las figuras del juego, y
 **sin bucle de cuadros**: se redibuja cuando algo cambia. Ésta es una pestaña que
 va a quedar abierta horas.
+
+Los controles —encuadrar, dónde estoy, agrandar— flotan **en la esquina del mapa y
+no en una barra al lado**. Son del mapa: agrandado no hay barra al lado, y un
+control que desaparece justo cuando hace más falta no es un control. Apoyados
+abajo, además, le comían una franja de galaxia entera para dos botones.
 
 #### Los territorios
 
@@ -566,15 +588,20 @@ Qué cambia, y por qué:
 | Dibuja la deuda de obra             | **No la dibuja**                                   |
 | Todas las conexiones se ven igual   | Las tuyas se leen en **tres estados**              |
 | Ficha con casilla, cuerpos y rumbos | Ficha con **servicios y salidas**                  |
-| Filtra por gobierno y constelación  | Filtra por **servicio**                            |
+| Filtra por gobierno y constelación  | Sin gobierno ni constelación                       |
 | Tabla de sistemas debajo            | **Sin tabla**                                      |
 
 - **Abre centrada en tu sistema.** La primera pregunta de un piloto es dónde está,
   no cómo es la galaxia; encuadrar sesenta sistemas para contestarla lo deja
-  buscándose a sí mismo en un plano. El botón de encuadrar queda al lado, para la
-  otra pregunta. El marcador de «estás acá» es un aro doble en cian y **no se apaga
-  con los filtros**: un marcador que un recorte puede esconder falla justo cuando
-  hace falta.
+  buscándose a sí mismo en un plano. El marcador de «estás acá» es un aro doble en
+  cian y **no se apaga con los filtros**: un marcador que un recorte puede esconder
+  falla justo cuando hace falta.
+
+  Y la cámara tiene **dos botones, no uno**, porque son las dos preguntas del mapa
+  y son opuestas: **«dónde estoy»** la lleva a tu sistema, se le acerca y lo deja
+  elegido —es con el que se vuelve después de andar mirando lejos— y
+  **«encuadrar»** se aleja hasta que entre la galaxia entera.
+
 - **La deuda de obra no viaja.** Ni las puertas sin conectar ni los sistemas a la
   deriva. Un ramal a medio construir no es un lugar misterioso, es trabajo
   pendiente de otro, y para el piloto sencillamente no se puede llegar.
@@ -589,9 +616,9 @@ Qué cambia, y por qué:
   desde el mapa la pregunta es «¿dónde refino?» y no «¿en cuál de sus tres
   estaciones está la refinería?»—. La casilla y el contenido crudo se quedan en el
   cuartel, que es donde significan algo.
-- **Se filtra por servicio**, que es el único filtro que contesta «¿me conviene
-  ir?» en vez de «¿cómo es ese lugar?». No se filtra por constelación ni por
-  gobierno: son vocabulario de quien arma la galaxia. Las constelaciones sí se
+- **Se filtra por servicio**, igual que en el cuartel: es el único filtro que
+  contesta «¿me conviene ir?» en vez de «¿cómo es ese lugar?». No se filtra por
+  constelación ni por gobierno: son vocabulario de quien arma la galaxia. Las constelaciones sí se
   **pintan**, y la diferencia no es un descuido —pintadas dibujan el terreno y se
   leen sin saber cómo se llaman; filtrar por ellas pide conocer el nombre de
   antemano—.
