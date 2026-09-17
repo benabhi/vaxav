@@ -1710,6 +1710,27 @@ export interface PilotoEnElMapa {
 	 * orden, así que el mapa, la pantalla y el servidor dicen exactamente lo mismo.
 	 */
 	readonly reach: Readonly<Record<string, string>>;
+	/**
+	 * El salto que está cruzando ahora mismo, o `null`.
+	 *
+	 * Sólo existe mientras hay un salto en curso: un viaje adentro del sistema no
+	 * cruza ninguna línea del mapa y no tendría qué dibujar. Trae cuándo empezó y
+	 * cuánto dura para que el mapa pueda mostrar **cuánto lleva recorrido**, que es
+	 * lo que convierte una línea resaltada en un viaje.
+	 *
+	 * Es la base de lo que va a necesitar el autopiloto: un recorrido de varios
+	 * saltos es esta misma línea, repetida.
+	 */
+	readonly route: RutaEnElMapa | null;
+}
+
+/** El tramo que el piloto está cruzando, en códigos de sistema. */
+export interface RutaEnElMapa {
+	readonly from: string;
+	readonly to: string;
+	/** En milisegundos UTC, para que el navegador lleve la cuenta. */
+	readonly startedAt: number;
+	readonly durationSeconds: number;
 }
 
 /** Un sistema en su casilla de la grilla. */

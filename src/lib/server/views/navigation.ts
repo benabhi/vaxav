@@ -92,6 +92,15 @@ import type {
 	Ubicacion
 } from '$lib/tipos';
 
+/** En qué sistema está ese cuerpo, por código. Vacío si no se lo encuentra. */
+function sistemaDelCuerpo(db: Db, bodyId: number): string | null {
+	const cuerpo = db.select().from(body).where(eq(body.id, bodyId)).get();
+	if (!cuerpo) return null;
+	return (
+		db.select().from(systemTable).where(eq(systemTable.id, cuerpo.systemId)).get()?.code ?? null
+	);
+}
+
 /** Nombre de la facción dueña, o el rótulo de las que no tienen bandera. */
 function factionName(code: string): string {
 	return FACTIONS[code as keyof typeof FACTIONS]?.name ?? 'Sin bandera';
@@ -995,6 +1004,13 @@ export function buildGalaxia(
 
 	const exits = cuerpo ? buildSalidas(db, row, cuerpo) : [];
 
+	// El salto en curso, para que el mapa pueda dibujar por dónde va la nave. Sólo
+	// un salto: un viaje adentro del sistema no cruza ninguna línea del mapa.
+	const orden = currentAction(db, row.id);
+	const salto = orden?.kind === JUMP_KIND ? orden : null;
+	const desde = salto?.originBodyId ? sistemaDelCuerpo(db, salto.originBodyId) : null;
+	const hasta = salto?.destinationBodyId ? sistemaDelCuerpo(db, salto.destinationBodyId) : null;
+
 	const pilot: PilotoEnElMapa = {
 		system: here?.code ?? '',
 		// Los saltos se cuentan sobre el grafo de puertas abiertas: «a dos saltos»
@@ -1002,7 +1018,16 @@ export function buildGalaxia(
 		// plano. Lo que no aparece **no se puede alcanzar**, que no es lo mismo que
 		// estar lejos.
 		jumps: here ? Object.fromEntries(hopsFrom(neighbourhood(map), here.code)) : {},
-		reach: Object.fromEntries(exits.map((salida) => [salida.code, salida.blocked]))
+		reach: Object.fromEntries(exits.map((salida) => [salida.code, salida.blocked])),
+		route:
+			salto && desde && hasta && desde !== hasta
+				? {
+						from: desde,
+						to: hasta,
+						startedAt: salto.startedAt.getTime(),
+						durationSeconds: salto.durationSeconds
+					}
+				: null
 	};
 
 	const pasan = map.systems.filter((nodo) => GALAXY_FILTERS.every((cumple) => cumple(nodo, query)));

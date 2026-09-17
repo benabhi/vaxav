@@ -257,6 +257,17 @@
 		{ label: 'Paso cerrado', color: 'var(--color-danger)' }
 	];
 
+	/**
+	 * La leyenda, con el tramo en curso adelante **sólo mientras se está viajando**.
+	 *
+	 * Una entrada de algo que no está en pantalla es una línea que hay que
+	 * descartar cada vez que se lee la leyenda, y la leyenda se lee justamente
+	 * cuando uno no sabe qué está mirando.
+	 */
+	let leyenda = $derived(
+		galaxia.pilot.route ? [{ label: 'Tu ruta', color: 'var(--color-data)' }, ...LEYENDA] : LEYENDA
+	);
+
 	let hayFiltro = $derived(
 		Boolean(
 			consulta.search ||
@@ -587,7 +598,7 @@
 {/snippet}
 
 {#snippet leyendasDelMapa()}
-	<GalaxyLegend paint={leyendaPintura} strokes={LEYENDA} />
+	<GalaxyLegend paint={leyendaPintura} strokes={leyenda} />
 {/snippet}
 
 {#snippet fichaDelMapa()}

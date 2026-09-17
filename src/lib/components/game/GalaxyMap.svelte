@@ -177,6 +177,33 @@
 	let viewport = $state<Punto>({ x: 0, y: 0 });
 	/** Cuánto agrandó el CSS la interfaz. Es 1 en un portátil. */
 	let escala = $state(1);
+
+	/**
+	 * El reloj del tramo en curso.
+	 *
+	 * **Late sólo mientras hay un salto**, y una vez por segundo: el lienzo no
+	 * tiene bucle de cuadros y no lo va a tener por esto. Un viaje dura minutos, así
+	 * que la línea que crece se ve crecer igual a un cuadro por segundo, y el resto
+	 * del tiempo el mapa se sigue redibujando sólo cuando algo cambia.
+	 *
+	 * Es el mismo patrón que el indicador de acción de la barra y el reloj UTC:
+	 * cada componente que necesita el tiempo lleva el suyo.
+	 */
+	let ahora = $state(Date.now());
+
+	$effect(() => {
+		if (!pilot?.route) return;
+		const reloj = setInterval(() => (ahora = Date.now()), 1000);
+		return () => clearInterval(reloj);
+	});
+
+	/** Qué fracción del tramo lleva recorrida, de cero a uno. */
+	let recorrido = $derived.by(() => {
+		const ruta = pilot?.route;
+		if (!ruta || ruta.durationSeconds <= 0) return 0;
+		const pasado = (ahora - ruta.startedAt) / 1000;
+		return Math.min(1, Math.max(0, pasado / ruta.durationSeconds));
+	});
 	/**
 	 * La cámara propia, para cuando nadie la sostiene desde afuera.
 	 *
@@ -225,7 +252,20 @@
 	 * ir último o queda tapado por la maraña de líneas normales, que es justo lo que
 	 * se estaba tratando de leer. Va de menos a más importante.
 	 */
+	/** El tramo que la nave está cruzando ahora mismo. */
+	function esLaRuta(enlace: EnlaceGalaxia): boolean {
+		const ruta = pilot?.route;
+		if (!ruta) return false;
+		return (
+			(enlace.from === ruta.from && enlace.to === ruta.to) ||
+			(enlace.from === ruta.to && enlace.to === ruta.from)
+		);
+	}
+
 	function rango(enlace: EnlaceGalaxia): number {
+		// El tramo en curso va último de todos: es lo único del mapa que está
+		// pasando ahora, y tapado por la maraña no sirve de nada.
+		if (esLaRuta(enlace)) return 3;
 		if (esMia(enlace)) return 2;
 		if (esDelElegido(enlace)) return 1;
 		return 0;
@@ -348,26 +388,64 @@
 			// camino completo hasta el otro extremo de la galaxia es otra pregunta, y
 			// pintarla entera dejaría el mapa iluminado de punta a punta—.
 			const suya = !mia && esDelElegido(enlace);
+			// **El tramo en curso manda sobre todo lo demás.** Mientras la nave está
+			// cruzando, ése es el único pasaje del mapa que está pasando algo, y se
+			// dibuja en cian —el color de lo que todavía no terminó— con lo ya
+			// recorrido encima.
+			const enCurso = esLaRuta(enlace);
 
-			ctx.setLineDash(enlace.shortcut || (mia && motivo) ? [6, 5] : []);
-			ctx.strokeStyle = apagado
-				? muted
-				: enlace.closed
-					? danger
-					: mia
-						? motivo
-							? muted
-							: accent
-						: suya
-							? accentBright
-							: enlace.shortcut
-								? data
-								: accentDim;
-			ctx.globalAlpha = apagado ? 0.25 : enlace.closed ? 0.55 : mia && motivo ? 0.5 : 1;
-			ctx.lineWidth = mia && !motivo ? 2.5 : suya ? 2 : enlace.shortcut ? 1 : 1.5;
+			ctx.setLineDash(enCurso || enlace.shortcut || (mia && motivo) ? [6, 5] : []);
+			ctx.strokeStyle = enCurso
+				? data
+				: apagado
+					? muted
+					: enlace.closed
+						? danger
+						: mia
+							? motivo
+								? muted
+								: accent
+							: suya
+								? accentBright
+								: enlace.shortcut
+									? data
+									: accentDim;
+			ctx.globalAlpha = enCurso
+				? 0.7
+				: apagado
+					? 0.25
+					: enlace.closed
+						? 0.55
+						: mia && motivo
+							? 0.5
+							: 1;
+			ctx.lineWidth = enCurso ? 2.5 : mia && !motivo ? 2.5 : suya ? 2 : enlace.shortcut ? 1 : 1.5;
 			ctx.stroke();
 			ctx.setLineDash([]);
 			ctx.globalAlpha = 1;
+
+			// Y encima, lo ya recorrido: una línea llena que crece con el viaje. Es lo
+			// que convierte un tramo resaltado en «vas por acá».
+			if (enCurso && pilot?.route) {
+				const origen = enlace.from === pilot.route.from ? a : b;
+				const destino = origen === a ? b : a;
+				const punta = {
+					x: origen.x + (destino.x - origen.x) * recorrido,
+					y: origen.y + (destino.y - origen.y) * recorrido
+				};
+
+				ctx.beginPath();
+				ctx.moveTo(origen.x, origen.y);
+				ctx.lineTo(punta.x, punta.y);
+				ctx.strokeStyle = data;
+				ctx.lineWidth = 3;
+				ctx.stroke();
+
+				ctx.beginPath();
+				ctx.arc(punta.x, punta.y, 3.2, 0, Math.PI * 2);
+				ctx.fillStyle = data;
+				ctx.fill();
+			}
 
 			// **La barra del paso cerrado.** Una línea más fina o más apagada no
 			// alcanza: cerrado no es «menos importante», es «no se cruza», y eso se
@@ -729,7 +807,7 @@
 	// El dibujo depende de todo esto y de nada más. Leerlos acá es lo que hace que
 	// se redibuje solo cuando alguno cambia, sin bucle de cuadros.
 	$effect(() => {
-		void [camara, viewport, escala, selected, hover, visible, map, paint];
+		void [camara, viewport, escala, selected, hover, visible, map, paint, recorrido];
 		dibujar();
 	});
 </script>
