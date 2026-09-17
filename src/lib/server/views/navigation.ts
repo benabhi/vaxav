@@ -41,6 +41,7 @@ import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
 import { canBeHired, requiredReputation } from '$lib/game/reputation';
+import { NO_STANDINGS, pilotStandings, type PilotStandings } from '../services/reputation';
 import {
 	SECURITY_LEVELS,
 	SERVICES,
@@ -80,7 +81,6 @@ import type {
 	Lectura,
 	Palanca,
 	Procedencia,
-	ReputacionDelPiloto,
 	PuntaTramo,
 	SalidaPuerta,
 	Tramo,
@@ -92,15 +92,6 @@ import type {
 	Sistema,
 	Ubicacion
 } from '$lib/tipos';
-
-/**
- * Un piloto del que no se sabe nada todavía.
- *
- * Lo que no está en el diccionario es cero, así que esto no es un caso especial:
- * es el mismo camino con el diccionario vacío. Sirve de valor por omisión para
- * los tests y para cualquier pantalla que todavía no cargue la reputación.
- */
-export const SIN_REPUTACION: ReputacionDelPiloto = { corporations: {}, factions: {} };
 
 /** Nombre de la facción dueña, o el rótulo de las que no tienen bandera. */
 function factionName(code: string): string {
@@ -134,7 +125,7 @@ export function buildModuleTiles(
  */
 export function buildAgentRows(
 	agents: readonly AgentInfo[],
-	reputation: ReputacionDelPiloto = SIN_REPUTACION
+	reputation: PilotStandings = NO_STANDINGS
 ): readonly FilaAgente[] {
 	return agents.map(({ agent, corporation }) => {
 		const faction = corporation.faction;
@@ -329,7 +320,9 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 		detail.body.kind === 'belt'
 			? buildBelt(db, row, ahora.orderBlocked)
 			: { field: SIN_CAMPO, asteroids: [] };
-	const agents = isStation ? buildAgentRows(detail.agents) : [];
+	// Lo que las corporaciones de esta estación piensan del piloto, de una sola
+	// consulta: es lo que decide qué agente atiende y qué agente todavía no.
+	const agents = isStation ? buildAgentRows(detail.agents, pilotStandings(db, row.id)) : [];
 	const abiertos = agents.filter((agent) => agent.open).length;
 
 	return {

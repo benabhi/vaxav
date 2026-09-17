@@ -122,16 +122,32 @@ cualquiera**, sin importar el nivel. No es un agujero: es el atractivo de un
 puerto franco. Al Amarre Franco se llega antes y se llega sin haberle caído bien
 a nadie, y esa es exactamente la clase de decisión que el juego quiere ofrecer.
 
-### Todavía no se guarda
+### Dónde se guarda
 
-No hay tabla de reputación. La escriben las misiones, y las misiones no existen,
-así que una tabla hoy sería una columna vacía sin nadie que la escriba —el mismo
-criterio que se usó para no agregar todavía qué corporación reclamó un sistema—.
+En dos tablas, como los créditos: `standing` con el valor que se lee en cada
+pantalla y `standing_entry` con el libro que lo explica. El valor **no se edita**:
+es la suma de sus asientos, y un test recorre el código fuente para que nadie más
+que `services/reputation.ts` escriba la tabla. El histórico paginado que muestra
+la pestaña no es una tabla aparte: **es ese libro**.
 
-Mientras tanto todo piloto está en cero, y **la pantalla lo dice**: los agentes
-que no atienden se ven igual, apagados, con cuánta reputación hace falta. Esconder
-lo que falta sería más prolijo y mucho peor: lo que se ve es la escalera que el
-jugador tiene por delante.
+Una sola tabla para corporaciones y facciones, con `subject_kind` diciendo cuál:
+la pregunta es la misma para las dos. Por código y no por identificador, porque
+las facciones no tienen tabla. Y **sin fila es cero**, que es donde arranca todo
+el mundo: nadie nace con cuarenta filas en cero, una por cada corporación del
+sector.
+
+Lo que se recorta se asienta recortado. Un asiento de «+1,00» sobre un piloto que
+estaba a 0,30 del techo sería una mentira prolija, y además rompería la suma del
+libro contra el valor guardado.
+
+### Todavía no la escribe nadie
+
+La máquina está puesta y **le falta la fuente**: la reputación la mueven las
+misiones, y las misiones no existen. Hasta entonces todo piloto está en cero.
+
+Y **la pantalla lo dice**: los agentes que no atienden se ven igual, apagados, con
+cuánta reputación hace falta y con quién. Esconder lo que falta sería más prolijo
+y mucho peor: lo que se ve es la escalera que el jugador tiene por delante.
 
 ## Los retratos
 

@@ -190,19 +190,6 @@ export interface BaldosaModulo {
 }
 
 /** Un agente de la estación, listo para dibujar. */
-/**
- * Lo que el piloto tiene con cada corporación y con cada facción, por código.
- *
- * Va como dos diccionarios y no como una lista porque quien lo consume pregunta
- * siempre por uno: «¿cuánto tengo con ésta?». Lo que no está es cero —nadie
- * empieza con una fila por cada corporación del sector—, y ésa es la razón de que
- * el que lee use un valor por omisión en vez de asumir que la clave existe.
- */
-export interface ReputacionDelPiloto {
-	readonly corporations: Readonly<Record<string, number>>;
-	readonly factions: Readonly<Record<string, number>>;
-}
-
 export interface FilaAgente {
 	readonly code: string;
 	readonly name: string;

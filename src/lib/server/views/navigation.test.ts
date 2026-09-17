@@ -11,7 +11,6 @@ import { SERVICES, allBodies } from '$lib/game/universe';
 import { MAX_REPUTATION, REPUTATION_SCALE } from '$lib/game/reputation';
 import { connectGates, createGate, createSystem, setGateClosed } from '../services/worldbuilding';
 import {
-	SIN_REPUTACION,
 	buildAgentRows,
 	buildBodyRows,
 	buildGalaxia,
@@ -20,7 +19,7 @@ import {
 	buildSystemView,
 	readGalaxyQuery
 } from './navigation';
-import type { ReputacionDelPiloto } from '$lib/tipos';
+import { NO_STANDINGS, type PilotStandings } from '../services/reputation';
 
 describe('el mosaico de módulos', () => {
 	it('muestra los ocho siempre, marcando los que la estación tiene', () => {
@@ -51,12 +50,12 @@ describe('el mosaico de módulos', () => {
 });
 
 /** Un piloto con esa reputación con la facción y nada con nadie más. */
-function conLaBandera(code: string, puntos: number): ReputacionDelPiloto {
+function conLaBandera(code: string, puntos: number): PilotStandings {
 	return { corporations: {}, factions: { [code]: puntos * REPUTATION_SCALE } };
 }
 
 /** Y uno con esa reputación con una sola corporación. */
-function conLaCorporacion(code: string, puntos: number): ReputacionDelPiloto {
+function conLaCorporacion(code: string, puntos: number): PilotStandings {
 	return { corporations: { [code]: puntos * REPUTATION_SCALE }, factions: {} };
 }
 
@@ -65,7 +64,7 @@ describe('los agentes', () => {
 		const db = seededDb();
 		const detalle = bodyDetail(db, 'puerto_anfora')!;
 
-		const filas = buildAgentRows(detalle.agents, SIN_REPUTACION);
+		const filas = buildAgentRows(detalle.agents, NO_STANDINGS);
 
 		expect(filas).toHaveLength(detalle.agents.length);
 		expect(filas.length).toBeGreaterThan(1);
@@ -78,7 +77,7 @@ describe('los agentes', () => {
 		const db = seededDb();
 		const detalle = bodyDetail(db, 'puerto_anfora')!;
 
-		const cerrado = buildAgentRows(detalle.agents, SIN_REPUTACION).find((f) => !f.open)!;
+		const cerrado = buildAgentRows(detalle.agents, NO_STANDINGS).find((f) => !f.open)!;
 
 		// Las dos puertas, dichas: la corporación abre a los suyos y la bandera abre
 		// ese nivel en todas las que la llevan.
@@ -121,7 +120,7 @@ describe('los agentes', () => {
 		const db = seededDb();
 		const detalle = bodyDetail(db, 'puerto_anfora')!;
 
-		const cerrado = buildAgentRows(detalle.agents, SIN_REPUTACION).find((f) => !f.open)!;
+		const cerrado = buildAgentRows(detalle.agents, NO_STANDINGS).find((f) => !f.open)!;
 		const suCodigo = detalle.agents.find((uno) => uno.agent.name === cerrado.name)!.corporation
 			.code;
 
