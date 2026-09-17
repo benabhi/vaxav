@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { crearPiloto, seededDb } from '../db/testing';
 import {
 	MessageError,
+	archivedPage,
 	inboxPage,
 	markRead,
 	messageFor,
 	sendMessage,
 	sentPage,
+	setArchived,
 	unreadMessages
 } from './messages';
 
@@ -88,6 +90,56 @@ describe('leer', () => {
 		expect(messageFor(db, ajeno.id, mandado.id)).toBeUndefined();
 		expect(messageFor(db, uno.id, mandado.id)?.id).toBe(mandado.id);
 		expect(messageFor(db, otro.id, mandado.id)?.id).toBe(mandado.id);
+	});
+});
+
+describe('archivar', () => {
+	it('lo saca de la bandeja de uno y lo deja en la de los dos', async () => {
+		const db = seededDb();
+		const { uno, otro } = await dos(db);
+		const mandado = sendMessage(db, uno, 'Zorro', 'Trato', 'Te paso el mineral.');
+
+		setArchived(db, otro.id, mandado.id, true);
+
+		// Sale de recibidos y entra al archivo, sin dejar de existir.
+		expect(inboxPage(db, otro.id).total).toBe(0);
+		expect(archivedPage(db, otro.id).total).toBe(1);
+		// Y el otro lo sigue teniendo en enviados: cada lado decide el suyo.
+		expect(sentPage(db, uno.id).total).toBe(1);
+		expect(archivedPage(db, uno.id).total).toBe(0);
+	});
+
+	it('vuelve con la misma llamada, porque archivar no borra', async () => {
+		const db = seededDb();
+		const { uno, otro } = await dos(db);
+		const mandado = sendMessage(db, uno, 'Zorro', 'Trato', 'Te paso el mineral.');
+
+		setArchived(db, otro.id, mandado.id, true);
+		setArchived(db, otro.id, mandado.id, false);
+
+		expect(inboxPage(db, otro.id).total).toBe(1);
+		expect(archivedPage(db, otro.id).total).toBe(0);
+	});
+
+	it('lo archivado deja de encender el aviso del Neocom', async () => {
+		const db = seededDb();
+		const { uno, otro } = await dos(db);
+		const mandado = sendMessage(db, uno, 'Zorro', 'Trato', 'Te paso el mineral.');
+
+		// Sin abrirlo: guardarlo sin leer es una forma de decir que no importa, y el
+		// Neocom no puede quedar titilando por algo que el jugador ya descartó.
+		setArchived(db, otro.id, mandado.id, true);
+
+		expect(unreadMessages(db, otro.id)).toBe(0);
+	});
+
+	it('no deja archivar lo que no es tuyo', async () => {
+		const db = seededDb();
+		const { uno } = await dos(db);
+		const ajeno = await crearPiloto(db, 'Mirlo');
+		const mandado = sendMessage(db, uno, 'Zorro', 'Trato', 'Te paso el mineral.');
+
+		expect(() => setArchived(db, ajeno.id, mandado.id, true)).toThrow(MessageError);
 	});
 });
 

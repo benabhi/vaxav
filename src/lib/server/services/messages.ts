@@ -18,7 +18,7 @@
  * Corresponde a `docs/systems/INTERFACE.md`.
  */
 
-import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, or, sql } from 'drizzle-orm';
 import { message, pilot, type Message, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { messageProblem, trimBody, trimSubject } from '$lib/game/messages';
@@ -91,18 +91,73 @@ export function sendMessage(
 		.get();
 }
 
-/** Una página de lo que le llegó. */
+/** Una página de lo que le llegó y todavía no archivó. */
 export function inboxPage(db: Db, pilotId: number, page = 1, size = PAGE_SIZE): MessagePage {
-	return pagina(db, eq(message.recipientId, pilotId), page, size);
+	return pagina(
+		db,
+		and(eq(message.recipientId, pilotId), eq(message.recipientArchived, false)),
+		page,
+		size
+	);
 }
 
-/** Y una de lo que mandó. */
+/** Y una de lo que mandó, con la misma regla. */
 export function sentPage(db: Db, pilotId: number, page = 1, size = PAGE_SIZE): MessagePage {
-	return pagina(db, eq(message.senderId, pilotId), page, size);
+	return pagina(
+		db,
+		and(eq(message.senderId, pilotId), eq(message.senderArchived, false)),
+		page,
+		size
+	);
 }
 
-/** El trabajo común de las dos bandejas, que sólo se diferencian en el filtro. */
-function pagina(db: Db, filtro: ReturnType<typeof eq>, page: number, size: number): MessagePage {
+/**
+ * Y una de lo que guardó, venga del lado que venga.
+ *
+ * **Un solo archivo para los dos lados.** Quien busca algo viejo no se acuerda de
+ * si lo escribió o se lo escribieron; se acuerda de con quién fue. Partirlo en
+ * dos archivos obligaría a buscar dos veces lo mismo.
+ */
+export function archivedPage(db: Db, pilotId: number, page = 1, size = PAGE_SIZE): MessagePage {
+	return pagina(
+		db,
+		or(
+			and(eq(message.recipientId, pilotId), eq(message.recipientArchived, true)),
+			and(eq(message.senderId, pilotId), eq(message.senderArchived, true))
+		),
+		page,
+		size
+	);
+}
+
+/**
+ * Guarda un mensaje en archivados, o lo devuelve a su bandeja.
+ *
+ * **Cada lado decide el suyo.** La fila es una sola y los dos extremos la ven:
+ * que el que lo mandó lo archive no tiene por qué sacarlo de la bandeja del otro.
+ * Por eso la columna que se toca depende de quién lo pide.
+ *
+ * Archivar **no borra**: el mensaje sigue entero y vuelve con la misma llamada.
+ */
+export function setArchived(db: Db, pilotId: number, id: number, archived: boolean): void {
+	const fila = messageFor(db, pilotId, id);
+	if (!fila) throw new MessageError('Ese mensaje no es tuyo.');
+
+	db.update(message)
+		.set(
+			fila.recipientId === pilotId ? { recipientArchived: archived } : { senderArchived: archived }
+		)
+		.where(eq(message.id, id))
+		.run();
+}
+
+/** Si ese piloto ya lo tiene guardado en archivados. */
+export function isArchived(row: Message, pilotId: number): boolean {
+	return row.recipientId === pilotId ? row.recipientArchived : row.senderArchived;
+}
+
+/** El trabajo común de las tres bandejas, que sólo se diferencian en el filtro. */
+function pagina(db: Db, filtro: ReturnType<typeof and>, page: number, size: number): MessagePage {
 	const total = db.select({ n: count() }).from(message).where(filtro).get()?.n ?? 0;
 
 	// Con la bandeja vacía sigue habiendo una página: la que dice que no hay nada.
@@ -156,7 +211,13 @@ export function unreadMessages(db: Db, pilotId: number): number {
 		db
 			.select({ n: count() })
 			.from(message)
-			.where(and(eq(message.recipientId, pilotId), isNull(message.readAt)))
+			.where(
+				and(
+					eq(message.recipientId, pilotId),
+					eq(message.recipientArchived, false),
+					isNull(message.readAt)
+				)
+			)
 			.get()?.n ?? 0
 	);
 }

@@ -110,7 +110,7 @@
 	-->
 	<div class="order-2 w-full min-w-0 flex-[3_1_0] lg:order-1">
 		<TitledPanel
-			title={bandeja.box === 'recibidos' ? 'Recibidos' : 'Enviados'}
+			title={bandeja.title}
 			detail={bandeja.total === 1 ? '1 mensaje' : `${bandeja.total} mensajes`}
 			class="w-full"
 		>
@@ -202,6 +202,26 @@
 					</p>
 
 					<div class="flex w-full flex-wrap items-center gap-3 border-t border-border-soft pt-4">
+						<!--
+							Archivar y no borrar. Un mensaje es la prueba de un trato, y un juego
+							donde el otro puede hacer desaparecer lo que escribió es un juego
+							donde la palabra no vale nada. Sale de la bandeja, queda entero, y
+							vuelve con el mismo botón.
+						-->
+						<form method="POST" action="/mensajes?/archivar">
+							<input type="hidden" name="mensaje" value={bandeja.open.id} />
+							<input type="hidden" name="guardar" value={bandeja.open.archived ? '0' : '1'} />
+							<input type="hidden" name="volver" value={bandeja.base} />
+							<HudButton type="submit" variant="ghost" size="1">
+								<Icon
+									name={bandeja.open.archived ? 'arrow-arc-left' : 'archive'}
+									weight="bold"
+									size="0.7rem"
+								/>
+								{bandeja.open.archived ? 'Devolver a la bandeja' : 'Archivar'}
+							</HudButton>
+						</form>
+
 						{#if bandeja.open.mine}
 							<!--
 								De lo que mandaste, lo único que falta saber es si lo abrieron. De

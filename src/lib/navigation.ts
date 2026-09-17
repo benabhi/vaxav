@@ -155,6 +155,12 @@ export const MODULES: readonly Module[] = [
 			{
 				route: '/mensajes/enviados',
 				label: 'Enviados'
+			},
+			// El archivo va último: es adonde se va lo que ya no está en curso, y es
+			// la pestaña que menos se abre de las tres.
+			{
+				route: '/mensajes/archivados',
+				label: 'Archivados'
 			}
 		]
 	},

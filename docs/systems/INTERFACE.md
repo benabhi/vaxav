@@ -243,10 +243,18 @@ guardado hasta que lo abra. Un mensaje **no pide estar cerca**: llega a donde
 esté el otro. Lo que sí pide estar en el mismo lugar es enterarse de que el otro
 existe, y de eso se ocupa la lista de pilotos de una estación.
 
-Dos pestañas —Recibidos y Enviados— que son **la misma lista mirada desde el
-otro lado**, y una sola fila en la base detrás de las dos: un mensaje enviado y
-uno recibido son el mismo hecho, y guardarlo dos veces es la manera segura de que
-un día digan cosas distintas.
+Tres pestañas —Recibidos, Enviados y Archivados— sobre **una sola fila en la
+base**: un mensaje enviado y uno recibido son el mismo hecho mirado desde dos
+lados, y guardarlo dos veces es la manera segura de que un día digan cosas
+distintas.
+
+**Archivar no borra.** Un mensaje es la prueba de un trato, y un juego donde el
+otro puede hacer desaparecer lo que escribió es un juego donde la palabra no vale
+nada. Lo archivado sale de la bandeja, queda entero y vuelve con el mismo botón.
+Cada lado decide el suyo: que el que lo mandó lo guarde no lo saca de la bandeja
+del otro. Y el archivo es **uno solo para los dos lados**, porque quien busca algo
+viejo no se acuerda de si lo escribió o se lo escribieron: se acuerda de con
+quién fue. Por eso ahí la columna no dice «De» ni «Para» sino «Con».
 
 El que está abierto va **al lado de la lista y no en otra ruta**: el proyecto
 tiene dos niveles de navegación y nunca un tercero, y cuando un módulo necesita

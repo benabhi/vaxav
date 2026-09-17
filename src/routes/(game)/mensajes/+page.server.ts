@@ -13,10 +13,13 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { MessageError, sendMessage } from '$lib/server/services/messages';
+import { MessageError, sendMessage, setArchived } from '$lib/server/services/messages';
 import { buildBandeja } from '$lib/server/views/messages';
 import { LOGIN_ROUTE } from '$lib/routes';
 import type { Actions, PageServerLoad } from './$types';
+
+/** Las únicas vueltas posibles después de archivar. Ver la acción de abajo. */
+const BANDEJAS = ['/mensajes', '/mensajes/enviados', '/mensajes/archivados'];
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	// El guard del layout del grupo ya rechazó a quien no tiene sesión.
@@ -48,5 +51,33 @@ export const actions: Actions = {
 		}
 
 		redirect(303, '/mensajes/enviados');
+	},
+
+	/**
+	 * Guarda un mensaje en archivados, o lo devuelve a su bandeja.
+	 *
+	 * Vive acá y no en cada bandeja por lo mismo que el envío: es una sola acción,
+	 * y tenerla escrita tres veces es tener tres que un día validan distinto.
+	 */
+	archivar: async ({ request, locals }) => {
+		if (!locals.pilot) return fail(401, { error: 'Tu sesión venció. Volvé a entrar.' });
+
+		const form = await request.formData();
+		const id = Number(form.get('mensaje') ?? '0');
+		const guardar = form.get('guardar') === '1';
+
+		try {
+			setArchived(db, locals.pilot.id, id, guardar);
+		} catch (error) {
+			if (error instanceof MessageError) return fail(400, { error: error.message });
+			throw error;
+		}
+
+		// **Se vuelve a la bandeja de la que vino, y sólo a una de las tres.** El
+		// destino llega del formulario, y un destino que llega de afuera se elige de
+		// una lista o no se elige: si no, cualquiera arma un enlace que manda a otro
+		// lado con la sesión puesta.
+		const vuelta = String(form.get('volver') ?? '');
+		redirect(303, BANDEJAS.includes(vuelta) ? vuelta : '/mensajes');
 	}
 };

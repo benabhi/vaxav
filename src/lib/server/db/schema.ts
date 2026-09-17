@@ -1525,7 +1525,18 @@ export const message = sqliteTable(
 
 		sentAt: integer('sent_at', { mode: 'timestamp' }).notNull().default(NOW),
 		/** Cuándo lo abrió quien lo recibió. Nulo mientras siga sin leer. */
-		readAt: integer('read_at', { mode: 'timestamp' })
+		readAt: integer('read_at', { mode: 'timestamp' }),
+
+		/**
+		 * Si cada lado lo guardó en archivados.
+		 *
+		 * **Dos banderas y no una**, porque la fila es una sola y los dos extremos
+		 * deciden por separado: que el que lo mandó lo saque de su bandeja no tiene
+		 * por qué sacarlo de la del otro. Archivar es mover de lugar y no borrar; lo
+		 * archivado sigue entero y se puede devolver.
+		 */
+		senderArchived: integer('sender_archived', { mode: 'boolean' }).notNull().default(false),
+		recipientArchived: integer('recipient_archived', { mode: 'boolean' }).notNull().default(false)
 	},
 	(table) => [
 		// Uno por bandeja: recibidos y enviados son dos consultas distintas sobre la

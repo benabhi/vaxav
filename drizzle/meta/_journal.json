@@ -155,6 +155,13 @@
       "when": 1789684251634,
       "tag": "0021_glamorous_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1789684714545,
+      "tag": "0022_premium_vance_astro",
+      "breakpoints": true
     }
   ]
 }

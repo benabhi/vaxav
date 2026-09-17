@@ -17,7 +17,9 @@ import { eq, inArray } from 'drizzle-orm';
 import { pilot, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import {
+	archivedPage,
 	inboxPage,
+	isArchived,
 	markRead,
 	messageFor,
 	sentPage,
@@ -28,16 +30,29 @@ import { NO_SUBJECT } from '$lib/game/messages';
 import type { Bandeja, Buzon, FilaMensaje, MensajeAbierto } from '$lib/tipos';
 
 /** Lo que distingue a una bandeja de la otra, dicho una sola vez. */
-const BUZONES: Record<Buzon, { base: string; counterpartLabel: string; empty: string }> = {
+const BUZONES: Record<
+	Buzon,
+	{ base: string; title: string; counterpartLabel: string; empty: string }
+> = {
 	recibidos: {
 		base: '/mensajes',
+		title: 'Recibidos',
 		counterpartLabel: 'De',
 		empty: 'No te escribió nadie todavía. Acá van a caer los mensajes que te manden.'
 	},
 	enviados: {
 		base: '/mensajes/enviados',
+		title: 'Enviados',
 		counterpartLabel: 'Para',
 		empty: 'Todavía no escribiste a nadie. Acá queda copia de lo que mandes.'
+	},
+	// El archivo junta los dos lados, así que la columna no puede decir «De» ni
+	// «Para»: dice **con quién**, que es lo único cierto de los dos.
+	archivados: {
+		base: '/mensajes/archivados',
+		title: 'Archivados',
+		counterpartLabel: 'Con',
+		empty: 'No guardaste nada todavía. Lo que archives sale de la bandeja y queda acá, entero.'
 	}
 };
 
@@ -65,12 +80,17 @@ function distintivos(db: Db, ids: readonly number[]): Map<number, string> {
  */
 export function buildBandeja(db: Db, row: Pilot, box: Buzon, page = 1, openId = 0): Bandeja {
 	const pagina: MessagePage =
-		box === 'recibidos' ? inboxPage(db, row.id, page) : sentPage(db, row.id, page);
+		box === 'recibidos'
+			? inboxPage(db, row.id, page)
+			: box === 'enviados'
+				? sentPage(db, row.id, page)
+				: archivedPage(db, row.id, page);
 
-	// El otro extremo es el que no sos vos, y cuál es depende de la bandeja.
-	const otros = pagina.entries.map((fila) =>
-		box === 'recibidos' ? fila.senderId : fila.recipientId
-	);
+	// El otro extremo es, sencillamente, **el que no sos vos**. Sirve para las tres
+	// bandejas sin preguntar en cuál estamos: en archivados hay de los dos lados.
+	const otroDe = (fila: { senderId: number; recipientId: number }) =>
+		fila.senderId === row.id ? fila.recipientId : fila.senderId;
+	const otros = pagina.entries.map(otroDe);
 	const abierto = openId > 0 ? messageFor(db, row.id, openId) : undefined;
 	if (abierto) markRead(db, row.id, abierto.id);
 
@@ -82,12 +102,11 @@ export function buildBandeja(db: Db, row: Pilot, box: Buzon, page = 1, openId = 
 	const rows: FilaMensaje[] = pagina.entries.map((fila) => ({
 		id: fila.id,
 		subject: fila.subject || NO_SUBJECT,
-		counterpart:
-			nombres.get(box === 'recibidos' ? fila.senderId : fila.recipientId) ?? 'Piloto retirado',
+		counterpart: nombres.get(otroDe(fila)) ?? 'Piloto retirado',
 		at: fila.sentAt.getTime(),
-		// Sin leer sólo tiene sentido de este lado: `readAt` dice cuándo lo abrió
-		// quien lo recibió, así que en enviados hablaría del otro y no de vos.
-		unread: box === 'recibidos' && fila.readAt === null,
+		// Sin leer sólo tiene sentido de lo que te llegó: `readAt` dice cuándo lo
+		// abrió quien lo recibió, así que de lo que mandaste hablaría del otro.
+		unread: fila.recipientId === row.id && fila.readAt === null,
 		open: abierto !== undefined && fila.id === abierto.id
 	}));
 
@@ -102,7 +121,8 @@ export function buildBandeja(db: Db, row: Pilot, box: Buzon, page = 1, openId = 
 				mine: abierto.senderId === row.id,
 				// Que el otro lo haya abierto sólo se dice de lo que mandaste vos: de lo
 				// que te mandaron, el que lo abrió sos vos y no es noticia.
-				seen: abierto.senderId === row.id && abierto.readAt !== null
+				seen: abierto.senderId === row.id && abierto.readAt !== null,
+				archived: isArchived(abierto, row.id)
 			}
 		: null;
 

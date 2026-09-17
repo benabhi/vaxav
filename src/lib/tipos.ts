@@ -686,8 +686,8 @@ export interface Sistema {
 	readonly travelSource: Procedencia;
 }
 
-/** Cuál de las dos bandejas se está mirando. */
-export type Buzon = 'recibidos' | 'enviados';
+/** Cuál de las tres bandejas se está mirando. */
+export type Buzon = 'recibidos' | 'enviados' | 'archivados';
 
 /** Una fila de una bandeja: lo que alcanza para decidir si abrirla o no. */
 export interface FilaMensaje {
@@ -720,6 +720,8 @@ export interface MensajeAbierto {
 	readonly mine: boolean;
 	/** Y si lo mandaste vos, si el otro ya lo abrió. */
 	readonly seen: boolean;
+	/** Si lo tenés guardado en archivados. */
+	readonly archived: boolean;
 }
 
 /**
@@ -733,6 +735,14 @@ export interface Bandeja {
 	readonly box: Buzon;
 	/** La ruta de esta bandeja, para armar los enlaces. */
 	readonly base: string;
+	/**
+	 * Cómo se llama el panel de la lista.
+	 *
+	 * Viaja con el dato y no se decide en la pantalla: con dos bandejas un ternario
+	 * alcanzaba, con la tercera el ternario se olvidó de un caso y el panel de
+	 * Archivados se titulaba «Enviados». Una tabla no se olvida de una fila.
+	 */
+	readonly title: string;
 	/** Cómo se llama la columna del otro: «De» o «Para». */
 	readonly counterpartLabel: string;
 	/** Qué decir cuando no hay nada, que no es lo mismo en las dos. */
