@@ -154,6 +154,19 @@ export const region = sqliteTable(
 		id: integer('id').primaryKey({ autoIncrement: true }),
 		code: text('code').notNull(),
 		name: text('name').notNull(),
+		/**
+		 * El color con que se la pinta en el mapa, o vacío para el automático.
+		 *
+		 * **Vacío no es un dato que falte: es «elegilo vos».** El mapa genera un tono
+		 * a partir del nombre, así que una región nueva nunca queda sin color y nadie
+		 * tiene que decidir nada para que el mapa se vea. Esto está para cuando sí
+		 * importa: dos vecinas que salieron parecidas, o una que se quiere de un color
+		 * concreto.
+		 *
+		 * Se guarda como `#rrggbb`. La facción es distinta —su color vive en el
+		 * catálogo y no se edita— porque son tres y son identidad del juego.
+		 */
+		color: text('color').notNull().default(''),
 		galaxyId: integer('galaxy_id')
 			.notNull()
 			.references(() => galaxy.id)
@@ -173,7 +186,20 @@ export const constellation = sqliteTable(
 		name: text('name').notNull(),
 		regionId: integer('region_id')
 			.notNull()
-			.references(() => region.id)
+			.references(() => region.id),
+		/**
+		 * El color con que se la pinta en el mapa, o vacío para el automático.
+		 *
+		 * **Vacío no es un dato que falte: es «elegilo vos».** El mapa genera un tono
+		 * a partir del nombre, así que una región nueva nunca queda sin color y nadie
+		 * tiene que decidir nada para que el mapa se vea. Esto está para cuando sí
+		 * importa: dos vecinas que salieron parecidas, o una que se quiere de un color
+		 * concreto.
+		 *
+		 * Se guarda como `#rrggbb`. La facción es distinta —su color vive en el
+		 * catálogo y no se edita— porque son tres y son identidad del juego.
+		 */
+		color: text('color').notNull().default('')
 	},
 	(table) => [
 		uniqueIndex('constellation_code_idx').on(table.code),

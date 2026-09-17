@@ -67,6 +67,7 @@ import {
 } from '$lib/format';
 import type {
 	ConsultaUniverso,
+	FilaRegion,
 	Constructor,
 	EnlaceGalaxia,
 	MapaGalaxia,
@@ -309,6 +310,8 @@ function buildMapa(
 			factionName: fila?.controlledBy ?? '',
 			region: fila?.region ?? '',
 			constellation: fila?.constellation ?? '',
+			regionColor: fila?.regionColor ?? '',
+			constellationColor: fila?.constellationColor ?? '',
 			bodies: fila?.bodies ?? 0,
 			stations: fila?.stations ?? 0,
 			gates: suyas.length,
@@ -358,6 +361,38 @@ function buildMapa(
 	};
 }
 
+/**
+ * Las regiones con sus constelaciones y cuántos sistemas tiene cada una.
+ *
+ * La cuenta va porque es lo que dice si una constelación está terminada: una vacía
+ * es trabajo a medio hacer que sólo se ve mirando la lista, igual que las puertas
+ * sin conectar sólo se ven mirando el mapa.
+ */
+function buildTaxonomia(db: Db, filas: readonly FilaSistema[]): FilaRegion[] {
+	const constelaciones = constellationsIn(db);
+	const porConstelacion = new Map<string, number>();
+	const porRegion = new Map<string, number>();
+	for (const fila of filas) {
+		porConstelacion.set(fila.constellation, (porConstelacion.get(fila.constellation) ?? 0) + 1);
+		porRegion.set(fila.region, (porRegion.get(fila.region) ?? 0) + 1);
+	}
+
+	return allRegions(db).map((una) => ({
+		id: una.id,
+		name: una.name,
+		color: una.color,
+		systems: porRegion.get(una.name) ?? 0,
+		constellations: constelaciones
+			.filter((otra) => otra.regionId === una.id)
+			.map((otra) => ({
+				id: otra.id,
+				name: otra.name,
+				color: otra.color,
+				systems: porConstelacion.get(otra.name) ?? 0
+			}))
+	}));
+}
+
 export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchParams())): Universo {
 	const sistemas = db.select().from(system).orderBy(system.name).all();
 	const constelaciones = new Map(
@@ -395,6 +430,8 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 			code: fila.code,
 			name: fila.name,
 			constellation: suConstelacion?.name ?? '',
+			regionColor: suConstelacion ? (regiones.get(suConstelacion.regionId)?.color ?? '') : '',
+			constellationColor: suConstelacion?.color ?? '',
 			region: suConstelacion ? (regiones.get(suConstelacion.regionId)?.name ?? '') : '',
 			government: governmentLabel(fila.government),
 			governmentCode: fila.government,
@@ -435,6 +472,7 @@ export function buildUniverso(db: Db, query = readUniverseQuery(new URLSearchPar
 		totalGates: puertas.length,
 		totalLoose: puertas.filter((una) => una.destinationId === null).length,
 		map: buildMapa(db, sistemas, filas),
+		taxonomy: buildTaxonomia(db, filas),
 		matches: pasan.map((fila) => fila.code),
 		query: { ...query, page: pagina },
 		total: filas.length,

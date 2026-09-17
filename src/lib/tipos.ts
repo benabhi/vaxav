@@ -1215,6 +1215,9 @@ export interface FilaSistema {
 	readonly code: string;
 	readonly name: string;
 	readonly constellation: string;
+	/** El color elegido de cada una, o vacío para el automático. */
+	readonly regionColor: string;
+	readonly constellationColor: string;
 	readonly region: string;
 	readonly government: string;
 	/**
@@ -1259,10 +1262,35 @@ export interface Universo {
 	readonly matches: readonly string[];
 	/** Cómo quedó la consulta, para que la pantalla dibuje sus controles. */
 	readonly query: ConsultaUniverso;
+	/**
+	 * Las regiones con sus constelaciones, para el panel que las edita.
+	 *
+	 * Van con la cuenta de sistemas de cada una: una constelación vacía es trabajo a
+	 * medio hacer, y verlo en la lista es la única forma de acordarse de terminarla.
+	 */
+	readonly taxonomy: readonly FilaRegion[];
 	/** Cuántos sistemas hay en total y cuántos pasan el filtro. */
 	readonly total: number;
 	readonly found: number;
 	readonly pages: number;
+}
+
+/** Una región del cuartel, con sus constelaciones adentro. */
+export interface FilaRegion {
+	readonly id: number;
+	readonly name: string;
+	/** El color elegido, o vacío. El resuelto lo calcula la pantalla. */
+	readonly color: string;
+	readonly systems: number;
+	readonly constellations: readonly FilaConstelacion[];
+}
+
+/** Una constelación, con cuántos sistemas tiene adentro. */
+export interface FilaConstelacion {
+	readonly id: number;
+	readonly name: string;
+	readonly color: string;
+	readonly systems: number;
 }
 
 /** Lo que se pidió del listado de sistemas: filtros, orden y página. */
@@ -1318,6 +1346,15 @@ export interface NodoGalaxia {
 	readonly factionName: string;
 	readonly region: string;
 	readonly constellation: string;
+	/**
+	 * El color elegido para su región y su constelación, o vacío.
+	 *
+	 * **Vacío no es un dato que falte, es «usá el automático»**: el que se genera a
+	 * partir del nombre. Viaja desde el servidor y no se resuelve acá porque quien
+	 * pinta el mapa no tiene por qué saber cuál de los dos corresponde.
+	 */
+	readonly regionColor: string;
+	readonly constellationColor: string;
 	readonly bodies: number;
 	readonly stations: number;
 	/** Cuántas salidas tiene. */

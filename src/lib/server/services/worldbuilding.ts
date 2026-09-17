@@ -92,8 +92,25 @@ export function constellationsIn(db: Db, regionId?: number): readonly Constellat
 	return [...filas].sort((a, b) => a.regionId - b.regionId || a.name.localeCompare(b.name, 'es'));
 }
 
+/**
+ * Un color de categoría, validado.
+ *
+ * **Vacío es legítimo**: quiere decir «usá el automático», que es lo que el mapa
+ * genera a partir del nombre. Lo que no entra es cualquier otra cosa: un valor a
+ * medio escribir llegaría hasta el lienzo y ahí un color inválido no falla, sólo
+ * pinta de negro.
+ */
+function checkColor(color: string): string {
+	const limpio = color.trim().toLowerCase();
+	if (!limpio) return '';
+	if (!/^#[0-9a-f]{6}$/.test(limpio)) {
+		throw new BuilderError('Ese color no es un hexadecimal de seis dígitos.');
+	}
+	return limpio;
+}
+
 /** Crea una región. El código sale del nombre. */
-export function createRegion(db: Db, name: string, actorId: number | null): Region {
+export function createRegion(db: Db, name: string, actorId: number | null, color = ''): Region {
 	const limpio = name.trim();
 	if (!limpio) throw new BuilderError('La región necesita un nombre.');
 
@@ -108,7 +125,7 @@ export function createRegion(db: Db, name: string, actorId: number | null): Regi
 	return db.transaction((tx) => {
 		const creada = tx
 			.insert(region)
-			.values({ code, name: limpio, galaxyId: galaxia.id })
+			.values({ code, name: limpio, galaxyId: galaxia.id, color: checkColor(color) })
 			.returning()
 			.get();
 
@@ -123,12 +140,91 @@ export function createRegion(db: Db, name: string, actorId: number | null): Regi
 	});
 }
 
+/**
+ * Cambia el nombre y el color de una región.
+ *
+ * **El código no se toca.** Sale del nombre al crearla y desde ahí es su identidad:
+ * cambiarlo al renombrar rompería cualquier cosa que lo hubiera guardado, y una
+ * región se renombra porque no gustó cómo quedó escrita, no porque sea otra.
+ */
+export function updateRegion(
+	db: Db,
+	regionId: number,
+	name: string,
+	color: string,
+	actorId: number | null
+): void {
+	const actual = db.select().from(region).where(eq(region.id, regionId)).get();
+	if (!actual) throw new BuilderError('Esa región no existe.');
+
+	const limpio = name.trim();
+	if (!limpio) throw new BuilderError('La región necesita un nombre.');
+
+	const repetida = db
+		.select()
+		.from(region)
+		.all()
+		.find((una) => una.id !== regionId && una.name === limpio);
+	if (repetida) throw new BuilderError(`Ya hay una región que se llama ${limpio}.`);
+
+	db.transaction((tx) => {
+		tx.update(region)
+			.set({ name: limpio, color: checkColor(color) })
+			.where(eq(region.id, regionId))
+			.run();
+
+		record(tx, {
+			kind: 'region.updated',
+			actorId,
+			subject: { kind: 'region', id: regionId },
+			payload: { name: limpio, before: actual.name }
+		});
+	});
+}
+
+/** Lo mismo para una constelación, que además puede cambiar de región. */
+export function updateConstellation(
+	db: Db,
+	constellationId: number,
+	name: string,
+	color: string,
+	actorId: number | null
+): void {
+	const actual = db.select().from(constellation).where(eq(constellation.id, constellationId)).get();
+	if (!actual) throw new BuilderError('Esa constelación no existe.');
+
+	const limpio = name.trim();
+	if (!limpio) throw new BuilderError('La constelación necesita un nombre.');
+
+	const repetida = db
+		.select()
+		.from(constellation)
+		.all()
+		.find((una) => una.id !== constellationId && una.name === limpio);
+	if (repetida) throw new BuilderError(`Ya hay una constelación que se llama ${limpio}.`);
+
+	db.transaction((tx) => {
+		tx.update(constellation)
+			.set({ name: limpio, color: checkColor(color) })
+			.where(eq(constellation.id, constellationId))
+			.run();
+
+		record(tx, {
+			kind: 'constellation.updated',
+			actorId,
+			subject: { kind: 'constellation', id: constellationId },
+			payload: { name: limpio, before: actual.name }
+		});
+	});
+}
+
 /** Crea una constelación dentro de una región. */
 export function createConstellation(
 	db: Db,
 	regionId: number,
 	name: string,
-	actorId: number | null
+	actorId: number | null,
+	color = ''
 ): Constellation {
 	const limpio = name.trim();
 	if (!limpio) throw new BuilderError('La constelación necesita un nombre.');
@@ -145,7 +241,7 @@ export function createConstellation(
 	return db.transaction((tx) => {
 		const creada = tx
 			.insert(constellation)
-			.values({ code, name: limpio, regionId })
+			.values({ code, name: limpio, regionId, color: checkColor(color) })
 			.returning()
 			.get();
 

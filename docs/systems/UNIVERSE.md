@@ -473,10 +473,24 @@ Dos reglas distintas, a propósito:
 - **La facción tiene su color en el catálogo** —rojo el Dominio, azul la
   Concordia, verde el Pacto— porque son tres y son identidad del juego. Ver
   [facciones](FACTIONS.md#el-color-de-cada-una).
-- **La región y la constelación lo generan de su nombre.** Son muchas y las crea
-  quien construye: el tono sale de un hash multiplicado por el ángulo áureo, así
-  que el mismo nombre da siempre el mismo color, hay trescientos sesenta
-  disponibles y nombres parecidos no caen en tonos parecidos.
+- **La región y la constelación lo generan de su nombre, y se puede pisar.** Son
+  muchas y las crea quien construye, así que el automático es lo que hace que
+  ninguna quede sin color y nadie tenga que decidir nada: el tono sale de un hash
+  multiplicado por el ángulo áureo, el mismo nombre da siempre el mismo color, hay
+  trescientos sesenta disponibles y nombres parecidos no caen en tonos parecidos.
+
+  Y se puede elegir uno, en el alta y en el modal de territorios. **Vacío no es un
+  dato que falte: es «usá el automático»**, que es la opción de entrada y abre la
+  rueda con el tono que le tocaría a ese nombre.
+
+  El selector es **el del navegador**, envuelto para que parezca del HUD. No es una
+  librería: es un control nativo, como el campo de texto que envuelve `TextField`,
+  y trae gratis la rueda completa, el hexadecimal a mano y el cuentagotas del
+  sistema. Escribir una rueda propia sería reimplementar peor algo que ya está en
+  todas las máquinas.
+
+  La cuenta vive en `src/lib/palette.ts`, que la comparten el mapa, el selector y
+  la vista: tres copias serían tres colores para la misma región.
 
 #### Agrandado
 

@@ -366,6 +366,36 @@ Tres cosas que la hacen servir para lo que sirve:
   brotes. Cuando la casilla elegida no tiene lugar se prueba con otro sistema
   hasta encontrarlo, que es lo que impide que un racimo entero quede flotando.
 
+### Regiones y constelaciones
+
+**Se crean desde el alta de sistema**, que es donde uno se acuerda de que hacen
+falta: llenando el formulario aparece «¿no existe la constelación?» y desde ahí
+«¿tampoco la región?». Obligar a pasar por una pantalla aparte para crear un
+contenedor vacío sería fricción sin nada a cambio.
+
+**Se editan desde el botón «Territorios»**, que abre un modal con las dos: ahí se
+les cambia el nombre y el color. Existe porque hasta que estuvo, una región creada
+quedaba con el nombre que salió y el color que decidió el generador, sin
+apelación.
+
+**En un modal y no en la pantalla**: la vista del universo es el mapa y la tabla
+de sistemas, que es lo que se mira todos los días, y la taxonomía se toca una vez
+cada tanto. Es el mismo criterio que el alta de sistema.
+
+El botón dice «Territorios» y no «Regiones» porque adentro están las dos, y un
+botón que nombra la mitad de lo que hace deja a quien no conoce la aplicación sin
+saber dónde está lo otro. Es además la palabra que el mapa ya usa para ese par.
+
+Se dibuja como un árbol de dos niveles y no como dos tablas: una constelación sin
+su región al lado es un nombre suelto, y lo que uno quiere ver al elegir un color
+es qué tiene alrededor. Cada fila lleva **cuántos sistemas tiene**, que no es un
+adorno: una constelación en cero es trabajo a medio hacer y verlo en la lista es
+la única forma de acordarse de terminarla.
+
+El código **no cambia al renombrar**. Sale del nombre al crearla y desde ahí es su
+identidad: una región se renombra porque no gustó cómo quedó escrita, no porque
+sea otra.
+
 ## El constructor de sistemas
 
 `/admin/universo/<sistema>` es donde se construye. Pide `universe.read` para mirar y `universe.edit` para tocar —el

@@ -37,6 +37,8 @@
 	import { FREE_SPACE } from '$lib/admin';
 	import { bearingLabel } from '$lib/format';
 	import { getFaction } from '$lib/game/factions';
+	import { colorFor } from '$lib/palette';
+	import ColorField from '$lib/components/forms/ColorField.svelte';
 	import { oppositeBearing, type GateBearing } from '$lib/game/universe';
 	import type { NodoGalaxia } from '$lib/tipos';
 	import type { Camara } from '$lib/camera';
@@ -90,6 +92,15 @@
 
 	let nuevaRegion = $state(false);
 	let nuevaConstelacion = $state(false);
+
+	/**
+	 * Lo que se está escribiendo en el alta, para que la muestra de «automático»
+	 * diga el tono que le va a tocar a **ese** nombre y no a uno cualquiera.
+	 */
+	let nombreRegion = $state('');
+	let nombreConstelacion = $state('');
+	let colorRegion = $state('');
+	let colorConstelacion = $state('');
 
 	let consulta = $derived(universo.query);
 
@@ -159,13 +170,13 @@
 		consulta.territory === 'region'
 			? {
 					key: (nodo: NodoGalaxia) => nodo.region,
-					color: (nodo: NodoGalaxia) => tono(nodo.region),
+					color: (nodo: NodoGalaxia) => colorFor(nodo.region, nodo.regionColor),
 					label: (nodo: NodoGalaxia) => nodo.region
 				}
 			: consulta.territory === 'constelacion'
 				? {
 						key: (nodo: NodoGalaxia) => nodo.constellation,
-						color: (nodo: NodoGalaxia) => tono(nodo.constellation),
+						color: (nodo: NodoGalaxia) => colorFor(nodo.constellation, nodo.constellationColor),
 						label: (nodo: NodoGalaxia) => nodo.constellation
 					}
 				: undefined
@@ -259,40 +270,16 @@
 	 * Agregar un criterio nuevo es agregar una entrada acá y una opción en el
 	 * select: por eso es una tabla y no un `if`.
 	 */
-	/**
-	 * El color de una categoría, generado a partir de su nombre.
-	 *
-	 * **Sin paleta y sin techo.** Antes eran siete colores fijos y la octava región
-	 * repetía uno: con quince constelaciones eso son dos manchas del mismo color
-	 * pegadas, que es peor que no pintar. El tono sale del nombre, así que hay
-	 * trescientos sesenta y no hay nada que configurar cuando alguien crea una
-	 * región nueva.
-	 *
-	 * **El mismo nombre da siempre el mismo color**, en cada carga y en cada
-	 * máquina, que es lo que deja comparar el mapa de hoy con el de ayer. Se
-	 * multiplica por el ángulo áureo para que nombres parecidos no caigan en tonos
-	 * parecidos: sin eso, «Pleamar» y «Peñascales» salían casi iguales.
-	 *
-	 * La saturación y el brillo son fijos y salen de la paleta del HUD: lo que varía
-	 * es el tono, así que ninguno desentona con el naranja del juego.
-	 */
-	const ANGULO_AUREO = 137.508;
-
-	function tono(clave: string): string {
-		if (!clave) return 'var(--color-text-muted)';
-		let suma = 0;
-		for (const letra of clave) suma = (suma * 31 + letra.charCodeAt(0)) % 100000;
-		return `hsl(${Math.round((suma * ANGULO_AUREO) % 360)} 68% 62%)`;
-	}
-
 	const CRITERIOS: Record<string, (nodo: NodoGalaxia) => string> = {
 		// **El color de una facción es suyo y está en el catálogo**, no se genera:
 		// rojo el Dominio, azul la Concordia y verde el Pacto, en todo el juego. El
 		// espacio libre no es una facción, así que se queda con el gris de lo que no
 		// tiene dueño.
 		faccion: (nodo) => (nodo.faction ? getFaction(nodo.faction).color : 'var(--color-text-muted)'),
-		region: (nodo) => tono(nodo.region),
-		gobierno: (nodo) => tono(nodo.government),
+		region: (nodo) => colorFor(nodo.region, nodo.regionColor),
+		// El gobierno no es una entidad que alguien cree y pinte: es un catálogo
+		// cerrado de seis, así que su color se genera y no se elige.
+		gobierno: (nodo) => colorFor(nodo.government),
 		// La seguridad no es una categoría sino una escala, así que va con los colores
 		// que el juego ya usa para decir cuánta ley hay.
 		seguridad: (nodo) =>
@@ -403,6 +390,12 @@
 	 * que se agranda o se achica volverías al encuadre inicial en vez de seguir
 	 * mirando lo que estabas mirando.
 	 */
+	/** El envío de las ediciones de taxonomía, para bloquear el botón mientras va. */
+	const enviando = submitting();
+
+	/** El modal que edita la taxonomía. */
+	let taxonomiaAbierta = $state(false);
+
 	let camara = $state<Camara | null>(null);
 	let encuadrado = $state(false);
 
@@ -490,10 +483,22 @@
 		<Eyebrow>Cuartel general</Eyebrow>
 		<DisplayTitle>Universo</DisplayTitle>
 	</div>
-	<HudButton variant="primary" onclick={() => (abierto = true)}>
-		<Icon name="planet" weight="bold" size="0.8rem" />
-		Crear sistema
-	</HudButton>
+	<div class="flex flex-wrap items-center gap-2">
+		<!--
+			«Territorios» y no «Regiones»: adentro también hay constelaciones, y un
+			botón que nombra la mitad de lo que hace deja a quien no conoce la
+			aplicación sin saber dónde está lo otro. Es además la palabra que el mapa
+			ya usa para ese par, así que no hay dos nombres para la misma cosa.
+		-->
+		<HudButton variant="outline" onclick={() => (taxonomiaAbierta = true)}>
+			<Icon name="map-trifold" weight="bold" size="0.8rem" />
+			Territorios
+		</HudButton>
+		<HudButton variant="primary" onclick={() => (abierto = true)}>
+			<Icon name="planet" weight="bold" size="0.8rem" />
+			Crear sistema
+		</HudButton>
+	</div>
 </div>
 
 <!--
@@ -528,6 +533,61 @@
 		</span>
 	</div>
 </div>
+
+<!--
+Una fila de la taxonomía: su color, su nombre y cuántos sistemas tiene.
+
+El color se elige **en la fila misma**, sin abrir nada: son doce muestras, entran
+al lado del nombre, y mandar a un diálogo para tocar un color es tres clics para
+una decisión de uno.
+
+La cuenta de sistemas no es un adorno: una constelación en cero es trabajo a
+medio hacer, y verlo acá es la única forma de acordarse de terminarla.
+-->
+{#snippet filaTaxonomia(
+	que: 'region' | 'constelacion',
+	id: number,
+	nombre: string,
+	color: string,
+	sistemas: number
+)}
+	<form
+		method="POST"
+		action="?/editarTaxonomia"
+		use:enviando.enhance
+		class="flex w-full flex-wrap items-center gap-3 px-[0.7rem] py-[0.5rem]
+		{que === 'region' ? 'bg-surface' : ''}"
+	>
+		<input type="hidden" name="que" value={que} />
+		<input type="hidden" name="id" value={id} />
+
+		<span
+			class="inline-block h-[0.9rem] w-[0.9rem] shrink-0 border border-border-soft"
+			style="background: {colorFor(nombre, color)}"
+		></span>
+
+		<input
+			name="name"
+			value={nombre}
+			class="h-[1.75rem] w-[12rem] min-w-0 border border-border-soft bg-field px-2 font-display
+			text-[0.78rem] tracking-display text-text-strong uppercase
+			focus:border-accent focus:outline-none"
+		/>
+
+		<span class="font-mono text-[0.7rem] whitespace-nowrap text-text-muted">
+			{sistemas === 1 ? '1 sistema' : `${sistemas} sistemas`}
+		</span>
+
+		<div class="grow"></div>
+
+		<ColorField label="" name="color" value={color} auto={colorFor(nombre)} />
+
+		<HudButton type="submit" size="1" variant="ghost" busy={enviando.busy}>
+			<Icon name="check" weight="bold" size="0.7rem" />
+			Guardar
+		</HudButton>
+	</form>
+{/snippet}
 
 {#if universo.systems.length === 0}
 	<Panel class="w-full">
@@ -576,6 +636,7 @@
 		sitios**: metidas en el panel, y sueltas sobre la capa de pantalla completa.
 		Escribirlas dos veces sería tener dos fichas que se van separando.
 	-->
+
 	{#snippet camposDeFiltro()}
 		<div class="flex w-full flex-wrap items-end gap-3">
 			<div class="w-full min-w-0 xs:w-[11rem]">
@@ -1071,6 +1132,47 @@
 {/if}
 
 <!--
+	Regiones y constelaciones: dónde se les cambia el nombre y el color.
+
+	**En un modal y no en la pantalla.** La vista del universo es el mapa y la tabla
+	de sistemas, que es lo que uno mira todos los días; la taxonomía se toca una vez
+	cada tanto y no tiene por qué ocupar lugar el resto del tiempo. Es el mismo
+	criterio que el alta de sistema.
+
+	Se dibuja como un árbol de dos niveles y no como dos tablas: una constelación sin
+	su región al lado es un nombre suelto, y lo que uno quiere ver al elegir un color
+	es **qué tiene alrededor**.
+-->
+<Modal bind:open={taxonomiaAbierta} title="Regiones y constelaciones" icon="map-trifold" size="lg">
+	<div class="flex w-full flex-col gap-2">
+		{#each universo.taxonomy as region (region.id)}
+			<div class="flex w-full flex-col border border-border-soft">
+				{@render filaTaxonomia('region', region.id, region.name, region.color, region.systems)}
+
+				{#if region.constellations.length > 0}
+					<div class="flex flex-col border-t border-border-soft/50 pl-[1.2rem]">
+						{#each region.constellations as constelacion (constelacion.id)}
+							{@render filaTaxonomia(
+								'constelacion',
+								constelacion.id,
+								constelacion.name,
+								constelacion.color,
+								constelacion.systems
+							)}
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{/each}
+
+		<p class="text-1 text-text-muted">
+			Se crean desde el alta de sistema, que es donde uno se acuerda de que hacen falta. Acá se les
+			cambia el nombre y el color.
+		</p>
+	</div>
+</Modal>
+
+<!--
 	El alta va en un modal y no en una pantalla propia: es un formulario corto que
 	termina llevándote a otro lado, y una pantalla intermedia sólo agregaría un
 	paso de ida y vuelta.
@@ -1109,15 +1211,36 @@
 				<form
 					method="POST"
 					action="?/constelacion"
+					id="constelacion-nueva"
 					use:envio.enhance
 					class="flex w-full items-end gap-3"
 				>
 					<SelectField label="En la región" name="regionId" options={opciones.regions} />
-					<TextField label="Nombre" name="name" placeholder="Cadena Rota" required />
+					<TextField
+						label="Nombre"
+						name="name"
+						placeholder="Cadena Rota"
+						required
+						bind:value={nombreConstelacion}
+					/>
 					<HudButton type="submit" busy={envio.busy} variant="primary" class="mb-[0.1rem] shrink-0"
 						>Crear</HudButton
 					>
 				</form>
+
+				<!--
+					El color, en el alta y no sólo en la edición: elegirlo cuando se crea es
+					un clic, y volver después a buscarla en el panel son cuatro. La muestra
+					de «automático» va con el tono que le tocaría a ese nombre, así que se
+					ve qué se está aceptando antes de aceptarlo.
+				-->
+				<ColorField
+					label="Color de la constelación"
+					name="color"
+					form="constelacion-nueva"
+					value={colorConstelacion}
+					auto={colorFor(nombreConstelacion || 'Cadena Rota')}
+				/>
 
 				<div class="flex w-full items-end gap-3">
 					<HudButton size="1" variant="ghost" onclick={() => (nuevaRegion = !nuevaRegion)}>
@@ -1130,10 +1253,17 @@
 					<form
 						method="POST"
 						action="?/region"
+						id="region-nueva"
 						use:envio.enhance
 						class="flex w-full items-end gap-3"
 					>
-						<TextField label="Región nueva" name="name" placeholder="Borde de Hierro" required />
+						<TextField
+							label="Región nueva"
+							name="name"
+							placeholder="Borde de Hierro"
+							required
+							bind:value={nombreRegion}
+						/>
 						<HudButton
 							type="submit"
 							busy={envio.busy}
@@ -1143,6 +1273,14 @@
 							Crear
 						</HudButton>
 					</form>
+
+					<ColorField
+						label="Color de la región"
+						name="color"
+						form="region-nueva"
+						value={colorRegion}
+						auto={colorFor(nombreRegion || 'Borde de Hierro')}
+					/>
 				{/if}
 			{/if}
 		</div>

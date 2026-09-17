@@ -298,6 +298,16 @@ export const EVENT_KINDS: readonly EventKind[] = [
 		'neutral',
 		(payload) =>
 			`Se creó la constelación ${texto(payload, 'name')}, en ${texto(payload, 'region')}.`
+	),
+	define('region.updated', 'universe', 'Región editada', 'neutral', (payload) =>
+		texto(payload, 'before') === texto(payload, 'name')
+			? `Se retocó ${texto(payload, 'name')}.`
+			: `${texto(payload, 'before')} pasó a llamarse ${texto(payload, 'name')}.`
+	),
+	define('constellation.updated', 'universe', 'Constelación editada', 'neutral', (payload) =>
+		texto(payload, 'before') === texto(payload, 'name')
+			? `Se retocó ${texto(payload, 'name')}.`
+			: `${texto(payload, 'before')} pasó a llamarse ${texto(payload, 'name')}.`
 	)
 ];
 

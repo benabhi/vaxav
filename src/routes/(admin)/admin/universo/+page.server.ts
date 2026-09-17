@@ -17,7 +17,9 @@ import {
 	BuilderError,
 	createConstellation,
 	createRegion,
-	createSystem
+	createSystem,
+	updateConstellation,
+	updateRegion
 } from '$lib/server/services/worldbuilding';
 import { can } from '$lib/permissions';
 import { GOVERNMENTS, type Government } from '$lib/game/universe';
@@ -56,13 +58,45 @@ function exigirPermiso(permisos: ReadonlySet<string>): void {
 
 export const actions: Actions = {
 	/** Crea una región desde el mismo formulario del sistema. */
+	/**
+	 * Cambia el nombre y el color de una región o de una constelación.
+	 *
+	 * **Una sola acción para las dos** porque hacen lo mismo con la misma forma, y
+	 * qué se está editando lo dice el campo `que`. Dos acciones gemelas serían dos
+	 * lugares donde arreglar lo que salga mal en una.
+	 */
+	editarTaxonomia: async ({ request, locals }) => {
+		const datos = await request.formData();
+		const nombre = String(datos.get('name') ?? '');
+		const color = String(datos.get('color') ?? '');
+		const id = entero(datos.get('id'));
+
+		try {
+			exigirPermiso(locals.permissions);
+			if (datos.get('que') === 'region') {
+				updateRegion(db, id, nombre, color, locals.pilot?.id ?? null);
+			} else {
+				updateConstellation(db, id, nombre, color, locals.pilot?.id ?? null);
+			}
+			return { ok: true };
+		} catch (error) {
+			if (error instanceof BuilderError) return fail(400, { error: error.message });
+			throw error;
+		}
+	},
+
 	region: async ({ request, locals }) => {
 		const datos = await request.formData();
 		const nombre = String(datos.get('name') ?? '');
 
 		try {
 			exigirPermiso(locals.permissions);
-			const creada = createRegion(db, nombre, locals.pilot?.id ?? null);
+			const creada = createRegion(
+				db,
+				nombre,
+				locals.pilot?.id ?? null,
+				String(datos.get('color') ?? '')
+			);
 			return { regionId: creada.id };
 		} catch (error) {
 			if (error instanceof BuilderError) return fail(400, { error: error.message });
@@ -80,7 +114,8 @@ export const actions: Actions = {
 				db,
 				entero(datos.get('regionId')),
 				String(datos.get('name') ?? ''),
-				locals.pilot?.id ?? null
+				locals.pilot?.id ?? null,
+				String(datos.get('color') ?? '')
 			);
 			return { constellationId: creada.id };
 		} catch (error) {
