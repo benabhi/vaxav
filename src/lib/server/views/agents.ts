@@ -109,11 +109,16 @@ const SIN_CORPORACION: AgentesCorporacion = {
 export function buildAgentes(
 	db: Db,
 	row: Pilot,
-	query = readAgentsQuery(new URLSearchParams())
+	query = readAgentsQuery(new URLSearchParams()),
+	/** De cuál. Vacío quiere decir la propia. */
+	code = ''
 ): AgentesCorporacion {
-	if (row.corporationId === null) return { ...SIN_CORPORACION, query };
+	const suya = code
+		? db.select().from(corporation).where(eq(corporation.code, code)).get()
+		: row.corporationId === null
+			? undefined
+			: db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
 
-	const suya = db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
 	if (!suya) return { ...SIN_CORPORACION, query };
 
 	const suyos = db

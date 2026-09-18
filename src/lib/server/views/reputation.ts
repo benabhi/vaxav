@@ -70,10 +70,26 @@ const SIN_NADA: PaginaReputacion = {
  * **Sólo la de su corporación**, no el panorama entero: el panorama es otra
  * pantalla —del piloto y no de la corporación— y hoy sería una lista de una fila.
  */
-export function buildPaginaReputacion(db: Db, row: Pilot, page = 1): PaginaReputacion {
-	if (row.corporationId === null) return SIN_NADA;
+export function buildPaginaReputacion(
+	db: Db,
+	row: Pilot,
+	page = 1,
+	/**
+	 * De cuál. Vacío quiere decir la propia.
+	 *
+	 * **La reputación existe con o sin membresía** —es del par piloto ×
+	 * corporación—, así que la escalera y el libro de una ajena son tan reales
+	 * como los de la tuya. Es lo que deja mirar la historia con alguien para quien
+	 * se trabajó y después se dejó de trabajar.
+	 */
+	code = ''
+): PaginaReputacion {
+	const suya = code
+		? db.select().from(corporation).where(eq(corporation.code, code)).get()
+		: row.corporationId === null
+			? undefined
+			: db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
 
-	const suya = db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
 	if (!suya) return SIN_NADA;
 
 	const suyas = pilotStandings(db, row.id);
