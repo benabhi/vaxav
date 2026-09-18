@@ -276,7 +276,9 @@ function seedBody(
 			kind: blueprint.kind,
 			orbitDistance: blueprint.orbitDistance,
 			explored: blueprint.explored,
-			description: blueprint.description
+			bodyClass: blueprint.bodyClass,
+			atmosphere: blueprint.atmosphere,
+			starClass: blueprint.starClass
 		})
 		.returning()
 		.get();
@@ -389,7 +391,6 @@ export function seedUniverse(db: Db, blueprint: GalaxyBlueprint = GALAXY): SeedC
 							x: systemBp.x,
 							y: systemBp.y,
 							z: systemBp.z,
-							description: systemBp.description,
 							government: systemBp.government,
 							security: systemBp.security,
 							controllingFaction: systemBp.controllingFaction,

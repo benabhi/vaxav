@@ -43,6 +43,19 @@
 	let place = $derived(data.location);
 
 	/**
+	 * El color del aviso de riesgo, por nivel.
+	 *
+	 * Las clases van enteras y escritas a mano porque Tailwind lee el código
+	 * fuente: una clase armada por concatenación no existe en la hoja de estilos.
+	 */
+	const RIESGO_TONO: Record<string, string> = {
+		calm: 'border-l-border bg-surface text-text-muted',
+		watched: 'border-l-warning bg-warning-wash text-warning',
+		exposed: 'border-l-warning bg-warning-wash text-warning',
+		hostile: 'border-l-danger bg-danger-wash text-danger'
+	};
+
+	/**
 	 * El módulo abierto debajo del mosaico. Arranca vacío: primero se ve el
 	 * conjunto, después se elige. Es estado de pantalla, así que vive acá y no
 	 * viaja al servidor.
@@ -116,8 +129,39 @@
 	<div class="flex w-full min-w-0 flex-col items-start gap-4">
 		<div class="flex w-full items-start gap-[0.9rem]">
 			<Icon name={place.icon} weight="thin" size="3rem" class="text-accent-dim" />
-			<BodyText>{place.description}</BodyText>
+			<div class="flex min-w-0 flex-col gap-1">
+				{#each place.description as frase (frase)}
+					<BodyText>{frase}</BodyText>
+				{/each}
+			</div>
 		</div>
+
+		<!--
+			Si acá te pueden atacar, se dice acá y no adentro del párrafo de arriba.
+			Una advertencia escondida en un texto de ambientación no la lee nadie: a
+			la tercera pantalla el párrafo se saltea entero.
+
+			No sale en una estación: atracado no te ataca nadie, y ponerle un cartel
+			de peligro a un hangar enseña a ignorar los carteles de peligro.
+		-->
+		{#if place.risk}
+			<div
+				class="flex w-full items-center gap-[0.6rem] border-l-[3px] px-3 py-[0.5rem] {RIESGO_TONO[
+					place.risk.level
+				] ?? RIESGO_TONO.calm}"
+			>
+				<Icon
+					name={place.risk.level === 'calm' ? 'shield-check' : 'warning'}
+					weight="duotone"
+					size="1rem"
+					class="shrink-0"
+				/>
+				<span class="font-display text-[0.72rem] font-bold tracking-label uppercase">
+					{place.risk.label}
+				</span>
+				<span class="min-w-0 text-1 text-text-body">{place.risk.note}</span>
+			</div>
+		{/if}
 		<div class="grid w-full grid-cols-2 gap-4">
 			{@render reading('Tipo', place.kind)}
 			{@render reading('Sistema', place.system)}
@@ -331,7 +375,7 @@
 						salto que sigue.
 					-->
 							<!-- Sin descripción no se dibuja el bloque: un ícono solo no dice nada. -->
-							{#if place.description}
+							{#if place.description.length > 0}
 								<div class="flex w-full items-start gap-[0.9rem]">
 									<Icon
 										name={place.icon}
@@ -339,7 +383,11 @@
 										size="2.25rem"
 										class="shrink-0 text-accent-dim"
 									/>
-									<BodyText>{place.description}</BodyText>
+									<div class="flex min-w-0 flex-col gap-1">
+										{#each place.description as frase (frase)}
+											<BodyText>{frase}</BodyText>
+										{/each}
+									</div>
 								</div>
 							{/if}
 

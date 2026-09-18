@@ -1286,8 +1286,6 @@ medio hacer, y verlo acá es la única forma de acordarse de terminarla.
 				</label>
 			{/if}
 
-			<TextField label="Descripción" name="description" placeholder="Opcional" />
-
 			<div class="grid w-full grid-cols-3 gap-3"></div>
 
 			<div class="flex w-full items-center justify-end gap-3">

@@ -27,13 +27,17 @@ import {
 	setDeposits,
 	setStation,
 	updateBody,
-	updateSystem
+	updateSystem,
+	type BodyDraft
 } from '$lib/server/services/worldbuilding';
 import { can } from '$lib/permissions';
 import {
+	ATMOSPHERES,
+	BODY_CLASSES,
 	BODY_KINDS,
 	GATE_BEARINGS,
 	GOVERNMENTS,
+	STAR_CLASSES,
 	type BodyKind,
 	type GateBearing,
 	type Government
@@ -89,16 +93,32 @@ async function intentar(trabajo: () => void) {
 }
 
 /** Lo que define a un cuerpo, leído del formulario. */
-function cuerpoDe(datos: FormData, kind: BodyKind) {
+function cuerpoDe(datos: FormData, kind: BodyKind): BodyDraft {
 	const parentId = entero(datos, 'parentId');
 	return {
 		name: String(datos.get('name') ?? ''),
 		kind,
 		parentId: parentId > 0 ? parentId : null,
 		orbitDistance: entero(datos, 'orbitDistance'),
-		description: String(datos.get('description') ?? ''),
-		explored: datos.get('explored') !== 'no'
+		explored: datos.get('explored') !== 'no',
+		bodyClass: deLista(datos, 'bodyClass', BODY_CLASSES),
+		atmosphere: deLista(datos, 'atmosphere', ATMOSPHERES),
+		starClass: deLista(datos, 'starClass', STAR_CLASSES)
 	};
+}
+
+/**
+ * Un valor de una lista cerrada, o vacío.
+ *
+ * Lo que no está en la lista se descarta en silencio en vez de fallar: el
+ * formulario sólo ofrece lo que corresponde al tipo de cuerpo, así que un valor
+ * fuera de lista es alguien tocando el HTML. Que los atributos correspondan al
+ * tipo lo hace cumplir el servicio, que es donde vale para todos los que
+ * escriban.
+ */
+function deLista<T extends string>(datos: FormData, campo: string, valores: readonly T[]): T | '' {
+	const valor = String(datos.get(campo) ?? '');
+	return valores.includes(valor as T) ? (valor as T) : '';
 }
 
 /** Lo que define a un sistema, leído del formulario. */
@@ -115,8 +135,7 @@ function sistemaDe(datos: FormData) {
 		government: government as Government,
 		security: entero(datos, 'security'),
 		controllingFaction,
-		capitalOf: datos.get('capital') === 'on' ? controllingFaction : '',
-		description: String(datos.get('description') ?? '')
+		capitalOf: datos.get('capital') === 'on' ? controllingFaction : ''
 	};
 }
 

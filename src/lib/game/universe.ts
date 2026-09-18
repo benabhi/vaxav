@@ -12,6 +12,7 @@
  */
 
 import type { AgentBlueprint } from './agents';
+import { floorDiv } from './math';
 
 /**
  * Qué es un cuerpo. Define qué se puede hacer con él y cómo se dibuja.
@@ -49,6 +50,84 @@ export const BODY_CHILDREN: Readonly<Record<BodyKind, readonly BodyKind[]>> = {
 /** Si un cuerpo de ese tipo puede colgar de uno de aquél. */
 export function canOrbit(child: BodyKind, parent: BodyKind): boolean {
 	return BODY_CHILDREN[parent].includes(child);
+}
+
+/**
+ * De qué está hecho un planeta o una luna.
+ *
+ * Existe porque **antes vivía adentro de una frase**. El plano decía «gigante
+ * gaseoso» y «luna helada» en la descripción, y ahí eso no servía para nada: no
+ * se puede consultar, ni filtrar, ni cosechar gas de una cadena de texto. Como
+ * campo, la misma palabra es la razón por la que ese cuerpo tiene lo que tiene.
+ *
+ * Vacío en lo que no es planeta ni luna: una estrella no es de roca y un
+ * cinturón no es un cuerpo sino muchos.
+ */
+export const BODY_CLASSES = ['rocky', 'gas', 'ice', 'ocean', 'volcanic'] as const;
+export type BodyClass = (typeof BODY_CLASSES)[number];
+
+/**
+ * Qué se respira, si se respira.
+ *
+ * Es del planeta y no del clima: la temperatura sale de la órbita y de la
+ * estrella, y por eso no se guarda. Esto no se deduce de ningún otro número.
+ */
+export const ATMOSPHERES = ['none', 'thin', 'breathable', 'dense', 'toxic'] as const;
+export type Atmosphere = (typeof ATMOSPHERES)[number];
+
+/**
+ * La clase espectral de una estrella, de la más caliente a la más fría.
+ *
+ * Es la secuencia real, y el orden importa: de acá sale **a qué distancia está
+ * la zona templada** de cada sistema, así que la misma órbita es templada
+ * alrededor de una G y hielo alrededor de una M. Un dato de una letra que le da
+ * clima a todo el sistema sin escribir el clima de ningún planeta.
+ */
+export const STAR_CLASSES = ['O', 'B', 'A', 'F', 'G', 'K', 'M'] as const;
+export type StarClass = (typeof STAR_CLASSES)[number];
+
+/** Qué tan crudo es el clima de una órbita, de adentro hacia afuera. */
+export const THERMAL_BANDS = ['scorched', 'warm', 'temperate', 'cold', 'frozen'] as const;
+export type ThermalBand = (typeof THERMAL_BANDS)[number];
+
+/**
+ * A qué distancia de cada clase de estrella está la zona templada.
+ *
+ * Es la única cifra que hace falta para darle clima a un sistema entero: todo lo
+ * demás se mide **en proporción a ésta**. Una M es tan fría que su zona templada
+ * está casi encima; una O quema a distancias donde una G ya es hielo.
+ *
+ * Los números son de balance y se eligieron para que Ánfora —una G— quede como
+ * estaba escrita a mano: el I abrasado a 40, el II templado a 95, el III frío a
+ * 210 y el IV helado a 380.
+ */
+const TEMPERATE_DISTANCE: Readonly<Record<StarClass, number>> = {
+	O: 600,
+	B: 400,
+	A: 240,
+	F: 150,
+	G: 95,
+	K: 55,
+	M: 25
+};
+
+/**
+ * En qué banda cae una órbita, dada la estrella que la calienta.
+ *
+ * `starDistance` es la distancia **a la estrella**, no al cuerpo que se orbita:
+ * una luna está a seis unidades de su planeta y a doscientas de la estrella, y
+ * la que manda en el clima es la segunda.
+ *
+ * Sin coma flotante, como todo el balance: se compara en décimos.
+ */
+export function thermalBand(starClass: StarClass | '', starDistance: number): ThermalBand | '' {
+	if (starClass === '' || starDistance <= 0) return '';
+	const decimos = floorDiv(starDistance * 10, TEMPERATE_DISTANCE[starClass]);
+	if (decimos < 5) return 'scorched';
+	if (decimos < 8) return 'warm';
+	if (decimos < 15) return 'temperate';
+	if (decimos < 30) return 'cold';
+	return 'frozen';
 }
 
 /**
@@ -199,6 +278,40 @@ export function securityLevel(security: number): SecurityLevel {
 	return 'lawless';
 }
 
+/**
+ * Qué tan riesgoso es estar en un lugar **a cielo abierto**.
+ *
+ * Es otra pregunta que la seguridad del sistema, y por eso es otra función: la
+ * seguridad describe al sistema entero y esto describe un punto adentro. Un
+ * cinturón en el borde de un sistema vigilado no está tan cuidado como la
+ * estación del mismo sistema, y el piloto merece saberlo **antes** de encargar
+ * una orden de varias horas.
+ *
+ * Adentro de una estación no corresponde: atracado no te ataca nadie. Por eso
+ * quien lo consulta pregunta primero si está en una.
+ */
+export const THREAT_LEVELS = ['calm', 'watched', 'exposed', 'hostile'] as const;
+export type ThreatLevel = (typeof THREAT_LEVELS)[number];
+
+/**
+ * Cruza la seguridad del sistema con lo lejos que esté del centro.
+ *
+ * Ninguna de las dos alcanza sola: un cinturón interior de un sistema sin ley es
+ * peligroso, y uno en el borde de uno vigilado también.
+ */
+export function threatLevel(security: number, atEdge: boolean): ThreatLevel {
+	switch (securityLevel(security)) {
+		case 'lawless':
+			return 'hostile';
+		case 'low':
+			return atEdge ? 'hostile' : 'exposed';
+		case 'medium':
+			return atEdge ? 'exposed' : 'watched';
+		case 'high':
+			return atEdge ? 'watched' : 'calm';
+	}
+}
+
 /** Entre qué números puede moverse la seguridad de un sistema. */
 export interface SecurityBand {
 	readonly min: number;
@@ -321,7 +434,18 @@ export interface BodyBlueprint {
 	readonly name: string;
 	readonly kind: BodyKind;
 	readonly orbitDistance: number;
-	readonly description: string;
+	/**
+	 * De qué está hecho, si es planeta o luna. Vacío en todo lo demás.
+	 *
+	 * Junto con la atmósfera y la clase de la estrella es **todo lo que hace
+	 * falta para describirlo**: la descripción se deriva de acá y no se escribe.
+	 * Ver `describeBody`.
+	 */
+	readonly bodyClass: BodyClass | '';
+	/** Qué se respira, si es planeta o luna. Vacío en todo lo demás. */
+	readonly atmosphere: Atmosphere | '';
+	/** La clase espectral, si es una estrella. Vacío en todo lo demás. */
+	readonly starClass: StarClass | '';
 	readonly station: StationBlueprint | null;
 	readonly children: readonly BodyBlueprint[];
 	/**
@@ -371,7 +495,9 @@ function defineBody(spec: BodySpec): BodyBlueprint {
 	const { station, ...rest } = spec;
 	return {
 		orbitDistance: 0,
-		description: '',
+		bodyClass: '',
+		atmosphere: '',
+		starClass: '',
 		children: [],
 		explored: true,
 		deposits: [],
@@ -393,7 +519,6 @@ export interface SystemBlueprint {
 	readonly x: number;
 	readonly y: number;
 	readonly z: number;
-	readonly description: string;
 	readonly government: Government;
 	/** De 0 a 100, dentro de la banda que le deja el gobierno. */
 	readonly security: number;
@@ -445,9 +570,6 @@ const ANFORA: SystemBlueprint = {
 	x: 0,
 	y: 0,
 	z: 0,
-	description:
-		'Una estrella amarilla tranquila en el borde de la región. Es ' +
-		'donde empiezan todos los pilotos.',
 	government: 'corporate',
 	// Alta, pero no lo más alto que da el gobierno corporativo: es un sistema de
 	// frontera administrado como concesión, no el corazón del Dominio.
@@ -458,34 +580,29 @@ const ANFORA: SystemBlueprint = {
 		code: 'anfora_estrella',
 		name: 'Ánfora',
 		kind: 'star',
-		description: 'Enana amarilla de clase G, estable y sin sobresaltos.',
+		starClass: 'G',
 		children: [
 			defineBody({
 				code: 'anfora_i',
 				name: 'Ánfora I',
 				kind: 'planet',
 				orbitDistance: 40,
-				description:
-					'Rocoso y abrasado. Sin atmósfera, con la cara soleada a 400 °C ' +
-					'y metales pesados a la vista en la superficie.'
+				bodyClass: 'rocky',
+				atmosphere: 'none'
 			}),
 			defineBody({
 				code: 'anfora_ii',
 				name: 'Ánfora II',
 				kind: 'planet',
 				orbitDistance: 95,
-				description:
-					'Templado, con atmósfera fina que se respira con equipo. Es el ' +
-					'planeta más poblado del sistema.',
+				bodyClass: 'rocky',
+				atmosphere: 'thin',
 				children: [
 					defineBody({
 						code: 'puerto_anfora',
 						name: 'Puerto Ánfora',
 						kind: 'station',
 						orbitDistance: 3,
-						description:
-							'La estación principal del sistema: hangar, refinería, mercado ' +
-							'y aduana. El Dominio firma acá los papeles que valen.',
 						station: {
 							corporation: 'casa_verlan',
 							services: [
@@ -548,16 +665,14 @@ const ANFORA: SystemBlueprint = {
 				name: 'Ánfora III',
 				kind: 'planet',
 				orbitDistance: 210,
-				description:
-					'Gigante gaseoso. Sus anillos son el campo de asteroides ' +
-					'principal del sistema: silicatos y hierro al alcance.',
+				bodyClass: 'gas',
+				atmosphere: 'dense',
 				children: [
 					defineBody({
 						code: 'anillos_anfora_iii',
 						name: 'Anillos de Ánfora III',
 						kind: 'belt',
 						orbitDistance: 2,
-						description: 'Denso y bien surtido. Es donde aprende a minar todo el mundo.',
 						// Lo común, en cantidad y de recuperación rápida: acá nadie se queda
 						// sin trabajo, y por eso es donde se empieza.
 						deposits: [
@@ -570,10 +685,6 @@ const ANFORA: SystemBlueprint = {
 						name: 'Muelle de los Anillos',
 						kind: 'station',
 						orbitDistance: 4,
-						description:
-							'Plataforma de acopio en órbita del gigante, pegada a los ' +
-							'anillos. La Concordia la administra por acuerdo, no por ' +
-							'conquista.',
 						station: {
 							corporation: 'extractora_anillo',
 							services: ['outfitting', 'refinery', 'market', 'contacts', 'storage'],
@@ -605,17 +716,14 @@ const ANFORA: SystemBlueprint = {
 						name: 'Ánfora III-a',
 						kind: 'moon',
 						orbitDistance: 6,
-						description:
-							'Luna helada. Hielo de agua hasta donde se mire: combustible y ' + 'soporte vital.',
+						bodyClass: 'ice',
+						atmosphere: 'none',
 						children: [
 							defineBody({
 								code: 'planta_escarcha',
 								name: 'Planta Escarcha',
 								kind: 'station',
 								orbitDistance: 1,
-								description:
-									'Puesto de agua y combustible en órbita de la luna. Poco más ' +
-									'que tanques, una refinería y gente con turnos largos.',
 								station: {
 									corporation: 'hidros_escarcha',
 									services: ['refinery', 'storage']
@@ -630,16 +738,14 @@ const ANFORA: SystemBlueprint = {
 				name: 'Ánfora IV',
 				kind: 'planet',
 				orbitDistance: 380,
-				description: 'Rocoso y helado, lejos de todo y pobre en casi todo. Buen ' + 'escondite.',
+				bodyClass: 'rocky',
+				atmosphere: 'none',
 				children: [
 					defineBody({
 						code: 'amarre_franco',
 						name: 'Amarre Franco',
 						kind: 'station',
 						orbitDistance: 2,
-						description:
-							'Un carguero varado y reacondicionado. No responde a ninguna de ' +
-							'las tres, y ése es su atractivo.',
 						station: {
 							corporation: 'libre_amarre',
 							services: ['outfitting', 'market', 'contacts', 'storage'],
@@ -674,8 +780,6 @@ const ANFORA: SystemBlueprint = {
 				name: 'Cinturón Exterior',
 				kind: 'belt',
 				orbitDistance: 520,
-				description:
-					'Disperso y sin vigilancia. Mineral raro para quien se anima a ' + 'estar lejos de todo.',
 				// Lo que el otro cinturón no tiene, y poco: la recuperación lenta es lo
 				// que hace que valga la pena competir por él en vez de acampar.
 				deposits: [
@@ -688,8 +792,6 @@ const ANFORA: SystemBlueprint = {
 						name: 'Hábitat Talo',
 						kind: 'station',
 						orbitDistance: 1,
-						description:
-							'Excavado en un asteroide del cinturón. El Pacto nació en ' + 'lugares como éste.',
 						station: {
 							corporation: 'comuna_talo',
 							services: ['outfitting', 'refinery', 'workshop', 'market', 'contacts', 'storage'],

@@ -542,11 +542,41 @@ export interface FilaAgente {
  * viaje, y se queda sin módulos ni agentes, porque no se está en ninguna
  * estación. Vaciarlos es parte de decir la verdad, no un descuido.
  */
+/**
+ * El aviso de que en este lugar te pueden atacar.
+ *
+ * Va **aparte de la descripción** a propósito. Una advertencia metida adentro de
+ * un párrafo de ambientación no la lee nadie: a la tercera pantalla el párrafo se
+ * saltea entero. Si un piloto puede perder la carga o la nave por salir acá, eso
+ * se dice en su propio renglón y sin rodeos.
+ *
+ * Es nulo dentro de una estación: atracado no te ataca nadie, y ponerle un cartel
+ * de peligro a un hangar enseña a ignorar los carteles de peligro.
+ */
+export interface Riesgo {
+	/** Para el color: `calm`, `watched`, `exposed` u `hostile`. */
+	readonly level: string;
+	/** El cajón, de una palabra. */
+	readonly label: string;
+	/** Qué significa, con todas las letras. */
+	readonly note: string;
+}
+
 export interface Ubicacion {
 	readonly name: string;
 	readonly kind: string;
 	readonly icon: IconName;
-	readonly description: string;
+	readonly risk: Riesgo | null;
+	/**
+	 * Lo que es este cuerpo, en frases sueltas.
+	 *
+	 * **Se deriva de sus atributos**, no la escribió nadie: ver `describeBody`.
+	 * Vienen sueltas y no como un párrafo para que cada pantalla decida —el árbol
+	 * junta las primeras en un renglón, Ubicación las muestra todas— y **puede
+	 * venir vacía**, que es lo normal en una estación: su pantalla ya dice todo lo
+	 * que tendría que decir el resumen.
+	 */
+	readonly description: readonly string[];
 	readonly parent: string;
 	readonly system: string;
 	/**
@@ -871,7 +901,16 @@ export interface FilaCuerpo {
 	readonly distance: string;
 	/** Cuánto tardaría llegar, ya calculado. Vacío en la propia fila. */
 	readonly travelLabel: string;
-	readonly description: string;
+	/**
+	 * Lo que es este cuerpo, en frases sueltas.
+	 *
+	 * **Se deriva de sus atributos**, no la escribió nadie: ver `describeBody`.
+	 * Vienen sueltas y no como un párrafo para que cada pantalla decida —el árbol
+	 * junta las primeras en un renglón, Ubicación las muestra todas— y **puede
+	 * venir vacía**, que es lo normal en una estación: su pantalla ya dice todo lo
+	 * que tendría que decir el resumen.
+	 */
+	readonly description: readonly string[];
 	readonly isStation: boolean;
 	readonly corporation: string;
 	readonly corporationKind: string;
@@ -893,7 +932,14 @@ export interface FilaCuerpo {
 /** El sistema donde está el piloto, con todos sus cuerpos. */
 export interface Sistema {
 	readonly name: string;
-	readonly description: string;
+	/**
+	 * Lo que este sistema es, en frases sueltas.
+	 *
+	 * Derivada de su gobierno, su seguridad y de quién lo controla: ver
+	 * `describeSystem`. El nombre, la región y el número ya están arriba en la
+	 * pantalla, así que acá va lo que esos datos **significan**.
+	 */
+	readonly description: readonly string[];
 	readonly region: string;
 	readonly constellation: string;
 	readonly controlledBy: string;
@@ -2374,7 +2420,17 @@ export interface FilaConstruccion {
 	readonly parentId: number | null;
 	readonly orbitDistance: number;
 	readonly explored: boolean;
-	readonly description: string;
+	/**
+	 * De qué está hecho, si es planeta o luna. Vacío en todo lo demás.
+	 *
+	 * Estos tres son lo que el constructor edita **en vez de una descripción**: la
+	 * frase que ve el jugador se arma sola con lo que el cuerpo es.
+	 */
+	readonly bodyClass: string;
+	/** Qué se respira, si es planeta o luna. Vacío en todo lo demás. */
+	readonly atmosphere: string;
+	/** La clase espectral, si es una estrella. Vacío en todo lo demás. */
+	readonly starClass: string;
 	/** Qué tipos de cuerpo pueden colgar de éste. Vacío quiere decir ninguno. */
 	readonly accepts: readonly OpcionConstructor[];
 	/** Qué lo retiene, si algo lo retiene. Vacío quiere decir que se puede borrar. */
@@ -2393,7 +2449,6 @@ export interface Constructor {
 	readonly id: number;
 	readonly code: string;
 	readonly name: string;
-	readonly description: string;
 	readonly constellationId: number;
 	readonly constellation: string;
 	readonly region: string;

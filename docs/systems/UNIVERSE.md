@@ -116,6 +116,92 @@ Cada cuerpo tiene **atributos que se traducen a mecánica**, no a ambientación:
 una atmósfera densa encarece el aterrizaje, un cinturón agotado da menos por
 ciclo, una estación de otra facción cobra más comisión.
 
+### Los atributos de un cuerpo
+
+Tres columnas, y ninguna es decorativa. Existen porque **antes vivían adentro de
+una frase**: el plano decía «gigante gaseoso» y «sin atmósfera» en la
+descripción, y ahí eso no servía para nada —no se puede consultar, ni filtrar, ni
+cosechar gas de una cadena de texto—.
+
+| Columna      | En qué cuerpos | Valores                                            |
+| ------------ | -------------- | -------------------------------------------------- |
+| `body_class` | Planeta y luna | `rocky` · `gas` · `ice` · `ocean` · `volcanic`     |
+| `atmosphere` | Planeta y luna | `none` · `thin` · `breathable` · `dense` · `toxic` |
+| `star_class` | Estrella       | `O` `B` `A` `F` `G` `K` `M`, la secuencia real     |
+
+La **temperatura no se guarda**: sale de cruzar la clase de la estrella con la
+distancia orbital. Cada clase tiene su zona templada a una distancia distinta
+—una enana roja la tiene casi encima, una gigante azul lejísimos—, así que la
+misma órbita es templada en un sistema y hielo en otro. Un dato de una letra le
+pone clima a un sistema entero sin que nadie escriba el clima de ningún planeta.
+Ver `thermalBand` en `game/universe.ts`.
+
+## La descripción se deriva, no se escribe
+
+**Ningún cuerpo ni sistema tiene descripción escrita a mano.** La frase que ve el
+jugador se arma con lo que el cuerpo es, en `src/lib/descriptions.ts`. Dos
+razones, y la segunda es la que manda:
+
+- **No escala.** Con doscientos sistemas hay que escribir mil textos, y
+  escribirlos es exactamente el trabajo que nadie va a hacer.
+- **Miente.** Una frase escrita a mano no se entera de que alguien cambió el
+  dato: si mañana el Cinturón Exterior duplica su mineral, el texto sigue
+  diciendo «disperso» y no hay nada que lo detecte. Una descripción derivada **no
+  puede estar desactualizada**.
+
+El texto que había no se tiró: se leyó como especificación. «Gigante gaseoso» era
+una clase, «sin atmósfera» era un campo y «denso» eran los depósitos. Lo que sí se
+descartó es la parte que **opinaba** —«bien surtido», «sin vigilancia»—, que no
+era descripción sino evaluación.
+
+### Qué puede decir y qué no
+
+La regla está entera en «La voz» de `docs/DESIGN.md`, porque vale para todo el
+texto que el juego arma solo. En corto:
+
+1. **Describe, no evalúa.** Un cinturón dice «campo denso de asteroides», que es
+   una propiedad física del lugar. **No** dice si su mineral es común o raro: eso
+   es una opinión sobre lo que vale, envejece en cuanto se toca un precio, y
+   además lo contesta el escáner roca por roca, que es como corresponde
+   averiguarlo.
+2. **No repite lo que ya está en un rótulo.** Al lado dice «520 ud» y «Órbita a:
+   Ánfora», así que la prosa no dice dónde está.
+3. **No esconde advertencias.** Que un lugar sea peligroso no va en la
+   descripción: va en el aviso de riesgo, acá abajo.
+4. **Callar es una respuesta.** Una estación no devuelve ninguna frase —su
+   pantalla ya muestra servicios, dueño y agentes—, una puerta tampoco, y un
+   sistema sólo habla si es capital de alguien. Que la mayoría callen es lo que
+   hace que la que habla signifique algo.
+
+Lo que sigue escrito a mano es lo que tiene **carácter y no atributos**: la
+descripción de una corporación y la de un agente. El día que una estación
+necesite personalidad, la personalidad es de quien la opera.
+
+### El aviso de riesgo
+
+Cruza la seguridad del sistema con lo lejos que esté el lugar del centro, porque
+ninguna de las dos alcanza sola: un cinturón interior de un sistema sin ley es
+peligroso, y uno en el borde de uno vigilado también.
+
+| Nivel     | Cuándo                                    |
+| --------- | ----------------------------------------- |
+| `calm`    | Seguridad alta, en el interior            |
+| `watched` | Alta en el borde, o media en el interior  |
+| `exposed` | Media en el borde, o baja en el interior  |
+| `hostile` | Baja en el borde, o sin ley en cualquiera |
+
+Va en **su propio renglón** en Ubicación, con el cajón de una palabra y lo que
+significa con todas las letras: si un piloto puede perder la carga o la nave por
+salir a un lugar, eso se dice sin rodeos. **No sale dentro de una estación**:
+atracado no te ataca nadie, y ponerle un cartel de peligro a un hangar enseña a
+ignorar los carteles de peligro.
+
+El borde es el **último cuarto** del sistema, medido en proporción y no en
+unidades, así que un sistema chico y uno enorme tienen los dos su borde. Las
+puertas no cuentan para esa medida: se plantan donde haga falta para que la línea
+salga por el rumbo correcto en el mapa, así que están más lejos que todo lo demás
+por construcción.
+
 ## Sistema inicial propuesto: Ánfora
 
 Una estrella amarilla tranquila en el borde de la región, con lo justo para

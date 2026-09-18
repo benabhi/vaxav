@@ -242,6 +242,31 @@ mineral puede tener imagen y ritmo porque describe **una cosa**; un aviso que se
 pone literario está adornando **un problema que el jugador tiene que resolver
 ahora**, y estorba.
 
+### El texto generado es técnico, y se calla
+
+Vaxav **arma frases solo** —la descripción de un cuerpo, la de un sistema— y ése
+es el texto que más fácil se va de registro, porque el que lo escribe no está
+mirando la pantalla donde va a caer. Cuatro reglas, y las cuatro son la misma:
+
+1. **Describe, no evalúa.** «Campo denso de asteroides» es lo que el lugar es;
+   «de mineral común» es una opinión sobre lo que vale, y además envejece: el día
+   que se le toque un precio, la frase queda mintiendo. Lo que rinde algo se
+   averigua yendo, no leyendo.
+2. **No repite lo que ya está en un rótulo.** Si al lado dice «520 ud», la prosa
+   no dice la distancia. Si una frase no agrega nada que el jugador no pueda ver,
+   **no se escribe**.
+3. **No esconde advertencias.** Nada de «donde las patrullas llegan tarde» metido
+   en un párrafo de ambientación: a la tercera pantalla el párrafo se saltea
+   entero. Lo que hay que avisar va **en su propio renglón**, con su color y con
+   todas las letras.
+4. **Callar es una respuesta.** Una estación no tiene descripción: su pantalla ya
+   muestra servicios, dueño y agentes. Un sistema tampoco. Que la mayoría no diga
+   nada es lo que hace que la que habla signifique algo.
+
+La ambientación con imagen y ritmo —la de un mineral, la de una corporación, la
+de un agente— **se sigue escribiendo a mano**, porque describe algo que tiene
+carácter y no atributos. Lo que se genera no compite con eso: informa.
+
 ### Un rótulo nombra, no explica
 
 Es la regla que más se viola, porque una frase descriptiva siempre parece más

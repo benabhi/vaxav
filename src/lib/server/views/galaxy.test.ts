@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { constellation } from '../db/schema';
 import { seededDb } from '../db/testing';
 import {
+	type BodyDraft,
 	connectGates,
 	createBody,
 	createGate,
@@ -26,19 +27,20 @@ function borrador(db: Db, cambios: Partial<SystemDraft> = {}): SystemDraft {
 		security: 70,
 		controllingFaction: 'dominion',
 		capitalOf: '',
-		description: '',
 		...cambios
 	};
 }
 
 /** Una puerta colgada de algo, que es la única forma en que se plantan. */
-function puerta(parentId: number, name = 'Puerta Norte') {
+function puerta(parentId: number, name = 'Puerta Norte'): BodyDraft {
 	return {
 		name,
 		kind: 'gate' as const,
 		parentId,
 		orbitDistance: 400,
-		description: '',
+		bodyClass: '',
+		atmosphere: '',
+		starClass: '',
 		explored: true
 	};
 }
@@ -115,7 +117,9 @@ describe('el mapa de la galaxia', () => {
 				kind: 'station',
 				parentId: uno.star.id,
 				orbitDistance: 120,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null

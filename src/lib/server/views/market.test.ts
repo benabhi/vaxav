@@ -124,8 +124,7 @@ describe('el catálogo', () => {
 				government: 'corporate',
 				security: 70,
 				controllingFaction: 'dominion',
-				capitalOf: '',
-				description: ''
+				capitalOf: ''
 			},
 			null
 		);
@@ -138,7 +137,9 @@ describe('el catálogo', () => {
 				kind: 'station',
 				parentId: vela.star.id,
 				orbitDistance: 5,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null

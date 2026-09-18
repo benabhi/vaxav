@@ -29,3 +29,5 @@ data/*.db*
 
 # Retratos de pilotos: los sube el jugador, no van al repositorio
 data/retratos/
+
+.claude/

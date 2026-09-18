@@ -184,7 +184,15 @@
 			</div>
 		</div>
 
-		<p class="text-1 leading-[1.65] text-text-muted">{body.description}</p>
+		<!--
+			Las frases van cada una en su renglón, no unidas en un párrafo: son datos
+			distintos —qué es, qué se respira, quién lo cuida— y separadas se barren
+			de un vistazo. Puede no venir ninguna, y ahí no se dibuja nada: una
+			estación ya dice abajo lo que tiene.
+		-->
+		{#each body.description as frase (frase)}
+			<p class="text-1 leading-[1.65] text-text-muted">{frase}</p>
+		{/each}
 
 		{#if body.isStation}
 			<div class="flex w-full flex-col items-start gap-2 pt-[0.15rem]">

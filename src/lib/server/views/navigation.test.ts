@@ -427,18 +427,19 @@ function conSalida(db: Db) {
 			government: 'feudal',
 			security: 20,
 			controllingFaction: '',
-			capitalOf: '',
-			description: ''
+			capitalOf: ''
 		},
 		null
 	);
 
 	const draft = {
-		kind: 'gate' as const,
+		kind: 'gate',
 		orbitDistance: 400,
-		description: '',
+		bodyClass: '',
+		atmosphere: '',
+		starClass: '',
 		explored: true
-	};
+	} as const;
 	const salida = createGate(
 		db,
 		anfora.id,
@@ -525,8 +526,7 @@ describe('la pestaña Galaxia', () => {
 				government: 'corporate',
 				security: 70,
 				controllingFaction: 'dominion',
-				capitalOf: '',
-				description: ''
+				capitalOf: ''
 			},
 			null
 		);
