@@ -593,7 +593,7 @@ casco exige. Trae cuatro consecuencias que valen más que la lista de naves:
 | **Exhumadora**        | Exhumadoras          | Medio  | La punta de la minería                           |
 | **Carguero**          | Cargueros            | Grande | Volumen, y nada más que volumen                  |
 | **Acorazado**         | Acorazados           | Grande | Aguantar y pegar                                 |
-| **Capital**           | Naves capitales      | Grande | El horizonte. No entra en esta etapa             |
+| **Capital**           | Naves capitales      | Grande | **Una nave que es un lugar.** Ver 6.6            |
 
 ### 6.2 · La regla del bono de rol
 
@@ -702,7 +702,120 @@ calor». El rol ya está escrito al lado; el nombre está para que se recuerde.
 > migración por un problema de gusto. Si se decide cambiarlos, `Acémila` y `Basalto`
 > entran sin tocar nada de lo que significan.
 
-### 6.5 · Qué hace falta en el código para que esto entre
+### 6.5 · Las capitales: una nave que es un lugar
+
+La idea que cambia de qué son las capitales, y conviene anotarla antes de que se
+pierda:
+
+> **Una capital desplegada aparece en el árbol del sistema, como una estación
+> más, y los demás pilotos pueden atracar en ella e interactuar.**
+
+No es una nave grande: es **la primera pieza de infraestructura que un jugador
+planta en el mapa**. Deja de ser algo que uno vuela y pasa a ser un lugar al que
+los otros van, que es una diferencia de naturaleza y no de tamaño.
+
+#### Por qué esto es más importante de lo que parece
+
+Cierra tres huecos de una sola vez, y ninguno se resuelve solo:
+
+1. **Le da sentido al espacio sin ley.** Hoy, salir del centro es todo riesgo y
+   ninguna permanencia: se va, se saca mineral y se vuelve. Con capitales, una
+   corporación puede **quedarse**, y quedarse es lo que convierte a un sistema en
+   territorio de alguien.
+2. **Le da meta a la industria.** El escalón de componentes de la sección 7.6
+   termina hoy en un módulo. Con capitales, termina en algo que se ve en el mapa y
+   que le sirve a otros, que es la única recompensa que un industrial valora de
+   verdad.
+3. **Le da razón de ser a la corporación.** Nadie se afilia por una lista de
+   miembros. Se afilia porque **la corporación tiene algo que uno solo no puede
+   tener**, y esto es exactamente eso.
+
+#### Qué la hace rara, que es la parte difícil
+
+Rara no quiere decir cara. Una cosa cara con el tiempo la tiene todo el mundo. Lo
+que la mantiene rara son **cuatro compuertas distintas**, y conviene que sean
+distintas porque una sola se satura:
+
+| Compuerta         | Qué exige                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| **Habilidad**     | Naves capitales x12 e Industria de capital x12: miles de horas                         |
+| **Material**      | Componentes de capital, que piden uranio, platino e iridio — los tres sólo hay sin ley |
+| **Lugar**         | Sólo se arma en una estación con **astillero de capital**, que hay en pocas            |
+| **Sostenimiento** | Consume combustible **mientras está desplegada**. Si nadie la abastece, se apaga       |
+
+La cuarta es la que más trabaja y la que menos se piensa. **Una capital que no
+cuesta nada mantener es una capital que nadie desarma**, y a los dos años el mapa
+está lleno. El consumo continuo la vuelve una decisión que se toma todos los
+meses, no una sola vez.
+
+#### Qué se puede hacer en una
+
+Lo que la corporación le haya montado. **Una capital no trae servicios: trae
+ranuras para servicios**, y ahí se decide qué clase de puesto es.
+
+| Servicio montado | Qué habilita                                          |
+| ---------------- | ----------------------------------------------------- |
+| Amarre           | Atracar, que es lo mínimo para que sea un lugar       |
+| Bodega           | Dejar carga y que otro la levante                     |
+| Taller           | Fabricar lejos del centro                             |
+| Refinería        | **Refinar donde se saca**, y acarrear la décima parte |
+| Astillero        | Reparar y reequipar sin volver                        |
+
+La refinería es la que cambia la economía: hoy la decisión de un minero lejano es
+acarrear piedra o no ir; con una capital refinando en el sistema, la decisión pasa
+a ser **quién sostiene la capital**, que es una decisión de grupo.
+
+#### Cómo entra en el modelo
+
+La buena noticia es que el patrón ya está resuelto y probado en el juego: **la
+puerta estelar es un cuerpo más y no una tabla aparte**, y por eso aparece en el
+árbol, tiene distancia orbital y se le puede viajar sin tocar una línea de
+`systemTree`. La capital desplegada usa exactamente el mismo camino.
+
+| Pieza                 | Cómo                                                                         |
+| --------------------- | ---------------------------------------------------------------------------- |
+| Aparece en el árbol   | `BodyKind` gana `'capital'`, como ganó `'gate'`                              |
+| Se le viaja           | Gratis: es un cuerpo, y viajar ya sabe ir a un cuerpo                        |
+| Se atraca             | La estación cuelga del cuerpo, igual que en cualquier estación               |
+| Es de alguien         | La estación ya apunta a una corporación. No hace falta nada nuevo            |
+| Sigue siendo una nave | La fila de `ship` gana `body_id`: desplegada apunta a su cuerpo, guardada no |
+
+Ese último renglón es el interesante y el que hay que pensar bien: **una capital
+es una nave y un lugar a la vez**, y el estado «desplegada» es el que decide cuál
+de las dos cosas es en cada momento. Desplegarla y replegarla son dos verbos
+nuevos, y son los que le dan a la mecánica su tensión: desplegada sirve a todos y
+es un blanco; guardada no sirve a nadie y no se la puede perder.
+
+#### La cadena
+
+| Eslabón    | En la capital                                            |
+| ---------- | -------------------------------------------------------- |
+| El verbo   | Desplegar, atracar, replegar                             |
+| El insumo  | **Combustible mientras está desplegada**                 |
+| La fuente  | Hielo → helio-3 → bloques de combustible                 |
+| El aparato | La capital, y los servicios que se le montan             |
+| La llave   | Naves capitales x12, Industria de capital x12            |
+| La fábrica | Astillero de capital, con componentes de capital         |
+| El lugar   | El sistema donde se despliega, que pasa a ser de alguien |
+
+Se cierra sola, y **depende entera de la cadena del hielo**: sin helio-3 no hay
+con qué sostenerla. Es otro argumento para que el hielo sea de las primeras etapas.
+
+#### Lo que hay que decidir antes de construirla
+
+1. **¿Se puede destruir?** Es la pregunta madre. Si sí, es el ancla de todo el
+   conflicto del juego y hace falta combate antes. Si no, es una conveniencia
+   logística y el mapa se llena.
+2. **¿Cuántas por corporación?** Una obliga a elegir dónde; varias convierten al
+   mapa en una grilla de puestos.
+3. **¿Quién puede atracar?** Sólo la corporación, los aliados, o cualquiera. La
+   tercera es la que crea economía —un puesto que le cobra peaje al que pasa— y la
+   que más trabajo pide.
+4. **¿Dónde se puede desplegar?** Si se puede en el centro, nadie va a salir. La
+   respuesta probablemente sea **sólo fuera del perímetro**, que de paso le da a la
+   zona sin ley una razón para existir.
+
+### 6.6 · Qué hace falta en el código para que esto entre
 
 Cuatro cambios, ninguno grande, y conviene el orden:
 
@@ -1164,3 +1277,6 @@ sólo los números.
 - **Módulos generados por familia, clase y escalón**, no escritos a mano.
 - **Buscar y esconderse son un solo sistema**: sensores contra firma.
 - **El hielo cierra el huérfano del combustible**, que es el más viejo que hay.
+- **Una capital desplegada es un lugar**, no una nave grande: aparece en el árbol
+  del sistema y los demás atracan en ella. Es lo que le da sentido al espacio sin
+  ley, meta a la industria y razón de ser a la corporación.
