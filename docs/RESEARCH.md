@@ -1017,7 +1017,85 @@ Hoy están hechos los dos extremos, E y A, y **el piso y el techo quedan fijos**
 propósito: los escalones del medio se llenan sin mover los extremos ni renombrar
 nada de lo que ya existe.
 
-### 8.2 · Los internos esenciales
+### 8.2 · El presupuesto: el micro-juego del equipamiento
+
+**Anotado para tenerlo en cuenta, no para hacerlo ahora.**
+
+Una de las mejores cosas de EVE no es un sistema: es una tensión. Cada nave tiene
+dos presupuestos —**potencia** y **cómputo**— que están apretados a propósito, y
+cada módulo consume de los dos. Entonces subir un escalón no es sólo pagar más:
+es ver si **entra**. Y ahí aparece lo bueno: un cinco por ciento más de potencia,
+que suena a nada, es lo que hace que el módulo mejor quepa.
+
+Eso convierte a equipar en una decisión con varias salidas, y ninguna obvia:
+
+- bajar un escalón en otra ranura para que entre éste;
+- dejar una ranura vacía y llevar el módulo que importa;
+- o entrenar dos niveles más y volver.
+
+#### Qué tenemos ya
+
+Más de lo que parece. Los dos presupuestos **existen y se hacen cumplir**: la
+calculadora suma el consumo de cada módulo y, si se pasa, la nave no vuela. Y las
+dos habilidades están en el catálogo, con el nombre puesto:
+
+| Habilidad          | Rango | Lo que dice que gobierna                             |
+| ------------------ | ----: | ---------------------------------------------------- |
+| Gestión de energía |    x2 | «Potencia disponible de la planta»                   |
+| Ajuste de módulos  |    x3 | «Cómputo disponible; requisito de módulos avanzados» |
+
+#### Qué falta
+
+**La calculadora no las aplica.** La tabla `SKILL_BONUSES` de `game/fitting.ts`
+tiene entradas para bodega, velocidad, alcance de salto, extracción, daño, escudo,
+blindaje, sensores y recarga — y **ninguna para potencia ni cómputo**. La potencia
+sale tal cual de la planta y el cómputo tal cual del casco.
+
+Es un huérfano al revés, y de los peores: **la descripción promete lo que el
+código no hace**. Falta agregar `power` y `computing` a `BONUS_TARGETS` y dos filas
+a `SKILL_BONUSES`, que es exactamente para lo que esa tabla está escrita.
+
+#### Y la tensión ya existe en los números
+
+Lo importante, porque es lo que dice si vale la pena: **los presupuestos ya
+aprietan donde tienen que apretar**. Con todas las ranuras llenas del mejor módulo
+que entra en cada una:
+
+| Casco        |  Potencia |   Cómputo |
+| ------------ | --------: | --------: |
+| Pioner       |      60 % |      51 % |
+| Mula         |      58 % |      63 % |
+| Vencejo      |      60 % |      62 % |
+| **Percal**   |  **93 %** |  **98 %** |
+| **Alabarda** | **119 %** | **158 %** |
+
+El Percal queda **al filo** y la Alabarda **no entra**: no le alcanza para
+llenarse con lo mejor. Ahí un cinco por ciento por nivel decide de verdad, y las
+tres salidas de arriba se vuelven una decisión real.
+
+Las tres primeras están holgadas, y también está bien: la nave de alta y las de
+oficio tranquilo no tienen por qué pelear con el presupuesto. **La tensión es del
+casco especializado**, que es el que se equipa para una cosa.
+
+#### Las dos palancas
+
+Cuando se haga, hay que decidir entre una y dos, porque EVE tiene las dos:
+
+| Palanca                         | Qué hace                              | Ejemplo en EVE           |
+| ------------------------------- | ------------------------------------- | ------------------------ |
+| **Subir el presupuesto**        | Más potencia y más cómputo disponible | Engineering, Electronics |
+| **Bajar lo que el módulo pide** | El mismo módulo consume menos         | Weapon Upgrades          |
+
+Con las dos, un veterano entra un escalón más arriba que un novato **con el mismo
+casco**, que es de las pocas formas honestas de que la experiencia se note sin
+regalar estadísticas.
+
+La recomendación: **la del presupuesto entra ya**, porque las habilidades están
+escritas y hoy mienten. La de bajar el consumo conviene dejarla para cuando existan
+las armas, que es donde EVE la usa y donde de verdad hace falta — un módulo de
+combate consume mucho más que uno de trabajo.
+
+### 8.3 · Los internos esenciales
 
 Siete, uno por ranura fija. **Se mejoran, no se quitan**: un casco no elige _si_
 tiene planta de energía, elige cuál.
@@ -1032,7 +1110,7 @@ tiene planta de energía, elige cuál.
 | **Soporte vital**     | Autonomía de la tripulación | Mecánica                  | Placa laminada, oxígeno      |
 | **Tanque**            | Capacidad de combustible    | Eficiencia de combustible | Armazón compuesto, hierro    |
 
-### 8.3 · Anclajes — lo que apunta hacia afuera
+### 8.4 · Anclajes — lo que apunta hacia afuera
 
 | Familia                 | Qué hace                          | Habilidad           | Clases | Se fabrica con               |
 | ----------------------- | --------------------------------- | ------------------- | ------ | ---------------------------- |
@@ -1050,7 +1128,7 @@ barcazas y exhumadoras: rinde varias veces lo que un láser común, pero gasta u
 cristal específico del mineral al que apunta. Es lo que convierte a minar en una
 cadena con abastecimiento propio en vez de un botón gratis.
 
-### 8.4 · Utilidad — lo que va colgado afuera y no dispara
+### 8.5 · Utilidad — lo que va colgado afuera y no dispara
 
 | Familia                      | Qué hace                                                | Habilidad                 | Clases | Se fabrica con         |
 | ---------------------------- | ------------------------------------------------------- | ------------------------- | ------ | ---------------------- |
@@ -1063,7 +1141,7 @@ cadena con abastecimiento propio en vez de un botón gratis.
 | **Inhibidor de salto**       | Impide que el otro salte                                | Inhibición de salto       | 4-6    | Tubo, núcleo           |
 | **Reparador de casco**       | Repara blindaje en vuelo                                | Reparación de casco       | 2-5    | Placa laminada, hierro |
 
-### 8.5 · Opcionales — lo que define a qué se dedica
+### 8.6 · Opcionales — lo que define a qué se dedica
 
 | Familia                   | Qué hace                             | Habilidad                 | Clases | Se fabrica con          |
 | ------------------------- | ------------------------------------ | ------------------------- | ------ | ----------------------- |
@@ -1083,7 +1161,7 @@ cadena con abastecimiento propio en vez de un botón gratis.
 de esquema: si compartieran espacio, llevar drones sería siempre peor que llevar
 mineral y nadie los llevaría nunca.
 
-### 8.6 · Los refuerzos de casco, que todavía no existen
+### 8.7 · Los refuerzos de casco, que todavía no existen
 
 EVE tiene una cuarta clase de ranura: **refuerzos permanentes**, que se montan una
 vez, no se sacan y **cobran una penalización** — más blindaje a cambio de
@@ -1094,7 +1172,7 @@ solución: **cómo diferenciar dos naves del mismo casco con el mismo equipo**. 
 no entran en esta etapa: piden una ranura nueva, una habilidad nueva y un escalón
 de fabricación propio, y hay cosas más urgentes.
 
-### 8.7 · Cuántos módulos salen de esto
+### 8.8 · Cuántos módulos salen de esto
 
 Con once familias de anclaje y utilidad, once de opcionales, siete internos, cinco
 escalones y las clases que cada familia admite, el catálogo llega **del orden de
