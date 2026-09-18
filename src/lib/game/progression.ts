@@ -54,7 +54,7 @@ export const LEVEL_COSTS: readonly number[] = Array.from({ length: MAX_LEVEL }, 
  *
  * Da 0 · 100 · 666 · 3.866 · 21.968 · 124.368. A seiscientos de experiencia por
  * hora de acción, un rango x1 llega al nivel 5 en unas doscientas horas y un x16
- * en más de tres mil. Ver docs/RESEARCH.md §4.
+ * en más de tres mil. Ver «Curva de experiencia» en docs/systems/SKILLS.md.
  */
 export const LEVEL_THRESHOLDS: readonly number[] = LEVEL_COSTS.reduce(
 	(acumulado: number[], costo) => [...acumulado, acumulado[acumulado.length - 1] + costo],

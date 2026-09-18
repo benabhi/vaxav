@@ -346,16 +346,59 @@ palabras en vez de con un panel.
 - **Cuerpo** — planeta, luna, cinturón, anillo o estación dentro de un sistema.
 - **Créditos** — moneda del juego.
 
-## Las bases: habilidades, naves, módulos y materiales
+## Qué tomamos de EVE, y qué no
 
-**Lo que el juego va a ser de grande está en [RESEARCH.md](RESEARCH.md)**: la
-investigación sobre cómo resuelve EVE estos problemas, qué se adapta y qué no, y
-los catálogos propuestos —ciento diez habilidades, doce clases de nave, tres
-materias primas y la cadena de fabricación entera—.
+Vaxav se parece a **EVE Online** a propósito, y conviene decir por qué y hasta
+dónde, porque es la pregunta que vuelve cada vez que se agrega algo.
 
-Es un documento de **propuesta**, no de implementación: contradice a propósito
-varias cosas que hoy existen. Lo que se decide de ahí se construye y pasa al
-documento del sistema que corresponda, que es el que manda.
+El público natural del juego es **el que jugó EVE y no puede sostenerlo**. Para
+ése, que las cosas estén donde espera no es una copia: es que no tiene que
+aprender de nuevo lo que ya sabe. De ahí sale la regla:
+
+> **La estructura es la que lo hace reconocible. Las palabras son las que lo hacen
+> nuestro.**
+
+Un piloto que ve tres bandejas y una terna de ranuras se orienta en cinco
+segundos, venga de donde venga. Los rótulos, en cambio, son nuestros: se llaman
+anclaje, consola y bastidor, no alto, medio y bajo.
+
+### Lo que sí
+
+| De EVE                                | Cómo entra acá                                         |
+| ------------------------------------- | ------------------------------------------------------ |
+| Bandejas de ranuras y la terna        | Anclajes · consolas · bastidor, más refuerzos          |
+| Presupuestos apretados a propósito    | Potencia, cómputo y calibración                        |
+| Escalones I/II y variantes con oficio | La nomenclatura de los módulos                         |
+| Radio de firma contra sensores        | Una sola cuenta para escanear, analizar y encontrar    |
+| La seguridad del sistema gradúa todo  | Qué mineral hay, y cuánto se arriesga en ir a buscarlo |
+| Las naves se pierden                  | Es lo que impide que la economía se sature             |
+| Clases de nave como requisito duro    | No se sabe «volar naves»: se sabe volar barcazas       |
+| Entrenar lleva tiempo real            | Pero se entrena **haciendo**, no con un reloj          |
+
+### Lo que no
+
+Es la mitad que define el producto: **lo que hace de EVE un segundo trabajo no
+entra.**
+
+| De EVE                                 | Por qué no                                                        |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| Entrenar con el reloj                  | Vaxav entrena **haciendo**. Es la decisión de identidad del juego |
+| Atributos neurales e implantes         | Optimización invisible que castiga al que no lee una wiki         |
+| Invención con probabilidad             | Fabricar y que salga mal no es una decisión: es un impuesto       |
+| Planos como objeto comerciable         | Una economía entera para sostener; más adelante, si hace falta    |
+| Cientos de variantes por módulo        | El catálogo tiene que caber en una cabeza                         |
+| Planes de habilidades de meses         | Ninguna nave tiene que esperar medio año para volarse             |
+| Cadenas de puertas de cuarenta minutos | El viaje es una decisión, no un peaje                             |
+| Tener que estar presente               | Para eso está el comportamiento de la nave                        |
+
+### La pregunta
+
+Cada vez que haya que decidir si algo de EVE entra:
+
+> **¿Esto es profundidad, o es peaje de tiempo?**
+
+Profundidad es una decisión que se puede tomar mal. Peaje es tiempo que hay que
+pagar para llegar a la decisión. Lo primero entra siempre; lo segundo, nunca.
 
 ## Hoja de ruta
 
