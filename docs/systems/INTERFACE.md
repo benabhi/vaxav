@@ -41,16 +41,17 @@ Todo el árbol vive en `src/lib/navigation.ts`, que es de donde salen el Neocom,
 barras de pestañas y el registro de rutas: una pantalla nueva se agrega en un solo
 lugar y aparece en los tres.
 
-| Módulo      | Pestañas                                       |
-| ----------- | ---------------------------------------------- |
-| Piloto      | Información · Habilidades · Bitácora           |
-| Nave        | Ficha · Bodega                                 |
-| Navegación  | Ubicación · Sistema · Galaxia                  |
-| Corporación | Ficha · Miembros                               |
-| Mercado     | Mercado · Órdenes de venta · Órdenes de compra |
-| Propiedades | Propiedades                                    |
-| Billetera   | Billetera                                      |
-| Opciones    | Cuenta                                         |
+| Módulo      | Pestañas                                              |
+| ----------- | ----------------------------------------------------- |
+| Piloto      | Información · Habilidades · Reputación · Bitácora     |
+| Nave        | Ficha · Bodega                                        |
+| Navegación  | Ubicación · Sistema · Galaxia                         |
+| Corporación | Ficha · Reputación · Ubicaciones · Agentes · Miembros |
+| Mensajes    | Recibidos · Enviados · Archivados                     |
+| Mercado     | Mercado · Órdenes de venta · Órdenes de compra        |
+| Propiedades | Propiedades                                           |
+| Billetera   | Billetera                                             |
+| Opciones    | Cuenta                                                |
 
 Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
 pantallas.
@@ -727,6 +728,24 @@ es una interfaz que hay que volver a aprender.
 La cámara vive en **la pantalla** y no en el marco ni en el mapa: agrandar dibuja
 la otra versión y eso vuelve a montar el lienzo, así que con la vista adentro cada
 expansión volvería al encuadre inicial.
+
+**Y el mapa se puede enlazar.** `?sistema=<código>` lo abre con ese sistema elegido
+—y mirando hacia él—, y `?corporacion=<código>` lo abre con el filtro puesto. Son
+dos cosas distintas y se ven distinto a propósito: un filtro **pinta un conjunto**
+—todas las casillas donde esa corporación tiene algo, que es la pregunta «¿dónde
+está metida?»— y una elección **marca una** con su aro y su ficha al costado. Un
+filtro de un solo elemento sería pintar un panal para señalar un punto.
+
+Lo que sí comparten es que el mapa **abre mirando lo que el enlace pidió**. Sin eso,
+la cámara se quedaba donde está parado el piloto y el sistema enlazado quedaba
+marcado fuera de cuadro: la pantalla contestaba, pero en un renglón del costado. El
+encuadre ocurre una sola vez, así que elegir después en el mapa no le mueve la
+cámara a quien la esté moviendo con la mano.
+
+Por eso **casi todo nombre de sistema del juego es un enlace al mapa**: el de un
+agente, el de un puesto de una corporación, el de la ficha del lugar donde estás
+parado. Saber que algo está en Ánfora sólo ayuda si desde ahí se puede ver dónde
+queda Ánfora.
 
 ### La credencial, y el sello del piloto
 
