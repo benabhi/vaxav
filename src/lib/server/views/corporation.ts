@@ -112,22 +112,17 @@ export function buildReputacion(
 }
 
 /**
- * La corporación del piloto, con lo que hace falta para reconocerla.
+ * Las estaciones que opera una corporación, con dónde están y qué ofrecen.
  *
- * Todo sale de **cuatro consultas**, no de una por estación: una corporación con
- * seis puestos no puede costar seis viajes a la base cada vez que alguien abre su
- * ficha.
+ * Vive aparte porque la piden dos: la ficha, que muestra un puñado, y la pestaña
+ * de ubicaciones, que las muestra todas con recorte y paginado. Escrito dos veces
+ * sería garantizar que un día una liste un servicio que la otra no.
+ *
+ * Cuatro consultas y no una por estación: una corporación con seis puestos no
+ * puede costar seis viajes a la base cada vez que alguien abre su ficha.
  */
-export function buildCorporacion(db: Db, row: Pilot): Corporacion {
-	if (row.corporationId === null) return INDEPENDIENTE;
-
-	const suya = db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
-	if (!suya) return INDEPENDIENTE;
-
-	// Las estaciones que opera, con el sistema donde están y qué ofrecen. El
-	// piloto necesita saber **adónde ir**, y una estación sin su sistema es un
-	// nombre que no lleva a ninguna parte.
-	const puestos = db.select().from(station).where(eq(station.corporationId, suya.id)).all();
+export function estacionesDe(db: Db, corporationId: number): EstacionCorporacion[] {
+	const puestos = db.select().from(station).where(eq(station.corporationId, corporationId)).all();
 	const cuerpos = new Map(
 		db
 			.select()
@@ -144,16 +139,18 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 	);
 	const servicios = db.select().from(stationService).all();
 
-	const stations: EstacionCorporacion[] = puestos
+	return puestos
 		.map((puesto) => {
 			const cuerpo = cuerpos.get(puesto.bodyId);
+			const sistema = cuerpo ? sistemas.get(cuerpo.systemId) : undefined;
 			const suyos = new Set(
 				servicios.filter((uno) => uno.stationId === puesto.id).map((uno) => uno.service)
 			);
 			return {
 				code: cuerpo?.code ?? '',
 				name: cuerpo?.name ?? '',
-				system: cuerpo ? (sistemas.get(cuerpo.systemId)?.name ?? '') : '',
+				system: sistema?.name ?? '',
+				systemCode: sistema?.code ?? '',
 				// En el orden del catálogo, como en el mapa: dos listas de servicios que
 				// se ordenan distinto no se pueden comparar de un vistazo.
 				services: SERVICE_ORDER.filter((servicio) => suyos.has(servicio)).map((servicio) =>
@@ -163,6 +160,25 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 		})
 		.filter((una) => una.name !== '')
 		.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
+
+/**
+ * La corporación del piloto, con lo que hace falta para reconocerla.
+ *
+ * Todo sale de **cuatro consultas**, no de una por estación: una corporación con
+ * seis puestos no puede costar seis viajes a la base cada vez que alguien abre su
+ * ficha.
+ */
+export function buildCorporacion(db: Db, row: Pilot): Corporacion {
+	if (row.corporationId === null) return INDEPENDIENTE;
+
+	const suya = db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
+	if (!suya) return INDEPENDIENTE;
+
+	// Las estaciones que opera, con el sistema donde están y qué ofrecen. El
+	// piloto necesita saber **adónde ir**, y una estación sin su sistema es un
+	// nombre que no lleva a ninguna parte.
+	const stations = estacionesDe(db, suya.id);
 
 	// Cuánta gente reparte trabajo. **Sólo la cuenta**: la lista con sus columnas
 	// —nivel, clase, si te atiende— vive en su propia pestaña, que es donde se la

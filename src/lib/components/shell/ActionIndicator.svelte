@@ -140,8 +140,13 @@
 		{/if}
 	</div>
 {:else}
+	<!--
+		Se corta con puntos suspensivos en vez de empujar la barra. Es un aviso, no
+		un dato: perder la mitad de la frase en un teléfono cuesta menos que dejar la
+		página entera desbordada en horizontal, que es lo que hacía.
+	-->
 	<span
-		class="font-display text-[0.72rem] tracking-label whitespace-nowrap text-text-muted uppercase"
+		class="min-w-0 truncate font-display text-[0.72rem] tracking-label text-text-muted uppercase"
 	>
 		Sin órdenes. Elegí algo para hacer.
 	</span>

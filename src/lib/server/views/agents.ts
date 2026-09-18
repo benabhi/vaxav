@@ -28,7 +28,13 @@ import { canBeHired, requiredReputation } from '$lib/game/reputation';
 import { missionKindIcon, missionKindLabel, roman } from '$lib/format';
 import { pilotStandings } from '../services/reputation';
 import { readListing, paginate, sift, type Ordenes } from './listing';
-import type { AgentesCorporacion, ConsultaAgentes, FilaAgenteCorporacion } from '$lib/tipos';
+import type {
+	AgentesCorporacion,
+	ConsultaAgentes,
+	ConsultaSectorAgentes,
+	DirectorioAgentes,
+	FilaAgenteCorporacion
+} from '$lib/tipos';
 
 /** Cuántos agentes entran en una página. El mismo número que el resto del juego. */
 export const AGENTS_PER_PAGE = 25;
@@ -163,6 +169,9 @@ export function buildAgentes(
 			levelValue: uno.level,
 			station: cuerpo?.name ?? '',
 			system: cuerpo ? (sistemas.get(cuerpo.systemId)?.name ?? '') : '',
+			systemCode: cuerpo ? (sistemas.get(cuerpo.systemId)?.code ?? '') : '',
+			corporation: suya.name,
+			corporationCode: suya.code,
 			open: canBeHired(uno.level, suya.faction, conLaCorporacion, conLaBandera),
 			// La misma frase que la ficha del lugar, palabra por palabra: el mismo
 			// hecho se dice igual en todos lados.
@@ -177,6 +186,157 @@ export function buildAgentes(
 		belongs: true,
 		name: suya.name,
 		count: todos.length === 1 ? '1 agente' : `${todos.length} agentes`,
+		agents: pagina.rows,
+		query: { ...query, page: pagina.page },
+		total: todos.length,
+		found: pagina.found,
+		pages: pagina.pages,
+		open: todos.filter((uno) => uno.open).length,
+		kinds: [...new Set(todos.map((uno) => uno.kindCode))]
+			.map((code) => ({ value: code, label: missionKindLabel(code as MissionKind) }))
+			.sort((a, b) => a.label.localeCompare(b.label, 'es'))
+	};
+}
+
+/** Cuántos agentes del sector entran en una página. */
+export const SECTOR_PER_PAGE = 25;
+
+/**
+ * Por qué columnas se ordena el directorio del sector.
+ *
+ * Tiene dos que la lista de una corporación no necesita —de quién es y en qué
+ * sistema está—, porque ahí son siempre la misma y acá son la mitad de la
+ * pregunta: uno busca a quién pedirle trabajo **cerca**.
+ */
+export const SECTOR_SORTS: Ordenes<FilaAgenteCorporacion> = {
+	nombre: (fila) => fila.name.toLocaleLowerCase('es'),
+	corporacion: (fila) => fila.corporation.toLocaleLowerCase('es'),
+	sistema: (fila) => fila.system.toLocaleLowerCase('es'),
+	nivel: (fila) => fila.levelValue
+};
+
+/** Los recortes del directorio. Se apilan: entra quien pasa todos. */
+const SECTOR_FILTERS: readonly ((
+	fila: FilaAgenteCorporacion,
+	query: ConsultaSectorAgentes
+) => boolean)[] = [
+	(fila, query) =>
+		!query.search ||
+		fila.name.toLocaleLowerCase('es').includes(query.search.toLocaleLowerCase('es')) ||
+		fila.corporation.toLocaleLowerCase('es').includes(query.search.toLocaleLowerCase('es')) ||
+		fila.system.toLocaleLowerCase('es').includes(query.search.toLocaleLowerCase('es')),
+	(fila, query) => !query.kind || fila.kindCode === query.kind,
+	(fila, query) => !query.onlyOpen || fila.open
+];
+
+/** Lee la consulta del directorio desde la URL, validada contra el catálogo. */
+export function readSectorQuery(params: URLSearchParams): ConsultaSectorAgentes {
+	const kind = params.get('clase') ?? '';
+
+	return {
+		...readListing(params, SECTOR_SORTS, 'nivel'),
+		kind: MISSION_KINDS.includes(kind as MissionKind) ? kind : '',
+		onlyOpen: params.get('atienden') !== null
+	};
+}
+
+/**
+ * Todos los agentes del sector, no sólo los de tu corporación.
+ *
+ * **Es un directorio y no un resumen de lo tuyo.** La reputación se gana con
+ * cualquiera, así que lo primero que uno quiere es ver quién reparte trabajo y
+ * dónde; un agente que todavía no te atiende no es ruido, es el que te falta. Por
+ * eso van todos, con su corporación y su sistema, y el recorte manda.
+ *
+ * Vive junto a la lista de una corporación porque **la fila es la misma** —mismo
+ * nombre, mismo nivel, misma clase, mismo si te atiende— y escribirla dos veces
+ * sería garantizar que un día digan cosas distintas. Lo que cambia es el alcance
+ * y qué columnas tiene sentido mostrar.
+ *
+ * Se pagina **en memoria**: por muchos que sean, no pasan de los agentes que
+ * existen, que es la regla del proyecto para las listas acotadas.
+ */
+export function buildDirectorioAgentes(
+	db: Db,
+	row: Pilot,
+	query = readSectorQuery(new URLSearchParams())
+): DirectorioAgentes {
+	const corporaciones = new Map(
+		db
+			.select()
+			.from(corporation)
+			.all()
+			.map((una) => [una.id, una])
+	);
+	const puestos = new Map(
+		db
+			.select()
+			.from(station)
+			.all()
+			.map((uno) => [uno.id, uno])
+	);
+	const cuerpos = new Map(
+		db
+			.select()
+			.from(body)
+			.all()
+			.map((uno) => [uno.id, uno])
+	);
+	const sistemas = new Map(
+		db
+			.select()
+			.from(systemTable)
+			.all()
+			.map((uno) => [uno.id, uno])
+	);
+
+	// Todo lo que el piloto tiene, de una consulta: son las dos escaleras de cada
+	// agente y hay uno por estación, así que preguntarlo por agente sería ir a la
+	// base cien veces para contestar lo mismo.
+	const reputacion = pilotStandings(db, row.id);
+
+	const todos: FilaAgenteCorporacion[] = db
+		.select()
+		.from(agent)
+		.orderBy(asc(agent.level), asc(agent.id))
+		.all()
+		.map((uno) => {
+			const suya = corporaciones.get(uno.corporationId);
+			const puesto = puestos.get(uno.stationId);
+			const cuerpo = puesto ? cuerpos.get(puesto.bodyId) : undefined;
+			const sistema = cuerpo ? sistemas.get(cuerpo.systemId) : undefined;
+			const kind = uno.missionKind as MissionKind;
+
+			const conLaCorporacion = suya ? (reputacion.corporations[suya.code] ?? 0) : 0;
+			const conLaBandera = suya?.faction ? (reputacion.factions[suya.faction] ?? 0) : 0;
+			const bandera = suya?.faction
+				? (FACTIONS[suya.faction as keyof typeof FACTIONS]?.name ?? 'Sin bandera')
+				: 'Sin bandera';
+			const needed = requiredReputation(uno.level, suya?.faction ?? '');
+
+			return {
+				code: uno.code,
+				name: uno.name,
+				kind: missionKindLabel(kind),
+				kindCode: uno.missionKind,
+				kindIcon: missionKindIcon(kind),
+				level: roman(uno.level),
+				levelValue: uno.level,
+				station: cuerpo?.name ?? '',
+				system: sistema?.name ?? '',
+				systemCode: sistema?.code ?? '',
+				corporation: suya?.name ?? '',
+				corporationCode: suya?.code ?? '',
+				open: canBeHired(uno.level, suya?.faction ?? '', conLaCorporacion, conLaBandera),
+				// La misma frase que la ficha del lugar, palabra por palabra: el mismo
+				// hecho se dice igual en todos lados.
+				requirement: `Requiere ${needed} de reputación con ${suya?.name ?? 'su corporación'} o con ${bandera}`
+			};
+		});
+
+	const pagina = paginate(sift(todos, query, SECTOR_FILTERS), query, SECTOR_SORTS, SECTOR_PER_PAGE);
+
+	return {
 		agents: pagina.rows,
 		query: { ...query, page: pagina.page },
 		total: todos.length,

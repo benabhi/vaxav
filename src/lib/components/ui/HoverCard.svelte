@@ -103,9 +103,16 @@
 	de inventarle un rol que mentiría.
 -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
+<!--
+	`w-fit` y no sólo `inline-flex`: adentro de una columna flex este envoltorio se
+	estira a lo ancho del contenedor —así reparte flex por omisión— y el aviso se
+	centraba sobre la caja estirada y no sobre el botón. En la puerta eso lo dejaba
+	doscientos píxeles a la derecha de lo que estaba señalando: el ancla medía 742
+	y el botón 110.
+-->
 <span
 	bind:this={disparador}
-	class="inline-flex"
+	class="inline-flex w-fit"
 	onmouseenter={abrir}
 	onmouseleave={cerrar}
 	onfocusin={abrir}

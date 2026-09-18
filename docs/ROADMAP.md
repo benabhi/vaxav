@@ -222,10 +222,11 @@ la siguiente:
   viaje, el aro de la puerta, el mosaico de la estación con su columna de
   secciones, el campo de rocas del cinturón y el vecindario en órbita de un
   planeta, una luna o una estrella.
-- **Y después, `Piloto · Reputación`.** La pestaña donde se ve el panorama
-  completo: toda facción, corporación y agente con el que haya número. Va en
-  Piloto porque es del piloto y sobrevive a renunciar, y va **después** de lo de
-  arriba. Ver «Dónde se mira» en [misiones](systems/MISSIONS.md).
+- ~~**`Piloto · Reputación`.**~~ El panorama: las banderas con su rosa y las
+  corporaciones que te conocen, cada una diciendo hasta qué nivel de agente te
+  abre. De agentes no hay lista y no la va a haber hasta que tengan número
+  propio: hoy quien decide si te atienden es el mayor entre su corporación y su
+  bandera, y eso se dice en la fila.
 - **La ficha de tránsito tiene que variar según a dónde se va.** Hoy cuenta igual
   un salto a otro sistema, un viaje a un cinturón y uno a una estación, y no son
   el mismo viaje.

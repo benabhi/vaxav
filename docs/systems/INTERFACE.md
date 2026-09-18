@@ -273,6 +273,37 @@ El aviso del Neocom tiene una vuelta propia: **abrir la bandeja no marca nada**,
 marca abrir un mensaje. Así que la pestaña sigue avisando mientras quede uno sin
 abrir, aunque el jugador ya esté parado ahí.
 
+### El panorama de reputación del piloto
+
+`Piloto · Reputación` contesta la pregunta que las pantallas de Corporación no
+pueden: **quién me conoce en el sector, y cuánto**. Va en Piloto porque es del
+piloto —sobrevive a renunciar— y porque la mitad de lo que muestra no es de
+ninguna corporación.
+
+La figura es **la rosa de banderas**: el largo de cada brazo es lo que esa facción
+piensa de vos, en su color, y los anillos caen donde caen los escalones de verdad
+—diez, veinticinco, cincuenta, ochenta—, así que se ve que el último tramo es el
+más largo de todos. Lo que dibuja no son tres cifras: es **qué clase de piloto
+sos**. Un brazo largo con dos muñones es una lealtad; tres iguales, un
+oportunista. Arranca vacía y no es un defecto: con todo en cero quedan los ejes y
+un punto en el medio, que es exactamente lo que pasa.
+
+Quién entra en las listas:
+
+| Quién             | Cuándo aparece                                           |
+| ----------------- | -------------------------------------------------------- |
+| Las banderas      | **Siempre**, tengas número o no: son el marco del sector |
+| Las corporaciones | Sólo si te conocen, más la tuya aunque esté en cero      |
+| Los agentes       | **Nunca**: no tienen un número propio con vos            |
+
+Lo último es lo primero que uno busca ahí, así que la pantalla lo contesta en vez
+de callarlo. Un agente no lleva reputación propia: te atiende el que esté a la
+altura del **mayor** entre lo que tiene su corporación y lo que tiene su bandera.
+Por eso cada fila dice hasta qué nivel te abre, y por eso ahí se vuelve visible la
+regla de las dos escaleras: una corporación en el primer escalón puede abrir el
+tercero porque su bandera llegó ahí. Una tercera lista vacía sería la pantalla
+cartel que el proyecto ya borró una vez.
+
 ### La columna angosta de una estación
 
 **Una estación contesta tres preguntas y no una**, y las tres son listas largas

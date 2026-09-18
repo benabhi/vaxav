@@ -51,6 +51,12 @@ export const MODULES: readonly Module[] = [
 				route: '/piloto/habilidades',
 				label: 'Habilidades'
 			},
+			// Entre habilidades y bitácora: primero en qué te convertiste, después
+			// quién te conoce por eso, y al final lo que fuiste haciendo.
+			{
+				route: '/piloto/reputacion',
+				label: 'Reputación'
+			},
 			{
 				route: '/piloto/bitacora',
 				label: 'Bitácora'
