@@ -28,12 +28,17 @@ Los que no se convierten en tiempo, en riesgo o en plata, son decoración.
 Cuatro preguntas distintas en cuatro momentos distintos. Es lo que EVE hace bien y
 conviene robar entero:
 
-| Presupuesto                         | La pregunta                     | Sale de  |
-| ----------------------------------- | ------------------------------- | -------- |
-| **Ranura** (clase 1-8)              | ¿Entra físicamente?             | El casco |
-| **Potencia** (MW) · **Cómputo** (u) | ¿La nave lo sostiene instalado? | El casco |
-| **Acumulador** (carga + recarga)    | ¿Lo puedo mantener encendido?   | El casco |
-| **Calibración**                     | ¿Me alcanza para otro refuerzo? | El casco |
+| Presupuesto                     | La pregunta                     | Sale de  |
+| ------------------------------- | ------------------------------- | -------- |
+| **Ranura** (clase 1-8)          | ¿Entra físicamente?             | El casco |
+| **Grilla** (MW) · **CPU** (u)   | ¿La nave lo sostiene instalado? | El casco |
+| **Capacitor** (carga + recarga) | ¿Lo puedo mantener encendido?   | El casco |
+| **Calibración**                 | ¿Me alcanza para otro refuerzo? | El casco |
+
+Los nombres son **los de EVE**, a propósito: grilla de poder, CPU, capacitor y
+calibración. El público que más rápido va a entender esta pantalla es el que ya
+jugó EVE, y hacerlo tropezar con sinónimos no lo hace más nuestro — lo hace más
+lento. Lo nuestro son las bandejas.
 
 **Los cuatro salen del casco, y eso es nuevo.** Antes la potencia venía de la
 planta y el acumulador del distribuidor, que eran módulos: el presupuesto se podía
@@ -60,9 +65,9 @@ presupuesto que obliga a decidir antes y no después.
 
 Un refuerzo grande se come casi toda; tres chicos entran justos.
 
-### El acumulador, reinterpretado
+### El capacitor, reinterpretado
 
-En EVE el acumulador es un juego de manejo en vivo: apagás cosas, esperás, tirás
+En EVE el capacitor es un juego de manejo en vivo: apagás cosas, esperás, tirás
 una batería. Eso acá no existe.
 
 En Vaxav se resuelve en **una cuenta al dar la orden**: recarga por segundo
@@ -71,7 +76,7 @@ si no, **el rendimiento cae en proporción a lo que la recarga alcanza a pagar**
 Mismo dilema —capacidad contra consumo—, sin pedirle a nadie que mire la
 pantalla.
 
-Es lo que convierte al acumulador en una decisión real: dos láseres grandes en un
+Es lo que convierte al capacitor en una decisión real: dos láseres grandes en un
 casco de acumulador modesto rinden al 80 %, y lo que se hace con eso es montar una
 batería en una consola —pagando la consola— o llevar un láser más chico. Ninguna
 de las dos es gratis, que es el punto.

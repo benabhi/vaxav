@@ -10,7 +10,7 @@ import type { IconName } from '$lib/icons';
 import type { ActionKind } from '$lib/game/actions';
 import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
-import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
+import type { BonusTarget, DockSize, SlotKind } from '$lib/game/hulls';
 import { getItem, type Item, type ItemKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
 import { startingKit, startingLevels, type ProfessionCode } from '$lib/game/professions';
@@ -419,9 +419,9 @@ export function explorationIcon(explored: boolean): IconName {
 
 const SLOT_KINDS: Record<SlotKind, string> = {
 	hardpoint: 'Anclaje',
-	utility: 'Utilitario',
-	core: 'Esencial',
-	optional: 'Opcional'
+	console: 'Consola',
+	chassis: 'Bastidor',
+	rig: 'Refuerzo'
 };
 
 /**
@@ -433,19 +433,9 @@ const SLOT_KINDS: Record<SlotKind, string> = {
  */
 const SLOT_ICONS: Record<SlotKind, IconName> = {
 	hardpoint: 'target',
-	utility: 'wrench',
-	core: 'gear-six',
-	optional: 'squares-four'
-};
-
-const CORE_SYSTEMS: Record<CoreSystem, string> = {
-	power_plant: 'Planta de energía',
-	thrusters: 'Propulsores',
-	jump_drive: 'Motor de salto',
-	distributor: 'Distribuidor',
-	sensors: 'Sensores',
-	life_support: 'Soporte vital',
-	tank: 'Tanque'
+	console: 'lightning',
+	chassis: 'squares-four',
+	rig: 'anchor'
 };
 
 const DOCK_SIZES: Record<DockSize, string> = {
@@ -475,11 +465,6 @@ export function slotKindLabel(kind: SlotKind): string {
 /** El ícono de Phosphor que le toca a un tipo de ranura. */
 export function slotKindIcon(kind: SlotKind): IconName {
 	return SLOT_ICONS[kind] ?? 'circles-three';
-}
-
-/** Cómo se llama un interno esencial en pantalla. */
-export function coreSystemLabel(core: CoreSystem): string {
-	return CORE_SYSTEMS[core] ?? core;
 }
 
 /** En qué amarre entra la nave. */

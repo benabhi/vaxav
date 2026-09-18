@@ -8,10 +8,10 @@
  * como las reglas del juego.
  */
 
-import { getHull, type CoreSystem, type Hull, type SlotKind } from '$lib/game/hulls';
+import { getHull, type Hull, type SlotKind } from '$lib/game/hulls';
 import { fitFromCodes } from '$lib/game/fitting';
 import type { ShipModule } from '$lib/game/modules';
-import { coreSystemLabel, moduleIcon, slotKindIcon, slotKindLabel } from '$lib/format';
+import { moduleIcon, slotKindIcon, slotKindLabel } from '$lib/format';
 import type { FilaRanura, GrupoRanuras } from '$lib/tipos';
 
 /**
@@ -21,10 +21,26 @@ import type { FilaRanura, GrupoRanuras } from '$lib/tipos';
 export const RING_RADIUS = 39;
 
 /**
- * En qué orden se recorre el anillo. Los esenciales van últimos y por eso caen
- * abajo: son los que menos se tocan.
+ * En qué orden se recorre el anillo, arrancando arriba y girando con el reloj.
+ *
+ * Los anclajes arriba porque apuntan hacia afuera; las consolas a la derecha, que
+ * es lo que más se toca; el bastidor abajo, que es lo que menos. Los refuerzos no
+ * están en esta lista: van **adentro** del anillo, porque no se desmontan, y ésa
+ * es toda la metáfora — afuera lo que se cambia, adentro lo que no.
  */
-export const RING_ORDER: readonly SlotKind[] = ['hardpoint', 'utility', 'optional', 'core'];
+export const RING_ORDER: readonly SlotKind[] = ['hardpoint', 'console', 'chassis'];
+
+/**
+ * Radio del círculo interior, donde van los refuerzos.
+ *
+ * **Afuera lo que se cambia, adentro lo que no.** Un refuerzo se suelda al casco
+ * y sacarlo lo destruye, así que dibujarlo en el mismo anillo que un módulo que
+ * se desmonta sería decir que son la misma clase de decisión, y no lo son.
+ */
+export const RIG_RADIUS = 22;
+
+/** La bandeja que se dibuja adentro, y no en el anillo. */
+export const INNER_KIND: SlotKind = 'rig';
 
 /** Dónde cae una ranura del anillo, en porcentaje del cuadro. */
 export interface RingPosition {
@@ -40,12 +56,12 @@ export interface RingPosition {
  * Se guarda el ángulo además de la posición porque la pantalla lo necesita para
  * decidir dónde cae cada ranura sin volver a hacer la trigonometría.
  */
-function pointAt(angleDegrees: number): RingPosition {
+function pointAt(angleDegrees: number, radius: number = RING_RADIUS): RingPosition {
 	const radianes = ((angleDegrees - 90) * Math.PI) / 180;
 	return {
 		angle: angleDegrees,
-		left: `${(50 + RING_RADIUS * Math.cos(radianes)).toFixed(2)}%`,
-		top: `${(50 + RING_RADIUS * Math.sin(radianes)).toFixed(2)}%`
+		left: `${(50 + radius * Math.cos(radianes)).toFixed(2)}%`,
+		top: `${(50 + radius * Math.sin(radianes)).toFixed(2)}%`
 	};
 }
 
@@ -87,6 +103,7 @@ export function ringPositions(counts: readonly number[]): readonly RingPosition[
 export function ringOrder(hull: Hull): readonly number[] {
 	return hull.slots
 		.map((slot, index) => ({ slot, index }))
+		.filter(({ slot }) => slot.kind !== INNER_KIND)
 		.sort(
 			(a, b) =>
 				RING_ORDER.indexOf(a.slot.kind) - RING_ORDER.indexOf(b.slot.kind) || a.index - b.index
@@ -94,9 +111,17 @@ export function ringOrder(hull: Hull): readonly number[] {
 		.map(({ index }) => index);
 }
 
+/** Las ranuras del círculo interior, en el orden en que se dibujan. */
+export function innerOrder(hull: Hull): readonly number[] {
+	return hull.slots
+		.map((slot, index) => ({ slot, index }))
+		.filter(({ slot }) => slot.kind === INNER_KIND)
+		.map(({ index }) => index);
+}
+
 /** Qué es esta ranura: el sistema esencial, o el tipo con su clase. */
-function slotTitle(kind: SlotKind, core: CoreSystem | null): string {
-	return core !== null ? coreSystemLabel(core) : slotKindLabel(kind);
+function slotTitle(kind: SlotKind): string {
+	return slotKindLabel(kind);
 }
 
 /** Una ranura resuelta para dibujar, la use el anillo o la lista. */
@@ -118,7 +143,7 @@ function slotRow(
 		// El ícono del módulo montado, no el de la categoría: es lo que hace que
 		// el círculo diga qué tiene sin pasarle el mouse por encima.
 		icon: montado ? moduleIcon(module) : slotKindIcon(slot.kind),
-		title: slotTitle(slot.kind, slot.core),
+		title: slotTitle(slot.kind),
 		classLabel: `Clase ${slot.size}`,
 		moduleName: montado ? module.name : 'Vacía',
 		badge: montado ? `${module.size}${module.tier}` : `c${slot.size}`,
@@ -151,8 +176,17 @@ export function buildRingSlots(
 	// anillo: es lo que decide el tamaño de cada arco.
 	const cuentas = RING_ORDER.map((kind) => hull.slots.filter((slot) => slot.kind === kind).length);
 	const posiciones = ringPositions(cuentas);
+	const afuera = orden.map((index, puesto) =>
+		slotRow(hull, modules, index, selected, posiciones[puesto])
+	);
 
-	return orden.map((index, puesto) => slotRow(hull, modules, index, selected, posiciones[puesto]));
+	// Y los refuerzos adentro, en su propio círculo chico.
+	const dentro = innerOrder(hull);
+	const suyas = dentro.map((index, puesto) =>
+		slotRow(hull, modules, index, selected, pointAt((puesto * 360) / dentro.length, RIG_RADIUS))
+	);
+
+	return [...afuera, ...suyas];
 }
 
 /**
@@ -171,7 +205,7 @@ export function buildSlotGroups(
 	const modules = fittedModules(hullCode, fitted);
 	const grupos: GrupoRanuras[] = [];
 
-	for (const kind of RING_ORDER) {
+	for (const kind of [...RING_ORDER, INNER_KIND]) {
 		const indices = hull.slots
 			.map((slot, index) => ({ slot, index }))
 			.filter(({ slot }) => slot.kind === kind)
@@ -197,10 +231,10 @@ export function buildSlotGroups(
 export function moduleSummary(module: ShipModule): string {
 	const partes: string[] = [];
 	const aportes: [string, number, string][] = [
-		['Potencia', module.powerOutput, 'MW'],
+		['Grilla', module.powerOutput, 'MW'],
 		['Empuje', Math.floor(module.thrust / 1000), 'kN'],
 		['Salto', module.jumpPower, ''],
-		['Acumulador', module.capacitor, 'u'],
+		['Capacitor', module.capacitor, 'u'],
 		['Recarga', module.capacitorRecharge, 'u/s'],
 		['Escudo', module.shield, ''],
 		['Blindaje', module.armor, ''],

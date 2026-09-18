@@ -29,25 +29,27 @@
  */
 
 import { lookup } from './catalog';
-import type { CoreSystem, SlotKind } from './hulls';
+import type { SlotKind } from './hulls';
 import type { Requirement } from './skills';
 
 /**
- * Los escalones tecnológicos, **de la más modesta a la más capaz**: E, D, C, B, A.
+ * Los escalones tecnológicos, **de entrada a avanzado**: I y II.
  *
- * No es una escala de calidad a secas: es la **puerta de habilidad**. Un módulo A
- * rinde más que su E, cuesta más y pide habilidades entrenadas; también aprieta
- * más la potencia y el cómputo, así que en una nave chica o con el cómputo al
- * límite el E puede ser la elección correcta.
+ * No es una escala de calidad a secas: es la **puerta de habilidad**. El **I** no
+ * pide nada y es con el que sale una nave del astillero; el **II** rinde más,
+ * cuesta más, pide habilidades entrenadas y aprieta más la potencia y el cómputo,
+ * así que en una nave chica o con el cómputo al límite el I puede ser la elección
+ * correcta.
  *
- * El rango va de E a A como en Elite Dangerous, con **el piso y el techo fijos**:
- * así se pueden llenar los escalones del medio sin mover nunca los extremos ni
- * renombrar lo que ya existe. Hoy sólo se usan los dos puntas.
+ * **Corre hacia adelante**, y queda lugar para un III. Antes era una letra de la E
+ * a la A que corría para atrás —la A era el tope— y había que aprenderse que la
+ * escalera iba al revés; ésa era la mitad de por qué no se entendía. La otra mitad
+ * era que la letra mezclaba dos cosas: el escalón tecnológico y el compromiso de
+ * diseño, que ahora va en el adjetivo.
  *
- * Lo que decide si un módulo **entra** en la ranura es la clase, que es otra
- * cosa, y lo que distingue a dos versiones del mismo escalón es su adjetivo.
+ * Lo que decide si un módulo **entra** en la ranura es la clase, que es otra cosa.
  */
-export const TIERS = ['A', 'B', 'C', 'D', 'E'] as const;
+export const TIERS = ['I', 'II'] as const;
 export type Tier = (typeof TIERS)[number] | '';
 
 /**
@@ -67,9 +69,6 @@ export interface ShipModule {
 	readonly tier: Tier;
 	readonly description: string;
 
-	/** Sólo los internos esenciales lo llevan: dice cuál de los siete es. */
-	readonly core: CoreSystem | null;
-
 	/**
 	 * Qué hay que saber para montarlo.
 	 *
@@ -85,6 +84,13 @@ export interface ShipModule {
 	readonly mass: number;
 	readonly powerDraw: number;
 	readonly computingDraw: number;
+	/**
+	 * Cuánta calibración gasta, si es un refuerzo.
+	 *
+	 * Es el único costo que no se recupera: sacar un refuerzo lo destruye, así que
+	 * gastar calibración es definitivo.
+	 */
+	readonly calibrationDraw: number;
 
 	// --- Qué aporta por estar puesto ---
 	readonly powerOutput: number;
@@ -115,11 +121,11 @@ export interface ShipModule {
 /** Lo que vale un campo que el módulo no declara: cero, siempre. */
 const NOTHING = {
 	description: '',
-	core: null,
 	requirements: [] as readonly Requirement[],
 	mass: 0,
 	powerDraw: 0,
 	computingDraw: 0,
+	calibrationDraw: 0,
 	powerOutput: 0,
 	thrust: 0,
 	jumpPower: 0,
@@ -160,329 +166,156 @@ function defineModule(spec: ModuleSpec): ShipModule {
 export const EMPTY: ShipModule = defineModule({
 	code: '',
 	name: 'Vacía',
-	kind: 'optional',
+	kind: 'chassis',
 	size: 0,
 	tier: '',
 	description: 'Sin nada montado.'
 });
 
 export const MODULES: readonly ShipModule[] = [
-	// --- Internos esenciales ---
-	// Se mejoran, no se quitan. Hay uno de clase 1 a 3 para cada sistema, que es
-	// lo que necesitan los cinco cascos del catálogo.
-	// Planta de energía: define cuánta potencia hay para repartir.
+	// --- Consolas: lo que se enciende ---
+	//
+	// Los propulsores, los sensores y el acumulador **eran internos esenciales**:
+	// toda nave tenía que llevar uno y elegir cuál era una compra, no una
+	// decisión. Ahora el casco los trae de fábrica y esto es la mejora, que
+	// cuesta una ranura. Eso es lo que separa mejorar de comprar.
 	defineModule({
-		code: 'plant_e2',
-		name: 'Planta de energía',
-		kind: 'core',
+		code: 'thruster_i2',
+		name: 'Propulsor auxiliar',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
-		description: 'Da lo justo. Barata y liviana.',
-		core: 'power_plant',
-		mass: 18,
-		powerOutput: 45
-	}),
-	defineModule({
-		code: 'plant_a2',
-		name: 'Planta de energía',
-		kind: 'core',
-		size: 2,
-		tier: 'A',
-		description: 'Mucha potencia y mucho peso. La que habilita el resto.',
-		core: 'power_plant',
-		mass: 30,
-		powerOutput: 70
-	}),
-	defineModule({
-		code: 'plant_e3',
-		name: 'Planta de energía',
-		kind: 'core',
-		size: 3,
-		tier: 'E',
-		description: 'La modesta de su clase.',
-		core: 'power_plant',
-		mass: 34,
-		powerOutput: 72
-	}),
-	defineModule({
-		code: 'plant_a3',
-		name: 'Planta de energía',
-		kind: 'core',
-		size: 3,
-		tier: 'A',
-		description: 'Alimenta una nave entera y se nota en la balanza.',
-		core: 'power_plant',
-		mass: 55,
-		powerOutput: 108
-	}),
-	// Propulsores: de acá sale la velocidad de crucero.
-	defineModule({
-		code: 'thrusters_e2',
-		name: 'Propulsores',
-		kind: 'core',
-		size: 2,
-		tier: 'E',
-		description: 'Empujan. No mucho más.',
-		core: 'thrusters',
+		tier: 'I',
+		description: 'Empuje de más, encendido cuando hace falta.',
 		mass: 14,
 		powerDraw: 6,
-		thrust: 48000
+		thrust: 14_000
 	}),
 	defineModule({
-		code: 'thrusters_a2',
+		code: 'thruster_ii2',
 		requirements: [{ skill: 'navigation', level: 2 }],
-		name: 'Propulsores',
-		kind: 'core',
+		name: 'Propulsor auxiliar',
+		kind: 'console',
 		size: 2,
-		tier: 'A',
-		description: 'Caros y sedientos, pero acortan cada viaje.',
-		core: 'thrusters',
+		tier: 'II',
+		description: 'Caro y sediento, pero acorta cada viaje.',
 		mass: 22,
 		powerDraw: 12,
-		thrust: 62000
+		thrust: 26_000
 	}),
 	defineModule({
-		code: 'thrusters_e3',
-		name: 'Propulsores',
-		kind: 'core',
-		size: 3,
-		tier: 'E',
-		description: 'Para cascos medianos, sin pretensiones.',
-		core: 'thrusters',
-		mass: 26,
-		powerDraw: 9,
-		thrust: 88000
-	}),
-	defineModule({
-		code: 'thrusters_a3',
+		code: 'thruster_ii3',
 		requirements: [{ skill: 'navigation', level: 3 }],
-		name: 'Propulsores',
-		kind: 'core',
+		name: 'Propulsor auxiliar',
+		kind: 'console',
 		size: 3,
-		tier: 'A',
-		description: 'Mueven una casa. Piden una planta a la altura.',
-		core: 'thrusters',
+		tier: 'II',
+		description: 'Mueve una casa. Pide una planta a la altura.',
 		mass: 40,
 		powerDraw: 18,
-		thrust: 116000
+		thrust: 44_000
 	}),
-	// Motor de salto: de acá sale el alcance entre sistemas.
 	defineModule({
-		code: 'jump_e2',
-		name: 'Motor de salto',
-		kind: 'core',
+		code: 'sensor_amp_i2',
+		name: 'Amplificador de sensores',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
-		description: 'Liviano, y por eso llega lejos pese a ser modesto.',
-		core: 'jump_drive',
-		mass: 10,
-		powerDraw: 5,
-		jumpPower: 720
-	}),
-	defineModule({
-		code: 'jump_a2',
-		requirements: [{ skill: 'astrogation', level: 2 }],
-		name: 'Motor de salto',
-		kind: 'core',
-		size: 2,
-		tier: 'A',
-		description: 'El que más empuja, si podés cargar con él.',
-		core: 'jump_drive',
-		mass: 20,
-		powerDraw: 9,
-		jumpPower: 1080
-	}),
-	defineModule({
-		code: 'jump_e3',
-		name: 'Motor de salto',
-		kind: 'core',
-		size: 3,
-		tier: 'E',
-		description: 'La opción de quien piensa en la vuelta.',
-		core: 'jump_drive',
-		mass: 18,
-		powerDraw: 7,
-		jumpPower: 1360
-	}),
-	defineModule({
-		code: 'jump_a3',
-		requirements: [{ skill: 'astrogation', level: 3 }],
-		name: 'Motor de salto',
-		kind: 'core',
-		size: 3,
-		tier: 'A',
-		description: 'Alcance de sobra a cambio de masa.',
-		core: 'jump_drive',
-		mass: 34,
-		powerDraw: 13,
-		jumpPower: 1960
-	}),
-	// Distribuidor: el acumulador y su recarga.
-	defineModule({
-		code: 'distributor_e2',
-		name: 'Distribuidor',
-		kind: 'core',
-		size: 2,
-		tier: 'E',
-		description: 'Reserva chica. Obliga a trabajar de a ratos.',
-		core: 'distributor',
-		mass: 8,
-		powerDraw: 3,
-		capacitor: 240,
-		capacitorRecharge: 8
-	}),
-	defineModule({
-		code: 'distributor_a2',
-		name: 'Distribuidor',
-		kind: 'core',
-		size: 2,
-		tier: 'A',
-		description: 'Aguanta un láser encendido sin pestañear.',
-		core: 'distributor',
-		mass: 14,
-		powerDraw: 7,
-		capacitor: 340,
-		capacitorRecharge: 14
-	}),
-	defineModule({
-		code: 'distributor_e3',
-		name: 'Distribuidor',
-		kind: 'core',
-		size: 3,
-		tier: 'E',
-		description: 'Reserva mediana para trabajos largos.',
-		core: 'distributor',
-		mass: 13,
-		powerDraw: 5,
-		capacitor: 380,
-		capacitorRecharge: 13
-	}),
-	defineModule({
-		code: 'distributor_a3',
-		name: 'Distribuidor',
-		kind: 'core',
-		size: 3,
-		tier: 'A',
-		description: 'Sostiene dos anclajes a la vez, si la planta acompaña.',
-		core: 'distributor',
-		mass: 22,
-		powerDraw: 11,
-		capacitor: 520,
-		capacitorRecharge: 22
-	}),
-	// Sensores.
-	defineModule({
-		code: 'sensors_e2',
-		name: 'Sensores',
-		kind: 'core',
-		size: 2,
-		tier: 'E',
-		description: 'Ven lo que tienen delante.',
-		core: 'sensors',
-		mass: 6,
-		powerDraw: 2,
-		computingDraw: 8,
-		sensorRange: 10
-	}),
-	defineModule({
-		code: 'sensors_a2',
-		requirements: [{ skill: 'scanning', level: 2 }],
-		name: 'Sensores',
-		kind: 'core',
-		size: 2,
-		tier: 'A',
-		description: 'Caros en cómputo, y ahí está el precio real.',
-		core: 'sensors',
+		tier: 'I',
+		description: 'Estira el alcance a cambio de cómputo.',
 		mass: 10,
 		powerDraw: 5,
 		computingDraw: 22,
 		sensorRange: 45
 	}),
 	defineModule({
-		code: 'sensors_e3',
-		name: 'Sensores',
-		kind: 'core',
-		size: 3,
-		tier: 'E',
-		description: 'Lo mínimo para no volar a ciegas.',
-		core: 'sensors',
-		mass: 9,
-		powerDraw: 3,
-		computingDraw: 12,
-		sensorRange: 16
-	}),
-	defineModule({
-		code: 'sensors_a3',
+		code: 'sensor_amp_ii3',
 		requirements: [{ skill: 'scanning', level: 3 }],
-		name: 'Sensores',
-		kind: 'core',
+		name: 'Amplificador de sensores',
+		kind: 'console',
 		size: 3,
-		tier: 'A',
-		description: 'Encuentran lo que nadie cartografió.',
-		core: 'sensors',
+		tier: 'II',
+		description: 'Ve lo que nadie, y se come el cómputo de la nave.',
 		mass: 15,
 		powerDraw: 7,
 		computingDraw: 34,
 		sensorRange: 70
 	}),
-	// Soporte vital y tanque: no se eligen, se llevan.
 	defineModule({
-		code: 'life_e2',
-		name: 'Soporte vital',
-		kind: 'core',
+		code: 'capacitor_battery_i2',
+		name: 'Batería de acumulador',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
-		description: 'Aire y calor. Nadie lo mejora hasta que lo necesita.',
-		core: 'life_support',
-		mass: 7,
-		powerDraw: 3,
-		computingDraw: 4
-	}),
-	defineModule({
-		code: 'life_e3',
-		name: 'Soporte vital',
-		kind: 'core',
-		size: 3,
-		tier: 'E',
-		description: 'Lo mismo, para un casco más grande.',
-		core: 'life_support',
-		mass: 11,
+		tier: 'I',
+		description: 'Más reserva para sostener lo que está encendido.',
+		mass: 14,
 		powerDraw: 4,
-		computingDraw: 6
+		capacitor: 120,
+		capacitorRecharge: 4
 	}),
 	defineModule({
-		code: 'tank_e2',
-		name: 'Tanque',
-		kind: 'core',
-		size: 2,
-		tier: 'E',
-		description: 'Combustible. Cuanto más lleva, más pesa.',
-		core: 'tank',
-		mass: 9,
-		powerDraw: 1,
-		fuel: 20
-	}),
-	defineModule({
-		code: 'tank_e3',
-		name: 'Tanque',
-		kind: 'core',
+		code: 'capacitor_battery_ii3',
+		name: 'Batería de acumulador',
+		kind: 'console',
 		size: 3,
-		tier: 'E',
-		description: 'El depósito de una nave que sale del sistema.',
-		core: 'tank',
-		mass: 15,
-		powerDraw: 1,
-		fuel: 45
+		tier: 'II',
+		description: 'Aguanta dos láseres grandes sin pestañear.',
+		mass: 22,
+		powerDraw: 8,
+		capacitor: 220,
+		capacitorRecharge: 9
 	}),
 
-	// --- Anclajes ---
-	// pega en todo un poco menos.
+	// --- Bastidor: lo que está puesto y ya ---
 	defineModule({
-		code: 'mining_laser_e1',
+		code: 'power_relay_i2',
+		name: 'Relé de energía',
+		kind: 'chassis',
+		size: 2,
+		tier: 'I',
+		description: 'Aprovecha mejor la planta. No se apaga nunca.',
+		mass: 16,
+		powerOutput: 12
+	}),
+	defineModule({
+		code: 'power_relay_ii3',
+		name: 'Relé de energía',
+		kind: 'chassis',
+		size: 3,
+		tier: 'II',
+		description: 'El que hace entrar el módulo que no entraba.',
+		mass: 28,
+		powerOutput: 26
+	}),
+	defineModule({
+		code: 'jump_calibrator_i2',
+		name: 'Calibrador de salto',
+		kind: 'chassis',
+		size: 2,
+		tier: 'I',
+		description: 'Estira el alcance de cada salto.',
+		mass: 20,
+		powerDraw: 4,
+		jumpPower: 360
+	}),
+	defineModule({
+		code: 'jump_calibrator_ii3',
+		requirements: [{ skill: 'astrogation', level: 3 }],
+		name: 'Calibrador de salto',
+		kind: 'chassis',
+		size: 3,
+		tier: 'II',
+		description: 'Cruza de un tirón lo que otros hacen en dos.',
+		mass: 34,
+		powerDraw: 7,
+		jumpPower: 600
+	}),
+
+	// --- Anclajes: lo que apunta hacia afuera ---
+	defineModule({
+		code: 'mining_laser_i1',
 		name: 'Láser de extracción',
 		kind: 'hardpoint',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'El primero de todos. Lento, pero paga la nave.',
 		mass: 6,
 		powerDraw: 4,
@@ -492,12 +325,12 @@ export const MODULES: readonly ShipModule[] = [
 		miningYield: 6
 	}),
 	defineModule({
-		code: 'mining_laser_a1',
+		code: 'mining_laser_ii1',
 		requirements: [{ skill: 'mining', level: 2 }],
 		name: 'Láser de extracción',
 		kind: 'hardpoint',
 		size: 1,
-		tier: 'A',
+		tier: 'II',
 		description: 'Casi el doble de mineral, y el acumulador lo siente.',
 		mass: 9,
 		powerDraw: 9,
@@ -507,11 +340,11 @@ export const MODULES: readonly ShipModule[] = [
 		miningYield: 10
 	}),
 	defineModule({
-		code: 'mining_laser_e2',
+		code: 'mining_laser_i2',
 		name: 'Láser de extracción',
 		kind: 'hardpoint',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Para una nave hecha para esto y nada más.',
 		mass: 16,
 		powerDraw: 15,
@@ -521,11 +354,11 @@ export const MODULES: readonly ShipModule[] = [
 		miningYield: 18
 	}),
 	defineModule({
-		code: 'mass_cannon_e1',
+		code: 'mass_cannon_i1',
 		name: 'Cañón de masa',
 		kind: 'hardpoint',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Metralla. Le rebota a un escudo y le abre el metal.',
 		mass: 8,
 		powerDraw: 5,
@@ -535,11 +368,11 @@ export const MODULES: readonly ShipModule[] = [
 		kinetic: 30
 	}),
 	defineModule({
-		code: 'mass_cannon_e2',
+		code: 'mass_cannon_i2',
 		name: 'Cañón de masa',
 		kind: 'hardpoint',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'El mismo argumento, más grande.',
 		mass: 15,
 		powerDraw: 9,
@@ -549,11 +382,11 @@ export const MODULES: readonly ShipModule[] = [
 		kinetic: 52
 	}),
 	defineModule({
-		code: 'ion_emitter_e1',
+		code: 'ion_emitter_i1',
 		name: 'Emisor iónico',
 		kind: 'hardpoint',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Atraviesa un escudo como si no estuviera. Contra blindaje, poco.',
 		mass: 7,
 		powerDraw: 8,
@@ -563,11 +396,11 @@ export const MODULES: readonly ShipModule[] = [
 		ionic: 26
 	}),
 	defineModule({
-		code: 'ion_emitter_e2',
+		code: 'ion_emitter_i2',
 		name: 'Emisor iónico',
 		kind: 'hardpoint',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Baja escudos rápido y te deja el trabajo a medias.',
 		mass: 13,
 		powerDraw: 16,
@@ -577,11 +410,11 @@ export const MODULES: readonly ShipModule[] = [
 		ionic: 46
 	}),
 	defineModule({
-		code: 'thermal_lance_e1',
+		code: 'thermal_lance_i1',
 		name: 'Lanza térmica',
 		kind: 'hardpoint',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Pega menos, pero nunca le rebota del todo. La de la duda.',
 		mass: 8,
 		powerDraw: 7,
@@ -591,11 +424,11 @@ export const MODULES: readonly ShipModule[] = [
 		thermal: 22
 	}),
 	defineModule({
-		code: 'thermal_lance_e2',
+		code: 'thermal_lance_i2',
 		name: 'Lanza térmica',
 		kind: 'hardpoint',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Sirve contra todo y contra nadie en particular.',
 		mass: 14,
 		powerDraw: 12,
@@ -607,11 +440,11 @@ export const MODULES: readonly ShipModule[] = [
 
 	// --- Utilitarios ---
 	defineModule({
-		code: 'scanner_e1',
+		code: 'scanner_i1',
 		name: 'Escáner de superficie',
-		kind: 'utility',
+		kind: 'console',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Lee un cuerpo desde lejos. Barato en todo menos cómputo.',
 		mass: 3,
 		powerDraw: 2,
@@ -619,11 +452,11 @@ export const MODULES: readonly ShipModule[] = [
 		sensorRange: 25
 	}),
 	defineModule({
-		code: 'scanner_e2',
+		code: 'scanner_i2',
 		name: 'Escáner de superficie',
-		kind: 'utility',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Ve lo que otros tienen que ir a mirar de cerca.',
 		mass: 5,
 		powerDraw: 4,
@@ -631,11 +464,11 @@ export const MODULES: readonly ShipModule[] = [
 		sensorRange: 65
 	}),
 	defineModule({
-		code: 'shield_booster_e1',
+		code: 'shield_booster_i1',
 		name: 'Refuerzo de escudo',
-		kind: 'utility',
+		kind: 'console',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Un poco más de campo, si hay generador que reforzar.',
 		mass: 4,
 		powerDraw: 5,
@@ -643,21 +476,21 @@ export const MODULES: readonly ShipModule[] = [
 		shield: 40
 	}),
 	defineModule({
-		code: 'armor_plate_e1',
+		code: 'armor_plate_i1',
 		name: 'Placa de blindaje',
-		kind: 'utility',
+		kind: 'chassis',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Metal y nada más: no pide energía, pero pesa como plomo.',
 		mass: 16,
 		armor: 90
 	}),
 	defineModule({
-		code: 'dampener_e2',
+		code: 'dampener_i2',
 		name: 'Amortiguador de firma',
-		kind: 'utility',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Te hace difícil de encontrar. La póliza del carguero.',
 		mass: 5,
 		powerDraw: 3,
@@ -668,43 +501,43 @@ export const MODULES: readonly ShipModule[] = [
 	// --- Internos opcionales ---
 	// Acá se decide a qué se dedica la nave.
 	defineModule({
-		code: 'cargo_rack_e1',
+		code: 'cargo_rack_i1',
 		name: 'Bodega adicional',
-		kind: 'optional',
+		kind: 'chassis',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Espacio. Sin energía, sin cómputo, sin excusas.',
 		mass: 4,
 		cargo: 25
 	}),
 	defineModule({
-		code: 'cargo_rack_e2',
+		code: 'cargo_rack_i2',
 		name: 'Bodega adicional',
-		kind: 'optional',
+		kind: 'chassis',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'El módulo que paga el viaje.',
 		mass: 9,
 		powerDraw: 1,
 		cargo: 90
 	}),
 	defineModule({
-		code: 'cargo_rack_e3',
+		code: 'cargo_rack_i3',
 		name: 'Bodega adicional',
-		kind: 'optional',
+		kind: 'chassis',
 		size: 3,
-		tier: 'E',
+		tier: 'I',
 		description: 'Media nave convertida en depósito.',
 		mass: 18,
 		powerDraw: 2,
 		cargo: 200
 	}),
 	defineModule({
-		code: 'shield_gen_e2',
+		code: 'shield_gen_i2',
 		name: 'Generador de escudo',
-		kind: 'optional',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Sin esto no hay escudo. Se lleva el cómputo de un tirón.',
 		mass: 12,
 		powerDraw: 10,
@@ -712,11 +545,11 @@ export const MODULES: readonly ShipModule[] = [
 		shield: 180
 	}),
 	defineModule({
-		code: 'shield_gen_e3',
+		code: 'shield_gen_i3',
 		name: 'Generador de escudo',
-		kind: 'optional',
+		kind: 'console',
 		size: 3,
-		tier: 'E',
+		tier: 'I',
 		description: 'Un campo serio, para una nave que puede alimentarlo.',
 		mass: 22,
 		powerDraw: 17,
@@ -724,11 +557,11 @@ export const MODULES: readonly ShipModule[] = [
 		shield: 330
 	}),
 	defineModule({
-		code: 'collector_e1',
+		code: 'collector_i1',
 		name: 'Recolectores',
-		kind: 'optional',
+		kind: 'chassis',
 		size: 1,
-		tier: 'E',
+		tier: 'I',
 		description: 'Levantan lo que el láser desprende. Poco espacio, mucho ahorro.',
 		mass: 5,
 		powerDraw: 2,
@@ -736,11 +569,11 @@ export const MODULES: readonly ShipModule[] = [
 		cargo: 15
 	}),
 	defineModule({
-		code: 'refinery_e2',
+		code: 'refinery_i2',
 		name: 'Refinería de a bordo',
-		kind: 'optional',
+		kind: 'console',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description:
 			'Convierte en el sitio y te ahorra el viaje. Ocupa parte de la bodega que viene a mejorar.',
 		mass: 20,
@@ -749,21 +582,21 @@ export const MODULES: readonly ShipModule[] = [
 		cargo: -30
 	}),
 	defineModule({
-		code: 'fuel_tank_e2',
+		code: 'fuel_tank_i2',
 		name: 'Depósito auxiliar',
-		kind: 'optional',
+		kind: 'chassis',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Más saltos antes de volver a puerto.',
 		mass: 7,
 		fuel: 40
 	}),
 	defineModule({
-		code: 'armor_bulkhead_e2',
+		code: 'armor_bulkhead_i2',
 		name: 'Mamparo reforzado',
-		kind: 'optional',
+		kind: 'chassis',
 		size: 2,
-		tier: 'E',
+		tier: 'I',
 		description: 'Blindaje de verdad, al precio de la velocidad.',
 		mass: 34,
 		armor: 220
@@ -791,12 +624,10 @@ export function getModule(code: string): ShipModule {
  * en que se desbloquean: la lista se lee como la escalera que el piloto tiene por
  * delante.
  */
-export function modulesForSlot(
-	kind: SlotKind,
-	size: number,
-	core: CoreSystem | null = null
-): readonly ShipModule[] {
-	return MODULES.filter(
-		(module) => module.kind === kind && module.size <= size && module.core === core
-	).sort((a, b) => b.size - a.size || (a.tier > b.tier ? -1 : a.tier < b.tier ? 1 : 0));
+export function modulesForSlot(kind: SlotKind, size: number): readonly ShipModule[] {
+	return MODULES.filter((module) => module.kind === kind && module.size <= size).sort(
+		// De la clase más grande a la más chica, y dentro de cada una el escalón
+		// más alto primero: es el orden en que uno mira una lista de repuestos.
+		(a, b) => b.size - a.size || b.tier.length - a.tier.length || a.name.localeCompare(b.name)
+	);
 }

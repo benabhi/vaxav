@@ -281,7 +281,7 @@ const CATALOG = [
 		name: 'Gestión de energía',
 		family: 'engineering',
 		difficulty: 2,
-		governs: 'Potencia disponible de la planta',
+		governs: 'Grilla de poder disponible',
 		requirements: [{ skill: 'mechanics', level: 2 }]
 	},
 	{
@@ -321,7 +321,7 @@ const CATALOG = [
 	},
 	{
 		code: 'capacitor',
-		name: 'Acumulador',
+		name: 'Capacitor',
 		family: 'engineering',
 		difficulty: 3,
 		governs: 'Capacidad del acumulador',

@@ -116,10 +116,10 @@ const CATALOG = [
 		// Sin armas: no es su oficio, y una nave que sale artillada sugiere que
 		// pelear es el plan.
 		kit: [
-			{ item: 'mining_laser_e1', quantity: 1, fitted: true },
-			{ item: 'cargo_rack_e1', quantity: 1, fitted: true },
-			{ item: 'scanner_e1', quantity: 1, fitted: true },
-			{ item: 'mining_laser_e1', quantity: 1, fitted: false }
+			{ item: 'mining_laser_i1', quantity: 1, fitted: true },
+			{ item: 'cargo_rack_i1', quantity: 1, fitted: true },
+			{ item: 'scanner_i1', quantity: 1, fitted: true },
+			{ item: 'mining_laser_i1', quantity: 1, fitted: false }
 		],
 		playable: true
 	},

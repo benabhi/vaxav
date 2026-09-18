@@ -147,7 +147,7 @@
 
 	let hasSelection = $derived(selected >= 0 && selected < hull.slots.length);
 	let slotSpec = $derived(hasSelection ? hull.slots[selected] : null);
-	let selectedIsCore = $derived(slotSpec?.kind === 'core');
+	let selectedIsRig = $derived(slotSpec?.kind === 'rig');
 	let selectedTitle = $derived(
 		slotSpec
 			? `${slots.find((s) => s.index === selected)?.title ?? ''} · clase ${slotSpec.size}`
@@ -176,17 +176,13 @@
 
 		const puesto = ship.fitted[selected] ?? '';
 		const desde = (codes: readonly string[], origin: 'ship' | 'station') =>
-			availableForSlot(
-				slotSpec.kind,
-				slotSpec.size,
-				slotSpec.core,
-				codes.map(getModule),
-				ship.pilotLevels
-			).map((module) => ({
-				module,
-				origin,
-				units: codes.filter((code) => code === module.code).length
-			}));
+			availableForSlot(slotSpec.kind, slotSpec.size, codes.map(getModule), ship.pilotLevels).map(
+				(module) => ({
+					module,
+					origin,
+					units: codes.filter((code) => code === module.code).length
+				})
+			);
 
 		const guardados = [
 			...desde(ship.cargoModules, 'ship'),
@@ -499,7 +495,7 @@
 
 {#snippet presupuestos()}
 	{@render linea({
-		label: 'Potencia',
+		label: 'Grilla',
 		value: `${hoja.power.used} / ${hoja.power.total}`,
 		unit: 'MW',
 		delta: cambio(readout.power.used, hoja.power.used),
@@ -508,7 +504,7 @@
 		over: hoja.power.over
 	})}
 	{@render linea({
-		label: 'Cómputo',
+		label: 'CPU',
 		value: `${hoja.computing.used} / ${hoja.computing.total}`,
 		unit: 'u',
 		delta: cambio(readout.computing.used, hoja.computing.used),
@@ -517,7 +513,7 @@
 		over: hoja.computing.over
 	})}
 	{@render linea({
-		label: 'Acumulador',
+		label: 'Capacitor',
 		value: `${hoja.capacitor}`,
 		unit: 'u',
 		delta: cambio(readout.capacitor, hoja.capacitor),
@@ -532,7 +528,7 @@
 	})}
 	{#if !hoja.stable}
 		<p class="text-1 text-warning">
-			El acumulador no sostiene lo encendido: el trabajo rinde en proporción a lo que la recarga
+			El capacitor no sostiene lo encendido: el trabajo rinde en proporción a lo que la recarga
 			paga.
 		</p>
 	{/if}
@@ -618,8 +614,8 @@
 			</div>
 		{/if}
 
-		{#if selectedIsCore}
-			<p class="text-1 text-text-muted">Un interno esencial se mejora, no se quita.</p>
+		{#if selectedIsRig}
+			<p class="text-1 text-text-muted">Un refuerzo se suelda al casco: sacarlo lo destruye.</p>
 		{:else}
 			<form method="POST" action="?/montar" use:enhance class="w-fit">
 				<input type="hidden" name="ranura" value={selected} />

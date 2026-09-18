@@ -94,12 +94,12 @@ describe('con qué sale a volar', () => {
 		// El escáner va montado como el láser: sin él un cinturón no dice qué tiene,
 		// y un minero que no puede leer la roca no puede trabajar.
 		expect(kit.filter((entrada) => entrada.fitted).map((e) => e.item)).toEqual([
-			'mining_laser_e1',
-			'cargo_rack_e1',
-			'scanner_e1'
+			'mining_laser_i1',
+			'cargo_rack_i1',
+			'scanner_i1'
 		]);
 		expect(kit.filter((entrada) => !entrada.fitted).map((e) => e.item)).toEqual([
-			'mining_laser_e1'
+			'mining_laser_i1'
 		]);
 	});
 

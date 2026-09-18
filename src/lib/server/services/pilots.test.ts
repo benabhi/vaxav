@@ -238,8 +238,8 @@ describe('con qué manda a volar el oficio', () => {
 		// Sin herramienta, el primer día de un minero es mirar el espacio. Y
 		// puesta, no en una caja: alguien que trabajó en los anillos hasta juntar
 		// para su nave le monta lo que sabe usar.
-		expect(montado).toContain('mining_laser_e1');
-		expect(montado).toContain('cargo_rack_e1');
+		expect(montado).toContain('mining_laser_i1');
+		expect(montado).toContain('cargo_rack_i1');
 	});
 
 	it('con lo justo: le quedan ranuras libres', async () => {
@@ -259,7 +259,7 @@ describe('con qué manda a volar el oficio', () => {
 		const bodega = shipContainer(db, activeShip(db, piloto.id)!.id);
 
 		// Un láser es lo primero que se rompe y lo primero que se mejora.
-		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(1);
+		expect(quantityOf(db, bodega.id, 'mining_laser_i1')).toBe(1);
 	});
 
 	it('y sin nada de combate', async () => {

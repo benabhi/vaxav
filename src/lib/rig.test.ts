@@ -10,6 +10,7 @@ import {
 	buildRingSlots,
 	buildSlotGroups,
 	moduleSummary,
+	innerOrder,
 	ringOrder,
 	ringPositions
 } from './rig';
@@ -89,11 +90,21 @@ describe('el orden del anillo', () => {
 		}
 	});
 
-	it('recorre todas las ranuras del casco, una sola vez', () => {
+	it('recorre todas las ranuras del casco, una sola vez, entre los dos círculos', () => {
+		// Los refuerzos van adentro y el resto en el anillo: juntos son el casco
+		// entero y ninguna ranura aparece dos veces.
 		for (const hull of HULLS) {
-			const orden = ringOrder(hull);
-			expect(orden).toHaveLength(hull.slots.length);
-			expect(new Set(orden).size).toBe(hull.slots.length);
+			const orden = [...ringOrder(hull), ...innerOrder(hull)];
+			expect(orden, hull.name).toHaveLength(hull.slots.length);
+			expect(new Set(orden).size, hull.name).toBe(hull.slots.length);
+		}
+	});
+
+	it('deja los refuerzos fuera del anillo', () => {
+		for (const hull of HULLS) {
+			for (const index of ringOrder(hull)) {
+				expect(hull.slots[index].kind, hull.name).not.toBe('rig');
+			}
 		}
 	});
 });

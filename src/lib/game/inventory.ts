@@ -19,7 +19,7 @@
  * docs/systems/SHIPS.md.
  */
 
-import type { CoreSystem, SlotKind } from './hulls';
+import type { SlotKind } from './hulls';
 import type { ShipModule } from './modules';
 import { unmetFrom } from './skills';
 
@@ -45,7 +45,6 @@ import { unmetFrom } from './skills';
 export function availableForSlot(
 	kind: SlotKind,
 	size: number,
-	core: CoreSystem | null,
 	cargo: Iterable<ShipModule> = [],
 	skills: Readonly<Record<string, number>> = {}
 ): readonly ShipModule[] {
@@ -53,7 +52,7 @@ export function availableForSlot(
 	const disponibles: ShipModule[] = [];
 
 	for (const module of cargo) {
-		if (module.kind !== kind || module.size > size || module.core !== core) continue;
+		if (module.kind !== kind || module.size > size) continue;
 		if (unmetFrom(module.requirements, skills).length > 0) continue;
 		if (vistos.has(module.code)) continue;
 		vistos.add(module.code);

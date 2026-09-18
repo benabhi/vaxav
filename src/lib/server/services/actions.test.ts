@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { body, pilot, pilotAction } from '../db/schema';
 import { crearPiloto, desguazar, seededDb } from '../db/testing';
 import { travelDurationSeconds } from '$lib/game/actions';
-import { coreSlotIndex } from '$lib/game/hulls';
 import { TRAVEL_KIND, ActionError, currentAction, resolveIfDue, startTravel } from './actions';
 import { skillXp } from './pilots';
 import { activeShip, saveFit, shipFit, shipHull, shipReadout } from './ships';
@@ -60,9 +59,10 @@ describe('dar la orden de viajar', () => {
 		const hull = shipHull(nave);
 		const deFabrica = travelDurationSeconds(distancia, shipReadout(db, piloto)!.speed);
 
-		// Los propulsores de mejor calificación empujan más y pesan un poco más.
+		// Un propulsor auxiliar empuja más y pesa un poco más. Ahora cuesta una
+		// consola: antes era un interno esencial que la nave llevaba igual.
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[coreSlotIndex(hull, 'thrusters')] = 'thrusters_a2';
+		codigos[hull.slots.findIndex((slot) => slot.kind === 'console')] = 'thruster_i2';
 		saveFit(db, nave, codigos);
 
 		const conMejores = travelDurationSeconds(distancia, shipReadout(db, piloto)!.speed);

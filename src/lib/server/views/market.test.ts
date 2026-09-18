@@ -68,11 +68,11 @@ describe('dónde se puede operar', () => {
 });
 
 describe('el catálogo', () => {
-	it('trae los cuatro minerales y los cuarenta y siete módulos', async () => {
+	it('trae los cuatro minerales y los treinta y cuatro módulos', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 
-		expect(buildMarketView(db, piloto).items).toHaveLength(51);
+		expect(buildMarketView(db, piloto).items).toHaveLength(38);
 	});
 
 	it('cada rama del árbol cuenta lo que tiene debajo', async () => {
@@ -83,9 +83,9 @@ describe('el catálogo', () => {
 		const rama = (code: string) => vista.groups.find((grupo) => grupo.code === code)!;
 
 		expect(rama('ore').count).toBe(4);
-		expect(rama('module').count).toBe(47);
-		const ranuras = ['hardpoint', 'utility', 'core', 'optional'].map((code) => rama(code).count);
-		expect(ranuras.reduce((total, cuantos) => total + cuantos, 0)).toBe(47);
+		expect(rama('module').count).toBe(34);
+		const ranuras = ['hardpoint', 'console', 'chassis'].map((code) => rama(code).count);
+		expect(ranuras.reduce((total, cuantos) => total + cuantos, 0)).toBe(34);
 	});
 
 	it('cuenta lo que el piloto tiene en toda la galaxia, no sólo acá', async () => {
@@ -229,7 +229,7 @@ describe('el mejor precio de cada lado', () => {
 		const piloto = await parado(db, 'anillos_anfora_iii');
 
 		const laser = buildMarketView(db, piloto).items.find(
-			(item) => item.itemCode === 'mining_laser_e1'
+			(item) => item.itemCode === 'mining_laser_i1'
 		)!;
 
 		// Es lo que cierra el ciclo del minero: trae mineral, lo vende y ve con qué
