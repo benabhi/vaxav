@@ -625,11 +625,11 @@ implementar cada uno; lo que decide acá es **el rol y el bono**.
 | Casco             | Rol           | Bono de rol                                     | Pide                        |
 | ----------------- | ------------- | ----------------------------------------------- | --------------------------- |
 | **Vencejo (hoy)** | Exploradora   | +8 % alcance de sensores por nivel de Escaneo   | Naves ligeras 1, Escaneo 2  |
-| **Jilguero**      | Minera ligera | +10 % rendimiento de láser por nivel de Minería | Naves ligeras 1, Minería 2  |
-| **Tero**          | Escolta       | +5 % daño por nivel de Puntería                 | Naves ligeras 2, Puntería 2 |
-| **Chasque**       | Correo        | +10 % velocidad por nivel de Maniobra           | Naves ligeras 2, Maniobra 2 |
+| **Barreno**       | Minera ligera | +10 % rendimiento de láser por nivel de Minería | Naves ligeras 1, Minería 2  |
+| **Estilete**      | Escolta       | +5 % daño por nivel de Puntería                 | Naves ligeras 2, Puntería 2 |
+| **Saeta**         | Correo        | +10 % velocidad por nivel de Maniobra           | Naves ligeras 2, Maniobra 2 |
 
-El **Jilguero** es la nave importante de esta clase: es el primer casco con bodega
+El **Barreno** es la nave importante de esta clase: es el primer casco con bodega
 de mineral separada de la bodega general, que es lo que convierte a la minería en
 un oficio con logística propia.
 
@@ -638,14 +638,14 @@ un oficio con logística propia.
 | Casco              | Rol          | Bono de rol                                                   | Pide                           |
 | ------------------ | ------------ | ------------------------------------------------------------- | ------------------------------ |
 | **Alabarda (hoy)** | Combate      | +5 % daño por nivel de Cadencia                               | Destructores 1, Puntería 3     |
-| **Rastrillo**      | Recuperación | +10 % de lo que se saca de un pecio por nivel de Recuperación | Destructores 2, Recuperación 2 |
+| **Rapiña**         | Recuperación | +10 % de lo que se saca de un pecio por nivel de Recuperación | Destructores 2, Recuperación 2 |
 
 #### Industrial — mover carga
 
 | Casco          | Rol                 | Bono de rol                                   | Pide                                    |
 | -------------- | ------------------- | --------------------------------------------- | --------------------------------------- |
 | **Mula (hoy)** | Carguera            | +5 % bodega por nivel de Ingeniería de bodega | Naves industriales 1, Ing. de bodega 2  |
-| **Petaca**     | Transporte discreto | −8 % firma por nivel de Perfil de firma       | Naves industriales 2, Perfil de firma 2 |
+| **Ónice**      | Transporte discreto | −8 % firma por nivel de Perfil de firma       | Naves industriales 2, Perfil de firma 2 |
 
 #### Barcaza minera — el salto de oficio
 
@@ -655,28 +655,54 @@ láseres de tira**, que piden cristales, que se fabrican y se gastan.
 | Casco            | Rol                | Bono de rol                                                    | Pide                                      |
 | ---------------- | ------------------ | -------------------------------------------------------------- | ----------------------------------------- |
 | **Percal (hoy)** | Barcaza de mineral | +5 % rendimiento de láser de tira por nivel de Láseres de tira | Barcazas mineras 1, Láseres de tira 1     |
-| **Terrón**       | Barcaza de hielo   | −5 % ciclo del cosechador por nivel de Extracción de hielo     | Barcazas mineras 2, Extracción de hielo 3 |
-| **Fuelle**       | Barcaza de gas     | +8 % rendimiento del aspirador por nivel de Extracción de gas  | Barcazas mineras 2, Extracción de gas 3   |
+| **Glaciar**      | Barcaza de hielo   | −5 % ciclo del cosechador por nivel de Extracción de hielo     | Barcazas mineras 2, Extracción de hielo 3 |
+| **Sifón**        | Barcaza de gas     | +8 % rendimiento del aspirador por nivel de Extracción de gas  | Barcazas mineras 2, Extracción de gas 3   |
 
 #### Crucero — el casco polivalente
 
-| Casco      | Rol                | Bono de rol                                               | Pide                              |
-| ---------- | ------------------ | --------------------------------------------------------- | --------------------------------- |
-| **Bastón** | Combate            | +5 % daño por nivel de Artillería pesada                  | Cruceros 1, Cadencia 3            |
-| **Faro**   | Apoyo              | +10 % reparación a otros por nivel de Tácticas de escolta | Cruceros 2, Tácticas de escolta 2 |
-| **Sirga**  | Guerra electrónica | +10 % efecto de perturbación por nivel de G. electrónica  | Cruceros 2, Guerra electrónica 3  |
+| Casco       | Rol                | Bono de rol                                               | Pide                              |
+| ----------- | ------------------ | --------------------------------------------------------- | --------------------------------- |
+| **Espolón** | Combate            | +5 % daño por nivel de Artillería pesada                  | Cruceros 1, Cadencia 3            |
+| **Fragua**  | Apoyo              | +10 % reparación a otros por nivel de Tácticas de escolta | Cruceros 2, Tácticas de escolta 2 |
+| **Quimera** | Guerra electrónica | +10 % efecto de perturbación por nivel de G. electrónica  | Cruceros 2, Guerra electrónica 3  |
 
 #### Las clases especializadas
 
 | Casco        | Clase             | Rol                     | Bono de rol                                                | Pide                                     |
 | ------------ | ----------------- | ----------------------- | ---------------------------------------------------------- | ---------------------------------------- |
-| **Aguja**    | Transporte rápido | Pasar donde no conviene | −10 % firma por nivel de Transportes rápidos               | Transportes rápidos 1, Perfil de firma 3 |
-| **Tijereta** | Reconocimiento    | Ver sin ser visto       | +10 % fuerza de escaneo por nivel de Astrometría           | Naves de recon. 1, Astrometría 3         |
-| **Cantera**  | Exhumadora        | La punta de la minería  | +8 % rendimiento de láser de tira por nivel de Exhumadoras | Exhumadoras 1, Láseres de tira 4         |
-| **Buey**     | Carguero          | Volumen y nada más      | +5 % bodega por nivel de Cargueros                         | Cargueros 1, Ing. de bodega 4            |
-| **Yunque**   | Acorazado         | Aguantar y pegar        | +5 % resistencias por nivel de Acorazados                  | Acorazados 1, Compensación de blindaje 3 |
+| **Corsario** | Transporte rápido | Pasar donde no conviene | −10 % firma por nivel de Transportes rápidos               | Transportes rápidos 1, Perfil de firma 3 |
+| **Espectro** | Reconocimiento    | Ver sin ser visto       | +10 % fuerza de escaneo por nivel de Astrometría           | Naves de recon. 1, Astrometría 3         |
+| **Cíclope**  | Exhumadora        | La punta de la minería  | +8 % rendimiento de láser de tira por nivel de Exhumadoras | Exhumadoras 1, Láseres de tira 4         |
+| **Coloso**   | Carguero          | Volumen y nada más      | +5 % bodega por nivel de Cargueros                         | Cargueros 1, Ing. de bodega 4            |
+| **Tizona**   | Acorazado         | Aguantar y pegar        | +5 % resistencias por nivel de Acorazados                  | Acorazados 1, Compensación de blindaje 3 |
 
-### 6.4 · Qué hace falta en el código para que esto entre
+### 6.4 · Cómo se nombra una nave
+
+Sin una regla, el catálogo deriva: la primera tanda sale evocadora y la décima
+sale de la cocina. Cuatro criterios, y el cuarto es el que más trabaja:
+
+1. **Una sola palabra**, sin artículo y sin apellido. `Corsario`, no `El Corsario`
+   ni `Corsario Mk II`.
+2. **Sustantivo concreto**, nunca adjetivo. `Espectro` dice algo; `Furtiva` es una
+   etiqueta pegada encima.
+3. **Del registro del oficio o del filo**: herramientas, armas, piedra,
+   depredadores, accidentes geográficos. Nada doméstico ni rural — una nave no se
+   llama como algo que hay en una cocina o en un galpón.
+4. **Tiene que poder gritarse en una radio.** Dos o tres sílabas, consonante dura,
+   sin diminutivos. Si el nombre suena tierno, está mal: estas cosas pesan
+   cuatrocientas toneladas.
+
+Y una regla de coherencia: **el nombre dice el carácter, no el rol**. `Barreno` no
+dice «minera», dice «perfora»; `Fragua` no dice «apoyo», dice «repara y aguanta
+calor». El rol ya está escrito al lado; el nombre está para que se recuerde.
+
+> **Los cinco cascos que ya existen se quedan como están.** `Pioner`, `Vencejo` y
+> `Alabarda` cumplen la regla de sobra. `Mula` y `Percal` no del todo —son de otro
+> registro, más rural—, pero están sembrados y en la base, y renombrarlos es una
+> migración por un problema de gusto. Si se decide cambiarlos, `Acémila` y `Basalto`
+> entran sin tocar nada de lo que significan.
+
+### 6.5 · Qué hace falta en el código para que esto entre
 
 Cuatro cambios, ninguno grande, y conviene el orden:
 
