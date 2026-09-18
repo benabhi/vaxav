@@ -181,7 +181,27 @@ export const HULLS: readonly Hull[] = [
 			'aguanta menos, pero es tuya desde el primer minuto.',
 		dockSize: 'small',
 		mass: 180,
-		cargo: 200,
+		/**
+		 * Treinta metros cúbicos: dos personas y un cajón.
+		 *
+		 * Eran doscientos, que no era una lanzadera humilde sino **un tercio de una
+		 * carguera**. Tres cosas se arreglan al achicarla:
+		 *
+		 * - **La primera sesión toma forma.** Con doscientos, llenar la bodega
+		 *   minando eran casi seis horas: se apretaba «extraer» y no pasaba nada en
+		 *   toda la tarde. Con treinta más la bodega auxiliar del kit son poco más de
+		 *   una hora, que es salir, minar, volver y vender.
+		 * - **Deja lugar para que la nave minera sea un salto.** Si la nave de alta
+		 *   lleva doscientos, la primera minera tiene que llevar ochocientos para
+		 *   sentirse mejor. Con treinta, la escalera entera respira.
+		 * - **Hace que la bodega sea una decisión.** Es la misma razón por la que el
+		 *   kit del minero deja ranuras vacías: el repuesto que lleva ocupa cinco de
+		 *   estos treinta, y eso ahora se siente.
+		 *
+		 * Lo que **no** cambia es cuánto se saca por hora, que es cosa del láser. Si
+		 * el problema fuera el ritmo y no la forma del viaje, la perilla es otra.
+		 */
+		cargo: 30,
 		armor: 120,
 		structure: 400,
 		computing: 55,
