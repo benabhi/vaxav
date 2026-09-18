@@ -243,6 +243,20 @@ Hoy tiene `+2 % de velocidad por nivel de Manejo de lanzaderas`. Se saca.
 Consecuencia: Manejo de lanzaderas pasa a gobernar el requisito de la clase, que
 es lo que le corresponde.
 
+### P8 · Las naves se pierden
+
+**Decidido.** Una nave destruida se pierde: el casco, lo que llevaba montado y lo
+que llevaba en la bodega.
+
+Es la decisión que sostiene todo lo demás de este documento. Sin pérdida, cada
+módulo que se fabrica es el último que alguien va a necesitar, y la industria se
+satura el día que el último jugador terminó de equiparse. **Con pérdida, la demanda
+no se agota nunca**: lo que se destruye hay que volver a minarlo, refinarlo,
+fabricarlo y comprarlo, y ahí está la economía entera.
+
+Tiene consecuencias largas y ninguna es opcional. Están en la
+[sección 11](#11--la-pérdida-y-la-economía).
+
 ---
 
 ## 4 · La progresión: por qué sube demasiado rápido
@@ -803,9 +817,11 @@ con qué sostenerla. Es otro argumento para que el hielo sea de las primeras eta
 
 #### Lo que hay que decidir antes de construirla
 
-1. **¿Se puede destruir?** Es la pregunta madre. Si sí, es el ancla de todo el
-   conflicto del juego y hace falta combate antes. Si no, es una conveniencia
-   logística y el mapa se llena.
+1. ~~**¿Se puede destruir?**~~ **Sí**, como todo lo que vuela en este juego. Ver
+   [P8](#p8--las-naves-se-pierden). La consecuencia de orden es dura y hay que
+   aceptarla: **el combate tiene que existir antes que las capitales**, porque una
+   capital indestructible en un mapa donde todo lo demás se pierde es la única cosa
+   segura del juego, y todos van a vivir adentro.
 2. **¿Cuántas por corporación?** Una obliga a elegir dónde; varias convierten al
    mapa en una grilla de puestos.
 3. **¿Quién puede atracar?** Sólo la corporación, los aliados, o cualquiera. La
@@ -1238,32 +1254,138 @@ Tres notas de orden que importan más que la lista:
 
 ---
 
-## 11 · Lo que este documento no decide
+## 11 · La pérdida y la economía
+
+**Las naves se destruyen.** Es la decisión más consecuente del documento y la que
+más cosas ordena, así que conviene escribir qué arrastra antes de construir nada
+que dependa de ella.
+
+### 11.1 · Por qué, dicho una vez
+
+Un juego de economía necesita que **la demanda no se agote**. Sin pérdida, la curva
+de cualquier bien es la misma: sube mientras los jugadores se equipan y después es
+plana para siempre. El minero deja de tener a quién venderle, el industrial deja de
+tener qué fabricar y el mercado se vuelve un museo con precios.
+
+Con pérdida, todo lo que se destruyó hay que volver a sacarlo de una piedra. **La
+economía deja de ser un acumulador y pasa a ser un caudal**, que es lo único que
+sostiene a un juego de años.
+
+### 11.2 · Qué se pierde y qué no
+
+La regla tiene que ser legible en una línea, porque es la que el jugador va a
+tener en la cabeza cada vez que decida salir:
+
+> **Se pierde la nave y lo que llevaba. El piloto siempre vuelve.**
+
+| Qué                   | Qué le pasa                                                |
+| --------------------- | ---------------------------------------------------------- |
+| El casco              | Se destruye                                                |
+| Los módulos montados  | Una parte se destruye y **otra queda flotando**            |
+| La carga de la bodega | Una parte se destruye y **otra queda flotando**            |
+| El piloto             | **Vuelve.** Aparece en la estación de su facción, sin nave |
+| Las habilidades       | No se tocan nunca. Lo aprendido, aprendido                 |
+
+Dos decisiones adentro de eso, y las dos importan:
+
+- **El piloto no muere.** Perder horas de entrenamiento por una emboscada no
+  produce cuidado: produce gente que no sale. La pérdida tiene que doler en lo que
+  se repone, no en lo que no se repone.
+- **Una parte queda flotando**, y no todo se destruye. Es lo que convierte a
+  destruir en algo que _rinde_ y no sólo en algo que arruina al otro; sin botín,
+  atacar es puro vandalismo y nadie lo hace por economía. Es además el verbo que le
+  faltaba a **Recuperación de pecios** y al **Rapiña**, que hoy son una llave y un
+  casco sin puerta.
+
+### 11.3 · La red de seguridad: la Pioner se repone gratis
+
+**Una nave de alta gratis en cualquier estación, siempre.** Es la consecuencia
+directa de P7 y de P8 juntas: si el primer casco se puede perder y no se repone, un
+piloto nuevo que tuvo mala suerte se queda mirando una pantalla sin nada que hacer,
+y eso no es dificultad, es un final.
+
+Con reposición gratis, la pérdida real de un piloto nuevo es **lo que llevaba
+puesto**, que es poco y se vuelve a juntar. Y la escalera de riesgo queda sola: el
+que sale con la Pioner arriesga nada y saca poco; el que sale con el Cíclope lleno
+arriesga mucho.
+
+### 11.4 · Dónde se puede perder una nave
+
+Acá es donde el número de seguridad de cada sistema —que hoy sólo se dibuja— se
+vuelve mecánico:
+
+| Banda de seguridad | Qué pasa si alguien ataca                                                    |
+| ------------------ | ---------------------------------------------------------------------------- |
+| **Alta**           | Las patrullas de la facción responden, y rápido. Atacar es una decisión cara |
+| **Media**          | Responden, pero tarde. Alcanza para escapar, no para salvar la carga         |
+| **Baja**           | No responde nadie. Queda el registro y la reputación perdida                 |
+| **Nula**           | No hay nada ni nadie. Es el lugar donde las capitales tienen sentido         |
+
+**Y eso es lo que hace que el mapa signifique algo.** Hoy la seguridad decide qué
+mineral hay; con esto decide además cuánto se arriesga en ir a buscarlo, y las dos
+cosas apuntan en la misma dirección: lo que vale está donde no te cuidan.
+
+### 11.5 · El problema del juego idle
+
+Vaxav es un juego de esperar, y eso choca de frente con la pérdida: **un piloto que
+cerró el navegador con una orden de cuarenta minutos en curso no puede defenderse
+de nada**. Si se lo puede destruir mientras no está, el juego castiga cerrar la
+pestaña, que es exactamente lo contrario de lo que un idle promete.
+
+Tres reglas que resuelven eso sin sacarle el filo a la pérdida:
+
+1. **Atracado es seguro, siempre.** Adentro de una estación no pasa nada. Es la
+   decisión de EVE y es la correcta: el riesgo se toma al salir, y salir es un acto
+   voluntario.
+2. **Se puede perder la nave estando en el espacio**, con una orden en curso o sin
+   ella. Es el precio de estar afuera, y es lo que hace que decidir salir cuente.
+3. **Una orden que termina con la nave destruida no entrega nada.** El botín de esa
+   acción se pierde con la bodega, que es lo que ya iba a pasar de todos modos.
+
+La consecuencia de diseño es la que hay que aceptar: **el que quiere estar seguro,
+atraca**. Y como atracado no se mina ni se viaja, el juego entero pasa a ser una
+serie de decisiones sobre cuánto tiempo estar afuera y con cuánto encima.
+
+### 11.6 · Qué cambia en el balance
+
+Cuatro cosas, y conviene revisarlas cuando se toque cualquier número:
+
+- **Los escalones altos pueden ser fuertes.** Un módulo A que rinde un 60 % más no
+  desbalancea si además se pierde: el que lo lleva está arriesgando algo que le
+  costó semanas fabricar.
+- **Los materiales tienen piso de precio.** La reposición es demanda constante, así
+  que el mineral común no se vuelve basura aunque todos sepan minarlo.
+- **El seguro, si existe, va después.** Un sistema que devuelve parte del valor
+  suaviza la pérdida, pero también la anula si se pasa de generoso. No entra en esta
+  etapa.
+- **El combate pasa a ser un prerrequisito de varias cosas**, no una etapa opcional
+  del final. Sin él, la pérdida sólo puede venir de accidentes, y un juego donde lo
+  único que te destruye es la mala suerte no es un juego de economía: es una
+  lotería.
+
+## 12 · Lo que este documento no decide
 
 Preguntas abiertas que hay que contestar antes de construir lo que depende de
 ellas. No están acá por olvido: están porque la respuesta cambia el diseño y no
 sólo los números.
 
-1. **¿Se pierde la nave?** Todo el balance de escalones y de fabricación depende de
-   si un módulo A es una compra para siempre o algo que se repone. Sin economía de
-   pérdida, la industria se satura en un año.
-2. **¿El mineral se agota por sistema o por cinturón?** Decide si vale la pena que
+1. **¿El mineral se agota por sistema o por cinturón?** Decide si vale la pena que
    una corporación se instale en un lugar.
-3. **¿Cuántas acciones simultáneas?** Con una sola, las cadenas largas se sienten
+2. **¿Cuántas acciones simultáneas?** Con una sola, las cadenas largas se sienten
    como una fila de espera. Con varias, el pozo por familia se llena mucho más
    rápido y la curva de la sección 4 necesita otro número.
-4. **¿La fabricación tarda tiempo real?** Si sí, es otra acción con temporizador y
+3. **¿La fabricación tarda tiempo real?** Si sí, es otra acción con temporizador y
    compite con minar. Si no, es un botón y el técnico no tiene qué hacer mientras.
-5. **¿Los planos son objeto?** Comerciables abren una economía entera; fijos por
+4. **¿Los planos son objeto?** Comerciables abren una economía entera; fijos por
    habilidad son mucho más simples y quitan una capa de juego.
-6. **¿Cuánto rinde el escalón A sobre el E?** Acá se propuso +60 %. Si es mucho, el
+5. **¿Cuánto rinde el escalón A sobre el E?** Acá se propuso +60 %. Si es mucho, el
    equipo decide más que el piloto; si es poco, subir de escalón no es una meta.
-7. **¿Las variantes de calidad del mineral son ítems distintos o un atributo?**
+6. **¿Las variantes de calidad del mineral son ítems distintos o un atributo?**
    Ítems distintos es más simple de mercado y multiplica el catálogo por cuatro.
 
 ---
 
-## 12 · Resumen para quien no leyó todo
+## 13 · Resumen para quien no leyó todo
 
 - **La curva de habilidades se empina** de ×3 a ×5,66 y los rangos llegan a x16.
   Es un cambio de dos constantes y es el más importante del documento.
@@ -1277,6 +1399,8 @@ sólo los números.
 - **Módulos generados por familia, clase y escalón**, no escritos a mano.
 - **Buscar y esconderse son un solo sistema**: sensores contra firma.
 - **El hielo cierra el huérfano del combustible**, que es el más viejo que hay.
+- **Las naves se pierden**, y por eso la economía no se satura nunca. El piloto
+  siempre vuelve, la Pioner se repone gratis y atracado no pasa nada.
 - **Una capital desplegada es un lugar**, no una nave grande: aparece en el árbol
   del sistema y los demás atracan en ella. Es lo que le da sentido al espacio sin
   ley, meta a la industria y razón de ser a la corporación.
