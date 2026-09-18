@@ -5,16 +5,21 @@
  * más cerca de la salida que del juego— pero es una pantalla más: exige sesión y
  * se registra igual que cualquier otra.
  *
- * Las tres cosas que se pueden hacer son de la cuenta: la foto, la contraseña y
- * darse de baja. Van en **una sola pestaña** justamente por eso; partirlas en
- * tres sería inventar categorías donde hay una. Las pestañas llegan el día que
- * haya opciones que no sean de la cuenta —interfaz, avisos— y entonces cada una
- * va a estar nombrando algo distinto de verdad.
+ * Lo que se puede hacer acá es de la cuenta: la foto, la contraseña, quién puede
+ * mirar tu ficha y darse de baja. Van en **una sola pestaña** justamente por eso;
+ * partirlas sería inventar categorías donde hay una. Las pestañas llegan el día
+ * que haya opciones que no sean de la cuenta —interfaz, avisos— y entonces cada
+ * una va a estar nombrando algo distinto de verdad.
  */
 
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { PilotError, changePassword, deleteAccount } from '$lib/server/services/pilots';
+import {
+	PilotError,
+	changePassword,
+	deleteAccount,
+	setProfilePrivacy
+} from '$lib/server/services/pilots';
 import { clearSessionCookie } from '$lib/server/auth';
 import { LOGIN_ROUTE } from '$lib/routes';
 import type { Actions } from './$types';
@@ -44,6 +49,30 @@ export const actions: Actions = {
 		}
 
 		return { scope: 'password', success: 'Contraseña actualizada.' };
+	},
+
+	/**
+	 * Abre o cierra la ficha del piloto.
+	 *
+	 * Un form action y no un interruptor que guarda solo: cambia la partida —quién
+	 * puede verte— y lo que cambia la partida va al servidor, que es la regla del
+	 * proyecto. El valor llega como el estado que se quiere dejar y no como «dar
+	 * vuelta lo que haya»: dos clics apurados en dos pestañas abiertas no pueden
+	 * terminar en lo contrario de lo que se apretó.
+	 */
+	ficha: async ({ request, locals }) => {
+		if (!locals.pilot) return fail(401, { scope: 'privacy', error: 'Tu sesión venció.' });
+
+		const form = await request.formData();
+		const cerrada = String(form.get('cerrada') ?? '') === '1';
+		setProfilePrivacy(db, locals.pilot, cerrada);
+
+		return {
+			scope: 'privacy',
+			success: cerrada
+				? 'Tu ficha queda cerrada: los demás ven sólo tu distintivo.'
+				: 'Tu ficha queda abierta.'
+		};
 	},
 
 	/**

@@ -79,6 +79,22 @@ export const pilot = sqliteTable(
 		corporationId: integer('corporation_id').references(() => corporation.id),
 
 		credits: integer('credits').notNull().default(0),
+
+		/**
+		 * Si su ficha está cerrada para los demás.
+		 *
+		 * **Abierta por omisión**, porque el juego se trata de gente: un sector donde
+		 * nadie puede mirar a nadie es una lista de nombres. El que prefiera no ser
+		 * mirado lo pide, y entonces su nombre sigue apareciendo —en los miembros de
+		 * su corporación, en un mensaje que mandó— pero su ficha contesta que está
+		 * cerrada.
+		 *
+		 * Es de la cuenta y no del piloto que se mira: vale para todos por igual, sin
+		 * listas de permitidos. Eso alcanza para lo que se pidió y no obliga a
+		 * inventar amistades que el juego todavía no tiene.
+		 */
+		private: integer('private', { mode: 'boolean' }).notNull().default(false),
+
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(NOW)
 	},
 	(table) => [

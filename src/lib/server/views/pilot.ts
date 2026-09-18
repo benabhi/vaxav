@@ -7,7 +7,7 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { body, corporation, system, type Pilot } from '../db/schema';
+import { body, corporation, pilot as pilotTable, system, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
@@ -19,8 +19,14 @@ import { skillXp } from '../services/pilots';
 import { pools } from '../services/pools';
 import { activeShip, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
-import { skillFamilyIcon, skillFamilyLabel, thousands } from '$lib/format';
-import type { NaveDelPiloto, PilotoConectado, RamaXp } from '$lib/tipos';
+import { factionCrest, skillFamilyIcon, skillFamilyLabel, thousands } from '$lib/format';
+import type {
+	IndicePiloto,
+	NaveDelPiloto,
+	PerfilPiloto,
+	PilotoConectado,
+	RamaXp
+} from '$lib/tipos';
 
 /**
  * Cómo le fue al piloto en cada rama del árbol: lo invertido y lo que hay en el
@@ -156,6 +162,7 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 			// Lo que falta y **para qué**: un umbral sin su nombre es un número más.
 			next: siguiente ? `${siguiente.name} a ${thousands(siguiente.at)}` : ''
 		},
+		privateProfile: row.private,
 		since: row.createdAt.getTime(),
 		// A quién le rinde cuentas. **Vacío quiere decir independiente**, que es un
 		// estado legítimo: la credencial lo dice con esa palabra en vez de dejar el
@@ -164,5 +171,87 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 		statusLabel: ahora.inTransit ? 'En tránsito' : 'Atracado',
 		inTransit: ahora.inTransit,
 		ship
+	};
+}
+
+/** El índice vacío, para la ficha que no dice nada porque está cerrada. */
+const SIN_INDICE: IndicePiloto = {
+	value: '',
+	rank: '',
+	step: 0,
+	steps: RATING_RANKS.length,
+	next: ''
+};
+
+/**
+ * La ficha pública de un piloto: la que se abre apretando un distintivo.
+ *
+ * **Muestra menos que la propia a propósito.** Lo de uno —créditos, el árbol
+ * entero, dónde está parado— no es asunto de nadie: dónde está sería un radar, y
+ * el juego ya decidió que un listado de compañeros no lo es. Lo que queda es lo
+ * que sirve para saber con quién estás hablando: de dónde viene, a quién le
+ * responde, desde cuándo vuela y qué tan lejos llegó.
+ *
+ * **El IPP sí entra**, y es la mitad de la ficha. Existe justamente para poder
+ * compararse y para que una corporación pida un mínimo; un índice que nadie
+ * puede ver no sirve para ninguna de las dos cosas.
+ *
+ * Y si la tiene cerrada, lo único que viaja es el distintivo: negarla en la
+ * pantalla pero mandar los datos igual sería no cerrarla.
+ */
+export function buildPerfilPiloto(db: Db, row: Pilot, callsign: string): PerfilPiloto | null {
+	const otro = db.select().from(pilotTable).where(eq(pilotTable.callsign, callsign)).get();
+	if (!otro) return null;
+
+	const mine = otro.id === row.id;
+	const vacia = {
+		callsign: otro.callsign,
+		profession: '',
+		faction: '',
+		factionCode: '',
+		factionColor: '',
+		factionCrest: '',
+		corporation: '',
+		corporationCode: '',
+		since: 0,
+		rating: SIN_INDICE,
+		families: [] as readonly RamaXp[],
+		mine
+	};
+
+	if (otro.private && !mine) return { ...vacia, closed: true };
+
+	const faccion = getFaction(otro.faction);
+	const suya =
+		otro.corporationId === null
+			? undefined
+			: db.select().from(corporation).where(eq(corporation.id, otro.corporationId)).get();
+
+	// El índice, con la misma cuenta que la credencial: lo invertido por rama,
+	// sumado. El pozo no entra —es potencial y no poder— y por eso no se lee.
+	const familias = buildFamilyXp(skillXp(db, otro.id));
+	const indice = pilotIndex(Object.fromEntries(familias.map((rama) => [rama.family, rama.xp])));
+	const rango = rankFor(indice);
+	const siguiente = nextRankFor(indice);
+
+	return {
+		...vacia,
+		profession: getProfession(otro.profession).name,
+		faction: faccion.name,
+		factionCode: faccion.code,
+		factionColor: faccion.color,
+		factionCrest: factionCrest(faccion.code),
+		corporation: suya?.name ?? '',
+		corporationCode: suya?.code ?? '',
+		since: otro.createdAt.getTime(),
+		families: familias,
+		rating: {
+			value: thousands(indice),
+			rank: rango.name,
+			step: rango.step,
+			steps: RATING_RANKS.length,
+			next: siguiente ? `${siguiente.name} a ${thousands(siguiente.at)}` : ''
+		},
+		closed: false
 	};
 }

@@ -42,6 +42,7 @@
 	import { colorFor } from '$lib/palette';
 	import type { NodoGalaxia, SalidaGalaxia } from '$lib/tipos';
 	import type { Camara } from '$lib/camera';
+	import { page } from '$app/state';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -58,7 +59,17 @@
 	 * no el resultado para que, al mover la nave, la ficha siga a donde estás si
 	 * nunca tocaste el mapa —y se quede donde la dejaste si sí—.
 	 */
-	let elegidoAMano = $state('');
+	/**
+	 * **Y arranca de la URL si viene puesto**, que es lo que vuelve enlazable un
+	 * sistema. Sin eso, la única manera de mirar uno era buscarlo a mano en el
+	 * mapa, y ninguna otra pantalla podía mandar a verlo: un agente que dice en qué
+	 * sistema está no servía de nada si el nombre no llevaba a ninguna parte.
+	 *
+	 * Elegir en el mapa **no reescribe la URL**: mover el dedo por el mapa no es
+	 * navegar, y llenar el historial de un clic por sistema mirado haría del botón
+	 * de atrás algo inservible. La URL es el punto de entrada, no un espejo.
+	 */
+	let elegidoAMano = $state(page.url.searchParams.get('sistema') ?? '');
 	let elegido = $derived(elegidoAMano || galaxia.pilot.system);
 
 	let mapa = $state<GalaxyMap>();
@@ -602,13 +613,20 @@
 {/snippet}
 
 {#snippet lienzoDelMapa()}
+	<!--
+		**Abre mirando lo elegido**, que sin nada pedido es tu sistema. Con un
+		`?sistema=` puesto, antes la cámara se quedaba donde estás parado y el sistema
+		del enlace quedaba marcado fuera de cuadro: la pantalla contestaba, pero en un
+		renglón del costado. El encuadre ocurre una sola vez, así que elegir después
+		en el mapa no le mueve la cámara al que la estaba moviendo con la mano.
+	-->
 	<GalaxyMap
 		bind:this={mapa}
 		bind:camera={camara}
 		bind:fitted={encuadrado}
 		map={galaxia.map}
 		pilot={galaxia.pilot}
-		focus={galaxia.pilot.system}
+		focus={elegido}
 		debt={false}
 		selected={elegido}
 		visible={visibles}

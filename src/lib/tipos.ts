@@ -83,6 +83,8 @@ export interface PilotoConectado {
 	readonly families: readonly RamaXp[];
 	/** Qué tan lejos llegó, en un solo número con su rango. */
 	readonly rating: IndicePiloto;
+	/** Si cerró su ficha para los demás. Lo lee Opciones, que es donde se cambia. */
+	readonly privateProfile: boolean;
 	/** Desde cuándo vuela, en milisegundos UTC. */
 	readonly since: number;
 	/**
@@ -144,9 +146,126 @@ export interface ReputacionCorporacion {
 	readonly ladder: readonly EscalonReputacion[];
 }
 
+/**
+ * Una fila del panorama: qué piensa de vos alguien del sector.
+ *
+ * Sirve igual para una bandera y para una corporación porque la pregunta es la
+ * misma —cuánto confía esto en mí— y el número es el mismo. Lo que cambia es de
+ * qué se trata, y eso lo dice `kind`.
+ */
+export interface FilaPanorama {
+	readonly code: string;
+	readonly name: string;
+	readonly icon: IconName;
+	/** El color propio de una bandera; vacío para una corporación. */
+	readonly color: string;
+	/**
+	 * Bajo qué bandera está, con su nombre escrito.
+	 *
+	 * En una corporación es la suya y en una bandera es ella misma. Sirve para
+	 * recortar la lista, que es la pregunta que aparece en cuanto hay más de una
+	 * pantalla de corporaciones: «¿cómo vengo del lado del Dominio?».
+	 */
+	readonly faction: string;
+	readonly factionName: string;
+	/** Lo que tiene con ella, con dos decimales. */
+	readonly value: string;
+	/** Lo mismo como número de cien, para dibujar. */
+	readonly percent: number;
+	readonly tier: string;
+	/** Cuántos escalones lleva y cuántos hay, para el medidor compacto. */
+	readonly reached: number;
+	readonly tiers: number;
+	/**
+	 * Hasta qué nivel de agente te abre, en romanos.
+	 *
+	 * **Es la única respuesta verdadera sobre agentes.** Un agente no tiene un
+	 * número propio con vos: lo que decide si te atiende es el mayor entre lo que
+	 * tiene su corporación y lo que tiene su bandera. Ver `effectiveMissionLevel`.
+	 */
+	readonly opens: string;
+	/** Y el mismo nivel como número, que es por lo que se ordena. */
+	readonly opensLevel: number;
+	/** Si es la corporación a la que respondés. */
+	readonly mine: boolean;
+}
+
+/**
+ * El panorama entero: quién te conoce en el sector, y cuánto.
+ *
+ * **Va en Piloto y no en Corporación** porque es del piloto: sobrevive a
+ * renunciar, y la mitad de lo que muestra no es de ninguna corporación. La
+ * pestaña de Corporación contesta otra cosa —cómo vas con la tuya, y cómo
+ * llegaste ahí— con el libro al lado.
+ */
+/**
+ * Por qué se recorta y se ordena el panorama.
+ *
+ * Los cuatro primeros son los de cualquier listado del proyecto, escritos acá y
+ * no heredados: `ConsultaLista` vive bajo `server/` y esto lo lee la pantalla.
+ */
+export interface ConsultaPanorama {
+	readonly search: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+	/** Sólo las de esta bandera. Vacío quiere decir todas. */
+	readonly faction: string;
+}
+
+export interface PanoramaReputacion {
+	/**
+	 * Las banderas, **todas**, tenga número con ellas o no.
+	 *
+	 * No se paginan ni se recortan: son cuatro contadas y son el marco del sector.
+	 * Ponerles buscador sería un formulario para encontrar una de cuatro.
+	 */
+	readonly factions: readonly FilaPanorama[];
+	/**
+	 * Y las corporaciones que te conocen, más la tuya aunque esté en cero, **ya
+	 * recortadas y paginadas**.
+	 *
+	 * Nacen con paginado y no cuando molesten: la reputación se gana con cualquier
+	 * corporación del mundo y hay doce por bandera, así que un piloto veterano va a
+	 * tener decenas. Una lista que hay que rehacer cuando crece es una lista que se
+	 * rehace tarde.
+	 */
+	readonly corporations: readonly FilaPanorama[];
+	readonly query: ConsultaPanorama;
+	/** Cuántas hay en total y cuántas pasaron el recorte. */
+	readonly total: number;
+	readonly found: number;
+	readonly page: number;
+	readonly pages: number;
+	/** Las banderas que existen, para el recorte. */
+	readonly flags: readonly { readonly code: string; readonly name: string }[];
+	/** Cuántos te conocen de verdad, para saber si hay algo que contar. */
+	readonly known: number;
+}
+
 export interface Corporacion {
 	/** Si pertenece a alguna. Lo demás describe a cuál, o a la falta de una. */
 	readonly belongs: boolean;
+	/**
+	 * Si la que se está mirando es la del piloto.
+	 *
+	 * La ficha se puede abrir para **cualquier** corporación —es lo que vuelve
+	 * enlazable su nombre—, así que lo que se puede hacer ahí no puede depender de
+	 * estar en la pantalla: renunciar es de la tuya, y alistarse de una ajena.
+	 */
+	readonly mine: boolean;
+	/**
+	 * Si se le puede ofrecer alistarse, y por qué no.
+	 *
+	 * **Tres estados y no dos.** `null` quiere decir que no hay nada que ofrecer
+	 * —el piloto ya responde a alguien— y ahí el botón ni se dibuja: no es que no
+	 * se pueda apretar, es que primero hay que renunciar, y un botón que existe
+	 * para explicar eso molesta más de lo que ayuda. `false` es estar libre y que
+	 * la bandera no dé, y ahí sí va apagado con el motivo, que es el trato de toda
+	 * acción del juego.
+	 */
+	readonly canJoin: boolean | null;
+	readonly joinBlocked: string;
 	readonly name: string;
 	readonly code: string;
 	/** El rubro, en palabras y en ícono. */
@@ -167,17 +286,14 @@ export interface Corporacion {
 	readonly description: string;
 	/** Cuántos pilotos son, ya escrito. */
 	readonly members: string;
-	/** Las estaciones que opera. Puede no operar ninguna y existir igual. */
 	/**
-	 * Las primeras estaciones que opera, no todas.
+	 * Si opera algún puesto.
 	 *
-	 * Una corporación grande puede operar cientos y el panel de una ficha no es el
-	 * lugar para leerlas: lo que contesta acá es «¿de qué tamaño es y por dónde
-	 * anda?». La lista entera la contesta el mapa, con su recorte puesto.
+	 * **Un booleano y no la lista**: la lista vive en su pestaña, con su recorte y
+	 * su paginado. Acá alcanza con saber si hay algo que ir a ver, porque una
+	 * corporación puede no tener edificios y existir igual, sólo como gente.
 	 */
-	readonly stations: readonly EstacionCorporacion[];
-	/** Cuántas quedaron afuera de esa muestra. Cero si entran todas. */
-	readonly moreStations: number;
+	readonly hasStations: boolean;
 	/** Cuántas opera en total, ya escrito. */
 	readonly stationCount: string;
 	/** Cuántos agentes tiene, ya escrito. La lista vive en su pestaña. */
@@ -194,10 +310,45 @@ export interface Corporacion {
 }
 
 /** Una estación que opera la corporación. */
+/** Lo que el listado de puestos lee de la URL. */
+export interface ConsultaUbicaciones {
+	readonly search: string;
+	/** El servicio pedido, ya escrito, o vacío para no filtrar por eso. */
+	readonly service: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+}
+
+/**
+ * Los puestos de una corporación, recortados y paginados.
+ *
+ * Misma forma que la lista de agentes y la de miembros: el constructor la arma y
+ * la misma pieza la dibuja en la pestaña del módulo y en la ventana de una ficha
+ * ajena.
+ */
+export interface Ubicaciones {
+	readonly belongs: boolean;
+	readonly name: string;
+	/** El código de la corporación, para recortar el mapa a lo suyo. */
+	readonly code: string;
+	/** Cuántos son en total, ya escrito. No cambia al filtrar. */
+	readonly count: string;
+	readonly stations: readonly EstacionCorporacion[];
+	readonly query: ConsultaUbicaciones;
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+	/** Los servicios que alguno ofrece, para el desplegable. */
+	readonly services: readonly OpcionConstructor[];
+}
+
 export interface EstacionCorporacion {
 	readonly code: string;
 	readonly name: string;
 	readonly system: string;
+	/** El código del sistema, para poder llevarlo al mapa. */
+	readonly systemCode: string;
 	/** Qué ofrece, ya escrito. */
 	readonly services: readonly string[];
 }
@@ -243,6 +394,17 @@ export interface FilaAgenteCorporacion {
 	readonly levelValue: number;
 	readonly station: string;
 	readonly system: string;
+	/**
+	 * El código del sistema, para poder llevarlo al mapa.
+	 *
+	 * **Un nombre que no lleva a ninguna parte no sirve de nada**: saber que un
+	 * agente está en Ánfora sólo ayuda si desde ahí se puede ir a ver dónde queda
+	 * Ánfora. Por eso viaja el código además del nombre.
+	 */
+	readonly systemCode: string;
+	/** De quién es el agente, para nombrarla y para poder ir a verla. */
+	readonly corporation: string;
+	readonly corporationCode: string;
 	/** Si este piloto tiene reputación suficiente para que lo atienda. */
 	readonly open: boolean;
 	/** Qué le falta, cuando no. */
@@ -259,6 +421,38 @@ export interface ConsultaAgentes {
 	readonly kind: string;
 	/** Si se muestran sólo los que ya atienden a este piloto. */
 	readonly onlyOpen: boolean;
+}
+
+/** Lo que se pidió del directorio de agentes del sector. */
+export interface ConsultaSectorAgentes {
+	readonly search: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+	/** La clase de misión, o vacío. */
+	readonly kind: string;
+	/** Si se muestran sólo los que ya atienden a este piloto. */
+	readonly onlyOpen: boolean;
+}
+
+/**
+ * Todos los agentes del sector, no sólo los de tu corporación.
+ *
+ * **Es un directorio y no un resumen de lo tuyo.** La reputación se gana con
+ * cualquiera, así que un agente que todavía no te atiende no es ruido: es el que
+ * te falta. Por eso van todos, con su corporación y su sistema, y el recorte
+ * manda.
+ */
+export interface DirectorioAgentes {
+	readonly agents: readonly FilaAgenteCorporacion[];
+	readonly query: ConsultaSectorAgentes;
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+	/** Cuántos te atienden hoy, de todos los que hay. */
+	readonly open: number;
+	/** Las clases de misión que existen, para el recorte. */
+	readonly kinds: readonly { readonly value: string; readonly label: string }[];
 }
 
 /**
@@ -327,6 +521,8 @@ export interface FilaAgente {
 	readonly code: string;
 	readonly name: string;
 	readonly corporation: string;
+	/** El código de su corporación, para abrir la ficha de ella desde la tarjeta. */
+	readonly corporationCode: string;
 	readonly faction: string;
 	readonly kind: string;
 	readonly kindIcon: IconName;
@@ -353,11 +549,22 @@ export interface Ubicacion {
 	readonly description: string;
 	readonly parent: string;
 	readonly system: string;
+	/**
+	 * El código de su sistema, para poder ir a verlo al mapa.
+	 *
+	 * **Un nombre que no lleva a ninguna parte no sirve de nada**: saber que estás
+	 * en Ánfora sólo ayuda si desde ahí se puede ver dónde queda Ánfora y qué tiene
+	 * alrededor. Es la misma razón por la que el sistema de un agente viaja con su
+	 * código.
+	 */
+	readonly systemCode: string;
 	readonly distance: string;
 	readonly exploration: string;
 	readonly isStation: boolean;
 	readonly inTransit: boolean;
 	readonly corporation: string;
+	/** El código del operador, para abrir su ficha desde acá. */
+	readonly corporationCode: string;
 	readonly corporationKind: string;
 	readonly owner: string;
 	readonly modules: readonly BaldosaModulo[];
@@ -828,6 +1035,116 @@ export interface Orbita {
 	readonly ring: readonly CuerpoVecino[];
 	/** Y lo que te da vueltas a vos. */
 	readonly satellites: readonly CuerpoVecino[];
+}
+
+/**
+ * Lo que se muestra en la ventana de una ficha.
+ *
+ * Una ficha es **una ventana y no una pantalla**: se abre encima de donde
+ * estabas, se mira y se cierra. Trae **una sola sección armada**, la que se está
+ * mirando; las otras vienen en nulo porque traer las cinco para mostrar una
+ * sería cinco consultas por cada nombre que alguien aprieta.
+ */
+export interface Ficha {
+	readonly kind: string;
+	readonly code: string;
+	/** Cómo se llama lo que se está mirando, y qué es. */
+	readonly title: string;
+	readonly subtitle: string;
+	/** El ícono de la ventana, que dice de qué clase de ficha se trata. */
+	readonly icon: IconName;
+	/** Qué sección se está mirando. Vacío en las fichas de una sola. */
+	readonly section: string;
+	readonly corporation: Corporacion | null;
+	readonly reputation: PaginaReputacion | null;
+	readonly stations: Ubicaciones | null;
+	readonly agents: AgentesCorporacion | null;
+	readonly members: Miembros | null;
+	readonly pilot: PerfilPiloto | null;
+	readonly agent: FichaAgente | null;
+}
+
+/**
+ * Lo público de un piloto: lo que cualquiera puede ver de cualquiera.
+ *
+ * **Dónde está parado no entra**, por lo mismo que no entra en el listado de
+ * miembros: eso es información operativa y una ficha no es un radar. Lo que entra
+ * es quién es, de dónde viene, a quién le responde y qué tan lejos llegó.
+ */
+export interface PerfilPiloto {
+	readonly callsign: string;
+	readonly profession: string;
+	readonly faction: string;
+	readonly factionCode: string;
+	/**
+	 * El color y el escudo de su bandera.
+	 *
+	 * Es lo que le da cara a la ficha: dos pilotos de dos banderas distintas tienen
+	 * que verse distintos de lejos, y el color de una facción es el mismo en todo el
+	 * juego. Viajan armados y no como código a resolver en la pantalla, igual que en
+	 * el resto de las vistas.
+	 */
+	readonly factionColor: string;
+	readonly factionCrest: string;
+	/** A quién le responde. Vacío quiere decir independiente. */
+	readonly corporation: string;
+	readonly corporationCode: string;
+	/** Desde cuándo vuela, en milisegundos UTC. */
+	readonly since: number;
+	/** El IPP y su rango, que es lo que dice qué tan armado está. */
+	readonly rating: IndicePiloto;
+	/**
+	 * Lo invertido en cada rama, para dibujar su hexágono.
+	 *
+	 * **Es la mitad de la ficha**: el número dice cuánto y la figura dice de qué
+	 * —una punta hacia Extracción es un minero, un hexágono parejo es alguien que
+	 * todavía no se decidió—, y eso no se lee en una cifra. Va sin los pozos: lo
+	 * que alguien tiene sin gastar es lo que puede ser mañana, y eso no se le
+	 * cuenta a un desconocido.
+	 */
+	readonly families: readonly RamaXp[];
+	/** Si sos vos: entonces la ves entera aunque la tengas cerrada. */
+	readonly mine: boolean;
+	/**
+	 * Si la cerró para los demás.
+	 *
+	 * Cerrada y ajena, lo único que viaja es el distintivo: negarla en la pantalla
+	 * pero mandar los datos igual sería no cerrarla.
+	 */
+	readonly closed: boolean;
+}
+
+/** Una escalera que puede alcanzar el umbral de un agente. */
+export interface EscaleraDeAgente {
+	readonly label: string;
+	readonly value: string;
+	readonly tier: string;
+	readonly reached: number;
+	readonly tiers: number;
+	/** Si por sí sola ya alcanza para que te atienda. */
+	readonly enough: boolean;
+}
+
+/**
+ * La ficha de un agente: la fila que ya aparece en las listas, con la cuenta de
+ * por qué te atiende o no al lado.
+ */
+export interface FichaAgente {
+	readonly agent: FilaAgenteCorporacion;
+	/**
+	 * Quién es, en una línea.
+	 *
+	 * Vive **acá y no en la tarjeta de la estación**: es lo que le da personalidad a
+	 * un agente y lo que uno lee una vez, no cada vez que recorre la columna
+	 * buscando a quién pedirle trabajo. En una lista de cuatro tarjetas, cuatro
+	 * párrafos son cuatro tarjetas que no entran juntas en la pantalla.
+	 */
+	readonly description: string;
+	readonly faction: string;
+	readonly factionCode: string;
+	/** El umbral que pide su nivel, ya escrito. */
+	readonly needed: string;
+	readonly standings: readonly EscaleraDeAgente[];
 }
 
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */

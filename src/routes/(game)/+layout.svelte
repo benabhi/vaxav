@@ -16,6 +16,7 @@
 	notices={data.notices}
 	admin={data.admin}
 	canRush={data.canRush}
+	ficha={data.ficha}
 >
 	{@render children()}
 </GameShell>

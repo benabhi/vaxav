@@ -29,6 +29,20 @@
 		readonly label: string;
 		/** La cuenta, si tiene sentido decirla. */
 		readonly detail?: string;
+		/**
+		 * Adónde lleva, si elegirla es una vuelta al servidor.
+		 *
+		 * **No es un segundo comportamiento, es el mismo dicho de dos maneras.** El
+		 * trabajo de esta pieza es mostrar cuál de varias está elegida y dejar
+		 * elegir otra; si eso cuesta una ida y vuelta o no lo decide quien la usa.
+		 * Una sección que reparte lo que la pantalla ya tiene se elige en el
+		 * navegador; una que trae otra consulta —con su recorte y su paginado— tiene
+		 * que viajar en la URL, que es la regla del proyecto para todo recorte.
+		 *
+		 * Es el mismo caso que `HudButton` y `HudLink`, que comparten sus clases
+		 * porque un `<a>` y un `<button>` tienen que verse idénticos.
+		 */
+		readonly href?: string;
 	}
 
 	interface Props {
@@ -40,37 +54,47 @@
 	let { tabs, active = $bindable('') }: Props = $props();
 </script>
 
+<!--
+	Lo que hay adentro de un segmento, escrito una vez: lo dibujan igual el enlace y
+	el botón, y dos copias serían dos que un día se separan.
+-->
+{#snippet segmento(seccion: Solapa, elegida: boolean)}
+	<!--
+		El filo encendido del elegido. Va absoluto para que no empuje el texto medio
+		píxel al cambiar de sección.
+	-->
+	{#if elegida}
+		<span class="absolute inset-x-0 top-0 h-[2px] bg-accent shadow-glow"></span>
+	{/if}
+	{seccion.label}
+	{#if seccion.detail}
+		<span class="font-mono text-[0.58rem] normal-case {elegida ? 'text-data' : 'text-text-muted'}">
+			{seccion.detail}
+		</span>
+	{/if}
+{/snippet}
+
 <div class="tab-bar w-full border border-border-soft bg-well">
 	<div class="flex w-max min-w-full items-stretch">
 		{#each tabs as seccion (seccion.code)}
-			<button
-				type="button"
-				onclick={() => (active = seccion.code)}
-				class="relative flex shrink-0 cursor-pointer items-center gap-[0.35rem] border-0
-					border-r border-r-border-soft/60 px-[0.6rem] py-[0.4rem] font-display text-[0.62rem]
-					font-semibold tracking-[0.12em] whitespace-nowrap uppercase transition-[background-color,color]
-					last:border-r-0
-					{seccion.code === active
-					? 'bg-surface-strong text-accent-bright'
-					: 'bg-transparent text-text-muted hover:bg-surface-hover hover:text-accent-bright'}"
-			>
-				<!--
-					El filo encendido del segmento elegido. Va absoluto para que no empuje el
-					texto medio píxel al cambiar de sección.
-				-->
-				{#if seccion.code === active}
-					<span class="absolute inset-x-0 top-0 h-[2px] bg-accent shadow-glow"></span>
-				{/if}
-				{seccion.label}
-				{#if seccion.detail}
-					<span
-						class="font-mono text-[0.58rem] normal-case
-							{seccion.code === active ? 'text-data' : 'text-text-muted'}"
-					>
-						{seccion.detail}
-					</span>
-				{/if}
-			</button>
+			{@const elegida = seccion.code === active}
+			{@const clases = `relative flex shrink-0 cursor-pointer items-center gap-[0.35rem] border-0
+				border-r border-r-border-soft/60 px-[0.6rem] py-[0.4rem] font-display text-[0.62rem]
+				font-semibold tracking-[0.12em] whitespace-nowrap uppercase no-underline
+				transition-[background-color,color] last:border-r-0 ${
+					elegida
+						? 'bg-surface-strong text-accent-bright'
+						: 'bg-transparent text-text-muted hover:bg-surface-hover hover:text-accent-bright'
+				}`}
+			{#if seccion.href}
+				<a href={seccion.href} class={clases}>
+					{@render segmento(seccion, elegida)}
+				</a>
+			{:else}
+				<button type="button" onclick={() => (active = seccion.code)} class={clases}>
+					{@render segmento(seccion, elegida)}
+				</button>
+			{/if}
 		{/each}
 	</div>
 </div>

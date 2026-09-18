@@ -14,7 +14,7 @@
  */
 
 import { asc, eq } from 'drizzle-orm';
-import { pilot, type Pilot } from '../db/schema';
+import { corporation as corporationTable, pilot, type Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { PLAYABLE_PROFESSIONS, getProfession } from '$lib/game/professions';
 import { FACTIONS } from '$lib/game/factions';
@@ -88,9 +88,16 @@ const SIN_CORPORACION: Miembros = {
 export function buildMiembros(
 	db: Db,
 	row: Pilot,
-	query = readMembersQuery(new URLSearchParams())
+	query = readMembersQuery(new URLSearchParams()),
+	/** De cuál. Vacío quiere decir la propia. */
+	code = ''
 ): Miembros {
-	if (row.corporationId === null) return { ...SIN_CORPORACION, query };
+	const otra = code
+		? db.select().from(corporationTable).where(eq(corporationTable.code, code)).get()
+		: undefined;
+	// De cuál se listan los pilotos: la pedida, o la propia si no pidieron ninguna.
+	const cual = code ? (otra?.id ?? null) : row.corporationId;
+	if (cual === null) return { ...SIN_CORPORACION, query };
 
 	// **Por antigüedad y después por identificador.** La fecha se guarda al segundo,
 	// así que cuatro pilotos dados de alta en el mismo minuto empatan; el que entró
@@ -99,7 +106,7 @@ export function buildMiembros(
 	const filas = db
 		.select()
 		.from(pilot)
-		.where(eq(pilot.corporationId, row.corporationId))
+		.where(eq(pilot.corporationId, cual))
 		.orderBy(asc(pilot.createdAt), asc(pilot.id))
 		.all();
 

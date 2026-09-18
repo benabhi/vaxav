@@ -26,7 +26,13 @@
 <div
 	class="sticky top-0 z-20 flex h-topbar w-full items-center border-b border-border bg-surface-overlay px-[0.9rem] backdrop-blur-[10px] xs:px-[1.1rem] sm:px-6"
 >
-	<div class="flex w-full items-center gap-4">
+	<!--
+		`min-w-0` y no sólo `w-full`: una caja flex no se encoge por debajo de su
+		contenido a menos que se le diga, y sin eso el aviso de la izquierda empujaba
+		la barra —y con ella la página entera— hasta 458 píxeles en una pantalla de
+		375. El reloj de la derecha se quedó siempre entero; lo que cede es el texto.
+	-->
+	<div class="flex w-full min-w-0 items-center gap-4">
 		<ActionIndicator {action} {canRush} />
 		<div class="grow"></div>
 		<div class="flex items-center gap-2">

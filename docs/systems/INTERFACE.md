@@ -41,16 +41,17 @@ Todo el árbol vive en `src/lib/navigation.ts`, que es de donde salen el Neocom,
 barras de pestañas y el registro de rutas: una pantalla nueva se agrega en un solo
 lugar y aparece en los tres.
 
-| Módulo      | Pestañas                                       |
-| ----------- | ---------------------------------------------- |
-| Piloto      | Información · Habilidades · Bitácora           |
-| Nave        | Ficha · Bodega                                 |
-| Navegación  | Ubicación · Sistema · Galaxia                  |
-| Corporación | Ficha · Miembros                               |
-| Mercado     | Mercado · Órdenes de venta · Órdenes de compra |
-| Propiedades | Propiedades                                    |
-| Billetera   | Billetera                                      |
-| Opciones    | Cuenta                                         |
+| Módulo      | Pestañas                                              |
+| ----------- | ----------------------------------------------------- |
+| Piloto      | Información · Habilidades · Reputación · Bitácora     |
+| Nave        | Ficha · Bodega                                        |
+| Navegación  | Ubicación · Sistema · Galaxia                         |
+| Corporación | Ficha · Reputación · Ubicaciones · Agentes · Miembros |
+| Mensajes    | Recibidos · Enviados · Archivados                     |
+| Mercado     | Mercado · Órdenes de venta · Órdenes de compra        |
+| Propiedades | Propiedades                                           |
+| Billetera   | Billetera                                             |
+| Opciones    | Cuenta                                                |
 
 Un módulo de una sola pestaña no dibuja barra. La lista crece a medida que hay
 pantallas.
@@ -272,6 +273,131 @@ cerrado y el jugador perdería lo que escribió sin saber por qué.
 El aviso del Neocom tiene una vuelta propia: **abrir la bandeja no marca nada**,
 marca abrir un mensaje. Así que la pestaña sigue avisando mientras quede uno sin
 abrir, aunque el jugador ya esté parado ahí.
+
+### El panorama de reputación del piloto
+
+`Piloto · Reputación` contesta la pregunta que las pantallas de Corporación no
+pueden: **quién me conoce en el sector, y cuánto**. Va en Piloto porque es del
+piloto —sobrevive a renunciar— y porque la mitad de lo que muestra no es de
+ninguna corporación.
+
+La figura es **la rosa de banderas**: el largo de cada brazo es lo que esa facción
+piensa de vos, en su color, y los anillos caen donde caen los escalones de verdad
+—diez, veinticinco, cincuenta, ochenta—, así que se ve que el último tramo es el
+más largo de todos. Lo que dibuja no son tres cifras: es **qué clase de piloto
+sos**. Un brazo largo con dos muñones es una lealtad; tres iguales, un
+oportunista. Arranca vacía y no es un defecto: con todo en cero quedan los ejes y
+un punto en el medio, que es exactamente lo que pasa.
+
+Quién entra en las listas:
+
+| Quién             | Cuándo aparece                                                               |
+| ----------------- | ---------------------------------------------------------------------------- |
+| Las banderas      | **Siempre**, tengas número o no: son el marco del sector                     |
+| Las corporaciones | **Todas**, te conozcan o no                                                  |
+| Los agentes       | **Todos**, con el nivel que te abren —no con un número propio, que no tienen |
+
+**Van todos y no sólo los conocidos**, y es la decisión que vuelve útil la
+pantalla. La reputación se gana con cualquiera, así que uno en cero no es ruido:
+es el que todavía no trabajaste. Saber que existe, de qué bandera es y en qué
+sistema está es la mitad de la decisión de a dónde ir, y una lista recortada a
+los que ya te conocen contesta bien sólo cuando ya no hace falta preguntarlo.
+
+Que los agentes estén **sin número propio** es lo primero que uno nota, así que la
+pantalla lo contesta en vez de callarlo. Te atiende el que esté a la altura del
+**mayor** entre lo que tiene su corporación y lo que tiene su bandera, y por eso
+cada fila dice hasta qué nivel te abre. Ahí se vuelve visible la regla de las dos
+escaleras: una corporación en el primer escalón puede abrir el tercero porque su
+bandera llegó ahí.
+
+Las dos listas largas van **una por vez**, con un selector arriba que lleva su
+cuenta. Apiladas la página era inmensa —dos tablas paginadas con sus dos barras de
+recorte— y para llegar a la segunda había que pasar por toda la primera. De paso
+resuelve que las dos quieran los mismos parámetros: como se dibuja una por vez,
+el selector decide quién los interpreta.
+
+### La ficha que se abre desde cualquier nombre
+
+Un nombre que aparece en una lista **lleva a lo que ese nombre es**. Es lo que
+hace que un directorio de cuarenta corporaciones sea navegable en vez de ser
+cuarenta cadenas de texto: se aprieta una y se ve qué es, quién la opera, dónde
+tiene puestos, quién reparte trabajo ahí y qué piensa de vos.
+
+**Es una ventana y no una pantalla.** Llevar a alguien al módulo Corporación para
+mostrarle una ajena —con el Neocom marcando «Corporación» y las pestañas de uno al
+lado— la hace leer como si fuera la suya; y sacar cada ficha a su propia ruta
+agregaría el tercer nivel de navegación que este proyecto no tiene. La ventana se
+abre encima, se mira y se cierra.
+
+**Muestra lo mismo que el módulo**, con las mismas secciones y las mismas piezas:
+la tabla de agentes y la de miembros son literalmente las de las pestañas, con su
+buscador y su paginado. Una ficha ajena que muestre menos que la propia obliga a
+preguntarse qué falta. Lo único que cambia es lo que es del que mira: **«Alistarse»
+no se dibuja si ya respondés a otra**, porque no es que no se pueda apretar, es
+que primero hay que renunciar.
+
+Se dibuja **una sola vez, en el armazón del juego**, y no en cada pantalla que
+quiera ofrecerla: una ventana que sólo se puede abrir desde algunas pantallas es
+media función. El servidor la arma en el `load` del layout, y **sólo la sección
+que se esté mirando**: traer las cinco para mostrar una sería cinco consultas por
+cada nombre que alguien aprieta.
+
+Su estado vive **en la URL**, como todo recorte de este juego: cuál está abierta,
+qué sección y por dónde va su listado. Así una ficha se manda por mensaje, se abre
+en otra pestaña, se cierra con el botón de atrás y se recarga sin perderla; una
+ventana que sólo existe en la memoria del navegador no se puede compartir con
+nadie. Y por eso sus parámetros llevan el prefijo `f_`: **abajo de la ventana hay
+una pantalla** con sus propios `buscar`, `orden` y `pagina`, y sin prefijo el
+buscador de la ficha filtraría la tabla de atrás. La URL queda más larga; a
+cambio, las dos cosas funcionan a la vez.
+
+**Y una ficha lleva a otra.** Desde la de un piloto se abre la de su corporación,
+y desde la de ésta la de cualquiera de sus agentes o de sus miembros, sin cerrar
+la ventana ni perder la pantalla de abajo. Es lo que vuelve navegable un sector de
+cuarenta corporaciones, y es de donde sale la idea: en EVE uno termina tres saltos
+adentro de una cadena de nombres que empezó en una lista.
+
+**El marco no se mueve.** La ventana grande es de ancho fijo, y de alto fijo
+cuando tiene secciones: una que se estira al cambiar de pestaña —cuatro datos en
+una, una tabla de veinticinco filas en otra— no se siente como una ventana con
+pestañas sino como cinco ventanas distintas. Lo que sobra se desplaza adentro. La
+ficha de una sola sección no tiene entre qué saltar, así que le alcanza con un
+piso que la salve de salir como una ranura.
+
+Las tres clases, y qué contesta cada una:
+
+| Ficha           | Qué muestra                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| **Corporación** | Las mismas cinco secciones del módulo, con las mismas tablas                                   |
+| **Piloto**      | La credencial pública: quién es, a quién le responde, desde cuándo vuela, su IPP y su hexágono |
+| **Agente**      | Qué reparte, dónde para, y **cuál de las dos escaleras** le falta para recibirte               |
+
+#### La ficha de un piloto es una credencial
+
+No una tabla de cuatro renglones. El que aprieta un distintivo quiere saber **con
+quién está hablando**, así que arriba va la banda de su bandera —su color al filo,
+su escudo de fondo, como en la credencial propia— con el sello, el distintivo, el
+oficio y a quién le responde; y abajo **el hexágono de sus ramas con sus cifras al
+lado**, que es la figura del piloto y dice por su silueta lo que el IPP dice por su
+tamaño.
+
+Es la credencial propia recortada a lo público: **sin créditos, sin dónde está
+parado y sin los pozos sin gastar**. Dónde está sería un radar, y el juego ya
+decidió que un listado de compañeros no lo es.
+
+#### Y se puede cerrar
+
+Desde `Opciones · Cuenta`, con el enlace a la propia ficha al lado: una preferencia
+sobre cómo te ven se decide mirando cómo te ven. Cerrada, de un piloto queda
+**sólo el distintivo** —que sigue apareciendo donde aparecía, en los miembros de su
+corporación o al pie de un mensaje— y el servidor no manda nada más: negarla en la
+pantalla pero mandar los datos igual sería no cerrarla.
+
+Y tiene **vista propia y no un cartel**: el sello apagado detrás de un ojo tachado,
+el distintivo y una línea que explica qué pasó. «No se puede» dicho con un renglón
+gris se lee como un error del juego; así se lee como lo que es —hay alguien, y
+eligió no mostrarse—. Es de la cuenta y vale para todos por igual: no hay listas
+de permitidos, porque el juego todavía no tiene amistades que declarar.
 
 ### La columna angosta de una estación
 
@@ -522,19 +648,19 @@ Con ochenta componentes, «fijarse si ya existe» no pasa solo: hay que pregunta
 pieza por pieza, y para eso hace falta saber qué hay. Esta tabla es el mapa, por
 carpeta; los archivos están en `src/lib/components/`.
 
-| Carpeta       | Para qué                                          | Lo que más se usa                                                                           |
-| ------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                      |
-| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                          |
-| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                      |
-| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`    |
-| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                     |
-| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `Identicon`, `PilotCredential` |
-| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                       |
-| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                      |
-| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                           |
-| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                             |
-| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                     |
+| Carpeta       | Para qué                                          | Lo que más se usa                                                                                        |
+| ------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                                   |
+| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                                       |
+| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                                   |
+| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`                 |
+| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                                  |
+| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `Identicon`, `PilotCredential`, `InfoSheet` |
+| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                                    |
+| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                                   |
+| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                                        |
+| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                                          |
+| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                                  |
 
 Tres que conviene conocer antes de escribir una pantalla nueva, porque son las
 que más se reinventan sin querer:
@@ -602,6 +728,24 @@ es una interfaz que hay que volver a aprender.
 La cámara vive en **la pantalla** y no en el marco ni en el mapa: agrandar dibuja
 la otra versión y eso vuelve a montar el lienzo, así que con la vista adentro cada
 expansión volvería al encuadre inicial.
+
+**Y el mapa se puede enlazar.** `?sistema=<código>` lo abre con ese sistema elegido
+—y mirando hacia él—, y `?corporacion=<código>` lo abre con el filtro puesto. Son
+dos cosas distintas y se ven distinto a propósito: un filtro **pinta un conjunto**
+—todas las casillas donde esa corporación tiene algo, que es la pregunta «¿dónde
+está metida?»— y una elección **marca una** con su aro y su ficha al costado. Un
+filtro de un solo elemento sería pintar un panal para señalar un punto.
+
+Lo que sí comparten es que el mapa **abre mirando lo que el enlace pidió**. Sin eso,
+la cámara se quedaba donde está parado el piloto y el sistema enlazado quedaba
+marcado fuera de cuadro: la pantalla contestaba, pero en un renglón del costado. El
+encuadre ocurre una sola vez, así que elegir después en el mapa no le mueve la
+cámara a quien la esté moviendo con la mano.
+
+Por eso **casi todo nombre de sistema del juego es un enlace al mapa**: el de un
+agente, el de un puesto de una corporación, el de la ficha del lugar donde estás
+parado. Saber que algo está en Ánfora sólo ayuda si desde ahí se puede ver dónde
+queda Ánfora.
 
 ### La credencial, y el sello del piloto
 
@@ -677,6 +821,15 @@ con ellos es **recorrer una columna**. De ahí tres reglas:
   sin leer el signo de cada fila.
 - **En pantalla angosta la tabla se desplaza dentro de su contenedor** y las
   columnas accesorias se esconden. La página nunca se desplaza en horizontal.
+
+**Lo que falta: en el teléfono una tabla no es una tabla.** Desplazarse a lo ancho
+para leer una fila es lo que hace una tabla cuando nadie decidió nada, no lo que
+uno quiere hacer con el pulgar. Lo que corresponde ahí es que **cada fila se
+dibuje como una tarjeta** —el dato principal grande arriba y los demás rotulados
+debajo— y que eso lo resuelva `HudTable` y no cada pantalla: son ocho listados
+largos y ocho maquetas paralelas serían ocho que se separan. Las columnas ya son
+un dato declarado —su rótulo, su ancho, si se esconde—, así que la pieza tiene
+con qué armar la tarjeta sin que nadie le explique nada. Queda pendiente.
 
 ### La zona de peligro
 

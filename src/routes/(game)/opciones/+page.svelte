@@ -6,6 +6,9 @@
 	no sean de la cuenta —la interfaz, los avisos—, y entonces cada una va a
 	nombrar algo distinto de verdad.
 
+	**Quién puede mirarte va primero**: es lo único de la pantalla que cambia lo que
+	otros ven, y lo demás son llaves y puertas.
+
 	**El retrato no está acá**, y es a propósito. Se cambia desde la credencial del
 	piloto, que es donde se lo ve: ahí la foto muestra el resultado exacto al
 	tamaño en que va a quedar, y la chapita de cámara dice que se puede tocar.
@@ -21,13 +24,17 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
+	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
 	import SuccessCallout from '$lib/components/forms/SuccessCallout.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
+	import Label from '$lib/components/typography/Label.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
+	import { page } from '$app/state';
+	import { hrefFicha } from '$lib/fichas';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -43,6 +50,9 @@
 	let confirmacion = $state('');
 
 	let coincide = $derived(confirmacion.trim() === data.pilot.callsign);
+
+	/** El enlace que abre tu propia ficha, para ver lo que ven los demás. */
+	let miFicha = $derived(hrefFicha(page.url, 'piloto', data.pilot.callsign));
 </script>
 
 <svelte:head><title>Cuenta · Opciones · Vaxav</title></svelte:head>
@@ -53,6 +63,54 @@
 </div>
 
 <div class="flex w-full max-w-[34rem] flex-col items-start gap-4">
+	<!--
+		**Quién puede mirarte**, arriba de la contraseña: es lo único de esta pantalla
+		que cambia lo que otros ven, así que es lo que uno viene a buscar. Y lleva al
+		lado el enlace a la propia ficha, porque una preferencia sobre cómo te ven se
+		decide mirando cómo te ven.
+	-->
+	<TitledPanel title="Tu ficha" detail="Quién puede mirarte" class="w-full">
+		<div class="flex w-full flex-col items-start gap-4">
+			<BodyText>
+				Cualquiera puede abrir tu ficha apretando tu distintivo: de dónde venís, a quién le
+				respondés, desde cuándo volás y tu IPP. Dónde estás parado no sale nunca.
+			</BodyText>
+
+			<div class="flex w-full flex-wrap items-center gap-3">
+				<Label>Ahora está</Label>
+				<span class="font-display text-1 tracking-display text-accent-bright uppercase">
+					{data.pilot.privateProfile ? 'Cerrada' : 'Abierta'}
+				</span>
+				<div class="grow"></div>
+				<HudLink href={miFicha} variant="outline" size="1">
+					<Icon name="identification-card" weight="bold" size="0.7rem" />
+					Ver cómo te ven
+				</HudLink>
+			</div>
+
+			{#if form?.scope === 'privacy'}
+				<ErrorCallout message={form?.error} />
+				<SuccessCallout message={form?.success} />
+			{/if}
+
+			<form method="POST" action="?/ficha">
+				<input type="hidden" name="cerrada" value={data.pilot.privateProfile ? '0' : '1'} />
+				<HudButton
+					variant={data.pilot.privateProfile ? 'primary' : 'outline'}
+					size="3"
+					type="submit"
+				>
+					<Icon
+						name={data.pilot.privateProfile ? 'identification-card' : 'eye-slash'}
+						weight="bold"
+						size="0.8rem"
+					/>
+					{data.pilot.privateProfile ? 'Abrir mi ficha' : 'Cerrar mi ficha'}
+				</HudButton>
+			</form>
+		</div>
+	</TitledPanel>
+
 	<TitledPanel title="Contraseña" detail="La llave para entrar" class="w-full">
 		<form method="POST" action="?/contrasena" class="w-full">
 			<div class="flex w-full max-w-[24rem] flex-col items-start gap-4">

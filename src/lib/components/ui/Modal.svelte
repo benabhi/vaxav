@@ -57,20 +57,28 @@
 		backdrop:backdrop-blur-[2px]"
 >
 	<!--
-		El ancho va en `min-width` y no en `width`, y no es un capricho: el panel
-		flotante trae `w-fit` de fábrica —lo necesita para los globos, que miden lo
-		que mide su texto— y entre dos utilidades de ancho gana la que Tailwind haya
-		puesto última en la hoja, no la que uno escribió después. Así que el ancho
-		declarado acá se perdía y la ventana se encogía al contenido.
+		El ancho va en `min-width` y `max-width`, nunca en `width`, y no es un
+		capricho: el panel flotante trae `w-fit` de fábrica —lo necesita para los
+		globos, que miden lo que mide su texto— y entre dos utilidades de ancho gana
+		la que Tailwind haya puesto última en la hoja, no la que uno escribió
+		después. Así que el ancho declarado acá se perdía y la ventana se encogía al
+		contenido. Los dos límites en el mismo valor no compiten con `w-fit`: lo
+		encierran.
 
 		Con contenido ancho —una tabla, una grilla— no se notaba. Con un formulario
 		se nota de golpe: los campos son `w-full` de un padre que mide lo que miden
 		los campos, la cuenta se muerde la cola y la ventana sale como una ranura.
-		`min-width` no compite con `w-fit`: lo levanta.
+
+		Y la grande es **de ancho fijo y no de ancho mínimo**: una ventana de trabajo
+		cambia de contenido sin cambiar de ventana —una ficha pasa de cuatro datos a
+		una tabla de cinco columnas— y si el marco se estira con cada sección, lo que
+		se siente no es una ventana con pestañas sino cinco ventanas distintas.
+		Adentro, lo ancho se desplaza en su propio contenedor, que es la regla de
+		siempre.
 	-->
 	<FloatingPanel
 		class="flex max-h-[88vh] flex-col p-5 {size === 'lg'
-			? 'max-w-[94vw] min-w-[min(58rem,94vw)]'
+			? 'max-w-[min(58rem,94vw)] min-w-[min(58rem,94vw)]'
 			: 'max-w-[92vw] min-w-[min(26rem,92vw)]'}"
 	>
 		<div class="flex w-full shrink-0 flex-wrap items-center gap-2 pb-4">

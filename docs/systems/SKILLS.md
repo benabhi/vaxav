@@ -300,6 +300,15 @@ el árbol crece —y el árbol se quiere grande a propósito—.
 **Cuenta lo invertido y no el pozo.** Lo que está sin gastar es potencial, no
 poder: dos pilotos con el mismo pozo y distinto árbol no vuelan igual.
 
+**Y es público.** Sale en la ficha de cualquier piloto, junto al hexágono de sus
+ramas: un índice que existe para compararse y para que una corporación pida un
+mínimo no sirve para ninguna de las dos cosas si nadie puede verlo. Lo que **no**
+sale de un piloto ajeno es el pozo —lo que puede ser mañana no se le cuenta a un
+desconocido—, así que la lista de ramas de una ficha ajena muestra sólo lo
+invertido y ni siquiera dice cuánto hay guardado: decir «0 XP» de algo que no se
+mandó sería afirmar una cosa falsa. El que prefiera no ser mirado **cierra su
+ficha** desde Opciones y entonces de él sólo queda el distintivo.
+
 ### Los rangos
 
 Un número suelto que sube no se siente como progreso; cruzar un umbral y pasar de

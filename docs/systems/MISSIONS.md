@@ -150,14 +150,27 @@ En **tres lugares distintos**, y cada uno contesta una pregunta que los otros no
 | Ubicación                | Cuál de los agentes **de esta estación** te atiende, y qué le falta al que no                      |
 | Piloto · Reputación      | El panorama: toda facción y toda corporación con la que tengas número                              |
 
-La tercera **todavía no existe**, y es a propósito: hoy sería una lista de una
-fila. Se gana el lugar cuando las misiones repartan números con varias, que es
-cuando aparece la pregunta que sólo ella contesta —«¿con quién me conviene seguir
-trabajando?»—. Va en Piloto y no en Corporación porque es del piloto: sobrevive a
-renunciar.
+La tercera va en **Piloto y no en Corporación** porque es del piloto: sobrevive a
+renunciar, y la mitad de lo que muestra no es de ninguna corporación. Contesta la
+pregunta que las otras dos no pueden —«¿con quién me conviene seguir
+trabajando?»— y su figura es **la rosa de banderas**: el largo de cada brazo es lo
+que esa facción piensa de vos, así que se lee de un vistazo si sos una lealtad o
+un oportunista.
 
-Lo mismo con la **reputación con el agente**: el esquema le deja lugar y nadie la
-escribe. Cuando haga algo además de existir, su lugar es la ficha de la
+Ahí las banderas van **todas**, tengas número con ellas o no —son cuatro contadas
+y son el marco del sector; una en cero es un dato, no una ausencia— y las
+corporaciones sólo si te conocen, más la tuya aunque esté en cero.
+
+**Y no hay lista de agentes, a propósito.** Un agente no tiene un número propio
+con vos: quien decide si te atiende es el mayor entre lo que tiene su corporación
+y lo que tiene su bandera. Esa es la respuesta verdadera y va dicha en cada fila
+—hasta qué nivel te abre— en vez de en una tercera lista que estaría siempre
+vacía. Es además donde la regla de las dos escaleras se vuelve visible: una
+corporación en el primer escalón puede abrir el tercero porque su bandera llegó
+ahí.
+
+Lo del **número propio con el agente** sigue igual: el esquema le deja lugar y
+nadie lo escribe. Cuando haga algo además de existir, su lugar es la ficha de la
 corporación, al lado de la gente que reparte trabajo.
 
 ### Todavía no la escribe nadie
@@ -182,6 +195,28 @@ dejar de necesitarlas: el sello sale del nombre, así que **todo agente tiene ca
 propia desde el segundo en que existe**, que era la pregunta de verdad.
 
 Ver «El sello» en [corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una).
+
+## Su ficha
+
+El nombre de un agente —en la estación, en la lista de su corporación o en el
+directorio del sector— **abre su ficha**, que contesta lo que en una fila no entra:
+quién es, qué clase de trabajo reparte, de qué nivel, de quién es y dónde para.
+
+**La línea que dice quién es cada uno vive acá y no en la tarjeta** de la estación.
+Es lo que le da personalidad a un agente y se lee una vez; repetida en las cuatro
+o cinco tarjetas de una columna angosta son cuatro tarjetas que ya no entran
+juntas en la pantalla, y la lista deja de poder recorrerse de un vistazo —que era
+todo su trabajo—. La tarjeta se queda con lo que hace falta para elegir a quién
+pedirle: el sello, el nombre, el nivel y de quién es.
+
+Y sobre todo contesta **por qué no te atiende**, que es la pregunta que la lista
+deja abierta. Dice el umbral que pide su nivel y dibuja **las dos escaleras** que
+lo pueden alcanzar —la de su corporación y la de su bandera— con cuánto tenés en
+cada una y si alcanza. Ahí se ve de un vistazo la regla de las dos escaleras: son
+dos caminos al mismo umbral, y el de la bandera abre de a muchos a la vez.
+
+La ventana es la misma de toda ficha del juego; el porqué está en
+[interfaz](INTERFACE.md#la-ficha-que-se-abre-desde-cualquier-nombre).
 
 ## Por decidir
 
