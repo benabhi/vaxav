@@ -129,14 +129,15 @@ piloto, su nave y dónde está; después a quién le rinde cuentas; recién ahí
 compra y vende.
 
 **Va a ser una zona de varias pestañas** —roles y permisos, bienes, contratos—, y
-están las cuatro que hoy tienen algo detrás:
+están las cinco que hoy tienen algo detrás:
 
-| Pestaña        | Qué contesta                                                            |
-| -------------- | ----------------------------------------------------------------------- |
-| **Ficha**      | Qué es, de qué clase, qué estaciones opera y qué piensa de vos          |
-| **Reputación** | Dónde estás en su escalera, qué abre el próximo escalón y cómo llegaste |
-| **Agentes**    | A quién le podés pedir trabajo, y qué le falta al que todavía no        |
-| **Miembros**   | Quiénes son los otros                                                   |
+| Pestaña         | Qué contesta                                                            |
+| --------------- | ----------------------------------------------------------------------- |
+| **Ficha**       | Qué es, de qué clase, de qué tamaño y qué piensa de vos                 |
+| **Reputación**  | Dónde estás en su escalera, qué abre el próximo escalón y cómo llegaste |
+| **Ubicaciones** | Dónde se la encuentra: sus puestos, con qué ofrece cada uno             |
+| **Agentes**     | A quién le podés pedir trabajo, y qué le falta al que todavía no        |
+| **Miembros**    | Quiénes son los otros                                                   |
 
 Las demás llegan cuando tengan algo detrás: una entrada de menú que lleva a un
 cartel es una puerta cerrada con el nombre puesto.
@@ -163,12 +164,32 @@ haberlo aprendido antes**, y una distinción que aparece recién cuando ya hay c
 qué confundirse llega tarde. Sale del catálogo y no de una columna —las del mundo
 son exactamente las que están ahí—, así que no hay nada que migrar.
 
-La ficha termina en **«ver en el mapa»**, que abre la galaxia recortada a los
-sistemas donde la corporación tiene un puesto. Es un botón y no una lista de
+La pestaña de ubicaciones termina en **«ver en el mapa»**, que abre la galaxia
+recortada a los sistemas donde la corporación tiene un puesto. Es un botón y no una lista de
 enlaces porque la pregunta no es «¿dónde está este puesto?» sino «¿dónde está
 metida?», y eso lo contesta la forma del conjunto y no un nombre a la vez. El
 recorte viaja en la URL y el mapa lo deja puesto en su propio desplegable, así
 que se ve de dónde salió y se saca desde ahí.
+
+### Los puestos, en su pestaña
+
+**Estuvieron en la columna angosta de la Ficha**, mostrando cinco y contando el
+resto con un «y N más». Eso alcanzaba mientras las corporaciones tuvieran dos
+puestos y dejaba de alcanzar exactamente cuando la lista empezaba a importar: con
+veinte estaciones, «y quince más» no contesta ninguna de las preguntas que uno le
+hace a esa lista —cuál queda cerca, dónde tienen refinería—.
+
+Así que son una pestaña, con la misma tabla recortable que los agentes y los
+miembros: se busca por puesto o por sistema, se filtra **por lo que ofrece** —de
+veinte puertos, cuáles tienen refinería es la única pregunta que importa cuando uno
+sale con la bodega llena— y se ordena por nombre, por sistema o por cuánto ofrece,
+que es la manera de encontrar dónde se puede hacer todo de una parada. El nombre
+del sistema lleva al mapa.
+
+En la Ficha queda **la cuenta y el camino**: cuántos puestos hay y el botón que
+lleva a verlos. Es el mismo trato que los agentes, y por la misma razón: un panel
+que repite una lista que existe en otro lado termina siendo dos listas de lo mismo
+y una sola que sirve.
 
 Del listado de miembros se muestra **lo público** —cómo se llama cada uno, a qué se
 dedica y desde cuándo vuela—: dónde está parado ahora no, porque un listado de
@@ -190,7 +211,7 @@ está en [arquitectura](ARCHITECTURE.md#toda-lista-larga-se-recorta-igual).
 
 ### Y la de otra, en una ventana
 
-Las cuatro pestañas de arriba son de **la tuya**. Cualquier otra se mira en una
+Las cinco pestañas de arriba son de **la tuya**. Cualquier otra se mira en una
 ventana que se abre desde su nombre, aparezca donde aparezca: en el panorama de
 reputación, en la lista de agentes o en la fila de un mensaje.
 

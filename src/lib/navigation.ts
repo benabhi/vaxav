@@ -125,6 +125,12 @@ export const MODULES: readonly Module[] = [
 				route: '/corporacion/reputacion',
 				label: 'Reputación'
 			},
+			// Dónde se la encuentra, antes que quiénes la forman: primero el mapa de
+			// sus puertos, que es lo que decide adonde ir, y después la gente.
+			{
+				route: '/corporacion/ubicaciones',
+				label: 'Ubicaciones'
+			},
 			// Los agentes antes que los miembros: a la corporación se le pide trabajo
 			// más seguido que compañía.
 			{

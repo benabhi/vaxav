@@ -239,52 +239,35 @@
 		</div>
 
 		<!--
-			Dónde está. Una corporación **puede no operar ninguna estación** y existir
-			igual, sólo como gente: por eso los dos bloques van separados y cada uno dice
-			qué pasa cuando está vacío.
+			**Lo que hay, no la lista de lo que hay.** De los puestos y de los agentes
+			va sólo la cuenta y el camino a su pestaña: las listas viven ahí, que es
+			donde se las puede recortar, ordenar y paginar. Los puestos estuvieron acá,
+			mostrando cinco y contando el resto con un «y N más», y eso dejaba de servir
+			exactamente cuando la lista empezaba a importar.
+
+			Una corporación **puede no operar ninguna estación** y existir igual, sólo
+			como gente: por eso cada bloque dice qué pasa cuando está vacío.
 		-->
 		<div class="w-full min-w-0 lg:flex-[1_1_0]">
-			<TitledPanel title="Ubicaciones" detail={corp.stationCount} class="w-full">
+			<TitledPanel title="Dónde y quiénes" detail={corp.stationCount} class="w-full">
 				<div class="flex w-full flex-col gap-4">
 					<div class="flex w-full flex-col gap-2">
-						<Label>Estaciones</Label>
-						{#if corp.stations.length > 0}
-							{#each corp.stations as puesto (puesto.code)}
-								<div class="flex w-full flex-col gap-[0.15rem]">
-									<span class="flex items-baseline gap-2">
-										<Icon
-											name="buildings"
-											weight="bold"
-											size="0.75rem"
-											class="shrink-0 text-accent"
-										/>
-										<span
-											class="truncate font-display text-[0.8rem] tracking-display text-text-strong"
-										>
-											{puesto.name}
-										</span>
-										<span class="text-[0.7rem] text-text-muted">{puesto.system}</span>
-									</span>
-									{#if puesto.services.length > 0}
-										<span class="pl-[1.35rem] text-[0.7rem] text-text-muted">
-											{puesto.services.join(' · ')}
-										</span>
-									{/if}
-								</div>
-							{/each}
-							{#if corp.moreStations > 0}
-								<!--
-									Lo que no entra se cuenta, no se esconde. Verlas todas es el mapa,
-									que para eso ya recorta por corporación.
-								-->
-								<span class="pl-[1.35rem] text-[0.7rem] text-text-muted">
-									y {corp.moreStations} más
-								</span>
-							{/if}
-						{:else}
-							<span class="text-1 text-text-muted">
-								Ninguna. No todas las corporaciones tienen edificios: ésta es gente.
+						<Label>Puestos</Label>
+						<span class="flex items-baseline gap-2">
+							<Icon name="buildings" weight="bold" size="0.75rem" class="shrink-0 text-accent" />
+							<span class="text-1 text-text-body">
+								{#if corp.hasStations}
+									{corp.stationCount}
+								{:else}
+									Ninguno. No todas las corporaciones tienen edificios: ésta es gente.
+								{/if}
 							</span>
+						</span>
+						{#if corp.hasStations}
+							<HudLink href="/corporacion/ubicaciones" variant="outline" size="1">
+								<Icon name="buildings" weight="bold" size="0.7rem" />
+								Ver dónde atracar
+							</HudLink>
 						{/if}
 					</div>
 

@@ -20,7 +20,8 @@
 import type { Pilot } from '../db/schema';
 import type { Db } from '../db/types';
 import { buildAgentes, buildFichaAgente, readAgentsQuery } from './agents';
-import { buildCorporacion, estacionesDe } from './corporation';
+import { buildCorporacion } from './corporation';
+import { buildUbicaciones, readStationsQuery } from './stations';
 import { buildMiembros, readMembersQuery } from './members';
 import { buildPerfilPiloto } from './pilot';
 import { buildPaginaReputacion } from './reputation';
@@ -134,7 +135,8 @@ function corporacion(
 		corporation: ficha,
 		reputation:
 			cual === 'reputacion' ? buildPaginaReputacion(db, row, pagina(propios), code) : null,
-		stations: cual === 'ubicaciones' ? estacionesDe(db, code) : null,
+		stations:
+			cual === 'ubicaciones' ? buildUbicaciones(db, row, readStationsQuery(propios), code) : null,
 		agents: cual === 'agentes' ? buildAgentes(db, row, readAgentsQuery(propios), code) : null,
 		members: cual === 'miembros' ? buildMiembros(db, row, readMembersQuery(propios), code) : null
 	};

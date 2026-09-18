@@ -34,6 +34,7 @@
 	import FamilyXpPanel from './FamilyXpPanel.svelte';
 	import Identicon from './Identicon.svelte';
 	import MemberList from './MemberList.svelte';
+	import StationList from './StationList.svelte';
 	import SkillHexagon from './SkillHexagon.svelte';
 	import ReputationLadder from './ReputationLadder.svelte';
 	import {
@@ -613,48 +614,16 @@
 					{/if}
 				{:else if ficha.section === 'ubicaciones' && ficha.stations}
 					<!--
-					**Todas y no un puñado.** En la ficha propia se muestran cinco y se
-					cuenta el resto porque ahí compiten con lo demás del panel; acá la
-					sección es de ellas, así que no hay nada que recortar.
-				-->
-					{#if ficha.stations.length === 0}
-						<p class="w-full text-1 text-text-muted">
-							Ninguna. No todas las corporaciones tienen edificios: ésta es gente.
-						</p>
-					{:else}
-						<div class="flex w-full flex-col gap-3">
-							{#each ficha.stations as puesto (puesto.code)}
-								<div
-									class="flex w-full flex-col gap-[0.15rem] border-b border-border-soft/40 pb-2 last:border-0"
-								>
-									<span class="flex min-w-0 items-baseline gap-2">
-										<Icon
-											name="buildings"
-											weight="bold"
-											size="0.75rem"
-											class="shrink-0 text-accent"
-										/>
-										<span
-											class="truncate font-display text-[0.85rem] tracking-display text-text-strong"
-										>
-											{puesto.name}
-										</span>
-										<a
-											href="/navegacion/galaxia?sistema={puesto.systemCode}"
-											class="truncate text-[0.7rem] text-text-muted underline decoration-dotted underline-offset-[0.2rem] hover:text-accent-bright"
-										>
-											{puesto.system}
-										</a>
-									</span>
-									{#if puesto.services.length > 0}
-										<span class="pl-[1.45rem] text-[0.7rem] text-text-muted">
-											{puesto.services.join(' · ')}
-										</span>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					{/if}
+						La misma tabla que la pestaña del módulo, con su buscador y su paginado:
+						dos maneras de listar los puestos de una corporación serían dos que un
+						día dicen cosas distintas. Ver `StationList`.
+					-->
+					<StationList
+						ubicaciones={ficha.stations}
+						hrefFor={conParametro}
+						hidden={escondidos}
+						prefix={FICHA_PREFIX}
+					/>
 				{:else if ficha.section === 'agentes' && ficha.agents}
 					<AgentList
 						agentes={ficha.agents}

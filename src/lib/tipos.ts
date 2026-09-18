@@ -286,17 +286,14 @@ export interface Corporacion {
 	readonly description: string;
 	/** Cuántos pilotos son, ya escrito. */
 	readonly members: string;
-	/** Las estaciones que opera. Puede no operar ninguna y existir igual. */
 	/**
-	 * Las primeras estaciones que opera, no todas.
+	 * Si opera algún puesto.
 	 *
-	 * Una corporación grande puede operar cientos y el panel de una ficha no es el
-	 * lugar para leerlas: lo que contesta acá es «¿de qué tamaño es y por dónde
-	 * anda?». La lista entera la contesta el mapa, con su recorte puesto.
+	 * **Un booleano y no la lista**: la lista vive en su pestaña, con su recorte y
+	 * su paginado. Acá alcanza con saber si hay algo que ir a ver, porque una
+	 * corporación puede no tener edificios y existir igual, sólo como gente.
 	 */
-	readonly stations: readonly EstacionCorporacion[];
-	/** Cuántas quedaron afuera de esa muestra. Cero si entran todas. */
-	readonly moreStations: number;
+	readonly hasStations: boolean;
 	/** Cuántas opera en total, ya escrito. */
 	readonly stationCount: string;
 	/** Cuántos agentes tiene, ya escrito. La lista vive en su pestaña. */
@@ -313,6 +310,39 @@ export interface Corporacion {
 }
 
 /** Una estación que opera la corporación. */
+/** Lo que el listado de puestos lee de la URL. */
+export interface ConsultaUbicaciones {
+	readonly search: string;
+	/** El servicio pedido, ya escrito, o vacío para no filtrar por eso. */
+	readonly service: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+}
+
+/**
+ * Los puestos de una corporación, recortados y paginados.
+ *
+ * Misma forma que la lista de agentes y la de miembros: el constructor la arma y
+ * la misma pieza la dibuja en la pestaña del módulo y en la ventana de una ficha
+ * ajena.
+ */
+export interface Ubicaciones {
+	readonly belongs: boolean;
+	readonly name: string;
+	/** El código de la corporación, para recortar el mapa a lo suyo. */
+	readonly code: string;
+	/** Cuántos son en total, ya escrito. No cambia al filtrar. */
+	readonly count: string;
+	readonly stations: readonly EstacionCorporacion[];
+	readonly query: ConsultaUbicaciones;
+	readonly total: number;
+	readonly found: number;
+	readonly pages: number;
+	/** Los servicios que alguno ofrece, para el desplegable. */
+	readonly services: readonly OpcionConstructor[];
+}
+
 export interface EstacionCorporacion {
 	readonly code: string;
 	readonly name: string;
@@ -1027,7 +1057,7 @@ export interface Ficha {
 	readonly section: string;
 	readonly corporation: Corporacion | null;
 	readonly reputation: PaginaReputacion | null;
-	readonly stations: readonly EstacionCorporacion[] | null;
+	readonly stations: Ubicaciones | null;
 	readonly agents: AgentesCorporacion | null;
 	readonly members: Miembros | null;
 	readonly pilot: PerfilPiloto | null;

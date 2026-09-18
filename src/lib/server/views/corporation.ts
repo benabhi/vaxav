@@ -40,15 +40,6 @@ import { pilotStandings } from '../services/reputation';
 import type { Corporacion, EscalonReputacion, ReputacionCorporacion } from '$lib/tipos';
 import type { EstacionCorporacion } from '$lib/tipos';
 
-/**
- * Cuántas estaciones entran en el panel de la ficha.
- *
- * Suficientes para leer de qué tamaño es la corporación, pocas para que el panel
- * no se vuelva una lista que hay que recorrer. Lo que no entra lo dice el
- * contador, y verlas todas es el mapa.
- */
-const ESTACIONES_EN_LA_FICHA = 5;
-
 /** Lo que se muestra cuando el piloto no pertenece a ninguna. */
 const INDEPENDIENTE: Corporacion = {
 	belongs: false,
@@ -66,8 +57,7 @@ const INDEPENDIENTE: Corporacion = {
 	mine: false,
 	canJoin: null,
 	joinBlocked: '',
-	stations: [],
-	moreStations: 0,
+	hasStations: false,
 	stationCount: '',
 	agentCount: '',
 	reputation: null
@@ -251,12 +241,11 @@ export function buildCorporacion(db: Db, row: Pilot, code = ''): Corporacion {
 		factionCode: suya.faction,
 		description: suya.description,
 		members: cuantos === 1 ? '1 piloto' : `${cuantos} pilotos`,
-		// **Una muestra y no la lista entera.** Una corporación grande puede operar
-		// cientos de puestos, y el panel de una ficha no es el lugar para leerlos: lo
-		// que contesta acá es de qué tamaño es y por dónde anda. El resto lo contesta
-		// el mapa, que para eso ya recorta por corporación.
-		stations: stations.slice(0, ESTACIONES_EN_LA_FICHA),
-		moreStations: Math.max(0, stations.length - ESTACIONES_EN_LA_FICHA),
+		// **Si hay, no cuáles.** Una corporación grande puede operar cientos de
+		// puestos y el panel de una ficha no es el lugar para leerlos: lo que contesta
+		// acá es de qué tamaño es y por dónde anda. La lista está en su pestaña, con
+		// su recorte y su paginado, y la forma del conjunto la contesta el mapa.
+		hasStations: stations.length > 0,
 		stationCount: stations.length === 1 ? '1 estación' : `${stations.length} estaciones`,
 		agentCount: cuantosAgentes === 1 ? '1 agente' : `${cuantosAgentes} agentes`,
 		reputation
