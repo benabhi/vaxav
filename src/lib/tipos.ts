@@ -1492,6 +1492,8 @@ export interface Arbol {
 export interface FilaCarga {
 	readonly itemCode: string;
 	readonly name: string;
+	/** El tipo crudo, para filtrar. El rótulo va aparte. */
+	readonly kind: string;
 	readonly kindLabel: string;
 	readonly icon: IconName;
 	readonly quantity: number;
@@ -1501,6 +1503,69 @@ export interface FilaCarga {
 	readonly share: number;
 	/** Lo que valdría a precio de referencia, para saber si vale el viaje. */
 	readonly value: string;
+	/**
+	 * Cuántos créditos por metro cúbico.
+	 *
+	 * **Es la cifra que decide qué se tira cuando no entra todo**, y la que en EVE
+	 * los mineros calculan a mano. Con la bodega llena, lo que importa no es qué
+	 * vale más sino qué vale más *por el lugar que ocupa*: cien unidades de veta
+	 * iridiada pesan menos y valen más que mil de silicato.
+	 */
+	readonly density: string;
+	/** Las dos cifras sin formatear, para poder ordenar por ellas. */
+	readonly rawValue: number;
+	readonly rawDensity: number;
+}
+
+/**
+ * Una bahía de la nave: un compartimiento con su tope propio.
+ *
+ * **Son varias a propósito.** Hoy toda nave tiene una sola bodega general, pero
+ * las barcazas mineras van a tener además una bodega de mineral que sólo acepta
+ * mena, y una carguera su bahía de flota. La pantalla se escribe para N desde
+ * ahora porque dibujar una lista de bahías y dibujar una sola es el mismo
+ * trabajo, y migrar después es rehacer la pantalla.
+ */
+export interface Bahia {
+	readonly code: string;
+	readonly name: string;
+	readonly icon: IconName;
+	readonly used: string;
+	readonly capacity: string;
+	readonly free: string;
+	/** Cuánto va llena, de 0 a 100. */
+	readonly percent: number;
+	/**
+	 * De qué está hecha la barra, un tramo por montón.
+	 *
+	 * Es lo que convierte al dibujo en una decisión en vez de un adorno: se ve de
+	 * un vistazo qué está llenando la bodega, y eso es exactamente lo que uno
+	 * necesita saber cuando no entra algo.
+	 */
+	readonly segments: readonly TramoBahia[];
+}
+
+/** Un montón dentro de la barra de una bahía. */
+export interface TramoBahia {
+	readonly itemCode: string;
+	readonly name: string;
+	/** Qué porcentaje de la **capacidad** ocupa. El resto de la barra es lo libre. */
+	readonly percent: number;
+	/** Un color CSS del sistema, no una clase de Tailwind. */
+	readonly color: string;
+}
+
+/** Cómo se está mirando la lista de carga. */
+export type VistaCarga = 'baldosas' | 'lista';
+
+/** Lo que la pantalla de bodega leyó de la URL. */
+export interface ConsultaCarga {
+	readonly search: string;
+	readonly kind: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+	readonly view: VistaCarga;
 }
 
 /**
@@ -1511,13 +1576,19 @@ export interface FilaCarga {
  */
 export interface Bodega {
 	readonly shipName: string;
+	/** Las bahías de la nave, con su composición. Hoy siempre una. */
+	readonly bays: readonly Bahia[];
 	readonly lines: readonly FilaCarga[];
-	readonly used: string;
-	readonly capacity: string;
-	readonly free: string;
-	/** Cuánto va lleno, de 0 a 100. */
-	readonly percent: number;
+	/** Cuántos montones hay en total, antes de filtrar. */
+	readonly total: number;
+	/** Cuántos quedaron después de filtrar. */
+	readonly found: number;
+	readonly page: number;
+	readonly pages: number;
 	readonly totalValue: string;
+	/** Los tipos que hay adentro, para el filtro. Sólo los que existen. */
+	readonly kinds: readonly OpcionFiltro[];
+	readonly query: ConsultaCarga;
 	/**
 	 * Lo que el piloto tiene guardado **en la estación donde está**, si está en
 	 * una.

@@ -686,6 +686,34 @@ con qué sostenerla. Es otro argumento para que el hielo sea de las primeras eta
    respuesta probablemente sea **sólo fuera del perímetro**, que de paso le da a la
    zona sin ley una razón para existir.
 
+## La bodega
+
+La pregunta de una bodega nunca es cuánto llevás: es **cuánto más entra**. En un
+juego donde la capacidad limitada es un pilar, un porcentaje suelto no alcanza
+para decidir nada, así que la pantalla se construye alrededor de tres cosas.
+
+**La barra de cada bahía está partida por lo que hay adentro.** Un medidor que
+dice «80 % lleno» informa una vez y después se mira sin leerlo; uno partido por
+montones contesta **qué la está llenando**, que es lo que uno quiere saber cuando
+no entra algo. Y muestra de un vistazo lo que las cifras esconden: el montón más
+caro suele ser una franja fina, porque lo valioso ocupa menos.
+
+**Las bahías son una lista, aunque hoy haya una sola.** Toda nave tiene su bodega
+general; las barcazas mineras van a tener además una **bodega de mineral** que
+sólo acepta mena, y las cargueras su bahía de flota. Dibujar N bahías y dibujar
+una es el mismo trabajo, y migrar después es rehacer la pantalla. Lo que falta del
+lado de los datos es que un contenedor pueda decir de qué bahía es: hoy hay uno
+por nave.
+
+**Los créditos por metro cúbico son una columna de primera.** Con la bodega llena,
+lo que decide qué se tira no es qué vale más sino qué vale más _por el lugar que
+ocupa_. Es la cuenta que en EVE los mineros hacen a mano, y acá se puede ordenar
+por ella.
+
+El resto es el mismo idioma que las otras tablas del juego: buscar, filtrar por
+tipo, ordenar y paginar viajan en la URL, y se puede mirar en **baldosas o en
+lista** —la grilla para ver qué hay, la lista para comparar cifras—.
+
 ## El hangar
 
 Cada piloto tiene **una nave**, y la tiene desde el alta: `create_pilot` la crea
