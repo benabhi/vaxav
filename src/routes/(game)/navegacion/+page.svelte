@@ -125,6 +125,24 @@
 			{@render reading('Distancia', place.distance, true)}
 			{@render reading('Estado', place.exploration)}
 		</div>
+
+		<!--
+			**Dónde queda esto**, que es la pregunta que la ficha de un lugar deja
+			abierta: dice el nombre del sistema y ahí termina. Es el mismo botón con el
+			que cierra la ficha de una corporación, y por la misma razón: un nombre que
+			no lleva a ninguna parte no sirve de nada.
+
+			Va como botón al pie y no como enlace en la lectura «Sistema» porque no es
+			un dato más de la lista, es lo único que se puede **hacer** desde acá.
+		-->
+		{#if place.systemCode}
+			<div class="flex w-full justify-end border-t border-border-soft pt-3">
+				<HudLink href="/navegacion/galaxia?sistema={place.systemCode}" variant="outline" size="1">
+					<Icon name="map-trifold" weight="bold" size="0.7rem" />
+					Ver en el mapa
+				</HudLink>
+			</div>
+		{/if}
 	</div>
 {/snippet}
 
@@ -767,7 +785,22 @@
 							<div class="mt-4 w-full border-t border-border-soft pt-4">
 								<Label>Operador</Label>
 								<div class="mt-2 flex w-full flex-col items-start gap-2">
-									<HudValue>{place.corporation}</HudValue>
+									<!--
+										Y quién opera el puerto abre su ficha: qué es, qué piensa de vos y
+										qué otros puestos tiene. Estar parado en una estación es el momento
+										exacto en que eso importa.
+									-->
+									{#if place.corporationCode}
+										<a
+											href={hrefFicha(page.url, 'corporacion', place.corporationCode)}
+											class="underline decoration-dotted underline-offset-[0.2rem]
+												hover:text-accent-bright"
+										>
+											<HudValue>{place.corporation}</HudValue>
+										</a>
+									{:else}
+										<HudValue>{place.corporation}</HudValue>
+									{/if}
 									<div class="flex flex-wrap items-center gap-[0.4rem]">
 										<Label>{place.corporationKind}</Label>
 										<span class="text-accent-dim">·</span>

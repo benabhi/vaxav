@@ -519,11 +519,22 @@ export interface Ubicacion {
 	readonly description: string;
 	readonly parent: string;
 	readonly system: string;
+	/**
+	 * El código de su sistema, para poder ir a verlo al mapa.
+	 *
+	 * **Un nombre que no lleva a ninguna parte no sirve de nada**: saber que estás
+	 * en Ánfora sólo ayuda si desde ahí se puede ver dónde queda Ánfora y qué tiene
+	 * alrededor. Es la misma razón por la que el sistema de un agente viaja con su
+	 * código.
+	 */
+	readonly systemCode: string;
 	readonly distance: string;
 	readonly exploration: string;
 	readonly isStation: boolean;
 	readonly inTransit: boolean;
 	readonly corporation: string;
+	/** El código del operador, para abrir su ficha desde acá. */
+	readonly corporationCode: string;
 	readonly corporationKind: string;
 	readonly owner: string;
 	readonly modules: readonly BaldosaModulo[];

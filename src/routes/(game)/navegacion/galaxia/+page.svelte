@@ -613,13 +613,20 @@
 {/snippet}
 
 {#snippet lienzoDelMapa()}
+	<!--
+		**Abre mirando lo elegido**, que sin nada pedido es tu sistema. Con un
+		`?sistema=` puesto, antes la cámara se quedaba donde estás parado y el sistema
+		del enlace quedaba marcado fuera de cuadro: la pantalla contestaba, pero en un
+		renglón del costado. El encuadre ocurre una sola vez, así que elegir después
+		en el mapa no le mueve la cámara al que la estaba moviendo con la mano.
+	-->
 	<GalaxyMap
 		bind:this={mapa}
 		bind:camera={camara}
 		bind:fitted={encuadrado}
 		map={galaxia.map}
 		pilot={galaxia.pilot}
-		focus={galaxia.pilot.system}
+		focus={elegido}
 		debt={false}
 		selected={elegido}
 		visible={visibles}
