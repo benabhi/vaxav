@@ -8,14 +8,14 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { PoolError, invest } from '$lib/server/services/pools';
-import { buildSkillTree } from '$lib/server/views/skills';
+import { buildSkillTree, readSkillQuery } from '$lib/server/views/skills';
 import { LOGIN_ROUTE } from '$lib/routes';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	// El guard del layout del grupo ya rechazó a quien no tiene sesión.
 	if (!locals.pilot) redirect(303, LOGIN_ROUTE);
-	return { tree: buildSkillTree(db, locals.pilot.id) };
+	return { tree: buildSkillTree(db, locals.pilot.id, readSkillQuery(url.searchParams)) };
 };
 
 export const actions: Actions = {

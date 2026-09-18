@@ -1367,6 +1367,8 @@ export interface RamaXp {
 export interface FilaArbol {
 	readonly code: string;
 	readonly name: string;
+	/** Qué lugar ocupa en el catálogo, para poder volver al orden del árbol. */
+	readonly order: number;
 	readonly family: string;
 	readonly familyName: string;
 	readonly familyIcon: IconName;
@@ -1394,6 +1396,18 @@ export interface FilaArbol {
 	readonly maxed: boolean;
 }
 
+/** Lo que se pidió del árbol de habilidades. */
+export interface ConsultaArbol {
+	readonly search: string;
+	/** Código de rama, o vacío para todas. */
+	readonly family: string;
+	/** `todas`, `entrenadas`, `disponibles` o `bloqueadas`. */
+	readonly state: string;
+	readonly sort: string;
+	readonly dir: 'asc' | 'desc';
+	readonly page: number;
+}
+
 /** Un pozo listo para mostrar, con lo que hay para gastar. */
 export interface PozoRama {
 	readonly family: string;
@@ -1408,10 +1422,15 @@ export interface PozoRama {
 /** Todo lo que la pantalla de habilidades necesita. */
 export interface Arbol {
 	readonly pools: readonly PozoRama[];
+	/** La página pedida, ya recortada y ordenada. */
 	readonly skills: readonly FilaArbol[];
-	/** Cuántas tiene empezadas, de cuántas hay. */
+	/** Cuántas tiene empezadas, de cuántas hay. No cambian al filtrar. */
 	readonly trained: number;
 	readonly total: number;
+	/** Cuántas pasaron el recorte, y en cuántas páginas entran. */
+	readonly found: number;
+	readonly pages: number;
+	readonly query: ConsultaArbol;
 }
 
 /** Una línea de la bodega: un montón de algo, con lo que ocupa y lo que vale. */
