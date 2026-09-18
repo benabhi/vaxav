@@ -299,7 +299,7 @@
 									<a
 										href={enlaceFicha('corporacion', uno.corporationCode)}
 										class="flex min-w-0 items-center gap-2 text-[0.78rem] text-text-muted
-											no-underline hover:text-accent-bright"
+											underline decoration-dotted underline-offset-[0.2rem] hover:text-accent-bright"
 									>
 										<Identicon name={uno.corporation} family="corporacion" size="1.15rem" />
 										<span class="truncate">{uno.corporation}</span>
@@ -418,7 +418,7 @@
 									<Label>Responde a</Label>
 									<a
 										href={enlaceFicha('corporacion', uno.agent.corporationCode)}
-										class="truncate text-1 text-text-body no-underline hover:text-accent-bright"
+										class="truncate text-1 text-text-body underline decoration-dotted underline-offset-[0.2rem] hover:text-accent-bright"
 									>
 										{uno.agent.corporation}
 									</a>
@@ -429,7 +429,7 @@
 										<span class="truncate text-1 text-text-body">{uno.agent.station}</span>
 										<a
 											href="/navegacion/galaxia?sistema={uno.agent.systemCode}"
-											class="truncate text-[0.7rem] text-text-muted no-underline hover:text-accent-bright"
+											class="truncate text-[0.7rem] text-text-muted underline decoration-dotted underline-offset-[0.2rem] hover:text-accent-bright"
 										>
 											{uno.agent.system}
 										</a>
@@ -452,6 +452,15 @@
 							</div>
 						</div>
 					</div>
+
+					{#if uno.description}
+						<!--
+							Quién es, en una línea. Va acá y no en la tarjeta de la estación: se lee
+							una vez, y en una columna de cuatro tarjetas cuatro párrafos son cuatro
+							tarjetas que no entran juntas.
+						-->
+						<BodyText>{uno.description}</BodyText>
+					{/if}
 
 					<!--
 						**Las dos escaleras, dibujadas.** Es la pregunta que la lista deja abierta
@@ -632,7 +641,7 @@
 										</span>
 										<a
 											href="/navegacion/galaxia?sistema={puesto.systemCode}"
-											class="truncate text-[0.7rem] text-text-muted no-underline hover:text-accent-bright"
+											class="truncate text-[0.7rem] text-text-muted underline decoration-dotted underline-offset-[0.2rem] hover:text-accent-bright"
 										>
 											{puesto.system}
 										</a>

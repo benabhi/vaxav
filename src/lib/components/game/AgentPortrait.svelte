@@ -9,12 +9,15 @@
 	Su familia es el **triángulo**, que no se confunde con el hexágono de una
 	corporación ni con el disco de un piloto ni de reojo. Ver `$lib/identicon.ts`.
 
-	El que no atiende va apagado, igual que el resto de su ficha: lo que no está a
+	El que no atiende va apagado, igual que el resto de su tarjeta: lo que no está a
 	tu alcance pierde el color, que es lo que lo separa de lo disponible.
 
-	El ancho es fijo y el alto no: **toma el de la ficha entera**, pegado al borde
-	de arriba. Así la cara se ve grande sin robarle ancho al texto, que es lo que
-	hace la columna de retratos de un tablero de misiones.
+	**Ancho fijo y alto el de la tarjeta**, pegado al filo izquierdo: la cara es el
+	costado de la tarjeta y no un dibujo apoyado adentro, que es lo que hace la
+	columna de retratos de un tablero de misiones. El sello queda casi cuadrado
+	porque la tarjeta es de dos renglones; con el ancho atado al alto —probado— la
+	cuenta se muerde la cola: el sello ensancha, el texto se parte en más renglones,
+	la tarjeta crece y el sello vuelve a ensanchar.
 -->
 <script lang="ts">
 	import Identicon from './Identicon.svelte';
@@ -31,8 +34,9 @@
 </script>
 
 <div
-	class="relative flex w-[5.5rem] shrink-0 items-center justify-center self-stretch overflow-hidden
-		p-2 {open ? 'border-r border-border bg-surface' : 'border-r border-dead-edge bg-transparent'}"
+	class="relative flex w-[3.4rem] shrink-0 items-center justify-center self-stretch
+		overflow-hidden p-[0.25rem]
+		{open ? 'border-r border-border bg-surface' : 'border-r border-dead-edge bg-transparent'}"
 >
 	<Identicon
 		{name}

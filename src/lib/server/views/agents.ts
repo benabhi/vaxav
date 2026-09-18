@@ -404,6 +404,7 @@ export function buildFichaAgente(db: Db, row: Pilot, code: string): FichaAgente 
 
 	return {
 		agent: filaAgente(uno, suya, dondeSeSientan(db), conLaCorporacion, conLaBandera),
+		description: uno.description,
 		faction: bandera,
 		factionCode: faccion,
 		needed: reputationLabel(umbral),

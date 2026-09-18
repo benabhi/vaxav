@@ -200,7 +200,14 @@ Ver «El sello» en [corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una
 
 El nombre de un agente —en la estación, en la lista de su corporación o en el
 directorio del sector— **abre su ficha**, que contesta lo que en una fila no entra:
-qué clase de trabajo reparte, de qué nivel, de quién es y dónde para.
+quién es, qué clase de trabajo reparte, de qué nivel, de quién es y dónde para.
+
+**La línea que dice quién es cada uno vive acá y no en la tarjeta** de la estación.
+Es lo que le da personalidad a un agente y se lee una vez; repetida en las cuatro
+o cinco tarjetas de una columna angosta son cuatro tarjetas que ya no entran
+juntas en la pantalla, y la lista deja de poder recorrerse de un vistazo —que era
+todo su trabajo—. La tarjeta se queda con lo que hace falta para elegir a quién
+pedirle: el sello, el nombre, el nivel y de quién es.
 
 Y sobre todo contesta **por qué no te atiende**, que es la pregunta que la lista
 deja abierta. Dice el umbral que pide su nivel y dibuja **las dos escaleras** que

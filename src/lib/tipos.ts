@@ -1090,6 +1090,15 @@ export interface EscaleraDeAgente {
  */
 export interface FichaAgente {
 	readonly agent: FilaAgenteCorporacion;
+	/**
+	 * Quién es, en una línea.
+	 *
+	 * Vive **acá y no en la tarjeta de la estación**: es lo que le da personalidad a
+	 * un agente y lo que uno lee una vez, no cada vez que recorre la columna
+	 * buscando a quién pedirle trabajo. En una lista de cuatro tarjetas, cuatro
+	 * párrafos son cuatro tarjetas que no entran juntas en la pantalla.
+	 */
+	readonly description: string;
 	readonly faction: string;
 	readonly factionCode: string;
 	/** El umbral que pide su nivel, ya escrito. */
