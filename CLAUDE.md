@@ -103,7 +103,7 @@ Las que ya existen:
 | -------------------------------------- | ------------------------- | -------------------------------------------------------------------- |
 | Nave                                   | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo        |
 | Navegación · Sistema                   | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                              |
-| Piloto                                 | El hexágono de ramas      | A qué se dedicó, y en qué está por convertirse                       |
+| Piloto                                 | La rueda de ramas         | A qué se dedicó, y en qué está por convertirse                       |
 | Universo (cuartel)                     | El mapa de la galaxia     | La forma del conjunto: dónde está el agujero y qué no llega          |
 | Corporación · Reputación               | La escalera de reputación | Cuánto llevás, y que el último tramo es el más largo de todos        |
 | Navegación · Ubicación, viajando       | La banda del tramo        | Cuánto falta, hacia dónde y dónde está la nave ahora                 |
@@ -124,7 +124,7 @@ Las reglas que las hacen funcionar:
   como una sola pantalla con el texto cambiado, que es justo lo que la figura
   viene a resolver.
 - **Tiene que informar por su forma.** Si el dibujo se ve igual con datos
-  distintos, es decoración y sobra. El hexágono de un minero y el de un artillero
+  distintos, es decoración y sobra. La rueda de un minero y la de un artillero
   son dos siluetas distintas; ése es el examen.
 - **No reemplaza a los números, los acompaña.** Una figura dice bien _cuál_ y mal
   _cuánto_. Siempre va con su lista al lado —el anillo con las ranuras, el

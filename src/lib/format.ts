@@ -96,9 +96,11 @@ const SKILL_FAMILIES: Record<SkillFamily, string> = {
 	piloting: 'Pilotaje',
 	engineering: 'Ingeniería',
 	extraction: 'Extracción',
+	industry: 'Industria',
 	trade: 'Comercio',
 	combat: 'Combate',
-	science: 'Ciencias'
+	science: 'Ciencias',
+	command: 'Mando'
 };
 
 /**
@@ -111,9 +113,11 @@ const SKILL_FAMILY_ICONS: Record<SkillFamily, IconName> = {
 	piloting: 'compass',
 	engineering: 'wrench',
 	extraction: 'diamond',
+	industry: 'factory',
 	trade: 'scales',
 	combat: 'crosshair',
-	science: 'atom'
+	science: 'atom',
+	command: 'users'
 };
 
 /**

@@ -10,7 +10,7 @@
 	Las esquinas de la foto llevan escuadras, como el visor de una cámara: es lo
 	que dice "esto es un registro" y no "esto es una imagen decorativa".
 
-	El hexágono de ramas va **adentro** y no en un panel aparte a propósito. Una
+	La rueda de ramas va **adentro** y no en un panel aparte a propósito. Una
 	credencial dice quién sos, y en un juego de progresión eso no es el nombre: es
 	la silueta de aquello a lo que le dedicaste el tiempo. Puesto al lado de la
 	foto, la tarjeta contesta las dos preguntas de un vistazo —quién y en qué te
@@ -30,11 +30,11 @@
 	import FloatingPanel from '../cards/FloatingPanel.svelte';
 	import Popover from '../ui/Popover.svelte';
 	import Identicon from './Identicon.svelte';
-	import SkillHexagon from './SkillHexagon.svelte';
+	import SkillWheel from './SkillWheel.svelte';
 	import SealHint from './SealHint.svelte';
 	import SegmentBar from '../meters/SegmentBar.svelte';
 	import HudButton from '../buttons/HudButton.svelte';
-	import type { CapasHexagono } from './SkillHexagon.svelte';
+	import type { CapasRueda } from './SkillWheel.svelte';
 	import { factionCrest } from '$lib/format';
 	import type { PilotoConectado } from '$lib/tipos';
 
@@ -64,7 +64,7 @@
 	let { pilot, serial }: Props = $props();
 
 	/** Las tres vistas del hexágono, en el orden en que se piensan. */
-	const CAPAS: readonly { value: CapasHexagono; label: string }[] = [
+	const CAPAS: readonly { value: CapasRueda; label: string }[] = [
 		{ value: 'invested', label: 'Invertido' },
 		{ value: 'pool', label: 'En el pozo' },
 		{ value: 'both', label: 'Los dos' }
@@ -75,7 +75,7 @@
 	 * y la razón por la que la figura vale la pena: la distancia entre las líneas
 	 * es la decisión pendiente.
 	 */
-	let capas = $state<CapasHexagono>('both');
+	let capas = $state<CapasRueda>('both');
 
 	let intensidad = $derived(INTENSIDAD[Math.min(pilot.rating.step, INTENSIDAD.length - 1)]);
 
@@ -375,7 +375,7 @@
 		</div>
 
 		<!--
-			El hexágono: la otra mitad de quién sos. Va separado por una línea, como el
+			La rueda: la otra mitad de quién sos. Va separado por una línea, como el
 			chip de un carnet, y con su etiqueta para que no se lea como un adorno. La
 			silueta de un minero y la de un artillero son dos formas distintas, y eso
 			es lo que dice de un vistazo a qué se dedicó este piloto.
@@ -400,7 +400,7 @@
 				</button>
 			</div>
 			<div class="w-full max-w-[17rem]">
-				<SkillHexagon families={pilot.families} layers="invested" />
+				<SkillWheel families={pilot.families} layers="invested" />
 			</div>
 		</div>
 	</div>
@@ -438,7 +438,7 @@
 				{/each}
 			</div>
 
-			<SkillHexagon families={pilot.families} layers={capas} />
+			<SkillWheel families={pilot.families} layers={capas} />
 		</div>
 		<div class="w-full min-w-0 flex-[1_1_0]">
 			<FamilyXpPanel families={pilot.families} />

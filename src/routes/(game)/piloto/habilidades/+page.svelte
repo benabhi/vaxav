@@ -91,7 +91,13 @@
 	detail="{tree.trained} de {tree.total} entrenadas"
 	class="w-full"
 >
-	<div class="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+	<!--
+		**Dos filas de cuatro**, y no una de ocho. Con ocho ramas en una sola fila cada
+		pozo queda de una pulgada y el nombre se corta; en dos filas parejas cada uno
+		tiene ancho para decir cuánto hay y cuántas habilidades se pueden subir, que
+		es lo que se viene a leer.
+	-->
+	<div class="grid w-full grid-cols-2 gap-2 xs:grid-cols-4">
 		{#each tree.pools as pozo (pozo.family)}
 			<button
 				type="button"

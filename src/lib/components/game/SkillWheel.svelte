@@ -1,5 +1,5 @@
 <!--
-	El hexágono de habilidades: la forma del piloto, y la de su próximo paso.
+	La rueda de habilidades: la forma del piloto, y la de su próximo paso.
 
 	Es **la figura propia de la pantalla de Piloto**, como el anillo lo es de Nave
 	y el árbol de Sistema. Las tres responden igual: dicen algo por su forma antes
@@ -7,8 +7,14 @@
 	punta hacia Extracción es un minero, un hexágono parejo es alguien que todavía
 	no se decidió—, y eso no se puede leer en una lista de números.
 
-	Seis ramas, seis vértices. No es una casualidad aprovechada: el árbol de
-	habilidades tiene seis familias y por eso la figura cierra.
+	**Un vértice por rama, y la figura los cuenta sola.** Nació hexagonal porque el
+	árbol tenía seis familias; hoy tiene ocho y sale un octógono sin tocar una
+	línea, porque cada vértice se calcula a partir de cuántas ramas llegan.
+
+	Por eso se llama rueda y no por su cantidad de lados: **la figura sigue a los
+	datos y no al revés**, que es lo que CLAUDE.md §2 pide de toda figura. Ponerle
+	el nombre de una forma obliga a elegir entre renombrarla o mentir cada vez que
+	el árbol crece.
 
 	**Van dos figuras, no una**, y ahí está lo que la hace distinta de un gráfico
 	de radar cualquiera. La naranja llena es lo ya invertido: quién es el piloto
@@ -38,11 +44,11 @@
 	 * una leyenda y un segundo de lectura para contestar algo que ahí no se
 	 * preguntó: ahí alcanza con quién es el piloto hoy.
 	 */
-	export type CapasHexagono = 'invested' | 'pool' | 'both';
+	export type CapasRueda = 'invested' | 'pool' | 'both';
 
 	interface Props {
 		families: readonly RamaXp[];
-		layers?: CapasHexagono;
+		layers?: CapasRueda;
 	}
 
 	let { families, layers = 'both' }: Props = $props();
@@ -50,7 +56,7 @@
 	let muestraInvertido = $derived(layers !== 'pool');
 	let muestraPozo = $derived(layers !== 'invested');
 
-	/** Radio del hexágono, en porcentaje del lado del cuadro. */
+	/** Radio de la rueda, en porcentaje del lado del cuadro. */
 	const RADIO = 32;
 	/** Dónde caen los rótulos: afuera del polígono, sin tocarlo. */
 	const RADIO_ROTULO = 44;
@@ -95,7 +101,7 @@
 	let potencial = $derived(figura((rama) => rama.poolShare));
 
 	/**
-	 * Sin nada guardado no se dibuja la segunda figura: un hexágono mínimo pegado
+	 * Sin nada guardado no se dibuja la segunda figura: un polígono mínimo pegado
 	 * al centro no informa de nada y ensucia la lectura del primero.
 	 */
 	let hayPozo = $derived(families.some((rama) => rama.pool > 0));
@@ -112,8 +118,8 @@
 <div class="flex w-full flex-col items-center gap-2">
 	<!--
 		El alto no se fija: sale de `aspect-ratio`, que es lo único que mantiene
-		cuadrado el dibujo cuando la columna se angosta. Con alto fijo, un hexágono
-		dentro de un rectángulo se vuelve otra cosa.
+		cuadrado el dibujo cuando la columna se angosta. Con alto fijo, un polígono
+		regular dentro de un rectángulo se vuelve otra cosa.
 	-->
 	<div class="relative aspect-square w-[min(20rem,100%)]">
 		<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">

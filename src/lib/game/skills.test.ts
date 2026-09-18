@@ -111,13 +111,18 @@ describe('poder entrenar', () => {
 	});
 
 	it('informa con detalle los requisitos que faltan', () => {
-		const faltantes = unmetRequirements('prospecting', { mining: 1 });
-		expect(faltantes.map((r) => [r.skill, r.level])).toEqual([['mining', 3]]);
+		// Prospección pide minar y saber mirar: con uno solo de los dos, la lista
+		// devuelve el que falta y no un sí o un no.
+		const faltantes = unmetRequirements('prospecting', { mining: 3 });
+		expect(faltantes.map((r) => [r.skill, r.level])).toEqual([['scanning', 2]]);
+
+		const ninguno = unmetRequirements('prospecting', { mining: 1 });
+		expect(ninguno.map((r) => r.skill)).toEqual(['mining', 'scanning']);
 	});
 
 	it('deja entrenar con los requisitos cumplidos', () => {
-		expect(canTrain('prospecting', { mining: 3 })).toBe(true);
-		expect(canTrain('prospecting', { mining: 5 })).toBe(true);
+		expect(canTrain('prospecting', { mining: 3, scanning: 2 })).toBe(true);
+		expect(canTrain('prospecting', { mining: 5, scanning: 5 })).toBe(true);
 	});
 
 	it('exige las dos ramas cuando la habilidad pide dos', () => {

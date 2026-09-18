@@ -758,7 +758,7 @@ debajo, y el escudo de la facción como marca de agua detrás de las lecturas
 debajo al hexágono, y una figura que informa por su forma no puede tener otra
 encima—.
 
-El hexágono de ramas va **adentro**, al otro lado de los datos. Una credencial
+La rueda de ramas va **adentro**, al otro lado de los datos. Una credencial
 dice quién sos, y en un juego de progresión eso no es el nombre: es la silueta de
 aquello a lo que le dedicaste el tiempo. La tarjeta contesta las dos preguntas de
 un vistazo, y un botón la abre en grande junto a las cifras exactas de cada rama.

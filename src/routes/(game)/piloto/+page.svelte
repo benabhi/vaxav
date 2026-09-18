@@ -4,7 +4,7 @@
 	Es la pantalla de identidad, y su figura es **la credencial**, como Nave tiene
 	el anillo y Sistema el árbol. La tarjeta contesta las dos preguntas que definen
 	a un piloto —quién sos y en qué te convertiste— con la foto de un lado y el
-	hexágono de ramas del otro; abajo, lo último que pasó.
+	rueda de ramas del otro; abajo, lo último que pasó.
 
 	**Está armada para ir creciendo.** A medida que el juego sume corporaciones,
 	rango, hangar o reputación, cada cosa entra como una celda más de la credencial
