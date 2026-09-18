@@ -1199,35 +1199,44 @@ export interface FilaRanura {
 	readonly kind: string;
 	readonly kindLabel: string;
 	readonly icon: IconName;
-	/** Qué es esta ranura: el sistema esencial, o el tipo con su clase. */
+	/** Qué es esta ranura, para el título al pasar el mouse. */
 	readonly title: string;
 	readonly classLabel: string;
 	readonly moduleName: string;
 	/**
-	 * Clase y calificación de lo montado (`2A`), o la clase de la ranura vacía
-	 * (`c2`). Es lo que se lee dentro del círculo sin pasar el mouse.
+	 * La clase, y nada más: `2`.
+	 *
+	 * Antes decía clase y escalón pegados —`2A`, `c2`— y eso era una notación que
+	 * había que aprenderse para leer una insignia de un centímetro. **La clase es
+	 * lo único que decide si un módulo entra**, así que es lo único que corresponde
+	 * en la insignia; el escalón va en el nombre del módulo, donde se lee sin
+	 * cifrar: `Láser de extracción II`.
 	 */
 	readonly badge: string;
 	readonly filled: boolean;
 	readonly selected: boolean;
-	/** La clase de la ranura: el nodo la dice por su tamaño. */
 	readonly size: number;
-	/**
-	 * Dónde cae en el anillo: el ángulo desde arriba y la posición en porcentaje.
-	 *
-	 * El ángulo viaja además de la posición porque la pantalla lo necesita para
-	 * decidir **hacia dónde abrir** el panel de la ranura: hacia afuera del
-	 * círculo, que es el único lado donde no tapa ni la nave ni las otras.
-	 */
-	readonly angle: number;
-	readonly left: string;
-	readonly top: string;
 }
 
-/** Las ranuras de una categoría, para la lista que acompaña al anillo. */
+/**
+ * Una bandeja entera, con sus ranuras.
+ *
+ * El largo de cada bandeja es **la terna del casco**, y es lo que hace que dos
+ * naves se distingan de un vistazo sin dibujar ninguna figura: la Mula tiene la
+ * fila de bajos larguísima y el Vencejo la de medios.
+ */
 export interface GrupoRanuras {
+	readonly kind: string;
 	readonly label: string;
 	readonly icon: IconName;
+	/**
+	 * Qué entra acá, en media línea.
+	 *
+	 * Hace falta porque **el nombre dejó de enseñar**: «Consola» decía sola qué iba
+	 * adentro y «Medios» no dice nada. Es el precio de usar los nombres que el
+	 * jugador de EVE ya tiene aprendidos, y la pista lo paga barato.
+	 */
+	readonly hint: string;
 	readonly rows: readonly FilaRanura[];
 }
 

@@ -15,10 +15,8 @@
 	import { enhance } from '$app/forms';
 	import Icon from '$lib/components/Icon.svelte';
 	import Panel from '$lib/components/cards/Panel.svelte';
-	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
-	import FittingRig from '$lib/components/game/FittingRig.svelte';
-	import IntegrityReadings from '$lib/components/game/IntegrityReadings.svelte';
-	import SlotList from '$lib/components/game/SlotList.svelte';
+	import BudgetStrip from '$lib/components/game/BudgetStrip.svelte';
+	import SlotRack from '$lib/components/game/SlotRack.svelte';
 	import ProgressBar from '$lib/components/meters/ProgressBar.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import DisplayTitle from '$lib/components/typography/DisplayTitle.svelte';
@@ -32,7 +30,6 @@
 		damageTypeShort,
 		moduleIcon,
 		requirementLabel,
-		slotKindIcon,
 		slotKindLabel,
 		tenths,
 		thousands
@@ -41,11 +38,11 @@
 	import { DAMAGE_TYPES } from '$lib/game/damage';
 	import { buildReadout, fitFromCodes, maxedSkills } from '$lib/game/fitting';
 	import { jumpsWithFuel } from '$lib/game/jumps';
-	import { SLOT_KINDS, getHull } from '$lib/game/hulls';
+	import { getHull } from '$lib/game/hulls';
 	import { availableForSlot } from '$lib/game/inventory';
 	import { getModule } from '$lib/game/modules';
 	import { getSkill } from '$lib/game/skills';
-	import { buildRingSlots, buildSlotGroups, fittedModules, moduleSummary } from '$lib/rig';
+	import { SLOT_ORDER, buildSlotGroups, fittedModules, moduleSummary } from '$lib/rig';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -56,6 +53,21 @@
 
 	/** Qué ranura está abierta, o -1 si ninguna. */
 	let selected = $state(-1);
+
+	/**
+	 * Qué columnas están plegadas.
+	 *
+	 * **Es estado de interfaz y vive en el navegador**, como plegar una rama del
+	 * árbol: no cambia la partida y no vale una ida y vuelta al servidor.
+	 *
+	 * Las dos de la derecha compiten por el mismo ancho y no se usan al mismo
+	 * tiempo: mientras se elige un módulo manda el catálogo; cuando se quiere leer
+	 * en qué quedó la nave, manda la hoja. Cualquiera de las dos se pliega para
+	 * darle su ancho a la otra, y ninguna desaparece: queda un riel que dice qué
+	 * hay adentro y vuelve a abrirse de un clic.
+	 */
+	let plegado = $state(false);
+	let plegadaHoja = $state(false);
 	/** Modo "con todo entrenado": muestra qué compraría entrenar. */
 	let showMaxed = $state(false);
 
@@ -142,16 +154,31 @@
 		preview === null ? '' : preview === '' ? 'la ranura vacía' : getModule(preview).name
 	);
 
-	let slots = $derived(buildRingSlots(ship.hullCode, ship.fitted, selected));
+	/**
+	 * La terna del casco: anclajes, consolas y bastidor.
+	 *
+	 * Es **lo primero que se lee de una nave** y lo que la identifica de un
+	 * vistazo, venga el jugador de donde venga: un `2·4·3` dice qué clase de nave
+	 * es antes que el nombre. Dice lo mismo que la silueta del anillo, en cifras,
+	 * que es la regla de toda figura de Vaxav — el dibujo dice cuál y la lista dice
+	 * cuánto.
+	 *
+	 * Los refuerzos quedan afuera de la terna a propósito: son tres en casi todos
+	 * los cascos, así que no distinguen a ninguno, y van en su propio renglón.
+	 */
+	let terna = $derived(
+		SLOT_ORDER.filter((kind) => kind !== 'rig')
+			.map((kind) => hull.slots.filter((slot) => slot.kind === kind).length)
+			.join('·')
+	);
+	let refuerzos = $derived(hull.slots.filter((slot) => slot.kind === 'rig').length);
 	let groups = $derived(buildSlotGroups(ship.hullCode, ship.fitted, selected));
 
 	let hasSelection = $derived(selected >= 0 && selected < hull.slots.length);
 	let slotSpec = $derived(hasSelection ? hull.slots[selected] : null);
 	let selectedIsRig = $derived(slotSpec?.kind === 'rig');
 	let selectedTitle = $derived(
-		slotSpec
-			? `${slots.find((s) => s.index === selected)?.title ?? ''} · clase ${slotSpec.size}`
-			: ''
+		slotSpec ? `${slotKindLabel(slotSpec.kind)} · clase ${slotSpec.size}` : ''
 	);
 
 	/**
@@ -233,6 +260,44 @@
 				: 0
 			: Math.min(100, roundHalfEven((hoja.drainPerHour * 100) / hoja.rechargePerHour))
 	);
+
+	/**
+	 * Los cuatro presupuestos, para la banda de arriba.
+	 *
+	 * Salen de la hoja **simulada** y no de la real, así que señalar un módulo en la
+	 * lista ya mueve las barras: es lo que convierte a esta pantalla en una
+	 * herramienta de equipamiento en vez de una ficha.
+	 */
+	let presupuestoBarras = $derived([
+		{
+			label: 'Grilla',
+			value: `${hoja.power.used} / ${hoja.power.total} MW`,
+			percent: hoja.power.percent,
+			color: 'var(--color-accent)',
+			over: hoja.power.over
+		},
+		{
+			label: 'CPU',
+			value: `${hoja.computing.used} / ${hoja.computing.total} u`,
+			percent: hoja.computing.percent,
+			color: 'var(--color-data)',
+			over: hoja.computing.over
+		},
+		{
+			label: 'Capacitor',
+			value: hoja.stable ? 'estable' : 'no alcanza',
+			percent: capacitorPercent,
+			color: 'var(--color-warning)',
+			over: !hoja.stable
+		},
+		{
+			label: 'Calibración',
+			value: `${hoja.calibration.used} / ${hoja.calibration.total}`,
+			percent: hoja.calibration.percent,
+			color: 'var(--color-text-muted)',
+			over: hoja.calibration.over
+		}
+	]);
 
 	/** Cuánto aguanta contra cada tipo, y por dónde se la van a romper. */
 	let effectiveHp = $derived.by(() => {
@@ -388,6 +453,9 @@
 		// La simulación era de la ranura anterior: dejarla encendida mostraría una
 		// hoja que no corresponde a nada de lo que hay en pantalla.
 		preview = null;
+		// Elegir una ranura con el catálogo plegado no haría nada visible, que es la
+		// peor respuesta posible a un clic. Se despliega solo.
+		if (selected >= 0) plegado = false;
 	}
 </script>
 
@@ -745,7 +813,19 @@
 <div class="flex w-full flex-wrap items-center gap-4">
 	<div class="flex min-w-0 flex-col items-start gap-1">
 		<Eyebrow>{hull.role}</Eyebrow>
-		<DisplayTitle>{hull.name}</DisplayTitle>
+		<div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+			<DisplayTitle>{hull.name}</DisplayTitle>
+			<!--
+				La terna, al lado del nombre. Dice qué clase de nave es antes de que se
+				lea una palabra, y es la misma cifra que dibuja la silueta del anillo.
+			-->
+			<span class="flex items-baseline gap-2">
+				<span class="font-mono text-4 leading-none tracking-[0.12em] text-text-strong">
+					{terna}
+				</span>
+				<span class="font-mono text-1 text-text-muted">+{refuerzos}r</span>
+			</span>
+		</div>
 	</div>
 	<div class="grow"></div>
 	<!--
@@ -893,142 +973,188 @@
 {/if}
 
 <!--
-	La bancada de equipamiento: **la nave y su banco de trabajo arriba, la consola
-	de lecturas abajo**.
+	La banda de presupuestos, arriba de todo y siempre a la vista.
 
-	Arriba, dos columnas de alto parejo: el anillo es la identidad y no se toca
-	mientras se trabaja, y la lista es el banco, donde cada ranura se abre en su
-	lugar. Abajo, de lado a lado, en qué queda la nave. Es la disposición de una
-	cabina —parabrisas arriba, consola abajo— y por eso se lee sola.
-
-	El corte es `md` y no `lg`: a partir de novecientos noventa y dos píxeles ya
-	entran las dos columnas, y dejar la disposición de teléfono hasta los mil
-	doscientos ochenta le daba una pantalla apilada a un portátil que tiene ancho
-	de sobra.
-
-	El reparto de oficios es lo que resuelve el problema que tenía esta pantalla.
-	Un anillo informa por su forma pero **no tiene un costado donde abrir un panel**
-	—sus ranuras están repartidas en trescientos sesenta grados—, así que todo
-	selector que le colgara iba a tapar algo o a correr el dibujo. Separando figura
-	de banco de trabajo, no hay nada que acomodar: la fila se abre donde está.
+	Es el micro-juego que hace buena a esta pantalla: los presupuestos están
+	apretados a propósito, así que la barra crece **mientras mirás la ranura que
+	estás llenando**. Señalando un módulo de la lista, las cuatro barras muestran ya
+	cómo quedaría la nave — que es lo que convierte a esto en una herramienta de
+	equipamiento y no en una ficha.
 -->
-<div class="flex w-full flex-col items-start gap-5 md:h-[28rem] md:flex-row md:items-stretch">
-	<!--
-		El emblema. Grande, quieto y sin nada encima: es lo que hace que esta
-		pantalla se reconozca antes de leer una palabra, y lo único del juego que se
-		organiza alrededor de un círculo.
+<BudgetStrip bars={presupuestoBarras} />
 
-		Sigue siendo clickeable —tocar una ranura abre su fila en la lista— pero ya no
-		carga con el trabajo: refleja lo que pasa, incluido lo que estás por montar.
-	-->
+<!--
+	La bancada, en **tres columnas**: las ranuras, qué entra en la que está abierta,
+	y en qué queda la nave.
+
+	La del medio es la que arregla el problema que tenía esto. Con el catálogo
+	abriéndose debajo de su bandeja, elegir una ranura empujaba todo lo que tenía
+	abajo y la pantalla entera se movía en cada clic — justo cuando uno está
+	comparando dos módulos y necesita que las cifras se queden quietas. Con su
+	propia columna, abrir una ranura **no mueve un píxel de las otras dos**.
+
+	Cada columna se desplaza por dentro en pantalla grande, así que la bancada mide
+	siempre lo mismo tenga el casco cinco ranuras o dieciséis. El `min-h-0` es lo
+	que lo hace posible: sin él, un hijo de flex no se deja achicar por debajo de su
+	contenido y la barra no aparece nunca.
+
+	En un teléfono se apilan en el orden en que se usan: primero las ranuras, que es
+	lo que se toca; después qué entra; al final la hoja.
+-->
+<div class="flex w-full flex-col items-stretch gap-5 md:h-[32rem] md:flex-row lg:h-[34rem]">
+	<!-- Las ranuras. -->
 	<div
-		class="flex w-full flex-col items-center gap-3 md:h-full md:w-[20rem] md:shrink-0 lg:w-[23rem]"
+		class="flex w-full min-w-0 flex-[3_1_0] flex-col gap-4 scroll-smooth md:h-full md:min-h-0
+			md:overflow-y-auto md:pr-1"
 	>
-		<FittingRig {slots} onChoose={chooseSlot} hasShield={hoja.shield > 0} />
-		<IntegrityReadings
-			shield={thousands(hoja.shield)}
-			armor={thousands(hoja.armor)}
-			structure={thousands(hoja.structure)}
-		/>
-
-		<!--
-			Las cuatro categorías del anillo, en una línea. Ahora que cada una ocupa su
-			propio arco, esta línea es su leyenda: dice qué significa cada tramo del
-			círculo.
-		-->
-		<div class="flex w-full flex-wrap justify-center gap-[0.9rem]">
-			{#each SLOT_KINDS as kind (kind)}
-				<span class="flex items-center gap-[0.3rem] text-text-muted">
-					<Icon name={slotKindIcon(kind)} weight="bold" size="0.7rem" />
-					<span
-						class="font-display text-[0.6rem] font-semibold tracking-label whitespace-nowrap uppercase"
-					>
-						{slotKindLabel(kind)}
-					</span>
-				</span>
-			{/each}
-		</div>
+		{#each groups as group (group.kind)}
+			<SlotRack {group} onChoose={chooseSlot} />
+		{/each}
 	</div>
 
 	<!--
-		El banco de trabajo. Cada ranura se abre en su lugar y muestra qué le entra;
-		lo único que se mueve es lo que está debajo de esa fila.
+		Qué entra en la ranura abierta.
 
-		**Se desplaza por dentro** en pantalla grande, y ésa es la última pieza que
-		faltaba. Dos columnas que comparten el borde de arriba y no el de abajo se
-		leen como algo a medio terminar, y encima ésta crecía al abrir una ranura: la
-		página se estiraba y la otra quedaba corta. Con el alto fijo de la bancada,
-		abrir una ranura no mueve el alto de nada.
-
-		Las veintiocho rem son las que mide el anillo con sus lecturas debajo: la
-		bancada mide lo que mide la nave, y el banco se acomoda a eso. El `min-h-0`
-		es lo que hace posible el desplazamiento: sin él, un hijo de flex no se deja
-		achicar por debajo de su contenido y la barra nunca aparece.
+		**Se pliega**, y es lo que resuelve que ésta y la hoja compitan por el mismo
+		ancho: no se usan al mismo tiempo. Mientras se elige un módulo manda el
+		catálogo; cuando se quiere leer en qué quedó la nave, estorba. Plegado queda
+		un riel de dos centímetros que dice qué ranura está abierta y vuelve a
+		abrirse de un clic, así que no se pierde el lugar.
 	-->
 	<div
-		bind:this={banco}
-		class="flex w-full min-w-0 flex-[1_1_0] flex-col gap-3 scroll-smooth md:h-full md:min-h-0
-			md:overflow-y-auto"
+		class="flex w-full min-w-0 flex-col border-border-soft transition-[flex] md:h-full
+			md:min-h-0 md:border-l md:pl-4
+			{plegado ? 'md:w-[2.5rem] md:flex-none md:pl-2' : 'md:flex-[5_1_0]'}"
 	>
-		<SlotList {groups} onChoose={chooseSlot} detail={equipamiento} />
-
-		{#if !hasSelection}
+		<div class="flex w-full items-center gap-2 pb-2 {plegado ? 'md:flex-col' : ''}">
 			<!--
-				La única instrucción de la pantalla, y sólo mientras haga falta: apenas se
-				abre una ranura desaparece, porque ya se aprendió.
+				El plegado sólo existe en pantalla ancha: apiladas en un teléfono, las
+				columnas no compiten por nada y esconder una sería esconder contenido.
 			-->
-			<p class="text-1 text-text-muted">
-				Abrí una ranura —acá o en el anillo— para ver qué le entra. Señalando un módulo, la hoja
-				muestra cómo quedaría la nave antes de montarlo.
-			</p>
+			<button
+				type="button"
+				onclick={() => (plegado = !plegado)}
+				aria-expanded={!plegado}
+				title={plegado ? 'Mostrar qué entra en la ranura' : 'Plegar para leer la hoja'}
+				class="hidden shrink-0 cursor-pointer items-center gap-[0.3rem] border border-border-soft
+					bg-transparent px-[0.35rem] py-[0.25rem] text-text-muted transition-colors
+					hover:border-border hover:text-accent-bright md:flex"
+			>
+				<Icon name={plegado ? 'caret-right' : 'caret-left'} weight="bold" size="0.7rem" />
+			</button>
+
+			{#if !plegado}
+				<span
+					class="min-w-0 truncate font-display text-[0.64rem] font-bold tracking-label
+						text-accent-dim uppercase"
+				>
+					{hasSelection ? selectedTitle : 'Qué entra'}
+				</span>
+			{/if}
+		</div>
+
+		{#if plegado}
+			<!--
+				Plegado, el riel sigue diciendo qué ranura está abierta: una columna que
+				desaparece sin dejar rastro hace dudar de si se cerró algo importante.
+			-->
+			<span
+				class="hidden font-display text-[0.6rem] tracking-label whitespace-nowrap text-text-muted
+					uppercase [writing-mode:vertical-rl] md:inline"
+			>
+				{hasSelection ? selectedTitle : 'Qué entra'}
+			</span>
+		{:else}
+			<div
+				class="flex w-full min-w-0 flex-col scroll-smooth md:min-h-0 md:flex-1 md:overflow-y-auto"
+			>
+				{#if hasSelection}
+					{@render equipamiento()}
+				{:else}
+					<!--
+						La única instrucción de la pantalla, y sólo mientras haga falta: apenas
+						se abre una ranura desaparece, porque ya se aprendió.
+					-->
+					<p class="text-1 text-text-muted">
+						Tocá una ranura para ver qué le entra. Señalando un módulo, la hoja y las barras de
+						arriba muestran cómo quedaría la nave antes de montarlo.
+					</p>
+				{/if}
+			</div>
+		{/if}
+	</div>
+
+	<!--
+		En qué se convirtió la nave que se armó. A la derecha y no abajo: es lo que
+		hay que mirar **mientras** se prueba un módulo, y abajo obligaría a
+		desplazarse en cada cambio.
+
+		Con el catálogo plegado se queda con su ancho, y ahí las lecturas dejan de
+		amontonarse en una columna flaca: pasan a dos y se leen como un tablero.
+	-->
+	<div
+		class="flex w-full min-w-0 flex-col border-border-soft transition-[flex] md:h-full
+			md:min-h-0 md:border-l md:pl-4
+			{plegadaHoja ? 'md:w-[2.5rem] md:flex-none md:pl-2' : 'md:flex-[4_1_0]'}"
+	>
+		<div class="flex w-full items-center gap-2 pb-2">
+			<button
+				type="button"
+				onclick={() => (plegadaHoja = !plegadaHoja)}
+				aria-expanded={!plegadaHoja}
+				title={plegadaHoja ? 'Mostrar la hoja de rendimiento' : 'Plegar para ver el catálogo'}
+				class="hidden shrink-0 cursor-pointer items-center border border-border-soft bg-transparent
+					px-[0.35rem] py-[0.25rem] text-text-muted transition-colors hover:border-border
+					hover:text-accent-bright md:flex"
+			>
+				<Icon name={plegadaHoja ? 'caret-left' : 'caret-right'} weight="bold" size="0.7rem" />
+			</button>
+
+			{#if !plegadaHoja}
+				<span
+					class="min-w-0 truncate font-display text-[0.64rem] font-bold tracking-label
+						text-accent-dim uppercase"
+				>
+					Hoja de rendimiento
+				</span>
+			{/if}
+		</div>
+
+		{#if plegadaHoja}
+			<span
+				class="hidden font-display text-[0.6rem] tracking-label whitespace-nowrap text-text-muted
+					uppercase [writing-mode:vertical-rl] md:inline"
+			>
+				Hoja de rendimiento
+			</span>
+		{:else}
+			<div
+				class="flex w-full min-w-0 flex-col gap-4 scroll-smooth md:min-h-0 md:flex-1 md:overflow-y-auto"
+			>
+				{#if futuro}
+					<div
+						class="flex w-full items-center gap-2 border-l-[3px] border-l-data bg-data-wash px-3
+					py-[0.4rem]"
+					>
+						<Icon name="eye-slash" weight="duotone" size="0.85rem" class="shrink-0 text-data" />
+						<span class="text-1 text-text-body">
+							Así quedaría con <span class="text-data">{previewLabel}</span>
+						</span>
+					</div>
+				{/if}
+
+				<!--
+			Con el catálogo plegado, la hoja se queda con su ancho y las lecturas
+			pasan a dos columnas: dejan de amontonarse en una tira flaca y se leen
+			como un tablero.
+		-->
+				<div class="grid w-full gap-x-5 gap-y-4 {plegado ? 'sm:grid-cols-2' : 'grid-cols-1'}">
+					{@render celda('Aguante', `flojo: ${damageTypeShort(hoja.weakSpot)}`, defensa)}
+					{@render celda('Capacidad', '', capacidad)}
+					{@render celda('Movilidad', '', movilidad)}
+					{@render celda('Presupuestos', '', presupuestos)}
+				</div>
+			</div>
 		{/if}
 	</div>
 </div>
-
-<!--
-	La hoja de rendimiento: en qué se convirtió la nave que se armó.
-
-	Va **abajo y de lado a lado**, no en una tercera columna. Apilada en vertical
-	era una torre que medía el doble que el anillo, y dos columnas que comparten el
-	borde de arriba pero no el de abajo se leen como algo a medio terminar.
-	Acostada, sus cuatro grupos caben en paralelo y la banda entera mide lo que
-	mide un grupo: deja de ser una torre y pasa a ser la consola de abajo de una
-	cabina, que es exactamente lo que es.
-
-	**Todos los renglones tienen la misma forma**, y ésa es la diferencia entre un
-	tablero y cuatro listas juntas: rótulo a la izquierda, cifra a la derecha
-	alineada con las de arriba y las de abajo, y la barra —cuando la hay— cruzando
-	debajo. Antes cada grupo usaba su propia gramática —uno con el rótulo encima,
-	otro al costado, unos con barra y otros no— y el ojo tenía que reaprender a
-	leer cuatro veces en la misma banda.
-
-	Los grupos se separan con una línea vertical y no con un marco cada uno: son
-	**cuatro esferas de un mismo aparato**, no cuatro tarjetas que se juntaron.
--->
-<TitledPanel title="Hoja de rendimiento" detail={hull.name} class="w-full">
-	<div class="flex w-full flex-col gap-4">
-		<!--
-			Que lo que se está mirando es una simulación y no la nave. Va **dentro** de
-			la banda y cruzándola entera: es una advertencia sobre todo lo que sigue,
-			no un panel aparte. Sin esto, las cifras cambian solas al pasar el dedo por
-			la lista y uno no sabe si ya montó algo sin querer.
-		-->
-		{#if futuro}
-			<div
-				class="flex w-full items-center gap-2 border-l-[3px] border-l-data bg-data-wash px-3 py-[0.4rem]"
-			>
-				<Icon name="eye-slash" weight="duotone" size="0.85rem" class="shrink-0 text-data" />
-				<span class="text-1 text-text-body">
-					Así quedaría con <span class="text-data">{previewLabel}</span>
-				</span>
-			</div>
-		{/if}
-
-		<div class="grid w-full grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-			{@render celda('Presupuestos', '', presupuestos)}
-			{@render celda('Aguante', `flojo: ${damageTypeShort(hoja.weakSpot)}`, defensa)}
-			{@render celda('Movilidad', '', movilidad)}
-			{@render celda('Capacidad', '', capacidad)}
-		</div>
-	</div>
-</TitledPanel>

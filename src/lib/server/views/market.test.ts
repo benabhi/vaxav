@@ -84,7 +84,7 @@ describe('el catálogo', () => {
 
 		expect(rama('ore').count).toBe(4);
 		expect(rama('module').count).toBe(34);
-		const ranuras = ['hardpoint', 'console', 'chassis'].map((code) => rama(code).count);
+		const ranuras = ['high', 'mid', 'low'].map((code) => rama(code).count);
 		expect(ranuras.reduce((total, cuantos) => total + cuantos, 0)).toBe(34);
 	});
 

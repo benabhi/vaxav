@@ -126,7 +126,7 @@ distintos.
 ## La figura de la pantalla
 
 Toda pantalla importante tiene **una figura**: un dibujo propio que dice lo que la
-pantalla dice, pero por su forma. El anillo de equipamiento en Nave, el árbol de
+pantalla dice, pero por su forma. El bloque de bandejas en Nave, el árbol de
 cuerpos en Sistema, la rueda de ramas en Piloto.
 
 Existe por una razón concreta. Un juego de paneles apilados es coherente y

@@ -202,7 +202,7 @@ describe('la hoja de rendimiento', () => {
 		const antes = shipReadout(db, piloto)!.speed;
 		const codigos = shipFit(db, nave).map((module) => module.code);
 		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'chassis') codigos[i] = 'armor_plate_i1';
+			if (slot.kind === 'low') codigos[i] = 'armor_plate_i1';
 		});
 		saveFit(db, nave, codigos);
 
@@ -217,7 +217,7 @@ describe('la hoja de rendimiento', () => {
 
 		const antes = shipReadout(db, piloto)!.speed;
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[hull.slots.findIndex((slot) => slot.kind === 'console')] = 'thruster_i2';
+		codigos[hull.slots.findIndex((slot) => slot.kind === 'mid')] = 'thruster_i2';
 		saveFit(db, nave, codigos);
 
 		expect(shipReadout(db, piloto)!.speed).toBeGreaterThan(antes);

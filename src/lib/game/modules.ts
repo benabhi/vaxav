@@ -166,7 +166,7 @@ function defineModule(spec: ModuleSpec): ShipModule {
 export const EMPTY: ShipModule = defineModule({
 	code: '',
 	name: 'Vacía',
-	kind: 'chassis',
+	kind: 'low',
 	size: 0,
 	tier: '',
 	description: 'Sin nada montado.'
@@ -182,7 +182,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'thruster_i2',
 		name: 'Propulsor auxiliar',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description: 'Empuje de más, encendido cuando hace falta.',
@@ -194,7 +194,7 @@ export const MODULES: readonly ShipModule[] = [
 		code: 'thruster_ii2',
 		requirements: [{ skill: 'navigation', level: 2 }],
 		name: 'Propulsor auxiliar',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'II',
 		description: 'Caro y sediento, pero acorta cada viaje.',
@@ -206,7 +206,7 @@ export const MODULES: readonly ShipModule[] = [
 		code: 'thruster_ii3',
 		requirements: [{ skill: 'navigation', level: 3 }],
 		name: 'Propulsor auxiliar',
-		kind: 'console',
+		kind: 'mid',
 		size: 3,
 		tier: 'II',
 		description: 'Mueve una casa. Pide una planta a la altura.',
@@ -217,7 +217,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'sensor_amp_i2',
 		name: 'Amplificador de sensores',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description: 'Estira el alcance a cambio de cómputo.',
@@ -230,7 +230,7 @@ export const MODULES: readonly ShipModule[] = [
 		code: 'sensor_amp_ii3',
 		requirements: [{ skill: 'scanning', level: 3 }],
 		name: 'Amplificador de sensores',
-		kind: 'console',
+		kind: 'mid',
 		size: 3,
 		tier: 'II',
 		description: 'Ve lo que nadie, y se come el cómputo de la nave.',
@@ -242,7 +242,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'capacitor_battery_i2',
 		name: 'Batería de acumulador',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description: 'Más reserva para sostener lo que está encendido.',
@@ -254,7 +254,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'capacitor_battery_ii3',
 		name: 'Batería de acumulador',
-		kind: 'console',
+		kind: 'mid',
 		size: 3,
 		tier: 'II',
 		description: 'Aguanta dos láseres grandes sin pestañear.',
@@ -268,7 +268,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'power_relay_i2',
 		name: 'Relé de energía',
-		kind: 'chassis',
+		kind: 'low',
 		size: 2,
 		tier: 'I',
 		description: 'Aprovecha mejor la planta. No se apaga nunca.',
@@ -278,7 +278,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'power_relay_ii3',
 		name: 'Relé de energía',
-		kind: 'chassis',
+		kind: 'low',
 		size: 3,
 		tier: 'II',
 		description: 'El que hace entrar el módulo que no entraba.',
@@ -288,7 +288,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'jump_calibrator_i2',
 		name: 'Calibrador de salto',
-		kind: 'chassis',
+		kind: 'low',
 		size: 2,
 		tier: 'I',
 		description: 'Estira el alcance de cada salto.',
@@ -300,7 +300,7 @@ export const MODULES: readonly ShipModule[] = [
 		code: 'jump_calibrator_ii3',
 		requirements: [{ skill: 'astrogation', level: 3 }],
 		name: 'Calibrador de salto',
-		kind: 'chassis',
+		kind: 'low',
 		size: 3,
 		tier: 'II',
 		description: 'Cruza de un tirón lo que otros hacen en dos.',
@@ -313,7 +313,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'mining_laser_i1',
 		name: 'Láser de extracción',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 1,
 		tier: 'I',
 		description: 'El primero de todos. Lento, pero paga la nave.',
@@ -328,7 +328,7 @@ export const MODULES: readonly ShipModule[] = [
 		code: 'mining_laser_ii1',
 		requirements: [{ skill: 'mining', level: 2 }],
 		name: 'Láser de extracción',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 1,
 		tier: 'II',
 		description: 'Casi el doble de mineral, y el acumulador lo siente.',
@@ -342,7 +342,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'mining_laser_i2',
 		name: 'Láser de extracción',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 2,
 		tier: 'I',
 		description: 'Para una nave hecha para esto y nada más.',
@@ -356,7 +356,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'mass_cannon_i1',
 		name: 'Cañón de masa',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 1,
 		tier: 'I',
 		description: 'Metralla. Le rebota a un escudo y le abre el metal.',
@@ -370,7 +370,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'mass_cannon_i2',
 		name: 'Cañón de masa',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 2,
 		tier: 'I',
 		description: 'El mismo argumento, más grande.',
@@ -384,7 +384,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'ion_emitter_i1',
 		name: 'Emisor iónico',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 1,
 		tier: 'I',
 		description: 'Atraviesa un escudo como si no estuviera. Contra blindaje, poco.',
@@ -398,7 +398,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'ion_emitter_i2',
 		name: 'Emisor iónico',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 2,
 		tier: 'I',
 		description: 'Baja escudos rápido y te deja el trabajo a medias.',
@@ -412,7 +412,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'thermal_lance_i1',
 		name: 'Lanza térmica',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 1,
 		tier: 'I',
 		description: 'Pega menos, pero nunca le rebota del todo. La de la duda.',
@@ -426,7 +426,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'thermal_lance_i2',
 		name: 'Lanza térmica',
-		kind: 'hardpoint',
+		kind: 'high',
 		size: 2,
 		tier: 'I',
 		description: 'Sirve contra todo y contra nadie en particular.',
@@ -442,7 +442,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'scanner_i1',
 		name: 'Escáner de superficie',
-		kind: 'console',
+		kind: 'mid',
 		size: 1,
 		tier: 'I',
 		description: 'Lee un cuerpo desde lejos. Barato en todo menos cómputo.',
@@ -454,7 +454,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'scanner_i2',
 		name: 'Escáner de superficie',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description: 'Ve lo que otros tienen que ir a mirar de cerca.',
@@ -466,7 +466,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'shield_booster_i1',
 		name: 'Refuerzo de escudo',
-		kind: 'console',
+		kind: 'mid',
 		size: 1,
 		tier: 'I',
 		description: 'Un poco más de campo, si hay generador que reforzar.',
@@ -478,7 +478,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'armor_plate_i1',
 		name: 'Placa de blindaje',
-		kind: 'chassis',
+		kind: 'low',
 		size: 1,
 		tier: 'I',
 		description: 'Metal y nada más: no pide energía, pero pesa como plomo.',
@@ -488,7 +488,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'dampener_i2',
 		name: 'Amortiguador de firma',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description: 'Te hace difícil de encontrar. La póliza del carguero.',
@@ -503,7 +503,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'cargo_rack_i1',
 		name: 'Bodega adicional',
-		kind: 'chassis',
+		kind: 'low',
 		size: 1,
 		tier: 'I',
 		description: 'Espacio. Sin energía, sin cómputo, sin excusas.',
@@ -513,7 +513,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'cargo_rack_i2',
 		name: 'Bodega adicional',
-		kind: 'chassis',
+		kind: 'low',
 		size: 2,
 		tier: 'I',
 		description: 'El módulo que paga el viaje.',
@@ -524,7 +524,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'cargo_rack_i3',
 		name: 'Bodega adicional',
-		kind: 'chassis',
+		kind: 'low',
 		size: 3,
 		tier: 'I',
 		description: 'Media nave convertida en depósito.',
@@ -535,7 +535,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'shield_gen_i2',
 		name: 'Generador de escudo',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description: 'Sin esto no hay escudo. Se lleva el cómputo de un tirón.',
@@ -547,7 +547,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'shield_gen_i3',
 		name: 'Generador de escudo',
-		kind: 'console',
+		kind: 'mid',
 		size: 3,
 		tier: 'I',
 		description: 'Un campo serio, para una nave que puede alimentarlo.',
@@ -559,7 +559,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'collector_i1',
 		name: 'Recolectores',
-		kind: 'chassis',
+		kind: 'low',
 		size: 1,
 		tier: 'I',
 		description: 'Levantan lo que el láser desprende. Poco espacio, mucho ahorro.',
@@ -571,7 +571,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'refinery_i2',
 		name: 'Refinería de a bordo',
-		kind: 'console',
+		kind: 'mid',
 		size: 2,
 		tier: 'I',
 		description:
@@ -584,7 +584,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'fuel_tank_i2',
 		name: 'Depósito auxiliar',
-		kind: 'chassis',
+		kind: 'low',
 		size: 2,
 		tier: 'I',
 		description: 'Más saltos antes de volver a puerto.',
@@ -594,7 +594,7 @@ export const MODULES: readonly ShipModule[] = [
 	defineModule({
 		code: 'armor_bulkhead_i2',
 		name: 'Mamparo reforzado',
-		kind: 'chassis',
+		kind: 'low',
 		size: 2,
 		tier: 'I',
 		description: 'Blindaje de verdad, al precio de la velocidad.',

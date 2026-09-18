@@ -359,14 +359,15 @@ aprender de nuevo lo que ya sabe. De ahí sale la regla:
 > nuestro.**
 
 Un piloto que ve tres bandejas y una terna de ranuras se orienta en cinco
-segundos, venga de donde venga. Los rótulos, en cambio, son nuestros: se llaman
-anclaje, consola y bastidor, no alto, medio y bajo.
+segundos, venga de donde venga — y si además se llaman como allá, no tiene ni que
+mirar dos veces. Lo nuestro no es el vocabulario: es qué decidimos que entre y qué
+no, y eso está más abajo.
 
 ### Lo que sí
 
 | De EVE                                | Cómo entra acá                                         |
 | ------------------------------------- | ------------------------------------------------------ |
-| Bandejas de ranuras y la terna        | Anclajes · consolas · bastidor, más refuerzos          |
+| Bandejas de ranuras y la terna        | Altos · medios · bajos, más refuerzos                  |
 | Presupuestos apretados a propósito    | Potencia, cómputo y calibración                        |
 | Escalones I/II y variantes con oficio | La nomenclatura de los módulos                         |
 | Radio de firma contra sensores        | Una sola cuenta para escanear, analizar y encontrar    |

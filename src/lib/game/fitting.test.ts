@@ -206,14 +206,14 @@ describe('el catálogo de módulos', () => {
 
 	it('no deja entrar un módulo más grande que la ranura', () => {
 		// En una de clase 1 entra un módulo de clase 1, nunca uno de clase 2.
-		const opciones = modulesForSlot('hardpoint', 1);
+		const opciones = modulesForSlot('high', 1);
 		expect(opciones.length).toBeGreaterThan(0);
 		expect(opciones.every((module) => module.size <= 1)).toBe(true);
 	});
 
 	it('deja los módulos chicos en una ranura grande', () => {
-		const chicas = modulesForSlot('hardpoint', 1).map((m) => m.code);
-		const grandes = new Set(modulesForSlot('hardpoint', 2).map((m) => m.code));
+		const chicas = modulesForSlot('high', 1).map((m) => m.code);
+		const grandes = new Set(modulesForSlot('high', 2).map((m) => m.code));
 		expect(chicas.every((code) => grandes.has(code))).toBe(true);
 	});
 
@@ -322,7 +322,7 @@ describe('los presupuestos', () => {
 		fit[0] = getModule('mining_laser_i2');
 		fit[1] = getModule('mining_laser_i2');
 		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'console' && slot.size >= 2) fit[i] = getModule('shield_gen_i2');
+			if (slot.kind === 'mid' && slot.size >= 2) fit[i] = getModule('shield_gen_i2');
 		});
 
 		const readout = buildReadout(hull, fit);
@@ -344,7 +344,7 @@ describe('lo que se divide por la masa', () => {
 		const cargada = [...liviana];
 		inicial.slots.forEach((slot, i) => {
 			// La placa de blindaje no pide energía: sólo pesa.
-			if (slot.kind === 'chassis') cargada[i] = getModule('armor_plate_i1');
+			if (slot.kind === 'low') cargada[i] = getModule('armor_plate_i1');
 		});
 
 		const antes = buildReadout(inicial, liviana);
@@ -435,7 +435,7 @@ describe('el acumulador', () => {
 
 		// La mejora ahora cuesta una ranura: la batería va en una consola.
 		const mejor = [...modesto];
-		const consola = hull.slots.findIndex((slot) => slot.kind === 'console' && slot.size >= 2);
+		const consola = hull.slots.findIndex((slot) => slot.kind === 'mid' && slot.size >= 2);
 		mejor[consola] = getModule('capacitor_battery_i2');
 
 		const conPoco = buildReadout(hull, modesto);
@@ -456,7 +456,7 @@ describe('la supervivencia y el daño', () => {
 	it('da escudo al montar un generador', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		const indice = hull.slots.findIndex((slot) => slot.kind === 'console' && slot.size >= 2);
+		const indice = hull.slots.findIndex((slot) => slot.kind === 'mid' && slot.size >= 2);
 		fit[indice] = getModule('shield_gen_i2');
 		expect(buildReadout(hull, fit).shield).toBeGreaterThan(0);
 	});

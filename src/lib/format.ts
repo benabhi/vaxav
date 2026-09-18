@@ -418,11 +418,32 @@ export function explorationIcon(explored: boolean): IconName {
 // --- Naves -------------------------------------------------------------------
 
 const SLOT_KINDS: Record<SlotKind, string> = {
-	hardpoint: 'Anclaje',
-	console: 'Consola',
-	chassis: 'Bastidor',
-	rig: 'Refuerzo'
+	high: 'Altos',
+	mid: 'Medios',
+	low: 'Bajos',
+	rig: 'Refuerzos'
 };
+
+/**
+ * Qué va en cada bandeja, en media línea.
+ *
+ * Existe porque **el nombre dejó de enseñar**. «Consola» decía sola qué iba
+ * adentro; «Medios» no dice nada, y ése es el precio de usar los nombres que el
+ * jugador de EVE ya tiene aprendidos. La pista lo paga: se lee una vez, al lado
+ * del rótulo de la fila, y después es ruido de fondo — que es exactamente lo que
+ * tiene que ser.
+ */
+const SLOT_HINTS: Record<SlotKind, string> = {
+	high: 'armas y herramientas',
+	mid: 'lo que se enciende',
+	low: 'lo que va atornillado',
+	rig: 'no se desmontan'
+};
+
+/** La media línea que dice qué entra en esa bandeja. */
+export function slotKindHint(kind: SlotKind): string {
+	return SLOT_HINTS[kind] ?? '';
+}
 
 /**
  * El dibujo de cada categoría de ranura.
@@ -432,9 +453,9 @@ const SLOT_KINDS: Record<SlotKind, string> = {
  * pueden verse igual.
  */
 const SLOT_ICONS: Record<SlotKind, IconName> = {
-	hardpoint: 'target',
-	console: 'lightning',
-	chassis: 'squares-four',
+	high: 'caret-up',
+	mid: 'lightning',
+	low: 'caret-down',
 	rig: 'anchor'
 };
 

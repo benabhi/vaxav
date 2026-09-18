@@ -588,27 +588,49 @@ cuando el piloto está atracado.
 Vive en `src/lib/components/` y es reutilizable: el día que un jugador
 instale módulos en su estación, la baldosa apagada **es** la ranura vacía.
 
-### El anillo de equipamiento
+### La ficha de la nave: una herramienta de equipamiento
 
-La pantalla de nave es **la única circular de todo Vaxav**, y ésa es media razón
-de que exista: el resto del juego son paneles rectangulares apilados, así que la
-nave se distingue por su forma antes de que se lea una palabra. Es la figura de
-la pantalla de _fitting_ de EVE cruzada con el esquema de nave del HUD de Elite.
+**Tres columnas**, y el reparto es la mitad del diseño: las ranuras, qué entra en
+la que está abierta, y en qué queda la nave. Arriba, cruzando las tres, la banda
+de los cuatro presupuestos.
 
-La otra media razón es que la figura **dice algo**:
+Es la ventana de _fitting_ de EVE en el HUD de Elite, y se llegó ahí sacando un
+anillo. Durante meses la pantalla tuvo las ranuras repartidas alrededor de un
+círculo, que era lindo y decía la terna por su forma, pero **un círculo tiene sus
+elementos en trescientos sesenta grados y por lo tanto no tiene ningún costado
+donde abrir el panel de una ranura** —abajo obliga a bajar, al lado lo achica,
+flotando tapa algo—. La consecuencia era una lista al lado diciendo las mismas
+ranuras otra vez: la figura le estaba cobrando una columna entera a la
+herramienta.
 
-- Las tres capas de integridad son **anillos concéntricos** —escudo afuera, casco
-  adentro—, que es exactamente el orden en que se las come el daño.
-- El anillo de afuera va **punteado** cuando no hay generador montado: la nave se
-  _ve_ sin escudo.
-- Las ranuras se reparten parejo alrededor y agrupadas por tipo, así que ninguna
-  se pisa tenga el casco nueve o quince.
-- Al centro, un **esquema de alambre** dibujado por nosotros. No hay arte de
-  naves, y el alambre es justamente el lenguaje del juego que se imita.
+Lo que el anillo hacía bien lo siguen haciendo las filas:
 
-Al costado va la **hoja de rendimiento**, que es lo que la vuelve una herramienta
-y no una ficha: presupuestos, aguante por tipo de daño, armamento, trabajo,
-movilidad y capacidad. Cambiar un módulo la mueve entera al instante.
+- **El largo de cada bandeja es la terna del casco.** La Mula tiene la fila de
+  bajos larguísima y el Vencejo la de medios, así que dos naves se distinguen por
+  la forma del bloque sin dibujar nada.
+- **El nombre del módulo se lee sin pasar el mouse**, que en el anillo era
+  imposible: ahí sólo entraba un ícono y una cifra.
+- **Escala.** Un acorazado con ocho ranuras altas alarga una fila; en un círculo
+  se amontona.
+
+Y lo que gana es el resto:
+
+- **Abrir una ranura no mueve un píxel.** El catálogo tiene columna propia, así
+  que elegir un módulo no empuja la hoja justo cuando se están comparando cifras.
+- **Las dos columnas de la derecha se pliegan**, cada una por su lado. No se usan
+  al mismo tiempo —mientras se elige un módulo manda el catálogo; para leer en qué
+  quedó la nave, la hoja—, así que cualquiera le cede su ancho a la otra y queda
+  un riel que dice qué hay adentro. Con el catálogo plegado, las lecturas pasan a
+  dos columnas y se leen como un tablero.
+- **El teléfono sale gratis.** Las tres columnas se apilan en el orden en que se
+  usan: ranuras, catálogo, hoja. El anillo, en cambio, era un cuadrado que se
+  comía media pantalla.
+
+La banda de presupuestos —**grilla, CPU, capacitor y calibración**— va arriba y
+siempre a la vista, porque ahí está el micro-juego: están apretados a propósito,
+así que la barra crece **mientras se mira la ranura que se está llenando** y un
+cinco por ciento más de grilla es lo que hace entrar el módulo mejor. Señalando un
+módulo de la lista, las barras y la hoja ya muestran cómo quedaría la nave.
 
 Dos detalles que valen para cualquier pantalla del juego:
 

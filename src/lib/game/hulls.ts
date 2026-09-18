@@ -58,7 +58,7 @@ export type DockSize = (typeof DOCK_SIZES)[number];
  * casco —una nave *tiene* planta de energía, igual que tiene masa— y lo que esos
  * módulos daban de más vuelve como módulo opcional que **cuesta una ranura**.
  */
-export const SLOT_KINDS = ['hardpoint', 'console', 'chassis', 'rig'] as const;
+export const SLOT_KINDS = ['high', 'mid', 'low', 'rig'] as const;
 export type SlotKind = (typeof SLOT_KINDS)[number];
 
 /**
@@ -251,9 +251,9 @@ export const HULLS: readonly Hull[] = [
 		sensorRange: 50,
 		signature: 30,
 		slots: [
-			...slots('hardpoint', 1, 1),
-			...slots('console', 1, 2),
-			...slots('chassis', 2, 2),
+			...slots('high', 1, 1),
+			...slots('mid', 1, 2),
+			...slots('low', 2, 2),
 			...slots('rig', 1, 1)
 		],
 		// El bono de rol pasó de Navegación a Manejo de lanzaderas. Navegación ya
@@ -288,9 +288,9 @@ export const HULLS: readonly Hull[] = [
 		sensorRange: 50,
 		signature: 70,
 		slots: [
-			...slots('hardpoint', 1, 1),
-			...slots('console', 2, 3),
-			...slots('chassis', 3, 5),
+			...slots('high', 1, 1),
+			...slots('mid', 2, 3),
+			...slots('low', 3, 5),
 			...slots('rig', 2, 3)
 		],
 		bonus: { target: 'cargo', skill: 'cargo_engineering', percentPerLevel: 5 },
@@ -319,9 +319,9 @@ export const HULLS: readonly Hull[] = [
 		sensorRange: 60,
 		signature: 60,
 		slots: [
-			...slots('hardpoint', 2, 2),
-			...slots('console', 2, 4),
-			...slots('chassis', 3, 3),
+			...slots('high', 2, 2),
+			...slots('mid', 2, 4),
+			...slots('low', 3, 3),
 			...slots('rig', 2, 3)
 		],
 		bonus: { target: 'mining_yield', skill: 'mining', percentPerLevel: 5 },
@@ -350,9 +350,9 @@ export const HULLS: readonly Hull[] = [
 		sensorRange: 135,
 		signature: 18,
 		slots: [
-			...slots('hardpoint', 1, 1),
-			...slots('console', 2, 5),
-			...slots('chassis', 2, 2),
+			...slots('high', 1, 1),
+			...slots('mid', 2, 5),
+			...slots('low', 2, 2),
 			...slots('rig', 1, 3)
 		],
 		bonus: { target: 'sensor_range', skill: 'scanning', percentPerLevel: 8 },
@@ -381,9 +381,9 @@ export const HULLS: readonly Hull[] = [
 		sensorRange: 75,
 		signature: 55,
 		slots: [
-			...slots('hardpoint', 2, 4),
-			...slots('console', 2, 3),
-			...slots('chassis', 3, 4),
+			...slots('high', 2, 4),
+			...slots('mid', 2, 3),
+			...slots('low', 3, 4),
 			...slots('rig', 2, 3)
 		],
 		bonus: { target: 'damage', skill: 'gunnery', percentPerLevel: 5 },

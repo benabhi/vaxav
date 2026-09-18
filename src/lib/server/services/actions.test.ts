@@ -62,7 +62,7 @@ describe('dar la orden de viajar', () => {
 		// Un propulsor auxiliar empuja más y pesa un poco más. Ahora cuesta una
 		// consola: antes era un interno esencial que la nave llevaba igual.
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[hull.slots.findIndex((slot) => slot.kind === 'console')] = 'thruster_i2';
+		codigos[hull.slots.findIndex((slot) => slot.kind === 'mid')] = 'thruster_i2';
 		saveFit(db, nave, codigos);
 
 		const conMejores = travelDurationSeconds(distancia, shipReadout(db, piloto)!.speed);

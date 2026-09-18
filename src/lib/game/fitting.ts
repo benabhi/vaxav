@@ -105,6 +105,13 @@ export interface Readout {
 	// Presupuestos
 	readonly power: Budget;
 	readonly computing: Budget;
+	/**
+	 * El de los refuerzos, y el único que no se recupera.
+	 *
+	 * Los otros tres se deshacen desmontando; un refuerzo sacado se destruye, así
+	 * que gastar calibración es definitivo.
+	 */
+	readonly calibration: Budget;
 
 	// Movimiento
 	readonly mass: number;
@@ -385,6 +392,7 @@ export function buildReadout(
 		hull,
 		power,
 		computing,
+		calibration,
 		mass,
 		speed,
 		jumpRange,

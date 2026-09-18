@@ -149,16 +149,27 @@ de auxilio— no compra nada que el juego necesite.
 
 Cuatro, y cada una contesta una pregunta distinta sobre qué hace ese módulo:
 
-| Bandeja       | Qué va                                             | La regla                           |
-| ------------- | -------------------------------------------------- | ---------------------------------- |
-| **Anclajes**  | Armas, láseres de extracción, rayos                | **Actúa sobre otra cosa**          |
-| **Consolas**  | Escudos, propulsores, sensores, guerra electrónica | **Se enciende y gasta acumulador** |
-| **Bastidor**  | Blindaje, bodega, relés de energía, calibradores   | **Está puesto y ya**               |
-| **Refuerzos** | Lo que se suelda al casco y no se saca             | **No se desmonta: se destruye**    |
+| Bandeja       | Qué va                                             | La regla                          |
+| ------------- | -------------------------------------------------- | --------------------------------- |
+| **Altos**     | Armas, láseres de extracción, rayos                | **Actúa sobre otra cosa**         |
+| **Medios**    | Escudos, propulsores, sensores, guerra electrónica | **Se enciende y gasta capacitor** |
+| **Bajos**     | Blindaje, bodega, relés de energía, calibradores   | **Está puesto y ya**              |
+| **Refuerzos** | Lo que se suelda al casco y no se saca             | **No se desmonta: se destruye**   |
+
+En el código son `high`, `mid`, `low` y `rig`. **Son los nombres de EVE**, por lo
+mismo que la grilla y la CPU: el que más rápido va a entender esta pantalla es el
+que ya jugó ese juego, y hacerlo tropezar con sinónimos no lo hace más nuestro,
+lo hace más lento.
 
 La regla de la derecha es la que evita que se discuta nunca dónde va un módulo
-nuevo. Si actúa sobre otra cosa es anclaje; si tiene interruptor es consola; si
-está puesto y no hace nada por sí solo es bastidor.
+nuevo. Si actúa sobre otra cosa va arriba; si tiene interruptor, al medio; si está
+puesto y no hace nada por sí solo, abajo.
+
+**El costo de estos nombres es que dejan de enseñar.** «Consola» decía sola qué
+iba adentro; «Medios» no dice nada. Por eso cada bandeja lleva media línea al lado
+del rótulo —_armas y herramientas · lo que se enciende · lo que va atornillado ·
+no se desmontan_—: se lee una vez y después es ruido de fondo, que es exactamente
+lo que tiene que ser. Vive en `slotKindHint`.
 
 **El reparto es la personalidad del casco.** Se escribe como una terna, siempre en
 ese orden, y es lo primero que se lee de una nave:

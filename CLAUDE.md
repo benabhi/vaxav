@@ -99,23 +99,30 @@ que ninguna se salga del lenguaje.
 
 Las que ya existen:
 
-| Pantalla                               | Su figura                 | Qué se lee sin leer                                                  |
-| -------------------------------------- | ------------------------- | -------------------------------------------------------------------- |
-| Nave                                   | El anillo de equipamiento | Cuántas ranuras hay, cuáles están llenas y si falta el escudo        |
-| Navegación · Sistema                   | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                              |
-| Piloto                                 | La rueda de ramas         | A qué se dedicó, y en qué está por convertirse                       |
-| Universo (cuartel)                     | El mapa de la galaxia     | La forma del conjunto: dónde está el agujero y qué no llega          |
-| Corporación · Reputación               | La escalera de reputación | Cuánto llevás, y que el último tramo es el más largo de todos        |
-| Navegación · Ubicación, viajando       | La banda del tramo        | Cuánto falta, hacia dónde y dónde está la nave ahora                 |
-| Navegación · Ubicación, en una puerta  | El aro de salto           | Por qué lado se sale, si lleva a alguna parte y si se cruza          |
-| Navegación · Ubicación, en un cinturón | El campo de rocas         | Cuántas hay, qué les queda y cuánto conocés del campo                |
-| Navegación · Ubicación, en un cuerpo   | El vecindario en órbita   | De quién colgás, qué tan afuera estás y qué te cuelga                |
-| Piloto · Reputación                    | La rosa de banderas       | Con quién estás parado: una lealtad y un oportunista se ven distinto |
+| Pantalla                               | Su figura                 | Qué se lee sin leer                                                    |
+| -------------------------------------- | ------------------------- | ---------------------------------------------------------------------- |
+| Nave                                   | El bloque de bandejas     | La terna del casco: qué largo tiene cada bandeja y cuáles están llenas |
+| Navegación · Sistema                   | El árbol de cuerpos       | Qué cuelga de qué, y dónde estás parado                                |
+| Piloto                                 | La rueda de ramas         | A qué se dedicó, y en qué está por convertirse                         |
+| Universo (cuartel)                     | El mapa de la galaxia     | La forma del conjunto: dónde está el agujero y qué no llega            |
+| Corporación · Reputación               | La escalera de reputación | Cuánto llevás, y que el último tramo es el más largo de todos          |
+| Navegación · Ubicación, viajando       | La banda del tramo        | Cuánto falta, hacia dónde y dónde está la nave ahora                   |
+| Navegación · Ubicación, en una puerta  | El aro de salto           | Por qué lado se sale, si lleva a alguna parte y si se cruza            |
+| Navegación · Ubicación, en un cinturón | El campo de rocas         | Cuántas hay, qué les queda y cuánto conocés del campo                  |
+| Navegación · Ubicación, en un cuerpo   | El vecindario en órbita   | De quién colgás, qué tan afuera estás y qué te cuelga                  |
+| Piloto · Reputación                    | La rosa de banderas       | Con quién estás parado: una lealtad y un oportunista se ven distinto   |
 
 Las reglas que las hacen funcionar:
 
 - **Una por pantalla, no una por panel.** Dos figuras compiten y ninguna gana. La
   que está es la que contesta la pregunta principal de esa pantalla.
+- **No es obligatoria, y una herramienta manda sobre una figura.** La ficha de la
+  nave tuvo un anillo durante meses y era lindo, pero un círculo no tiene ningún
+  costado donde abrir el panel de una ranura, así que **hacía falta una lista al
+  lado diciendo las mismas ranuras otra vez**. La figura le estaba cobrando una
+  columna entera a la herramienta. Hoy son filas y la figura es el perfil del
+  bloque: más pobre de mirar, mucho mejor de usar. Cuando las dos cosas peleen,
+  gana la que se usa.
 - **Una pantalla que cambia de qué es, cambia de figura.** Ubicación no es una
   pantalla con contenido variable: parado en una puerta es una cosa y viajando es
   otra, y por eso tiene el aro en un caso y la banda en el otro. **Nunca las dos
