@@ -321,6 +321,17 @@ palabras en vez de con un panel.
 - **Cuerpo** — planeta, luna, cinturón, anillo o estación dentro de un sistema.
 - **Créditos** — moneda del juego.
 
+## Las bases: habilidades, naves, módulos y materiales
+
+**Lo que el juego va a ser de grande está en [RESEARCH.md](RESEARCH.md)**: la
+investigación sobre cómo resuelve EVE estos problemas, qué se adapta y qué no, y
+los catálogos propuestos —ciento diez habilidades, doce clases de nave, tres
+materias primas y la cadena de fabricación entera—.
+
+Es un documento de **propuesta**, no de implementación: contradice a propósito
+varias cosas que hoy existen. Lo que se decide de ahí se construye y pasa al
+documento del sistema que corresponda, que es el que manda.
+
 ## Hoja de ruta
 
 Está en su propio documento: [ROADMAP.md](ROADMAP.md). El resumen es que el

@@ -1,7 +1,9 @@
 # Vaxav
 
 Juego web multijugador idle y textual: un piloto espacial y su nave. La visión y
-la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas.
+la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas. Las
+bases de los catálogos —habilidades, naves, módulos y materiales— y de dónde salen
+están en `docs/RESEARCH.md`.
 
 **Ninguna mecánica entra sola.** Toda característica arrastra una cadena —verbo,
 insumo, fuente, aparato, llave, fábrica y lugar— y lo que no se cierra queda como
