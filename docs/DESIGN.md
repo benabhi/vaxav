@@ -3,19 +3,56 @@
 > Documento vivo. Se va corrigiendo a medida que el juego se define; lo que está
 > acá es intención de diseño, no una promesa.
 
+## La premisa
+
+> **EVE Online asíncrono, por acciones, en el navegador.**
+
+Ésa es la frase que decide todo lo demás, y conviene leerla por partes:
+
+- **EVE Online.** No «inspirado en»: el objetivo es **replicar sus sistemas** —el
+  equipamiento por ranuras con presupuestos apretados, las clases de nave como
+  requisito duro, la economía enteramente de los jugadores, las naves que se
+  pierden, la seguridad del sistema graduando el peligro, los materiales en
+  cadena— y adaptarlos. Cuando haya una duda de diseño, la primera pregunta es
+  **cómo lo resuelve EVE**.
+- **Asíncrono.** Nadie tiene que estar conectado al mismo tiempo que otro, ni
+  estar presente mientras su nave trabaja. Lo que en EVE exige atención en vivo,
+  acá se resuelve de una cuenta al dar la orden.
+- **Por acciones.** La unidad de juego es **encargar una acción y esperar**: se
+  elige, tarda, y al volver hay un informe. No hay tiempo real, no hay clicks que
+  aceleren nada.
+- **En el navegador.** Textual, sin instalación, y **utilizable en un teléfono**.
+
+De eso sale un beneficio que vale nombrar: **un jugador de EVE entiende Vaxav en
+cinco minutos**. Las bandejas de ranuras se llaman altos, medios y bajos; los
+presupuestos, grilla, CPU y calibración. No es falta de personalidad: es no
+hacerlo tropezar con sinónimos.
+
+### Qué es nuestro
+
+Dos cosas, y las dos son consecuencia de lo asíncrono:
+
+1. **Los pozos de experiencia por familia.** En EVE se entrena con un reloj que
+   corre solo; acá **se entrena haciendo**. Cada acción deposita experiencia en la
+   familia que le corresponde, y el jugador después elige en qué habilidad de esa
+   familia gastarla. Es la pieza que más se aleja de EVE y la que no se toca: es
+   lo que hace que jugar y progresar sean la misma cosa en vez de dos relojes
+   paralelos.
+2. **Tres facciones, no cuatro.** Es una decisión de escala, no de gusto: con
+   tres, cada una puede tener carácter propio y la política del sector se lee de
+   un vistazo.
+
 ## Visión
 
 Vaxav es un juego web multijugador de navegador, **textual** y de **ritmo lento**.
 El jugador es un piloto independiente con una nave en un sector espacial que
 ninguna facción termina de controlar. No hay campaña ni final: es un sandbox
-donde cada uno decide a qué dedicarse (extraer, transportar, comerciar,
-explorar, pelear) y el mundo lo comparten todos.
+donde cada uno decide a qué dedicarse (extraer, transportar, comerciar, explorar,
+pelear) y el mundo lo comparten todos.
 
-Se lo puede definir como una mezcla de tres juegos: el **ritmo de OGame** —dar una
-orden y esperar un contador—, la **profundidad de EVE Online** —habilidades que
-tardan meses, economía en manos de los jugadores, un solo universo compartido— y
-la **piel y las naves de Elite Dangerous** —el HUD naranja y una nave que se arma
-ranura por ranura—.
+La piel es la de **Elite Dangerous**: el HUD naranja sobre casi negro, los paneles
+translúcidos y las mayúsculas espaciadas. Es lo único que no viene de EVE, y es a
+propósito — los sistemas son de uno y la cara es del otro.
 
 La unidad de decisión es **una nave con capacidad limitada**, no una base que sólo
 crece: por eso todo lo que se lleva obliga a dejar otra cosa.
@@ -31,7 +68,10 @@ crece: por eso todo lo que se lleva obliga a dejar otra cosa.
    duelen porque cierran otras puertas.
 4. **El mundo es compartido.** Los precios, los recursos y los peligros dependen
    de lo que hagan los demás pilotos, no de un guion.
-5. **Simple de entrar, hondo de jugar.** Pocas mecánicas, pero que se combinen.
+5. **Nunca hace falta estar.** Lo que en otro juego pide reflejos, acá se decide
+   antes de salir. Es lo que hace que un idle pueda tener combate y pérdida de
+   naves sin castigar al que cierra la pestaña.
+6. **Simple de entrar, hondo de jugar.** Pocas mecánicas, pero que se combinen.
 
 ## Bucle de juego
 
@@ -348,33 +388,54 @@ palabras en vez de con un panel.
 
 ## Qué tomamos de EVE, y qué no
 
-Vaxav se parece a **EVE Online** a propósito, y conviene decir por qué y hasta
-dónde, porque es la pregunta que vuelve cada vez que se agrega algo.
+La premisa —**EVE asíncrono, por acciones, en el navegador**— dice que los
+sistemas se replican. Esta sección dice **hasta dónde**, porque es la pregunta que
+vuelve cada vez que se agrega algo.
 
 El público natural del juego es **el que jugó EVE y no puede sostenerlo**. Para
 ése, que las cosas estén donde espera no es una copia: es que no tiene que
-aprender de nuevo lo que ya sabe. De ahí sale la regla:
+aprender de nuevo lo que ya sabe. De ahí sale la regla del vocabulario:
 
-> **La estructura es la que lo hace reconocible. Las palabras son las que lo hacen
-> nuestro.**
+> **Donde EVE ya tiene un nombre para algo, se usa ese nombre, en castellano.**
 
-Un piloto que ve tres bandejas y una terna de ranuras se orienta en cinco
-segundos, venga de donde venga — y si además se llaman como allá, no tiene ni que
-mirar dos veces. Lo nuestro no es el vocabulario: es qué decidimos que entre y qué
-no, y eso está más abajo.
+Vale para los presupuestos —grilla, CPU, capacitor, calibración—, para las
+bandejas —altos, medios, bajos—, y también para **los módulos y las habilidades**.
+Inventar un sinónimo no hace al juego más nuestro: lo hace más lento de aprender,
+y le cobra el peaje justamente al que más rápido lo entendería.
+
+Se traduce, no se calca: _Small Shield Extender II_ es «Extensor de escudo
+chico II». Y donde no haya equivalente porque la mecánica es nuestra —los pozos,
+las tres facciones— el nombre se inventa con la voz del juego.
+
+Dos excepciones, y son las que le dan nombre propio al juego:
+
+- **Los cascos.** Pioner, Mula, Percal, Vencejo, Alabarda: los nombres de nave se
+  inventan acá y no se traducen de ningún lado. Un módulo es una pieza y su nombre
+  es una etiqueta; **una nave es un personaje**, es lo que el jugador dice cuando
+  cuenta qué le pasó, y es lo único del catálogo que se recuerda. Cómo se nombra
+  una está en [naves](systems/SHIPS.md#cómo-se-nombra-una-nave).
+- **La moneda.** Son **créditos**, abreviados **CR**. No ISK: es la palabra que
+  más veces se lee en una sesión, así que es de las pocas que conviene que sean
+  nuestras.
+
+**Lo nuestro no es el vocabulario: es qué decidimos que entre y qué no**, y eso es
+lo que sigue.
 
 ### Lo que sí
 
 | De EVE                                | Cómo entra acá                                         |
 | ------------------------------------- | ------------------------------------------------------ |
 | Bandejas de ranuras y la terna        | Altos · medios · bajos, más refuerzos                  |
-| Presupuestos apretados a propósito    | Potencia, cómputo y calibración                        |
+| Presupuestos apretados a propósito    | Grilla, CPU, capacitor y calibración                   |
 | Escalones I/II y variantes con oficio | La nomenclatura de los módulos                         |
 | Radio de firma contra sensores        | Una sola cuenta para escanear, analizar y encontrar    |
 | La seguridad del sistema gradúa todo  | Qué mineral hay, y cuánto se arriesga en ir a buscarlo |
 | Las naves se pierden                  | Es lo que impide que la economía se sature             |
 | Clases de nave como requisito duro    | No se sabe «volar naves»: se sabe volar barcazas       |
 | Entrenar lleva tiempo real            | Pero se entrena **haciendo**, no con un reloj          |
+| Refuerzos con su propio presupuesto   | Se sueldan al casco y sacarlos los destruye            |
+| Materiales en cadena                  | Mineral, refinado, componente, producto                |
+| Las corporaciones como el eje social  | Con roles y permisos, no un chat con nombre            |
 
 ### Lo que no
 
@@ -391,6 +452,8 @@ entra.**
 | Planes de habilidades de meses         | Ninguna nave tiene que esperar medio año para volarse             |
 | Cadenas de puertas de cuarenta minutos | El viaje es una decisión, no un peaje                             |
 | Tener que estar presente               | Para eso está el comportamiento de la nave                        |
+| Las cuatro facciones                   | Acá son **tres**: con menos, cada una puede tener carácter        |
+| Standing de −10 a +10                  | Sin decidir. Ver «Por decidir»                                    |
 
 ### La pregunta
 
@@ -400,6 +463,15 @@ Cada vez que haya que decidir si algo de EVE entra:
 
 Profundidad es una decisión que se puede tomar mal. Peaje es tiempo que hay que
 pagar para llegar a la decisión. Lo primero entra siempre; lo segundo, nunca.
+
+Y una segunda, que es la de lo asíncrono:
+
+> **¿Esto se puede decidir antes de salir?**
+
+Si la respuesta es no —si exige mirar la pantalla mientras pasa— no entra como
+está: entra convertido en una decisión que se toma **al dar la orden**. Así entró
+el combate, que es una tirada sembrada al salir y un informe al volver; y así va a
+entrar todo lo demás que en EVE se juega en vivo.
 
 ## Hoja de ruta
 

@@ -177,6 +177,27 @@ Lo que sigue escrito a mano es lo que tiene **carácter y no atributos**: la
 descripción de una corporación y la de un agente. El día que una estación
 necesite personalidad, la personalidad es de quien la opera.
 
+### Quién responde: la Albatros
+
+Las patrullas que llegan cuando alguien ataca en espacio vigilado son **la
+Albatros**. No pertenece a ninguna de las tres facciones: es la fuerza que las
+tres sostienen entre todas justamente porque ninguna confía en las otras dos para
+hacerlo.
+
+Es el equivalente de CONCORD en EVE y cumple el mismo papel —hace que la seguridad
+alta signifique algo—, pero el nombre es nuestro, como el de los cascos y el de la
+moneda.
+
+Dos cosas que conviene fijar desde ahora, porque son las que hacen que funcione:
+
+- **Llega tarde a propósito.** No impide el ataque: lo castiga. Un piloto puede
+  disparar en seguridad alta; lo que no puede es irse con lo que robó ni volver a
+  atracar como si nada.
+- **No se le gana.** No es contenido: es la consecuencia. Una nave que pueda
+  aguantar a la Albatros convierte al espacio vigilado en espacio sin ley.
+
+Nada de esto está implementado. Entra con el combate.
+
 ### El aviso de riesgo
 
 Cruza la seguridad del sistema con lo lejos que esté el lugar del centro, porque

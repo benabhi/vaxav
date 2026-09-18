@@ -15,7 +15,7 @@ import { skillXp } from './pilots';
 import { SKILL_FAMILIES } from '$lib/game/skills';
 
 describe('el pozo de una rama', () => {
-	it('arranca en cero en las seis, no ausente', async () => {
+	it('arranca en cero en las ocho, no ausente', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
 

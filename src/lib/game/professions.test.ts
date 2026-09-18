@@ -20,9 +20,29 @@ import {
 	startingXp
 } from './professions';
 import { MAX_LEVEL, levelFromXp } from './progression';
-import { SKILLS, getSkill, unmetRequirements } from './skills';
+import { SKILLS, SKILL_FAMILIES, getSkill, unmetRequirements } from './skills';
 
 const CODES = Object.keys(PROFESSIONS).sort();
+
+describe('el catálogo', () => {
+	it('tiene exactamente una profesión por familia de habilidades', () => {
+		// La familia es la que tiene pozo propio: una sin oficio de entrada es una
+		// rama a la que nadie llega con el repartidor puesto, y dos oficios en la
+		// misma familia son dos formas de empezar en el mismo lugar.
+		const suyas = Object.values(PROFESSIONS).map((profession) => profession.family);
+		expect([...suyas].sort()).toEqual([...SKILL_FAMILIES].sort());
+	});
+
+	it('entrega al menos una habilidad de la familia que declara', () => {
+		// Si ninguna lo fuera, la familia sería una etiqueta y no un oficio.
+		for (const profession of Object.values(PROFESSIONS)) {
+			const suyas = profession.grants.filter(
+				(grant) => getSkill(grant.skill).family === profession.family
+			);
+			expect(suyas.length, profession.code).toBeGreaterThan(0);
+		}
+	});
+});
 
 describe.each(CODES)('la profesión %s', (code) => {
 	it('gasta el presupuesto completo', () => {

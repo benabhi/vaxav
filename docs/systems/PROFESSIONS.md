@@ -1,10 +1,11 @@
 # Profesiones
 
-> **Implementado.** El alta reparte el presupuesto de 1.000 puntos y el piloto
-> arranca con esas habilidades entrenadas. Los repartos siguen siendo un borrador.
+> **Implementado.** El alta reparte el presupuesto de experiencia y el piloto
+> arranca con esas habilidades entrenadas y, si su oficio lo trae, con el equipo
+> puesto en la nave.
 
-> **Hoy sólo se ofrece el minero.** Una profesión se elige cuando hay algo que
-> hacer con ella, y es la única con actividades propias. Las otras cinco se quedan
+> **Hoy sólo se ofrece el minero.** Una profesión se ofrece cuando hay algo que
+> hacer con ella, y es la única con actividades propias. Las otras siete se quedan
 > en el catálogo —siguen verificando el presupuesto y los pilotos que ya las tengan
 > siguen jugando— pero no aparecen en el alta.
 >
@@ -12,123 +13,158 @@
 > [naves](SHIPS.md)
 
 Al crear el piloto se elige una **profesión**: lo que venía haciendo antes de
-comprarse una nave. No es una clase ni un rol permanente — es **de dónde arranca**.
+comprarse una nave.
 
-## Qué hace una profesión
+## No es una clase, y esto importa
 
-Le da al piloto un puñado de habilidades ya entrenadas, para que pueda hacer algo
-útil desde el primer minuto en vez de mirar una pantalla de ceros. Eso es todo:
-no bloquea nada, no da bonos propios, no impide reconvertirse. Un minero que se
-aburre puede terminar de mercader, sólo que va a tardar más que uno que empezó
-ahí.
+**La profesión no tiene ninguna consecuencia mecánica.** Ni una. No da bonos, no
+desbloquea nada, no cierra ninguna puerta y no se puede «equivocar»:
+
+- **Cualquier piloto puede entrenar cualquier habilidad del catálogo**, desde el
+  primer día y sin permiso de nadie. Un minero que se aburre puede terminar de
+  mercader; sólo va a tardar más que uno que empezó ahí, y esa diferencia se mide
+  en horas, no en semanas.
+- **Nunca se vuelve a consultar.** Después del alta, el juego no le pregunta a
+  nadie qué oficio eligió. Queda como parte de la historia del piloto, como la
+  facción de origen.
+
+Lo único que hace es **evitar la pantalla de ceros**: le da al piloto un puñado de
+habilidades ya entrenadas y una Pioner adaptada a ese oficio, para que pueda hacer
+algo útil desde el primer minuto en vez de mirar una nave vacía sin saber por
+dónde empezar.
+
+Dicho de otro modo: es **el primer reparto del presupuesto inicial, hecho por el
+juego en vez de por el jugador**. Y por eso la pregunta abierta más interesante de
+este documento sigue siendo si hace falta una novena opción «sin oficio» que deje
+repartirlo a mano.
+
+## Una por familia
+
+Hay **ocho**, exactamente una por cada familia de habilidades, y un test lo hace
+cumplir.
+
+No es simetría por gusto: la familia es la unidad que tiene **pozo de experiencia
+propio**, así que una familia sin oficio de entrada es una rama a la que nadie
+llega con el repartidor puesto, y dos oficios en la misma familia son dos formas
+de empezar en el mismo lugar.
 
 ## El presupuesto común
 
-Todas las profesiones reparten **la misma cantidad de experiencia inicial: 1.000
-puntos**, contados con el multiplicador de cada habilidad ya aplicado. Ninguna
-empieza mejor que otra: empiezan **distinto**.
+Todas reparten **la misma experiencia inicial**, contada con el multiplicador de
+cada habilidad ya aplicado. Ninguna empieza mejor que otra: empiezan **distinto**.
 
-Eso hace que el balance sea verificable de un vistazo —si las cuentas dan 1.000,
-está bien— y que agregar una profesión nueva no requiera rediscutir las otras.
+El número sale de la curva y no de una cifra redonda, porque la curva se mueve y
+el presupuesto tiene que moverse con ella:
 
-Recordatorio de costos, para leer las tablas: alcanzar el nivel 1 de una x1 son
-100 puntos; el nivel 2, 400 acumulados. En una x2 esos mismos niveles son 200 y 800.
+```
+2 × (una habilidad x1 al nivel II)  +  (una habilidad x2 al nivel I)  =  1.532
+```
 
-## Las seis propuestas
+Esa forma —**dos habilidades que el piloto hace bien y una que conoce**— es la
+misma para las ocho. Es lo que un oficio previo deja, y es lo que hace el balance
+verificable de un vistazo: si las cuentas dan, está bien.
 
-### Minero
+## Las ocho
 
-Trabajó en los anillos hasta que juntó para su propia nave. Sabe sacar mineral,
-sabe acomodarlo y sabe leer una roca antes de picarla.
+### Minero · Extracción
 
-| Habilidad | Nivel | Costo |
-| --------- | :---: | ----: |
-| Minería   |  II   |   400 |
-| Estiba    |  II   |   400 |
-| Escaneo   |   I   |   200 |
+Trabajó en los anillos hasta que juntó para su propia nave. Sabe sacar mineral, sabe acomodarlo y sabe leer una roca antes de picarla.
 
-Las tres son el bucle: sacar, guardar y mirar. **Escaneo entra al oficio** desde
-que el cinturón es un campo de rocas: sin él un minero ve que la piedra es de
-silicato pero no cuánto tiene, que es justo el dato con el que se decide a cuál
-apuntarle. A cambio se fueron Navegación y Mecánica, que eran las dos de relleno
-—una mejora un viaje que igual hay que hacer, la otra repara algo que todavía no
-se rompe—.
+| Habilidad | Nivel | Rango | Costo |
+| --------- | :---: | :---: | ----: |
+| Minería   |  II   |  x1   |   666 |
+| Estiba    |  II   |  x1   |   666 |
+| Escaneo   |   I   |  x2   |   200 |
 
-Sale además con el **escáner montado**: el módulo es el requisito duro, y sin
-instrumento no hay lectura por mucha habilidad que se tenga.
-
-### Explorador
+### Explorador · Ciencias
 
 Vivió de vender coordenadas. Llega más lejos y ve antes lo que hay.
 
-| Habilidad            | Nivel | Costo |
-| -------------------- | :---: | ----: |
-| Navegación           |  II   |   400 |
-| Manejo de lanzaderas |  II   |   400 |
-| Escaneo              |   I   |   200 |
+| Habilidad            | Nivel | Rango | Costo |
+| -------------------- | :---: | :---: | ----: |
+| Navegación           |  II   |  x1   |   666 |
+| Manejo de lanzaderas |  II   |  x1   |   666 |
+| Escaneo              |   I   |  x2   |   200 |
 
-### Transportista
+### Transportista · Pilotaje
 
 Llevó carga ajena media vida. Nadie mete más cosas en menos bodega.
 
-| Habilidad            | Nivel | Costo |
-| -------------------- | :---: | ----: |
-| Estiba               |  II   |   400 |
-| Navegación           |  II   |   400 |
-| Regateo              |   I   |   100 |
-| Manejo de lanzaderas |   I   |   100 |
+| Habilidad                 | Nivel | Rango | Costo |
+| ------------------------- | :---: | :---: | ----: |
+| Estiba                    |  II   |  x1   |   666 |
+| Navegación                |  II   |  x1   |   666 |
+| Eficiencia de combustible |   I   |  x2   |   200 |
 
-### Mercader
+### Mercader · Comercio
 
 Empezó revendiendo en el muelle. Compra bien y sabe qué le están cobrando.
 
-| Habilidad            | Nivel | Costo |
-| -------------------- | :---: | ----: |
-| Regateo              |  II   |   400 |
-| Contabilidad         |   I   |   200 |
-| Navegación           |   I   |   100 |
-| Estiba               |   I   |   100 |
-| Mecánica             |   I   |   100 |
-| Manejo de lanzaderas |   I   |   100 |
+| Habilidad    | Nivel | Rango | Costo |
+| ------------ | :---: | :---: | ----: |
+| Regateo      |  II   |  x1   |   666 |
+| Estiba       |  II   |  x1   |   666 |
+| Contabilidad |   I   |  x2   |   200 |
 
-### Escolta
+### Escolta · Combate
 
 Cobró por proteger convoyes. Tira derecho y arregla lo que le rompen.
 
-| Habilidad            | Nivel | Costo |
-| -------------------- | :---: | ----: |
-| Puntería             |  II   |   400 |
-| Mecánica             |  II   |   400 |
-| Navegación           |   I   |   100 |
-| Manejo de lanzaderas |   I   |   100 |
+| Habilidad | Nivel | Rango | Costo |
+| --------- | :---: | :---: | ----: |
+| Puntería  |  II   |  x1   |   666 |
+| Mecánica  |  II   |  x1   |   666 |
+| Blindaje  |   I   |  x2   |   200 |
 
-### Técnico
+### Técnico · Ingeniería
 
 Fue mecánico de hangar. Entiende la nave por dentro mejor que nadie.
 
-| Habilidad            | Nivel | Costo |
-| -------------------- | :---: | ----: |
-| Mecánica             |  II   |   400 |
-| Gestión de energía   |   I   |   200 |
-| Minería              |   I   |   100 |
-| Estiba               |   I   |   100 |
-| Navegación           |   I   |   100 |
-| Manejo de lanzaderas |   I   |   100 |
+| Habilidad          | Nivel | Rango | Costo |
+| ------------------ | :---: | :---: | ----: |
+| Mecánica           |  II   |  x1   |   666 |
+| Estiba             |  II   |  x1   |   666 |
+| Gestión de energía |   I   |  x2   |   200 |
+
+### Fundidor · Industria
+
+Pasó años en un horno de estación. Sabe qué sale de cada piedra y cuánto se pierde en el intento.
+
+| Habilidad   | Nivel | Rango | Costo |
+| ----------- | :---: | :---: | ----: |
+| Refinado    |  II   |  x1   |   666 |
+| Fabricación |  II   |  x1   |   666 |
+| Reciclaje   |   I   |  x2   |   200 |
+
+### Contramaestre · Mando
+
+Manejó la tripulación de un carguero ajeno. Repartir trabajo y cuentas es lo único que sabe hacer, y lo hace muy bien.
+
+| Habilidad  | Nivel | Rango | Costo |
+| ---------- | :---: | :---: | ----: |
+| Liderazgo  |  II   |  x1   |   666 |
+| Navegación |  II   |  x1   |   666 |
+| Maniobra   |   I   |  x2   |   200 |
 
 ## Reglas de diseño
 
 - **Los repartos respetan los prerrequisitos.** El Técnico puede tener Gestión de
-  energía porque tiene Mecánica II; el Mercader, Contabilidad porque tiene
-  Regateo II. Una profesión nunca entrega una habilidad que el piloto no podría
-  haber entrenado.
+  energía porque tiene Mecánica II; el Mercader, Contabilidad porque tiene Regateo
+  II. Una profesión nunca entrega una habilidad que el piloto no podría haber
+  entrenado.
 - **Ninguna profesión es la buena.** Si alguna se vuelve la elección obvia, el
   problema está en el balance de las acciones, no en subirle los niveles.
-- **La profesión se elige una vez** y queda como parte de la historia del piloto,
-  aunque después haga otra cosa.
+- **La forma no se toca.** Dos x1 al nivel II y una x2 al nivel I. Una profesión
+  que pida otra forma está pidiendo otro presupuesto, y ahí se rediscuten las
+  ocho.
+- **El equipo es parte del oficio, no del presupuesto.** Un oficio deja lo que uno
+  sabe y también las herramientas con las que trabajaba; sin herramientas, el
+  primer día es mirar el espacio. Va en el kit y no cuesta experiencia.
 
 ## Por decidir
 
-- Si la profesión también define la **nave inicial** o el capital de arranque.
+- **Si hace falta una novena opción «sin oficio»** que reparta el presupuesto a
+  gusto del jugador, para quien ya sabe lo que quiere. Es la que más sentido tiene
+  de todas, justamente porque la profesión no es una clase.
+- Si la profesión define también el **capital de arranque**.
 - Si conviene mostrarla en el perfil público del piloto.
-- Si hay una séptima opción "sin oficio" que reparte el presupuesto a gusto del
-  jugador, para quien ya sabe lo que quiere.

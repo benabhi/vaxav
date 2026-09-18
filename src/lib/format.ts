@@ -88,7 +88,9 @@ const PROFESSION_ICONS: Record<ProfessionCode, IconName> = {
 	hauler: 'package',
 	trader: 'scales',
 	escort: 'shield',
-	technician: 'wrench'
+	technician: 'wrench',
+	smelter: 'flame',
+	boatswain: 'users-three'
 };
 
 /** El ícono de Phosphor que le toca a un oficio. */

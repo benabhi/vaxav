@@ -354,31 +354,33 @@ y la propuesta de la sección 5.6 no cambia eso: entra cuando entre el combate.
 
 ## Las etapas de los catálogos
 
-Diez etapas, en orden de dependencia y no de entusiasmo. Cada una deja algo
-jugable y cada una cierra huérfanos concretos.
+En orden de dependencia y no de entusiasmo. Cada una deja algo jugable y cada una
+cierra huérfanos concretos.
 
-| #     | Etapa                       | Qué entra                                                                 | Qué cierra                                  |
-| ----- | --------------------------- | ------------------------------------------------------------------------- | ------------------------------------------- |
-| **A** | **La curva**                | `LEVEL_COSTS`, `MAX_DIFFICULTY` a 16, devolver lo invertido a los pozos   | Que el catálogo se termine en un año        |
-| **B** | **Las siete familias**      | Familia Industria; habilidades movidas de familia; rangos nuevos          | Que fabricar financie su oficio con minería |
-| **C** | **Las clases de nave**      | `Hull.class`, bono opcional, **la Pioner sin bono**, habilidades de clase | Que volar una nave no pida nada             |
-| **D** | **Refinar**                 | El verbo, los ocho refinados, la merma                                    | El servicio de refinería que no hace nada   |
-| **E** | **Componentes y fabricar**  | El verbo, los ocho componentes, recetas por módulo                        | 47 módulos que no se fabrican               |
-| **F** | **El generador de módulos** | Familias + fórmula de clase y escalón; escalones D, C, B                  | Un catálogo escrito a mano que no escala    |
-| **G** | **El hielo**                | Cosechador, cuatro hielos, helio-3                                        | **El combustible sin fuente**               |
-| **H** | **Barcazas y cristales**    | Clase barcaza, láser de tira, cristales, bodega de mineral                | Que minar sea un botón sin abastecimiento   |
-| **I** | **Escanear**                | Sondas, firmas, encontrar y esconderse                                    | Sensores y firma, que sólo se dibujan       |
-| **J** | **El gas**                  | Aspirador, tres gases, nubes que hay que escanear                         | Nada: es contenido sobre H e I              |
+| #     | Etapa                       | Qué entra                                                              | Estado                     |
+| ----- | --------------------------- | ---------------------------------------------------------------------- | -------------------------- |
+| **A** | **La curva**                | Rangos hasta x16, la escalera de ×5,66, devolver lo invertido          | **Hecho**                  |
+| **B** | **Las ocho familias**       | Industria y Mando; 111 habilidades; una profesión por familia          | **Hecho**                  |
+| **C** | **Las bandejas**            | Altos, medios, bajos y refuerzos; internos a atributos; escalones I/II | **Hecho**                  |
+| **D** | **Las clases de nave**      | `Hull.class` y las habilidades de clase como requisito duro            | Falta                      |
+| **E** | **Refinar**                 | El verbo, los refinados, la merma                                      | Falta                      |
+| **F** | **Componentes y fabricar**  | El verbo, los componentes, recetas por módulo                          | Falta                      |
+| **G** | **Los refuerzos**           | Catálogo, calibración que se gasta, siete habilidades de Ingeniería    | Falta — la bandeja ya está |
+| **H** | **El generador de módulos** | Familias más fórmula de clase y escalón, para no escribirlos a mano    | Falta                      |
+| **I** | **El hielo**                | Cosechador, cuatro hielos, helio-3                                     | Falta                      |
+| **J** | **Barcazas y cristales**    | Clase barcaza, láser de tira, cristales, bodega de mineral             | Falta                      |
+| **K** | **Escanear**                | Sondas, firmas, encontrar y esconderse                                 | Falta                      |
+| **L** | **El gas**                  | Aspirador, tres gases, nubes que hay que escanear                      | Falta                      |
 
 Tres notas de orden que importan más que la lista:
 
-- **A y B van primero y juntos.** Son las dos que invalidan trabajo si llegan
-  después: cada habilidad que se agregue con la curva vieja hay que rebalancearla,
-  y cada una que se ponga en la familia equivocada hay que migrarla.
-- **D antes que E, y E antes que F.** Fabricar sin refinar no tiene insumo, y
+- **E antes que F, y F antes que H.** Fabricar sin refinar no tiene insumo, y
   generar módulos sin saber con qué se fabrican es generar la mitad de cada uno.
-- **G cierra el huérfano más viejo del juego.** Si hay que elegir una sola de las
-  diez para hacer después de C, es ésa.
+- **G no depende de nada y cierra una bandeja vacía.** Los refuerzos ya tienen su
+  ranura en los cinco cascos y su presupuesto en la calculadora; falta el
+  catálogo. Se pueden fabricar con material refinado hasta que existan los restos.
+- **I cierra el huérfano más viejo del juego**: el combustible se compra en la
+  estación y no sale de ningún lado. Si hay que elegir una sola, es ésa.
 
 ## Lo que se decide en el camino
 

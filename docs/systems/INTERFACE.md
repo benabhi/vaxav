@@ -977,6 +977,27 @@ evitar.
   jerga ni chistes, y cada clase de texto en su registro. Está entera en
   [«La voz»](../DESIGN.md#la-voz).
 
+## Lo que falta
+
+### El Neocom en un teléfono tiene que ser un cajón
+
+Hoy el Neocom se pliega a una tira de íconos y ahí se queda: sigue ocupando ancho
+en una pantalla donde el ancho es todo lo que hay. En un teléfono tiene que
+**esconderse del todo y abrirse con una hamburguesa en la barra de estado**,
+pasando **por encima** de la página con un velo detrás — el cajón lateral que
+cualquiera reconoce sin que se lo expliquen.
+
+Tres cosas que tiene que cumplir para no ser una molestia:
+
+- **Se cierra al elegir algo.** Un cajón que queda abierto después de navegar
+  obliga a un gesto de más cada vez.
+- **Se cierra con el velo y con Escape.** Son los dos reflejos que trae la gente.
+- **No cambia nada en escritorio.** Ahí el Neocom es una columna y funciona; el
+  cajón es una respuesta al ancho, no un rediseño.
+
+Es la deuda más visible que tiene el marco en móvil, y bloquea que la barra de
+estado gane cualquier otra cosa: hoy no tiene de dónde sacar lugar.
+
 ## Por decidir
 
 - Si el Neocom se pliega solo en pantallas chicas o queda a criterio del jugador.

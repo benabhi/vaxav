@@ -146,6 +146,11 @@ Minería (principal) recibe 600; Estiba y Prospección (secundarias), 90 cada un
 > `/piloto/habilidades`. Lo que sigue sin implementar es el laboratorio de más
 > abajo: hoy toda habilidad del catálogo está disponible desde el primer día.
 
+**Es la pieza más nuestra de todo el juego**, y la única que no sale de EVE. La
+premisa dice que los sistemas se replican; éste es el que no, porque lo asíncrono
+lo obliga: allá se entrena con un reloj que corre aunque nadie juegue, y acá
+jugar y progresar tienen que ser la misma cosa.
+
 Una acción no le paga experiencia a una habilidad: se la paga a la **familia** de
 la actividad. Minar deposita en el pozo de Extracción, y el jugador decide en qué
 habilidad de esa familia gastarlo.
@@ -197,7 +202,7 @@ otra pestaña; lo que decide es lo que hay en la base al escribir.
   las dos líneas es la decisión pendiente.
 - El **informe de cada acción** —el aviso y la bitácora— dice a qué pozo fue,
   cuánto había y cuánto quedó para gastar.
-- **`/piloto/habilidades`** tiene los seis pozos arriba, con cuántas habilidades
+- **`/piloto/habilidades`** tiene los ocho pozos arriba, con cuántas habilidades
   de la rama se pueden subir ahora mismo, y el catálogo entero abajo.
 
 ## Cómo se consigue una habilidad: el laboratorio
@@ -241,7 +246,7 @@ algo. Nadie prospecta un cinturón sin saber minar.
 Reglas para que el árbol no se vuelva un muro:
 
 - **Las habilidades de entrada (x1) nunca tienen requisitos.** Un piloto nuevo
-  siempre tiene seis puertas abiertas, una por familia.
+  siempre tiene ocho puertas abiertas, una por familia.
 - **Las cadenas son cortas**: como mucho dos saltos desde una habilidad de
   entrada hasta la más profunda de su rama.
 - **El requisito se mide en niveles, no en habilidades sueltas**: pedir

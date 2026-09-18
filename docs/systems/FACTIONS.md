@@ -16,8 +16,12 @@ federación y alianza— porque es un reparto que funciona: un poder viejo y
 jerárquico, uno grande y burocrático, y una coalición de los que no quisieron ser
 ninguno de los dos.
 
-Tres y no cuatro. Con cuatro, la cuarta siempre termina siendo "los
-independientes", que no es una facción sino la ausencia de una.
+Tres y no cuatro, y ésta es de las pocas veces en que **nos apartamos de EVE a
+propósito**: allá son cuatro imperios y acá tres. Con cuatro, la cuarta siempre
+termina siendo «los independientes», que no es una facción sino la ausencia de
+una; y con tres, cada una puede tener carácter propio y la política del sector se
+lee de un vistazo. Ver «Qué tomamos de EVE, y qué no» en
+[DESIGN.md](../DESIGN.md).
 
 ## Qué hace una facción
 
@@ -149,6 +153,17 @@ tienen son acuerdos, y los cumplen.
 - **Empieza en**: Hábitat Talo, excavado en un asteroide del Cinturón Exterior.
 - **Cómo ve al resto**: dos imperios discutiendo cuál se queda con la mesa.
 
+## La policía no es de nadie: la Albatros
+
+Las patrullas que responden en espacio vigilado son **la Albatros**, y no
+pertenece a ninguna de las tres: es la fuerza que las tres sostienen entre todas,
+precisamente porque ninguna confía en las otras dos para hacerlo.
+
+Que sea neutral es lo que la hace útil como mecánica —la seguridad de un sistema
+significa lo mismo lleve la bandera que lleve— y lo que evita que «alta seguridad»
+se lea como «territorio del Dominio». El detalle está en
+[universo](UNIVERSE.md#quién-responde-la-albatros).
+
 ## Las facciones no poseen estaciones
 
 Poseen **corporaciones**, y las corporaciones poseen estaciones. Una facción es un
@@ -171,8 +186,28 @@ del espacio queda libre para que lo reclamen las corporaciones de jugadores. Ver
 
 ## Por decidir
 
+### La reputación no puede ser negativa, y eso hoy es un límite
+
+`MIN_REPUTATION` es **cero**: la escala va de 0 a 100 y no baja de ahí. Alcanza
+para lo que existe —la reputación abre agentes y niveles de misión— pero **no
+alcanza para nada de lo que viene**:
+
+- No se puede ser **enemigo** de una facción, sólo desconocido. Un pirata que
+  asalta convoyes del Dominio y uno que nunca habló con el Dominio tienen la misma
+  ficha.
+- No hay de dónde colgar la **hostilidad mecánica**: zonas vedadas, patrullas que
+  disparan a la vista, tasas castigadas. Todo eso necesita un número por debajo de
+  cero para significar algo.
+- **Perder reputación no duele.** Si el piso es cero, el que ya está en cero
+  atacó gratis, y una consecuencia que se agota no es una consecuencia.
+
+En EVE la escala va de −10 a +10 y ése es su punto: lo que te abre una puerta te
+cierra otra. La decisión pendiente es si copiamos eso —con el cero como
+«desconocido» y los negativos como enemistad— o si la enemistad va en un campo
+aparte. Hay que resolverlo **antes del combate**, porque atacar sin que baje nada
+es lo que convierte a la piratería en un botón sin costo.
+
 - Si se puede cambiar de facción, y a qué costo.
-- Cómo funciona la reputación: una escala por facción, y qué abre y cierra.
 - Si hay hostilidad mecánica (zonas vedadas, tasas distintas, ataques a la vista).
 - Si las corporaciones de jugadores se alinean con facciones o son ajenas.
 - La historia larga de cada una: cómo llegaron, qué se deben y qué se reprochan.

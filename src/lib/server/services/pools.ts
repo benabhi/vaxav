@@ -25,7 +25,7 @@ export function pools(db: Db, pilotId: number): Pools {
 	const filas = db.select().from(pilotPool).where(eq(pilotPool.pilotId, pilotId)).all();
 	const encontrado = new Map(filas.map((fila) => [fila.family, fila.xp]));
 
-	// Se completan las seis: una rama sin fila es una rama en cero, y quien lee
+	// Se completan las ocho: una rama sin fila es una rama en cero, y quien lee
 	// esto no tiene por qué acordarse de esa equivalencia.
 	return Object.fromEntries(
 		SKILL_FAMILIES.map((family) => [family, encontrado.get(family) ?? 0])

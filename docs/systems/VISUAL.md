@@ -232,6 +232,21 @@ apoya directamente sobre las estrellas; el halo cian no está en la imagen sino
 que es una sombra proyectada, para que acompañe al destello del propio logotipo
 sin quemarlo.
 
+## Temas, para más adelante
+
+**No hay modo claro y no va a haberlo**: la estética es de una sola pieza. Pero
+todo el color del juego vive en un solo lugar —los tokens de `@theme` en
+`src/app.css`— y ninguna pantalla hardcodea un color, así que **cambiar la paleta
+entera es cambiar un bloque de variables**.
+
+Eso deja la puerta abierta a **temas**: el mismo HUD en otro color —el cian del
+logotipo como dominante, un ámbar más cálido, un verde de terminal vieja— sin
+tocar una sola pantalla. Es una idea anotada, no un plan; lo que la hace posible
+es la disciplina de los tokens, y ésa se mantiene igual aunque nunca se use.
+
+El naranja sobre casi negro sigue siendo **el** tema de Vaxav. Uno alternativo
+sería una preferencia del jugador, nunca el aspecto por omisión.
+
 ## Dónde vive cada cosa
 
 - `src/app.css` — los tokens. Única fuente de verdad; ninguna página escribe
