@@ -11,7 +11,20 @@
 import { indexByCode, lookup } from './catalog';
 
 export const MIN_DIFFICULTY = 1;
-export const MAX_DIFFICULTY = 5;
+
+/**
+ * El rango más caro que puede tener una habilidad.
+ *
+ * **Dieciséis y no cinco**, como en EVE y por el mismo motivo: con un techo de
+ * cinco, la habilidad más cara del juego cuesta lo mismo que cinco baratas y no
+ * hay forma de declarar que algo es el trabajo de una carrera. Con dieciséis, el
+ * tope son más de tres mil horas de acción y queda lugar para todo lo que hay en
+ * el medio.
+ *
+ * La escalera con la que se elige el rango de una habilidad nueva está en
+ * docs/RESEARCH.md §4.4: no se inventa caso por caso.
+ */
+export const MAX_DIFFICULTY = 16;
 
 /**
  * Las seis ramas en que se agrupa el catálogo.

@@ -14,9 +14,9 @@ ni clases: un piloto **es** lo que sabe hacer.
 ## Cómo funcionan
 
 - Cada habilidad va del **nivel 0 al 5**. El 0 es no entrenada.
-- Cada habilidad tiene un **multiplicador de dificultad, de x1 a x5**, que
-  representa lo costosa que es. Una x2 pide el doble de experiencia que una x1
-  para el mismo nivel; una x5, cinco veces.
+- Cada habilidad tiene un **rango, de x1 a x16**, que multiplica lo que cuesta.
+  Una x2 pide el doble de experiencia que una x1 para el mismo nivel; una x16,
+  dieciséis veces. El rango no se elige por gusto: sale de una escalera fija.
 - **La experiencia se gana resolviendo acciones**, no esperando. Acá está la
   diferencia con EVE Online, de donde viene la idea de los multiplicadores: allá
   se entrena con el reloj; en Vaxav se entrena **haciendo**. El que mina, mejora
@@ -28,30 +28,72 @@ ni clases: un piloto **es** lo que sabe hacer.
 
 ## Curva de experiencia
 
-XP necesaria para alcanzar cada nivel, **antes** del multiplicador. Son potencias
-de tres: cada nivel cuesta tres veces el anterior.
+XP necesaria para alcanzar cada nivel, **antes** del multiplicador. Cada nivel
+cuesta **la raíz de 32 —5,66 veces— el anterior**, que es la proporción de EVE.
 
 | Nivel | XP del nivel | Acumulada |
 | ----: | -----------: | --------: |
 |     1 |          100 |       100 |
-|     2 |          300 |       400 |
-|     3 |          900 |     1.300 |
-|     4 |        2.700 |     4.000 |
-|     5 |        8.100 |    12.100 |
+|     2 |          566 |       666 |
+|     3 |        3.200 |     3.866 |
+|     4 |       18.102 |    21.968 |
+|     5 |      102.400 |   124.368 |
 
 Con el multiplicador aplicado, llegar al nivel 5 cuesta:
 
-| Dificultad | XP acumulada a nivel 5 |
-| ---------- | ---------------------: |
-| x1         |                 12.100 |
-| x2         |                 24.200 |
-| x3         |                 36.300 |
-| x4         |                 48.400 |
-| x5         |                 60.500 |
+| Rango | XP acumulada a nivel 5 | Horas de acción |
+| ----- | ---------------------: | --------------: |
+| x1    |                124.368 |             207 |
+| x2    |                248.736 |             415 |
+| x3    |                373.104 |             622 |
+| x5    |                621.840 |           1.036 |
+| x8    |                994.944 |           1.658 |
+| x16   |              1.989.888 |           3.316 |
 
-La forma de la curva importa más que los números: **los primeros niveles se
-sienten enseguida y el quinto es una decisión de identidad**. Nadie va a tener
-todo al 5, y ahí está la gracia.
+(Las horas son a seiscientos de experiencia por hora, que es lo que da una acción
+de dificultad 1.)
+
+La forma de la curva importa más que los números, y tiene tres propiedades que son
+las que se buscaron:
+
+- **Los primeros niveles siguen siendo inmediatos.** El 1 son diez minutos de
+  juego y el 3 una tarde larga: empinar la curva no podía volver lento el empezar.
+- **El 4 es una inversión y el 5 es una identidad.** El último nivel cuesta
+  **cinco veces y media lo que los cuatro anteriores juntos**. Nadie lleva veinte
+  habilidades al cinco; se llevan tres, y ésas dicen quién sos.
+- **El rango estira sin deformar.** Un x16 al cinco son más de tres mil horas: es
+  el techo de una carrera, no un objetivo de temporada.
+
+### De dónde salen estos números
+
+**La curva se calcula, no se escribe.** `game/progression.ts` tiene el costo del
+primer nivel y el crecimiento; las dos tablas salen de ahí. Dos listas escritas a
+mano son dos listas que se desfasan.
+
+Antes cada nivel costaba el triple que el anterior, y eso tenía un problema que
+sólo se ve al mirarlo con números: el nivel 5 costaba **apenas el doble** que los
+cuatro anteriores juntos, así que especializarse no dolía y el catálogo entero se
+terminaba en unas novecientas horas. El detalle del diagnóstico y de la decisión
+está en [la investigación](../RESEARCH.md).
+
+### El rango de cada habilidad
+
+Va de **x1 a x16**, y no se elige por gusto: sale de una escalera fija.
+
+| Rango | Para qué                                                        |
+| ----: | --------------------------------------------------------------- |
+|    x1 | Habilidad de entrada de una familia. Cualquiera la empieza      |
+|    x2 | El segundo escalón de una rama; lo que se usa todos los días    |
+|    x3 | Especialización clara dentro de un oficio                       |
+|    x4 | Lo que abre una clase de nave intermedia o un módulo avanzado   |
+|    x5 | La punta de una rama de oficio                                  |
+|    x6 | Clases de nave pesadas, técnicas caras                          |
+|    x8 | Lo que define a un veterano de un oficio                        |
+|   x12 | Capacidades de flota o de capital                               |
+|   x16 | El tope del juego. Una o dos por familia, y ninguna obligatoria |
+
+Si una habilidad parece merecer un rango que la escalera no le da, lo que está mal
+es dónde se la puso en el árbol.
 
 ## Qué da un nivel
 
