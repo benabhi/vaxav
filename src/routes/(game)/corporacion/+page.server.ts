@@ -21,6 +21,11 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals }) => {
 	// El guard del layout del grupo ya rechazó a quien no tiene sesión.
 	if (!locals.pilot) redirect(303, LOGIN_ROUTE);
+
+	// **Acá siempre la propia.** Mirar la de otro se hace en una ventana y no en
+	// esta pantalla: puesta acá, con el Neocom marcando «Corporación» y las
+	// pestañas de uno al lado, una corporación ajena se lee como si fuera la tuya.
+	// Ver `/fichas/corporacion`.
 	return {
 		corporacion: buildCorporacion(db, locals.pilot),
 		// La bandera del piloto, para ofrecerle las suyas cuando está sin corporación.

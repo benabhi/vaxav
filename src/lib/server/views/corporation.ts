@@ -63,6 +63,9 @@ const INDEPENDIENTE: Corporacion = {
 		'No respondés a ninguna corporación. Volás por tu cuenta, cobrás para vos y ' +
 		'no le debés explicaciones a nadie.',
 	members: '',
+	mine: false,
+	canJoin: null,
+	joinBlocked: '',
 	stations: [],
 	moreStations: 0,
 	stationCount: '',
@@ -169,10 +172,21 @@ export function estacionesDe(db: Db, corporationId: number): EstacionCorporacion
  * seis puestos no puede costar seis viajes a la base cada vez que alguien abre su
  * ficha.
  */
-export function buildCorporacion(db: Db, row: Pilot): Corporacion {
-	if (row.corporationId === null) return INDEPENDIENTE;
+export function buildCorporacion(db: Db, row: Pilot, code = ''): Corporacion {
+	// **Con código se mira la ficha de cualquiera; sin código, la tuya.** Que una
+	// corporación se pueda mirar sin pertenecer a ella es lo que vuelve enlazable
+	// su nombre, y un nombre que no lleva a ninguna parte no sirve de nada: el
+	// panorama del piloto lista cuarenta y cada una tenía que poder abrirse.
+	//
+	// Va por parámetro y no por una ruta nueva porque el proyecto tiene **dos
+	// niveles de navegación y nunca un tercero**: `/corporacion/casa_verlan`
+	// chocaría con las pestañas, y mirar otra ficha es un recorte, no un lugar.
+	const suya = code
+		? db.select().from(corporation).where(eq(corporation.code, code)).get()
+		: row.corporationId === null
+			? undefined
+			: db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
 
-	const suya = db.select().from(corporation).where(eq(corporation.id, row.corporationId)).get();
 	if (!suya) return INDEPENDIENTE;
 
 	// Las estaciones que opera, con el sistema donde están y qué ofrecen. El
@@ -203,6 +217,19 @@ export function buildCorporacion(db: Db, row: Pilot): Corporacion {
 
 	return {
 		belongs: true,
+		// Si la que se está mirando es la propia. Lo que se puede **hacer** —renunciar,
+		// cobrar el día que se cobre— depende de esto y no de estar en la pantalla.
+		mine: row.corporationId === suya.id,
+		// Y si se le puede ofrecer alistarse. La regla es la misma que valida el
+		// servicio, dicha una sola vez allá: acá sólo se decide qué dibujar.
+		canJoin: row.corporationId !== null ? null : suya.faction === row.faction,
+		joinBlocked:
+			row.corporationId === null && suya.faction !== row.faction
+				? suya.faction
+					? `Es del bando de ${FACTIONS[suya.faction as keyof typeof FACTIONS]?.name ?? 'otra bandera'}` +
+						` y vos volás con ${FACTIONS[row.faction as keyof typeof FACTIONS]?.name ?? 'otra'}.`
+					: 'Opera estaciones, no recibe pilotos.'
+				: '',
 		name: suya.name,
 		code: suya.code,
 		kind: corporationKindLabel(suya.kind as CorporationKind),

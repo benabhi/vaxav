@@ -244,6 +244,26 @@ export interface PanoramaReputacion {
 export interface Corporacion {
 	/** Si pertenece a alguna. Lo demás describe a cuál, o a la falta de una. */
 	readonly belongs: boolean;
+	/**
+	 * Si la que se está mirando es la del piloto.
+	 *
+	 * La ficha se puede abrir para **cualquier** corporación —es lo que vuelve
+	 * enlazable su nombre—, así que lo que se puede hacer ahí no puede depender de
+	 * estar en la pantalla: renunciar es de la tuya, y alistarse de una ajena.
+	 */
+	readonly mine: boolean;
+	/**
+	 * Si se le puede ofrecer alistarse, y por qué no.
+	 *
+	 * **Tres estados y no dos.** `null` quiere decir que no hay nada que ofrecer
+	 * —el piloto ya responde a alguien— y ahí el botón ni se dibuja: no es que no
+	 * se pueda apretar, es que primero hay que renunciar, y un botón que existe
+	 * para explicar eso molesta más de lo que ayuda. `false` es estar libre y que
+	 * la bandera no dé, y ahí sí va apagado con el motivo, que es el trato de toda
+	 * acción del juego.
+	 */
+	readonly canJoin: boolean | null;
+	readonly joinBlocked: string;
 	readonly name: string;
 	readonly code: string;
 	/** El rubro, en palabras y en ícono. */

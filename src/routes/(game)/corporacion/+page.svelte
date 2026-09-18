@@ -191,13 +191,46 @@
 									<span class="text-[0.7rem] text-text-muted">{corp.reputation.next}</span>
 								{/if}
 								<div class="grow"></div>
-								<HudLink href="/corporacion/reputacion" variant="outline" size="1">
-									<Icon name="scales" weight="bold" size="0.7rem" />
-									Ver la reputación
-								</HudLink>
-								<HudButton variant="ghost" size="1" onclick={() => (renunciando = true)}>
-									Renunciar
-								</HudButton>
+								<!--
+									El libro y el renunciar son **de la tuya**. Mirando la ficha de otra
+									corporación no hay historia que abrir ni nada a lo que renunciar, y
+									un botón que no se puede apretar es peor que uno que no está.
+								-->
+								{#if corp.mine}
+									<HudLink href="/corporacion/reputacion" variant="outline" size="1">
+										<Icon name="scales" weight="bold" size="0.7rem" />
+										Ver la reputación
+									</HudLink>
+									<HudButton variant="ghost" size="1" onclick={() => (renunciando = true)}>
+										Renunciar
+									</HudButton>
+								{/if}
+								<!--
+									**Alistarse, sólo si estás libre.** Mirando una ficha ajena con
+									corporación propia el botón no aparece: no es que no se pueda
+									apretar, es que no hay nada que ofrecer hasta renunciar, y un botón
+									que existe para explicar por qué no se puede es peor que no estar.
+									Si estás libre y la bandera no da, aparece apagado con el motivo,
+									que es el trato de toda acción del juego.
+								-->
+								{#if !corp.mine && corp.canJoin !== null}
+									{#if corp.joinBlocked}
+										<span class="text-[0.7rem] text-text-muted">{corp.joinBlocked}</span>
+									{/if}
+									<form method="POST" action="?/unirse" use:enhance>
+										<input type="hidden" name="corporacion" value={corp.code} />
+										<HudButton
+											type="submit"
+											variant="primary"
+											size="1"
+											disabled={!corp.canJoin}
+											title={corp.joinBlocked || undefined}
+										>
+											<Icon name="handshake" weight="bold" size="0.7rem" />
+											Alistarse
+										</HudButton>
+									</form>
+								{/if}
 							</div>
 						{/if}
 					</div>

@@ -28,6 +28,7 @@
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
+	import CorporationSheet from '$lib/components/game/CorporationSheet.svelte';
 	import FactionRose from '$lib/components/game/FactionRose.svelte';
 	import SegmentBar from '$lib/components/meters/SegmentBar.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -113,6 +114,14 @@
 	function alCambiar(evento: Event & { currentTarget: HTMLSelectElement }) {
 		evento.currentTarget.form?.requestSubmit();
 	}
+
+	/**
+	 * Qué corporación se está mirando en la ventana. Vacío, ninguna.
+	 *
+	 * Ventana y no pantalla: llevar a `/corporacion` con otra puesta se lee como si
+	 * fuera la tuya, con el Neocom marcando tu módulo y tus pestañas al lado.
+	 */
+	let fichaCorp = $state('');
 
 	let hayFiltroCorp = $derived(Boolean(consulta.search || consulta.faction));
 	let hayFiltroAgentes = $derived(
@@ -255,15 +264,19 @@
 								<Icon name={una.icon} weight="bold" size="0.75rem" class="shrink-0 text-accent" />
 								<span class="flex min-w-0 flex-col items-start">
 									<!--
-										El nombre lleva al mapa con esa corporación puesta en el recorte:
-										dónde opera es la mitad de la decisión de trabajar para alguien.
+										El nombre abre **su ficha**, no el mapa: ahí está qué es, quién la
+										opera, dónde tiene puestos y qué piensa de vos, y desde ahí sale
+										el enlace al mapa. Saltar directo al mapa contesta una sola de
+										esas preguntas y se saltea las otras cuatro.
 									-->
-									<a
-										href="/navegacion/galaxia?corporacion={una.code}"
-										class="truncate text-1 text-text-strong no-underline hover:text-accent-bright"
+									<button
+										type="button"
+										onclick={() => (fichaCorp = una.code)}
+										class="cursor-pointer truncate border-0 bg-transparent p-0 text-left text-1
+											text-text-strong hover:text-accent-bright"
 									>
 										{una.name}
-									</a>
+									</button>
 									{#if una.mine}
 										<Label>Respondés a ella</Label>
 									{/if}
@@ -384,12 +397,14 @@
 							</span>
 						</td>
 						<td class="py-[0.5rem] pr-3">
-							<a
-								href="/navegacion/galaxia?corporacion={uno.corporationCode}"
-								class="block truncate text-1 text-text-body no-underline hover:text-accent-bright"
+							<button
+								type="button"
+								onclick={() => (fichaCorp = uno.corporationCode)}
+								class="block w-full cursor-pointer truncate border-0 bg-transparent p-0 text-left
+									text-1 text-text-body hover:text-accent-bright"
 							>
 								{uno.corporation}
-							</a>
+							</button>
 						</td>
 						<td class="hidden py-[0.5rem] pr-3 md:table-cell">
 							<!-- El sistema lleva al mapa, con él elegido. -->
@@ -451,3 +466,6 @@
 		</BodyText>
 	</div>
 </Panel>
+
+<!-- La ficha de la corporación que se esté mirando, encima de todo. -->
+<CorporationSheet bind:code={fichaCorp} />
