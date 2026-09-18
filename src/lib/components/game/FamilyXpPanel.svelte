@@ -7,7 +7,7 @@
 	mismos datos— y por eso las dos métricas de acá son las dos de la rueda: lo
 	invertido en naranja, el pozo en cian.
 
-	Las seis ramas salen siempre, incluso en cero: una rama vacía también informa
+	Las ocho ramas salen siempre, incluso en cero: una rama vacía también informa
 	—dice por dónde *no* fue— y una lista que cambia de largo según el piloto no se
 	puede comparar de un vistazo.
 

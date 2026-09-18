@@ -11,7 +11,7 @@
 
 import { indexByCode, lookup } from './catalog';
 import { xpForLevel } from './progression';
-import { getSkill } from './skills';
+import { getSkill, type SkillFamily } from './skills';
 
 /**
  * Experiencia inicial que reparte toda profesión, con el multiplicador de cada
@@ -64,6 +64,21 @@ export interface Profession {
 	readonly kit: readonly KitEntry[];
 
 	/**
+	 * De qué familia de habilidades es el oficio.
+	 *
+	 * **Hay exactamente una profesión por familia**, y un test lo hace cumplir. No
+	 * es simetría por gusto: la familia es la que tiene pozo propio, así que una
+	 * familia sin oficio de entrada es una rama a la que nadie llega con el
+	 * repartidor puesto, y dos oficios en la misma familia son dos formas de
+	 * empezar en el mismo lugar.
+	 *
+	 * Se declara en vez de deducirse de la primera habilidad: varias profesiones
+	 * arrancan con una habilidad de otra rama —el explorador es de Ciencias pero su
+	 * primer nivel es de Pilotaje— y deducirlo daría la respuesta equivocada.
+	 */
+	readonly family: SkillFamily;
+
+	/**
 	 * Si se puede elegir en el alta.
 	 *
 	 * Una profesión se ofrece cuando hay algo que hacer con ella. Hoy sólo el
@@ -73,6 +88,10 @@ export interface Profession {
 	 * Las otras **se quedan en el catálogo** aunque no se ofrezcan: siguen
 	 * verificando el presupuesto de experiencia, y los pilotos que ya las tengan
 	 * tienen que poder seguir jugando.
+	 *
+	 * Esto no limita a nadie: **la profesión no cierra ninguna puerta**. Es el
+	 * punto de partida y nada más, y cualquier piloto puede entrenar cualquier
+	 * habilidad del catálogo desde el primer día.
 	 */
 	readonly playable: boolean;
 }
@@ -80,6 +99,7 @@ export interface Profession {
 const CATALOG = [
 	{
 		code: 'miner',
+		family: 'extraction',
 		name: 'Minero',
 		description:
 			'Trabajó en los anillos hasta que juntó para su propia nave. Sabe sacar ' +
@@ -116,15 +136,16 @@ const CATALOG = [
 		// Sin armas: no es su oficio, y una nave que sale artillada sugiere que
 		// pelear es el plan.
 		kit: [
-			{ item: 'mining_laser_e1', quantity: 1, fitted: true },
-			{ item: 'cargo_rack_e1', quantity: 1, fitted: true },
-			{ item: 'scanner_e1', quantity: 1, fitted: true },
-			{ item: 'mining_laser_e1', quantity: 1, fitted: false }
+			{ item: 'mining_laser_i1', quantity: 1, fitted: true },
+			{ item: 'cargo_rack_i1', quantity: 1, fitted: true },
+			{ item: 'scanner_i1', quantity: 1, fitted: true },
+			{ item: 'mining_laser_i1', quantity: 1, fitted: false }
 		],
 		playable: true
 	},
 	{
 		code: 'explorer',
+		family: 'science',
 		name: 'Explorador',
 		description: 'Vivió de vender coordenadas. Llega más lejos y ve antes lo que hay.',
 		grants: [
@@ -137,6 +158,7 @@ const CATALOG = [
 	},
 	{
 		code: 'hauler',
+		family: 'piloting',
 		name: 'Transportista',
 		description: 'Llevó carga ajena media vida. Nadie mete más cosas en menos bodega.',
 		// Estiba y Navegación son el oficio; Eficiencia de combustible es lo que
@@ -152,6 +174,7 @@ const CATALOG = [
 	},
 	{
 		code: 'trader',
+		family: 'trade',
 		name: 'Mercader',
 		description: 'Empezó revendiendo en el muelle. Compra bien y sabe qué le están cobrando.',
 		// Regatear y saber acomodar lo que compró son el oficio; Contabilidad es lo
@@ -167,6 +190,7 @@ const CATALOG = [
 	},
 	{
 		code: 'escort',
+		family: 'combat',
 		name: 'Escolta',
 		description: 'Cobró por proteger convoyes. Tira derecho y arregla lo que le rompen.',
 		// Puntería y Mecánica son el oficio; Blindaje es lo primero que aprende
@@ -181,6 +205,7 @@ const CATALOG = [
 	},
 	{
 		code: 'technician',
+		family: 'engineering',
 		name: 'Técnico',
 		description: 'Fue mecánico de hangar. Entiende la nave por dentro mejor que nadie.',
 		// Mecánica y Estiba son el oficio del hangar —abrir la nave y volver a
@@ -190,6 +215,42 @@ const CATALOG = [
 			{ skill: 'mechanics', level: 2 },
 			{ skill: 'stowage', level: 2 },
 			{ skill: 'power_management', level: 1 }
+		],
+		kit: [],
+		playable: false
+	},
+	{
+		code: 'smelter',
+		family: 'industry',
+		name: 'Fundidor',
+		description:
+			'Pasó años en un horno de estación. Sabe qué sale de cada piedra y ' +
+			'cuánto se pierde en el intento.',
+		// Refinado y Fabricación son el oficio entero —convertir una cosa en otra—;
+		// Reciclaje es lo que separa al que funde mineral del que además sabe sacarle
+		// algo a lo que los demás tiran.
+		grants: [
+			{ skill: 'refining', level: 2 },
+			{ skill: 'manufacturing', level: 2 },
+			{ skill: 'recycling', level: 1 }
+		],
+		kit: [],
+		playable: false
+	},
+	{
+		code: 'boatswain',
+		family: 'command',
+		name: 'Contramaestre',
+		description:
+			'Manejó la tripulación de un carguero ajeno. Repartir trabajo y ' +
+			'cuentas es lo único que sabe hacer, y lo hace muy bien.',
+		// Liderazgo y Navegación son el oficio de quien lleva gente de un lado a
+		// otro; Maniobra es lo que lo separa del pasajero: el que da la orden de
+		// salir sabe cuánto tarda la nave en alinearse.
+		grants: [
+			{ skill: 'leadership', level: 2 },
+			{ skill: 'navigation', level: 2 },
+			{ skill: 'maneuvering', level: 1 }
 		],
 		kit: [],
 		playable: false

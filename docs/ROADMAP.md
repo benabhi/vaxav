@@ -238,11 +238,164 @@ la siguiente:
   `HudTable` —que ya tiene las columnas declaradas como dato— y no cada pantalla:
   ocho listados largos con ocho maquetas paralelas son ocho que se separan.
 
+## La auditoría de las cadenas
+
+Ninguna mecánica entra sola: toda característica arrastra **siete eslabones**
+—verbo, insumo, fuente, aparato, llave, fábrica y lugar— y la que tenga huecos no
+está lista. Ver «La cadena» en [DESIGN.md](DESIGN.md).
+
+Esto es el estado de cada actividad, que es lo que dice qué conviene construir
+antes. Leyenda: ✅ existe · 🔨 diseñado · ❌ hueco sin fecha.
+
+### Minar mineral
+
+| Eslabón    | Qué es                                   |                 |
+| ---------- | ---------------------------------------- | --------------- |
+| El verbo   | Extraer de una roca                      | ✅              |
+| El insumo  | Nada, con láser común                    | ✅              |
+| La fuente  | Cinturones, ocho minerales por seguridad | 🔨 (hay cuatro) |
+| El aparato | Láser de extracción                      | ✅              |
+| La llave   | Minería, Estiba, Prospección             | ✅              |
+| La fábrica | Lente focal + silicio                    | 🔨              |
+| El lugar   | El cinturón; la estación que compra      | ✅              |
+
+**Es la única cadena casi cerrada.** Le falta la fábrica del láser y la mitad de
+los minerales.
+
+### Minar con láser de tira
+
+| Eslabón    | Qué es                                       |     |
+| ---------- | -------------------------------------------- | --- |
+| El verbo   | Extraer en serie                             | 🔨  |
+| El insumo  | **Cristal de extracción, que se gasta**      | 🔨  |
+| La fuente  | El mismo cinturón, más rápido                | 🔨  |
+| El aparato | Láser de tira, sólo en barcaza               | 🔨  |
+| La llave   | Láseres de tira, Cristales, Barcazas mineras | 🔨  |
+| La fábrica | Cristalografía, en taller de estación        | 🔨  |
+| El lugar   | Cinturón + taller que fabrique cristales     | 🔨  |
+
+Todo propuesto, y **cierra sola**: es la cadena más completa de las nuevas, y por
+eso es la mejor candidata a ser la primera que se construya entera.
+
+### Refinar
+
+| Eslabón    | Qué es                        |                         |
+| ---------- | ----------------------------- | ----------------------- |
+| El verbo   | Convertir mineral en material | ❌                      |
+| El insumo  | El mineral, que se consume    | ✅                      |
+| La fuente  | La minería                    | ✅                      |
+| El aparato | La refinería de la estación   | ✅ (el servicio existe) |
+| La llave   | Refinado, Tasación de mena    | ✅ / 🔨                 |
+| La fábrica | No aplica                     | —                       |
+| El lugar   | Estación con refinería        | ✅                      |
+
+**El verbo no existe**: el servicio de refinería está sembrado en las estaciones y
+no hace nada. Es el hueco más barato de cerrar de todos los que hay.
+
+### Saltar a otro sistema
+
+| Eslabón    | Qué es                                 |     |
+| ---------- | -------------------------------------- | --- |
+| El verbo   | Cruzar una puerta                      | ✅  |
+| El insumo  | **Combustible**, que se consume        | ✅  |
+| La fuente  | **Hielo → helio-3**                    | ❌  |
+| El aparato | Motor de salto y tanque                | ✅  |
+| La llave   | Astrogación, Eficiencia de combustible | ✅  |
+| La fábrica | Tubo de contención + uranio            | 🔨  |
+| El lugar   | La puerta; la estación que reabastece  | ✅  |
+
+El huérfano declarado en `DESIGN.md`: **el combustible se compra y no sale de
+ningún lado.** La cadena del hielo lo cierra.
+
+### Fabricar un módulo
+
+| Eslabón    | Qué es                                          |                         |
+| ---------- | ----------------------------------------------- | ----------------------- |
+| El verbo   | Fabricar                                        | ❌                      |
+| El insumo  | Componentes y refinados                         | 🔨                      |
+| La fuente  | Refinado y fabricación de componentes           | 🔨                      |
+| El aparato | El taller de la estación                        | ✅ (el servicio existe) |
+| La llave   | Fabricación, Componentes, Ingeniería de módulos | 🔨                      |
+| La fábrica | No aplica: es la fábrica                        | —                       |
+| El lugar   | Estación con taller                             | ✅                      |
+
+### Escanear y explorar
+
+| Eslabón    | Qué es                                           |                 |
+| ---------- | ------------------------------------------------ | --------------- |
+| El verbo   | Escanear un sistema, un cuerpo o a alguien       | ❌ (sólo rocas) |
+| El insumo  | **Sondas**, que se gastan                        | 🔨              |
+| La fuente  | Circuito impreso + silicio                       | 🔨              |
+| El aparato | Lanzador de sondas, amplificador                 | 🔨              |
+| La llave   | Escaneo, Sondas, Astrometría, Análisis de firmas | 🔨              |
+| La fábrica | Taller                                           | 🔨              |
+| El lugar   | Cualquier sistema; lo que se encuentra está ahí  | 🔨              |
+
+**Y su reverso, que es la misma cadena:** el amortiguador de firma y Perfil de
+firma son el aparato y la llave de _no ser encontrado_. Diseñarlos juntos es lo que
+evita terminar con dos sistemas parecidos que no se hablan.
+
+### Comerciar
+
+| Eslabón    | Qué es                           |         |
+| ---------- | -------------------------------- | ------- |
+| El verbo   | Comprar y vender                 | ✅      |
+| El insumo  | Créditos                         | ✅      |
+| La fuente  | Todo lo demás                    | ✅      |
+| El aparato | Ninguno                          | —       |
+| La llave   | Regateo, Contabilidad, Corretaje | ✅ / 🔨 |
+| La fábrica | No aplica                        | —       |
+| El lugar   | Estación con mercado             | ✅      |
+
+### Combatir
+
+Sin verbo. **Toda la familia de Combate es hoy un conjunto de llaves sin puerta**,
+y la propuesta de la sección 5.6 no cambia eso: entra cuando entre el combate.
+
+## Las etapas de los catálogos
+
+En orden de dependencia y no de entusiasmo. Cada una deja algo jugable y cada una
+cierra huérfanos concretos.
+
+| #     | Etapa                       | Qué entra                                                              | Estado                     |
+| ----- | --------------------------- | ---------------------------------------------------------------------- | -------------------------- |
+| **A** | **La curva**                | Rangos hasta x16, la escalera de ×5,66, devolver lo invertido          | **Hecho**                  |
+| **B** | **Las ocho familias**       | Industria y Mando; 111 habilidades; una profesión por familia          | **Hecho**                  |
+| **C** | **Las bandejas**            | Altos, medios, bajos y refuerzos; internos a atributos; escalones I/II | **Hecho**                  |
+| **D** | **Las clases de nave**      | `Hull.class` y las habilidades de clase como requisito duro            | Falta                      |
+| **E** | **Refinar**                 | El verbo, los refinados, la merma                                      | Falta                      |
+| **F** | **Componentes y fabricar**  | El verbo, los componentes, recetas por módulo                          | Falta                      |
+| **G** | **Los refuerzos**           | Catálogo, calibración que se gasta, siete habilidades de Ingeniería    | Falta — la bandeja ya está |
+| **H** | **El generador de módulos** | Familias más fórmula de clase y escalón, para no escribirlos a mano    | Falta                      |
+| **I** | **El hielo**                | Cosechador, cuatro hielos, helio-3                                     | Falta                      |
+| **J** | **Barcazas y cristales**    | Clase barcaza, láser de tira, cristales, bodega de mineral             | Falta                      |
+| **K** | **Escanear**                | Sondas, firmas, encontrar y esconderse                                 | Falta                      |
+| **L** | **El gas**                  | Aspirador, tres gases, nubes que hay que escanear                      | Falta                      |
+
+Tres notas de orden que importan más que la lista:
+
+- **E antes que F, y F antes que H.** Fabricar sin refinar no tiene insumo, y
+  generar módulos sin saber con qué se fabrican es generar la mitad de cada uno.
+- **G no depende de nada y cierra una bandeja vacía.** Los refuerzos ya tienen su
+  ranura en los cinco cascos y su presupuesto en la calculadora; falta el
+  catálogo. Se pueden fabricar con material refinado hasta que existan los restos.
+- **I cierra el huérfano más viejo del juego**: el combustible se compra en la
+  estación y no sale de ningún lado. Si hay que elegir una sola, es ésa.
+
 ## Lo que se decide en el camino
 
-| Pregunta                                          | Se necesita en |
-| ------------------------------------------------- | -------------- |
-| ¿Se puede encolar más de una acción?              | Etapa 2        |
-| ¿Qué se pierde al morir: la carga, la nave, nada? | Combate        |
-| ¿El mapa es fijo o generado?                      | Etapa 6        |
-| ¿Cuánto PvP directo y cuánto conflicto indirecto? | Combate        |
+Preguntas cuya respuesta **cambia el diseño y no sólo los números**. No están acá
+por olvido: están porque construir lo que depende de ellas antes de contestarlas
+es trabajo que después hay que deshacer.
+
+| Pregunta                                          | Se necesita en | Por qué importa                                                                                                                                |
+| ------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| ¿Se puede encolar más de una acción?              | Etapa 2        | Con una sola, las cadenas largas son una fila de espera; con varias, el pozo por familia se llena mucho más rápido y la curva pide otro número |
+| ¿El mineral se agota por sistema o por cinturón?  | Etapa 2        | Decide si a una corporación le conviene instalarse en un lugar                                                                                 |
+| ¿El mapa es fijo o generado?                      | Etapa 6        | Un generador obliga a que toda descripción y todo balance sea derivado                                                                         |
+| ¿La fabricación tarda tiempo real?                | Taller         | Si tarda, compite con minar y es otra acción; si no, el técnico no tiene qué hacer mientras                                                    |
+| ¿Los planos son objeto comerciable?               | Taller         | Comerciables abren una economía entera; fijos por habilidad quitan una capa                                                                    |
+| ¿Cuánto rinde el escalón II sobre el I?           | Módulos        | Si es mucho, el equipo decide más que el piloto; si es poco, subir de escalón no es una meta                                                   |
+| ¿Las variantes de calidad del mineral son ítems?  | Materiales     | Ítems distintos es más simple de mercado y multiplica el catálogo por cuatro                                                                   |
+| ¿Qué le pasa al piloto cuando pierde la nave?     | Combate        | Está decidido que vuelve; falta dónde, con qué y cuánto tarda                                                                                  |
+| ¿Cuánto PvP directo y cuánto conflicto indirecto? | Combate        | Decide si el mapa se disputa con naves o con precios                                                                                           |

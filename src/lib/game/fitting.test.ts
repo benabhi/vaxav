@@ -17,7 +17,7 @@ import {
 	fitFromCodes,
 	maxedSkills
 } from './fitting';
-import { CORE_ORDER, HULLS, STARTING_HULL, coreSlotIndex, getHull } from './hulls';
+import { HULLS, SLOT_KINDS, STARTING_HULL, getHull } from './hulls';
 import { EMPTY, MODULES, TIERS, getModule, modulesForSlot } from './modules';
 import { SKILLS, getSkill } from './skills';
 import { PLAYABLE_PROFESSIONS, startingLevels } from './professions';
@@ -50,20 +50,28 @@ describe('el catálogo de cascos', () => {
 		}
 	});
 
-	it('le da a todo casco los siete internos esenciales', () => {
-		// Se mejoran, no se quitan: un casco sin ranura para propulsores no vuela.
+	it('le da a todo casco las cuatro bandejas y algo en cada una', () => {
+		// La terna es la personalidad del casco: si una bandeja queda en cero, el
+		// casco no puede hacer algo entero —sin anclajes no trabaja, sin bastidor
+		// no aguanta— y eso tiene que ser una decisión escrita, no un descuido.
 		for (const hull of HULLS) {
-			const presentes = new Set(
-				hull.slots.map((slot) => slot.core).filter((core) => core !== null)
-			);
-			expect([...presentes].sort(), hull.name).toEqual([...CORE_ORDER].sort());
+			for (const kind of SLOT_KINDS) {
+				const cuantas = hull.slots.filter((slot) => slot.kind === kind).length;
+				expect(cuantas, `${hull.name}: ${kind}`).toBeGreaterThan(0);
+			}
 		}
 	});
 
-	it('no repite ninguna ranura esencial', () => {
+	it('le da a todo casco los presupuestos que antes traían los internos', () => {
+		// Son atributos del casco y no módulos: una nave *tiene* planta de energía.
+		// Un cero acá sería una nave que no se mueve o que no alimenta nada.
 		for (const hull of HULLS) {
-			const esenciales = hull.slots.map((slot) => slot.core).filter((core) => core !== null);
-			expect(new Set(esenciales).size, hull.name).toBe(esenciales.length);
+			expect(hull.power, hull.name).toBeGreaterThan(0);
+			expect(hull.thrust, hull.name).toBeGreaterThan(0);
+			expect(hull.jumpPower, hull.name).toBeGreaterThan(0);
+			expect(hull.capacitor, hull.name).toBeGreaterThan(0);
+			expect(hull.capacitorRecharge, hull.name).toBeGreaterThan(0);
+			expect(hull.calibration, hull.name).toBeGreaterThan(0);
 		}
 	});
 
@@ -137,9 +145,14 @@ describe('el catálogo de cascos', () => {
 		expect(() => getHull('inventado')).toThrow();
 	});
 
-	it('sabe en qué ranura va cada esencial', () => {
-		const indice = coreSlotIndex(inicial, 'thrusters');
-		expect(inicial.slots[indice].core).toBe('thrusters');
+	it('le da a la lanzadera inicial la terna más chica de todas', () => {
+		// Es el casco que no se especializa: si tuviera tantas ranuras como otro,
+		// no habría razón para cambiarla.
+		const suyas = inicial.slots.length;
+		for (const hull of HULLS) {
+			if (hull.code === inicial.code) continue;
+			expect(hull.slots.length, hull.name).toBeGreaterThan(suyas);
+		}
 	});
 });
 
@@ -159,10 +172,9 @@ describe('el catálogo de módulos', () => {
 		}
 	});
 
-	it('sólo deja que los internos esenciales digan qué sistema son', () => {
+	it('pone cada módulo en una bandeja que existe', () => {
 		for (const module of MODULES) {
-			if (module.kind === 'core') expect(module.core, module.code).not.toBeNull();
-			else expect(module.core, module.code).toBeNull();
+			expect(SLOT_KINDS, module.code).toContain(module.kind);
 		}
 	});
 
@@ -177,14 +189,16 @@ describe('el catálogo de módulos', () => {
 		}
 	});
 
-	it('tiene algo que montarle a toda ranura esencial de todo casco', () => {
-		// Una ranura sin opciones sería un hueco muerto en la pantalla.
+	it('tiene algo que montarle a toda ranura de todo casco', () => {
+		// Una ranura sin opciones sería un hueco muerto en la pantalla. Los
+		// refuerzos son la excepción de hoy: la bandeja existe y el catálogo
+		// todavía no.
 		for (const hull of HULLS) {
 			for (const slot of hull.slots) {
-				if (slot.kind !== 'core') continue;
+				if (slot.kind === 'rig') continue;
 				expect(
-					modulesForSlot(slot.kind, slot.size, slot.core).length,
-					`${hull.name}: ${slot.core} clase ${slot.size}`
+					modulesForSlot(slot.kind, slot.size).length,
+					`${hull.name}: ${slot.kind} clase ${slot.size}`
 				).toBeGreaterThan(0);
 			}
 		}
@@ -192,14 +206,14 @@ describe('el catálogo de módulos', () => {
 
 	it('no deja entrar un módulo más grande que la ranura', () => {
 		// En una de clase 1 entra un módulo de clase 1, nunca uno de clase 2.
-		const opciones = modulesForSlot('hardpoint', 1);
+		const opciones = modulesForSlot('high', 1);
 		expect(opciones.length).toBeGreaterThan(0);
 		expect(opciones.every((module) => module.size <= 1)).toBe(true);
 	});
 
 	it('deja los módulos chicos en una ranura grande', () => {
-		const chicas = modulesForSlot('hardpoint', 1).map((m) => m.code);
-		const grandes = new Set(modulesForSlot('hardpoint', 2).map((m) => m.code));
+		const chicas = modulesForSlot('high', 1).map((m) => m.code);
+		const grandes = new Set(modulesForSlot('high', 2).map((m) => m.code));
 		expect(chicas.every((code) => grandes.has(code))).toBe(true);
 	});
 
@@ -213,21 +227,15 @@ describe('el catálogo de módulos', () => {
 });
 
 describe('la configuración de fábrica', () => {
-	it('sale con los esenciales puestos', () => {
+	it('sale vacía, y esa es la decisión', () => {
+		// Antes venía con los siete internos esenciales puestos porque sin
+		// propulsores no se movía. Ahora el casco los trae de fábrica, así que una
+		// nave de astillero vuela pelada y **todas** sus ranuras son del piloto.
 		for (const hull of HULLS) {
 			const fit = defaultFit(hull);
-			hull.slots.forEach((slot, i) => {
-				if (slot.kind === 'core') expect(fit[i], `${hull.name}: ${slot.core}`).not.toBe(EMPTY);
-			});
+			expect(fit.length, hull.name).toBe(hull.slots.length);
+			for (const module of fit) expect(module, hull.name).toBe(EMPTY);
 		}
-	});
-
-	it('sale con lo demás vacío', () => {
-		// Viene completa, no viene buena: lo que la define lo elige el piloto.
-		const fit = defaultFit(inicial);
-		inicial.slots.forEach((slot, i) => {
-			if (slot.kind !== 'core') expect(fit[i]).toBe(EMPTY);
-		});
 	});
 
 	it('se puede volar en todo casco, sabiendo volar ese casco', () => {
@@ -261,7 +269,7 @@ describe('la configuración de fábrica', () => {
 	});
 
 	it('no se reconstruye con la cantidad equivocada de ranuras', () => {
-		expect(() => fitFromCodes(inicial, ['plant_e2'])).toThrow();
+		expect(() => fitFromCodes(inicial, ['mining_laser_i1'])).toThrow();
 	});
 });
 
@@ -278,13 +286,13 @@ describe('los presupuestos', () => {
 
 	it('dejan la nave en tierra al pasarse de cómputo', () => {
 		// Y hay que decir cuánto falta, no sólo que no se puede.
-		const fit = [...defaultFit(inicial)];
-		// Lo más caro en cómputo del catálogo, todo junto: sensores finos, un
-		// generador de escudo y un escáner.
-		fit[coreSlotIndex(inicial, 'sensors')] = getModule('sensors_a2');
-		inicial.slots.forEach((slot, i) => {
-			if (slot.kind === 'optional' && slot.size >= 2) fit[i] = getModule('shield_gen_e2');
-			else if (slot.kind === 'utility') fit[i] = getModule('scanner_e1');
+		// Lo más caro en cómputo que entre, en cada ranura que lo acepte.
+		const fit = inicial.slots.map((slot) => {
+			const opciones = modulesForSlot(slot.kind, slot.size);
+			if (opciones.length === 0) return EMPTY;
+			return opciones.reduce((peor, module) =>
+				module.computingDraw > peor.computingDraw ? module : peor
+			);
 		});
 
 		const readout = buildReadout(inicial, fit);
@@ -298,7 +306,7 @@ describe('los presupuestos', () => {
 		// Si ningún casco pudiera pasarse, el segundo presupuesto sería decorativo.
 		for (const hull of HULLS) {
 			const electronico = hull.slots.reduce((total, slot) => {
-				const opciones = modulesForSlot(slot.kind, slot.size, slot.core);
+				const opciones = modulesForSlot(slot.kind, slot.size);
 				const mayor = opciones.length
 					? Math.max(...opciones.map((module) => module.computingDraw))
 					: 0;
@@ -311,10 +319,10 @@ describe('los presupuestos', () => {
 	it('dicen con el número cuánta potencia falta', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mining_laser_e2');
-		fit[1] = getModule('mining_laser_e2');
+		fit[0] = getModule('mining_laser_i2');
+		fit[1] = getModule('mining_laser_i2');
 		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'optional' && slot.size === 3) fit[i] = getModule('shield_gen_e3');
+			if (slot.kind === 'mid' && slot.size >= 2) fit[i] = getModule('shield_gen_i2');
 		});
 
 		const readout = buildReadout(hull, fit);
@@ -336,7 +344,7 @@ describe('lo que se divide por la masa', () => {
 		const cargada = [...liviana];
 		inicial.slots.forEach((slot, i) => {
 			// La placa de blindaje no pide energía: sólo pesa.
-			if (slot.kind === 'utility') cargada[i] = getModule('armor_plate_e1');
+			if (slot.kind === 'low') cargada[i] = getModule('armor_plate_i1');
 		});
 
 		const antes = buildReadout(inicial, liviana);
@@ -346,13 +354,13 @@ describe('lo que se divide por la masa', () => {
 		expect(despues.jumpRange).toBeLessThan(antes.jumpRange);
 	});
 
-	it('no mueve una nave sin propulsores', () => {
-		const fit = [...defaultFit(inicial)];
-		fit[coreSlotIndex(inicial, 'thrusters')] = EMPTY;
-
-		const readout = buildReadout(inicial, fit);
-		expect(readout.speed).toBe(0);
-		expect(readout.flyable).toBe(false);
+	it('mueve una nave pelada, porque el empuje es del casco', () => {
+		// Es la diferencia con antes: sin propulsores montados la nave **igual
+		// vuela**, porque los propulsores son parte del casco. Lo que se monta es
+		// la mejora.
+		const readout = buildReadout(inicial, defaultFit(inicial));
+		expect(readout.speed).toBeGreaterThan(0);
+		expect(readout.flyable).toBe(true);
 	});
 });
 
@@ -377,7 +385,7 @@ describe('los bonos', () => {
 	it('aumentan el rendimiento al entrenar minería', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mining_laser_e1');
+		fit[0] = getModule('mining_laser_i1');
 
 		const sinEntrenar = buildReadout(hull, fit);
 		const entrenado = buildReadout(hull, fit, { mining: 5 });
@@ -411,8 +419,8 @@ describe('el acumulador', () => {
 	it('se declara estable sólo si la recarga alcanza', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mining_laser_e2');
-		fit[1] = getModule('mining_laser_e2');
+		fit[0] = getModule('mining_laser_i2');
+		fit[1] = getModule('mining_laser_i2');
 
 		const readout = buildReadout(hull, fit);
 		expect(readout.stable).toBe(readout.drainPerHour <= readout.rechargePerHour);
@@ -422,11 +430,13 @@ describe('el acumulador', () => {
 		// Es la traducción del manejo en vivo de EVE a una sola cuenta.
 		const hull = getHull('percal');
 		const modesto = [...defaultFit(hull)];
-		modesto[0] = getModule('mining_laser_e2');
-		modesto[1] = getModule('mining_laser_e2');
+		modesto[0] = getModule('mining_laser_i2');
+		modesto[1] = getModule('mining_laser_i2');
 
+		// La mejora ahora cuesta una ranura: la batería va en una consola.
 		const mejor = [...modesto];
-		mejor[coreSlotIndex(hull, 'distributor')] = getModule('distributor_a3');
+		const consola = hull.slots.findIndex((slot) => slot.kind === 'mid' && slot.size >= 2);
+		mejor[consola] = getModule('capacitor_battery_i2');
 
 		const conPoco = buildReadout(hull, modesto);
 		const conMucho = buildReadout(hull, mejor);
@@ -446,8 +456,8 @@ describe('la supervivencia y el daño', () => {
 	it('da escudo al montar un generador', () => {
 		const hull = getHull('percal');
 		const fit = [...defaultFit(hull)];
-		const indice = hull.slots.findIndex((slot) => slot.kind === 'optional' && slot.size >= 2);
-		fit[indice] = getModule('shield_gen_e2');
+		const indice = hull.slots.findIndex((slot) => slot.kind === 'mid' && slot.size >= 2);
+		fit[indice] = getModule('shield_gen_i2');
 		expect(buildReadout(hull, fit).shield).toBeGreaterThan(0);
 	});
 
@@ -464,7 +474,7 @@ describe('la supervivencia y el daño', () => {
 	it('da daño de su tipo y sólo de ése al montar un arma', () => {
 		const hull = getHull('alabarda');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('ion_emitter_e1');
+		fit[0] = getModule('ion_emitter_i1');
 
 		const readout = buildReadout(hull, fit);
 		expect(readout.dps.ionic).toBeGreaterThan(0);
@@ -475,7 +485,7 @@ describe('la supervivencia y el daño', () => {
 	it('aumenta el daño al entrenar puntería', () => {
 		const hull = getHull('alabarda');
 		const fit = [...defaultFit(hull)];
-		fit[0] = getModule('mass_cannon_e2');
+		fit[0] = getModule('mass_cannon_i2');
 
 		const sinEntrenar = buildReadout(hull, fit);
 		const entrenado = buildReadout(hull, fit, { gunnery: 5 });
@@ -490,7 +500,7 @@ describe('la supervivencia y el daño', () => {
 			fit[0] = getModule(code);
 			return buildReadout(hull, fit).totalDps;
 		};
-		expect(dps('thermal_lance_e2')).toBeLessThan(dps('mass_cannon_e2'));
+		expect(dps('thermal_lance_i2')).toBeLessThan(dps('mass_cannon_i2'));
 	});
 });
 

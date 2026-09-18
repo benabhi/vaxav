@@ -36,26 +36,30 @@ export type DockSize = (typeof DOCK_SIZES)[number];
  * afuera pero no dispara, lo que la nave necesita para volar, y lo que define a
  * qué se dedica.
  */
-export const SLOT_KINDS = ['hardpoint', 'utility', 'core', 'optional'] as const;
-export type SlotKind = (typeof SLOT_KINDS)[number];
-
 /**
- * Los siete internos esenciales. **Se mejoran, no se quitan.**
+ * Las cuatro bandejas de una nave, y qué contesta cada una.
  *
- * Cada uno ocupa una ranura fija del casco, así que un casco no elige *si* tiene
- * planta de energía: elige cuál. El orden es el de la interfaz y el de la
- * siembra, de lo que más se toca a lo que menos.
+ * | Bandeja       | Qué va                             | La regla                    |
+ * | ------------- | ---------------------------------- | --------------------------- |
+ * | `hardpoint`   | Armas, láseres, rayos              | Actúa sobre otra cosa       |
+ * | `console`     | Escudos, propulsores, sensores     | Se enciende y gasta acumulador |
+ * | `chassis`     | Blindaje, bodega, relés            | Está puesto y ya            |
+ * | `rig`         | Refuerzos soldados al casco        | No se desmonta: se destruye |
+ *
+ * La regla de la derecha es la que evita que se discuta dónde va un módulo
+ * nuevo. Y el reparto —la **terna** `2·4·3`— es la personalidad del casco: la
+ * Mula lleva casi todo en el bastidor y el Vencejo casi todo en consolas, así
+ * que se equipan de maneras que no se parecen en nada.
+ *
+ * **Antes había una quinta bandeja** de siete internos esenciales que todo casco
+ * tenía que llevar. No eran una decisión: de las once ranuras de la Pioner, siete
+ * estaban decididas de antemano, y veinticuatro de los cuarenta y nueve módulos
+ * del catálogo existían sólo para llenarlas. Ahora los siete son atributos del
+ * casco —una nave *tiene* planta de energía, igual que tiene masa— y lo que esos
+ * módulos daban de más vuelve como módulo opcional que **cuesta una ranura**.
  */
-export const CORE_ORDER = [
-	'power_plant',
-	'thrusters',
-	'jump_drive',
-	'distributor',
-	'sensors',
-	'life_support',
-	'tank'
-] as const;
-export type CoreSystem = (typeof CORE_ORDER)[number];
+export const SLOT_KINDS = ['high', 'mid', 'low', 'rig'] as const;
+export type SlotKind = (typeof SLOT_KINDS)[number];
 
 /**
  * Sobre qué actúa un bono, sea de casco o de habilidad.
@@ -99,7 +103,6 @@ export interface RoleBonus {
 export interface SlotSpec {
 	readonly kind: SlotKind;
 	readonly size: number;
-	readonly core: CoreSystem | null;
 }
 
 /**
@@ -139,6 +142,39 @@ export interface Hull {
 	 */
 	readonly computing: number;
 
+	/**
+	 * Cuánta potencia da su planta. El presupuesto que castiga lo grande y lo
+	 * bruto.
+	 *
+	 * **Antes salía de un módulo** y por lo tanto se podía comprar; ahora es fijo
+	 * por casco y sólo se estira con habilidades o con un relé que cuesta una
+	 * ranura. Es lo que convierte al equipamiento en un rompecabezas en vez de una
+	 * lista de compras.
+	 */
+	readonly power: number;
+
+	/**
+	 * Empuje de sus propulsores. La velocidad sale de dividirlo por la masa total,
+	 * así que **todo lo que se monta frena**, aunque no consuma nada.
+	 */
+	readonly thrust: number;
+
+	/** Fuerza de su motor de salto. El alcance sale de dividirla por la masa. */
+	readonly jumpPower: number;
+
+	readonly capacitor: number;
+	/** Unidades de acumulador que se rehacen por segundo. */
+	readonly capacitorRecharge: number;
+
+	/**
+	 * El presupuesto de los refuerzos, y el único que no se recupera.
+	 *
+	 * Los otros tres se deshacen desmontando; un refuerzo sacado se destruye, así
+	 * que gastar calibración es definitivo. Es el único presupuesto que obliga a
+	 * decidir antes y no después.
+	 */
+	readonly calibration: number;
+
 	readonly fuel: number;
 	readonly sensorRange: number;
 
@@ -153,14 +189,14 @@ export interface Hull {
 	readonly requirements: readonly Requirement[];
 }
 
-/** Una ranura que no es de un interno esencial. */
+/** Una ranura del casco. */
 function slot(kind: SlotKind, size: number): SlotSpec {
-	return { kind, size, core: null };
+	return { kind, size };
 }
 
-/** Las siete ranuras esenciales de un casco, todas de la misma clase. */
-function coreSlots(size: number): SlotSpec[] {
-	return CORE_ORDER.map((core) => ({ kind: 'core' as const, size, core }));
+/** Varias ranuras iguales de una bandeja, que es como se declara una terna. */
+function slots(kind: SlotKind, size: number, count: number): SlotSpec[] {
+	return Array.from({ length: count }, () => slot(kind, size));
 }
 
 /**
@@ -180,7 +216,7 @@ export const HULLS: readonly Hull[] = [
 			'todo el mundo. Mediocre en todo a propósito: vuela, carga poco y ' +
 			'aguanta menos, pero es tuya desde el primer minuto.',
 		dockSize: 'small',
-		mass: 180,
+		mass: 250,
 		/**
 		 * Treinta metros cúbicos: dos personas y un cajón.
 		 *
@@ -204,16 +240,21 @@ export const HULLS: readonly Hull[] = [
 		cargo: 30,
 		armor: 120,
 		structure: 400,
-		computing: 55,
-		fuel: 100,
-		sensorRange: 40,
+		computing: 45,
+		power: 30,
+		thrust: 48_000,
+		jumpPower: 720,
+		capacitor: 240,
+		capacitorRecharge: 8,
+		calibration: 100,
+		fuel: 120,
+		sensorRange: 50,
 		signature: 30,
 		slots: [
-			slot('hardpoint', 1),
-			slot('utility', 1),
-			...coreSlots(2),
-			slot('optional', 2),
-			slot('optional', 1)
+			...slots('high', 1, 1),
+			...slots('mid', 1, 2),
+			...slots('low', 2, 2),
+			...slots('rig', 1, 1)
 		],
 		// El bono de rol pasó de Navegación a Manejo de lanzaderas. Navegación ya
 		// empuja la velocidad de toda nave desde el bono general, y sumarla otra vez
@@ -232,23 +273,25 @@ export const HULLS: readonly Hull[] = [
 			'Una bodega con motores. Lenta, gorda y visible desde el otro lado ' +
 			'del sistema, pero es la columna vertebral de todo el comercio.',
 		dockSize: 'medium',
-		mass: 420,
+		mass: 545,
 		cargo: 600,
 		armor: 180,
 		structure: 620,
-		computing: 70,
-		fuel: 160,
-		sensorRange: 35,
+		computing: 55,
+		power: 45,
+		thrust: 88_000,
+		jumpPower: 1360,
+		capacitor: 380,
+		capacitorRecharge: 13,
+		calibration: 300,
+		fuel: 200,
+		sensorRange: 50,
 		signature: 70,
 		slots: [
-			slot('hardpoint', 1),
-			slot('utility', 1),
-			slot('utility', 1),
-			...coreSlots(3),
-			slot('optional', 3),
-			slot('optional', 3),
-			slot('optional', 2),
-			slot('optional', 1)
+			...slots('high', 1, 1),
+			...slots('mid', 2, 3),
+			...slots('low', 3, 5),
+			...slots('rig', 2, 3)
 		],
 		bonus: { target: 'cargo', skill: 'cargo_engineering', percentPerLevel: 5 },
 		requirements: [{ skill: 'cargo_engineering', level: 2 }]
@@ -261,23 +304,25 @@ export const HULLS: readonly Hull[] = [
 			'Casco reforzado y sitio para dos láseres. Se mueve como una casa, ' +
 			'pero saca más de un asteroide que cualquier otra cosa de su porte.',
 		dockSize: 'medium',
-		mass: 380,
+		mass: 505,
 		cargo: 400,
 		armor: 220,
 		structure: 700,
-		computing: 80,
-		fuel: 140,
-		sensorRange: 45,
+		computing: 65,
+		power: 50,
+		thrust: 88_000,
+		jumpPower: 1360,
+		capacitor: 400,
+		capacitorRecharge: 15,
+		calibration: 300,
+		fuel: 185,
+		sensorRange: 60,
 		signature: 60,
 		slots: [
-			slot('hardpoint', 2),
-			slot('hardpoint', 2),
-			slot('utility', 1),
-			slot('utility', 1),
-			...coreSlots(3),
-			slot('optional', 3),
-			slot('optional', 2),
-			slot('optional', 2)
+			...slots('high', 2, 2),
+			...slots('mid', 2, 4),
+			...slots('low', 3, 3),
+			...slots('rig', 2, 3)
 		],
 		bonus: { target: 'mining_yield', skill: 'mining', percentPerLevel: 5 },
 		requirements: [{ skill: 'mining', level: 2 }]
@@ -290,22 +335,25 @@ export const HULLS: readonly Hull[] = [
 			'Liviana, callada y con más sensores que bodega. Llega adonde nadie ' +
 			'llegó y vuelve a contarlo, siempre que no la encuentren.',
 		dockSize: 'small',
-		mass: 150,
+		mass: 275,
 		cargo: 120,
 		armor: 100,
 		structure: 360,
-		computing: 130,
-		fuel: 220,
-		sensorRange: 120,
+		computing: 115,
+		power: 40,
+		thrust: 88_000,
+		jumpPower: 1360,
+		capacitor: 360,
+		capacitorRecharge: 16,
+		calibration: 300,
+		fuel: 265,
+		sensorRange: 135,
 		signature: 18,
 		slots: [
-			slot('hardpoint', 1),
-			slot('utility', 2),
-			slot('utility', 2),
-			...coreSlots(3),
-			slot('optional', 2),
-			slot('optional', 2),
-			slot('optional', 1)
+			...slots('high', 1, 1),
+			...slots('mid', 2, 5),
+			...slots('low', 2, 2),
+			...slots('rig', 1, 3)
 		],
 		bonus: { target: 'sensor_range', skill: 'scanning', percentPerLevel: 8 },
 		requirements: [{ skill: 'scanning', level: 2 }]
@@ -318,24 +366,25 @@ export const HULLS: readonly Hull[] = [
 			'Tres anclajes y blindaje de sobra. La bodega alcanza para munición ' +
 			'y poco más: esta nave no va a ningún lado a trabajar.',
 		dockSize: 'medium',
-		mass: 460,
+		mass: 585,
 		cargo: 90,
 		armor: 420,
 		structure: 900,
-		computing: 85,
-		fuel: 150,
-		sensorRange: 60,
+		computing: 60,
+		power: 55,
+		thrust: 96_000,
+		jumpPower: 1360,
+		capacitor: 440,
+		capacitorRecharge: 14,
+		calibration: 300,
+		fuel: 195,
+		sensorRange: 75,
 		signature: 55,
 		slots: [
-			slot('hardpoint', 2),
-			slot('hardpoint', 2),
-			slot('hardpoint', 2),
-			slot('utility', 2),
-			slot('utility', 2),
-			...coreSlots(3),
-			slot('optional', 3),
-			slot('optional', 2),
-			slot('optional', 2)
+			...slots('high', 2, 4),
+			...slots('mid', 2, 3),
+			...slots('low', 3, 4),
+			...slots('rig', 2, 3)
 		],
 		bonus: { target: 'damage', skill: 'gunnery', percentPerLevel: 5 },
 		requirements: [{ skill: 'gunnery', level: 2 }]
@@ -353,11 +402,4 @@ const BY_CODE: Readonly<Record<string, Hull>> = Object.fromEntries(
 /** Busca un casco por código, o falla diciendo cuál falta. */
 export function getHull(code: string): Hull {
 	return lookup(BY_CODE, code, 'el casco');
-}
-
-/** En qué ranura del casco va ese interno esencial. */
-export function coreSlotIndex(hull: Hull, core: CoreSystem): number {
-	const index = hull.slots.findIndex((spec) => spec.core === core);
-	if (index < 0) throw new Error(`${hull.name} no tiene ranura para '${core}'`);
-	return index;
 }

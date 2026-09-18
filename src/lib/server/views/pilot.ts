@@ -38,7 +38,7 @@ import type {
  * solo deja afuera media respuesta —un piloto con cuatro mil sin invertir en
  * Extracción no es "alguien que no mina", es alguien a punto de serlo.
  *
- * Se recorre el catálogo y no lo que el piloto tiene, para que las seis ramas
+ * Se recorre el catálogo y no lo que el piloto tiene, para que las ocho ramas
  * salgan siempre y en el mismo orden: una rama en cero también informa —dice por
  * dónde no fue—, y una lista que cambia de largo según el piloto no se puede
  * comparar de un vistazo.

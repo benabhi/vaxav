@@ -22,9 +22,9 @@
  */
 
 import { DAMAGE_TYPES, type DamageType, totalEffectiveHp, weakestAgainst } from './damage';
-import { HULLS, type BonusTarget, type CoreSystem, type Hull, type SlotSpec } from './hulls';
+import { HULLS, type BonusTarget, type Hull, type SlotSpec } from './hulls';
 import { floorDiv, roundHalfEven } from './math';
-import { EMPTY, type ShipModule, getModule, modulesForSlot } from './modules';
+import { EMPTY, type ShipModule, getModule } from './modules';
 import { getSkill, unmetFrom, type Requirement } from './skills';
 
 /**
@@ -105,6 +105,13 @@ export interface Readout {
 	// Presupuestos
 	readonly power: Budget;
 	readonly computing: Budget;
+	/**
+	 * El de los refuerzos, y el único que no se recupera.
+	 *
+	 * Los otros tres se deshacen desmontando; un refuerzo sacado se destruye, así
+	 * que gastar calibración es definitivo.
+	 */
+	readonly calibration: Budget;
 
 	// Movimiento
 	readonly mass: number;
@@ -190,29 +197,16 @@ function withBonus(value: number, percent: number): number {
 }
 
 /**
- * La configuración con la que sale una nave del astillero.
+ * La configuración con la que sale una nave del astillero: **vacía**.
  *
- * Los internos esenciales vienen puestos —sin propulsores no se mueve— con lo
- * más modesto que entre; el resto de las ranuras van vacías. Es a propósito: la
- * nave inicial tiene que ser un punto de partida, no un regalo.
+ * Antes venía con los siete internos esenciales puestos, porque sin propulsores
+ * no se movía. Ahora el casco los trae de fábrica —son atributos suyos— así que
+ * una nave de astillero vuela pelada, y todas sus ranuras son del piloto desde el
+ * primer minuto. Lo que el oficio le agregue encima lo pone el kit de la
+ * profesión, que es otra cosa y se ve en el registro.
  */
 export function defaultFit(hull: Hull): readonly ShipModule[] {
-	return hull.slots.map((slot) => {
-		if (slot.kind !== 'core') return EMPTY;
-
-		const options = modulesForSlot(slot.kind, slot.size, slot.core);
-		if (options.length === 0) {
-			throw new Error(
-				`${hull.name} pide un ${slot.core} de clase ${slot.size} y no hay ninguno en el catálogo`
-			);
-		}
-		// El más grande que entre, en su escalón más modesto: una nave de astillero
-		// viene completa, no viene buena. Y el escalón de abajo no pide
-		// habilidades, así que un piloto nuevo puede volarla.
-		const largest = Math.max(...options.map((module) => module.size));
-		const sized = options.filter((module) => module.size === largest);
-		return sized.reduce((best, module) => (module.tier > best.tier ? module : best));
-	});
+	return hull.slots.map(() => EMPTY);
 }
 
 /**
@@ -232,11 +226,7 @@ export function placeInFreeSlot(
 	module: ShipModule
 ): string[] | null {
 	const index = hull.slots.findIndex(
-		(slot, i) =>
-			codes[i] === '' &&
-			slot.kind === module.kind &&
-			slot.size >= module.size &&
-			slot.core === module.core
+		(slot, i) => codes[i] === '' && slot.kind === module.kind && slot.size >= module.size
 	);
 	if (index < 0) return null;
 
@@ -251,11 +241,6 @@ export function fitFromCodes(hull: Hull, codes: readonly string[]): readonly Shi
 		throw new Error(`${hull.name} tiene ${hull.slots.length} ranuras y llegaron ${codes.length}`);
 	}
 	return codes.map((code) => (code ? getModule(code) : EMPTY));
-}
-
-/** El módulo montado en ese sistema esencial, o la ranura vacía. */
-function findCore(modules: readonly ShipModule[], core: CoreSystem): ShipModule {
-	return modules.find((module) => module.core === core) ?? EMPTY;
 }
 
 /**
@@ -278,6 +263,14 @@ export function buildReadout(
 	let mass = hull.mass;
 	let powerUsed = 0;
 	let computingUsed = 0;
+	let calibrationUsed = 0;
+	// Lo que el casco trae de fábrica, que antes venía de un interno esencial. Los
+	// módulos suman encima, igual que con la bodega y el blindaje.
+	let powerOutput = hull.power;
+	let thrust = hull.thrust;
+	let jumpPower = hull.jumpPower;
+	let capacitor = hull.capacitor;
+	let capacitorRecharge = hull.capacitorRecharge;
 	let cargo = hull.cargo;
 	let shield = 0;
 	let armor = hull.armor;
@@ -292,12 +285,18 @@ export function buildReadout(
 		mass += module.mass;
 		powerUsed += module.powerDraw;
 		computingUsed += module.computingDraw;
+		calibrationUsed += module.calibrationDraw;
 		cargo += module.cargo;
 		shield += module.shield;
 		armor += module.armor;
 		fuel += module.fuel;
 		sensorRange += module.sensorRange;
 		signature += module.signature;
+		powerOutput += module.powerOutput;
+		thrust += module.thrust;
+		jumpPower += module.jumpPower;
+		capacitor += module.capacitor;
+		capacitorRecharge += module.capacitorRecharge;
 
 		if (module.cycleSeconds > 0) {
 			const cycles = SECONDS_PER_HOUR / module.cycleSeconds;
@@ -309,11 +308,6 @@ export function buildReadout(
 			damage.thermal += roundHalfEven((module.thermal * TENTHS) / module.cycleSeconds);
 		}
 	}
-
-	const plant = findCore(modules, 'power_plant');
-	const thrusters = findCore(modules, 'thrusters');
-	const jumpDrive = findCore(modules, 'jump_drive');
-	const distributor = findCore(modules, 'distributor');
 
 	// --- Bonos de habilidad y de casco ---
 	cargo = Math.max(0, withBonus(cargo, bonusPercent('cargo', hull, skills)));
@@ -330,20 +324,14 @@ export function buildReadout(
 	// Velocidad y alcance salen los dos de dividir por la masa total, y no es
 	// casualidad: es lo que hace que **toda** decisión de equipamiento cueste
 	// tiempo. Un módulo que pesa te frena aunque no consuma nada.
-	const speed = withBonus(
-		mass ? floorDiv(thrusters.thrust, mass) : 0,
-		bonusPercent('speed', hull, skills)
-	);
+	const speed = withBonus(mass ? floorDiv(thrust, mass) : 0, bonusPercent('speed', hull, skills));
 	const jumpRange = withBonus(
-		mass ? floorDiv(jumpDrive.jumpPower * TENTHS, mass) : 0,
+		mass ? floorDiv(jumpPower * TENTHS, mass) : 0,
 		bonusPercent('jump_range', hull, skills)
 	);
 
 	// --- Acumulador ---
-	const recharge = withBonus(
-		distributor.capacitorRecharge,
-		bonusPercent('capacitor_recharge', hull, skills)
-	);
+	const recharge = withBonus(capacitorRecharge, bonusPercent('capacitor_recharge', hull, skills));
 	const rechargePerHour = recharge * SECONDS_PER_HOUR;
 	const stable = drainPerHour <= rechargePerHour;
 
@@ -355,12 +343,14 @@ export function buildReadout(
 	}
 
 	// --- Presupuestos y problemas ---
-	const power = budget(powerUsed, plant.powerOutput);
+	const power = budget(powerUsed, powerOutput);
 	const computing = budget(computingUsed, hull.computing);
+	const calibration = budget(calibrationUsed, hull.calibration);
 
 	const problems: string[] = [];
 	if (power.over) problems.push(`La planta no alcanza: faltan ${-power.free} MW`);
 	if (computing.over) problems.push(`Falta cómputo: ${-computing.free} u`);
+	if (calibration.over) problems.push(`Falta calibración: ${-calibration.free} u`);
 
 	// **Los requisitos se hacen cumplir acá, y acá es un solo lugar.** Volar exige
 	// que no haya problemas, y todas las acciones ya consultan eso antes de
@@ -377,11 +367,11 @@ export function buildReadout(
 
 	hull.slots.forEach((slot: SlotSpec, index: number) => {
 		const module = modules[index];
-		if (isEmpty(module) && slot.kind === 'core') {
-			problems.push(`Falta un interno esencial: ${slot.core}`);
-			return;
-		}
 		if (isEmpty(module)) return;
+
+		if (module.kind !== slot.kind) {
+			problems.push(`${module.name} no va en una ranura de ${slot.kind}`);
+		}
 
 		if (module.size > slot.size) {
 			problems.push(`${module.name} es de clase ${module.size} y la ranura es de ${slot.size}`);
@@ -402,6 +392,7 @@ export function buildReadout(
 		hull,
 		power,
 		computing,
+		calibration,
 		mass,
 		speed,
 		jumpRange,
@@ -423,7 +414,7 @@ export function buildReadout(
 		dps: damage,
 		totalDps: damage.kinetic + damage.ionic + damage.thermal,
 		miningPerHour,
-		capacitor: distributor.capacitor,
+		capacitor,
 		rechargePerHour,
 		drainPerHour,
 		stable,

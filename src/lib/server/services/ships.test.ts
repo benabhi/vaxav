@@ -24,7 +24,7 @@ import {
 	stationContainer
 } from './containers';
 import { buildReadout, defaultFit, fitFromCodes } from '$lib/game/fitting';
-import { STARTING_HULL, coreSlotIndex } from '$lib/game/hulls';
+import { STARTING_HULL } from '$lib/game/hulls';
 import { EMPTY } from '$lib/game/modules';
 import {
 	ShipError,
@@ -58,16 +58,14 @@ describe('el alta de la nave', () => {
 		expect(shipHull(activeShip(db, piloto.id)!).code).toBe(STARTING_HULL);
 	});
 
-	it('sale con los internos esenciales puestos', async () => {
-		// Se mejoran, no se quitan: una nave sin propulsores no vuela.
+	it('sale volando sin llevar nada montado', async () => {
+		// El empuje, la planta y el acumulador son del casco: una nave de astillero
+		// vuela pelada, y todas sus ranuras son del piloto desde el primer minuto.
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
-		const nave = activeShip(db, piloto.id)!;
-		const hull = shipHull(nave);
-		const fit = shipFit(db, nave);
-		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'core') expect(fit[i], String(slot.core)).not.toBe(EMPTY);
-		});
+		const readout = shipReadout(db, piloto)!;
+		expect(readout.speed).toBeGreaterThan(0);
+		expect(readout.power.total).toBeGreaterThan(0);
 	});
 
 	it('sale del astillero con el resto de las ranuras vacías', async () => {
@@ -84,9 +82,8 @@ describe('el alta de la nave', () => {
 		const nave = createStarterShip(db, piloto.id);
 		const hull = shipHull(nave);
 		const fit = shipFit(db, nave);
-		hull.slots.forEach((slot, i) => {
-			if (slot.kind !== 'core') expect(fit[i]).toBe(EMPTY);
-		});
+		expect(fit.length).toBe(hull.slots.length);
+		for (const module of fit) expect(module).toBe(EMPTY);
 	});
 
 	it('sale volable', async () => {
@@ -112,7 +109,7 @@ describe('guardar y volver a leer', () => {
 		const nave = activeShip(db, piloto.id)!;
 
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[0] = 'mining_laser_e1';
+		codigos[0] = 'mining_laser_i1';
 		saveFit(db, nave, codigos);
 
 		expect(shipFit(db, nave).map((module) => module.code)).toEqual(codigos);
@@ -125,7 +122,7 @@ describe('guardar y volver a leer', () => {
 		const nave = activeShip(db, piloto.id)!;
 
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[0] = 'mining_laser_e1';
+		codigos[0] = 'mining_laser_i1';
 		saveFit(db, nave, codigos);
 		codigos[0] = '';
 		saveFit(db, nave, codigos);
@@ -157,7 +154,7 @@ describe('guardar y volver a leer', () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
 		const nave = activeShip(db, piloto.id)!;
-		expect(() => saveFit(db, nave, ['plant_e2'])).toThrow(ShipError);
+		expect(() => saveFit(db, nave, ['plant_i2'])).toThrow(ShipError);
 	});
 
 	it('dice claro que un casco inventado no está en el catálogo', async () => {
@@ -205,7 +202,7 @@ describe('la hoja de rendimiento', () => {
 		const antes = shipReadout(db, piloto)!.speed;
 		const codigos = shipFit(db, nave).map((module) => module.code);
 		hull.slots.forEach((slot, i) => {
-			if (slot.kind === 'utility') codigos[i] = 'armor_plate_e1';
+			if (slot.kind === 'low') codigos[i] = 'armor_plate_i1';
 		});
 		saveFit(db, nave, codigos);
 
@@ -220,7 +217,7 @@ describe('la hoja de rendimiento', () => {
 
 		const antes = shipReadout(db, piloto)!.speed;
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[coreSlotIndex(hull, 'thrusters')] = 'thrusters_a2';
+		codigos[hull.slots.findIndex((slot) => slot.kind === 'mid')] = 'thruster_i2';
 		saveFit(db, nave, codigos);
 
 		expect(shipReadout(db, piloto)!.speed).toBeGreaterThan(antes);
@@ -279,7 +276,7 @@ describe('bajar y subir modulos mueve la carga', () => {
 		return {
 			nave,
 			codes,
-			index: codes.indexOf('mining_laser_e1'),
+			index: codes.indexOf('mining_laser_i1'),
 			bodega: shipContainer(db, nave.id),
 			hangar: stationContainer(db, piloto.id, ahora.stationId!)
 		};
@@ -297,7 +294,7 @@ describe('bajar y subir modulos mueve la carga', () => {
 		// Equipar sólo se puede atracado, así que lo que sale de una ranura sale
 		// ahí. Desmontar era tirar el módulo sin decirlo, que es la clase de
 		// pérdida silenciosa que arruina la confianza en un inventario.
-		expect(quantityOf(db, hangar.id, 'mining_laser_e1')).toBe(1);
+		expect(quantityOf(db, hangar.id, 'mining_laser_i1')).toBe(1);
 		expect(shipFit(db, nave)[index].code).toBe('');
 	});
 
@@ -312,8 +309,8 @@ describe('bajar y subir modulos mueve la carga', () => {
 		refit(db, piloto, vaciada);
 		refit(db, piloto, codes, 'ship');
 
-		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(0);
-		expect(shipFit(db, nave)[index].code).toBe('mining_laser_e1');
+		expect(quantityOf(db, bodega.id, 'mining_laser_i1')).toBe(0);
+		expect(shipFit(db, nave)[index].code).toBe('mining_laser_i1');
 	});
 
 	it('y lo que se sube desde la estación sale de la estación', async () => {
@@ -324,15 +321,15 @@ describe('bajar y subir modulos mueve la carga', () => {
 		const vaciada = [...codes];
 		vaciada[index] = '';
 		refit(db, piloto, vaciada);
-		const enBodega = quantityOf(db, bodega.id, 'mining_laser_e1');
+		const enBodega = quantityOf(db, bodega.id, 'mining_laser_i1');
 
 		refit(db, piloto, codes, 'station');
 
 		// La pantalla muestra las dos bodegas por separado y el jugador eligió una:
 		// tomar de la otra sería hacerle algo distinto de lo que pidió.
-		expect(quantityOf(db, hangar.id, 'mining_laser_e1')).toBe(0);
-		expect(quantityOf(db, bodega.id, 'mining_laser_e1')).toBe(enBodega);
-		expect(shipFit(db, nave)[index].code).toBe('mining_laser_e1');
+		expect(quantityOf(db, hangar.id, 'mining_laser_i1')).toBe(0);
+		expect(quantityOf(db, bodega.id, 'mining_laser_i1')).toBe(enBodega);
+		expect(shipFit(db, nave)[index].code).toBe('mining_laser_i1');
 	});
 
 	it('no se puede montar lo que no se tiene', async () => {
@@ -342,7 +339,7 @@ describe('bajar y subir modulos mueve la carga', () => {
 
 		// La estación ya no surte el catálogo: comprar es del mercado.
 		const conCanon = [...codes];
-		conCanon[index] = 'mass_cannon_e1';
+		conCanon[index] = 'mass_cannon_i1';
 
 		expect(() => refit(db, piloto, conCanon)).toThrow(ShipError);
 		expect(shipFit(db, nave).map((m) => m.code)).toEqual(codes);
@@ -371,7 +368,7 @@ describe('bajar y subir modulos mueve la carga', () => {
 		moveItem(db, bodega.id, 'ferrous_silicate', fitsUnits(libre, 'ferrous_silicate'), 'mined');
 
 		const sinBodega = [...codes];
-		sinBodega[codes.indexOf('cargo_rack_e1')] = '';
+		sinBodega[codes.indexOf('cargo_rack_i1')] = '';
 
 		// Bajar una bodega adicional achica el lugar sin sacar nada de adentro.
 		expect(() => refit(db, piloto, sinBodega)).toThrow(ShipError);
@@ -385,12 +382,12 @@ describe('lo que el piloto no sabe usar', () => {
 		const piloto = await crearPiloto(db);
 		const nave = activeShip(db, piloto.id)!;
 		const codes = shipFit(db, nave).map((module) => module.code);
-		const index = codes.indexOf('mining_laser_e1');
+		const index = codes.indexOf('mining_laser_i1');
 		// Se lo metemos en la bodega para que el único impedimento sea la habilidad.
-		moveItem(db, shipContainer(db, nave.id).id, 'mining_laser_a1', 1, 'bought');
+		moveItem(db, shipContainer(db, nave.id).id, 'mining_laser_ii1', 1, 'bought');
 
 		const avanzado = [...codes];
-		avanzado[index] = 'mining_laser_a1';
+		avanzado[index] = 'mining_laser_ii1';
 
 		// El minero sale con Minería II... pero el láser A pide justamente eso, así
 		// que primero lo bajamos a I para que falte.
@@ -410,14 +407,14 @@ describe('lo que el piloto no sabe usar', () => {
 		const piloto = await crearPiloto(db);
 		const nave = activeShip(db, piloto.id)!;
 		const codes = shipFit(db, nave).map((module) => module.code);
-		const index = codes.indexOf('mining_laser_e1');
-		moveItem(db, shipContainer(db, nave.id).id, 'mining_laser_a1', 1, 'bought');
+		const index = codes.indexOf('mining_laser_i1');
+		moveItem(db, shipContainer(db, nave.id).id, 'mining_laser_ii1', 1, 'bought');
 
 		const avanzado = [...codes];
-		avanzado[index] = 'mining_laser_a1';
+		avanzado[index] = 'mining_laser_ii1';
 		refit(db, piloto, avanzado);
 
-		expect(shipFit(db, nave)[index].code).toBe('mining_laser_a1');
+		expect(shipFit(db, nave)[index].code).toBe('mining_laser_ii1');
 	});
 
 	it('y la nave con algo que no sabe usar no vuela', async () => {
@@ -426,7 +423,7 @@ describe('lo que el piloto no sabe usar', () => {
 		const nave = activeShip(db, piloto.id)!;
 		const hull = shipHull(nave);
 		const codes = shipFit(db, nave).map((module) => module.code);
-		codes[codes.indexOf('mining_laser_e1')] = 'mining_laser_a1';
+		codes[codes.indexOf('mining_laser_i1')] = 'mining_laser_ii1';
 
 		const hoja = buildReadout(hull, fitFromCodes(hull, codes), { mining: 1 });
 

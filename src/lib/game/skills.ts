@@ -22,7 +22,8 @@ export const MIN_DIFFICULTY = 1;
  * el medio.
  *
  * La escalera con la que se elige el rango de una habilidad nueva está en
- * docs/RESEARCH.md §4.4: no se inventa caso por caso.
+ * docs/systems/SKILLS.md, «El rango de cada habilidad»: no se inventa caso
+ * por caso.
  */
 export const MAX_DIFFICULTY = 16;
 
@@ -104,7 +105,8 @@ export interface Skill {
  * El orden dentro de cada familia va de la habilidad de entrada a la más
  * profunda, que es como se lee en la interfaz.
  *
- * El plano completo, con el porqué de cada rango, está en docs/RESEARCH.md §5.
+ * El plano completo, con el porqué de cada rango, está en «El catálogo» de
+ * docs/systems/SKILLS.md.
  */
 const CATALOG = [
 	// --- Pilotaje: dónde y cómo se mueve la nave ---
@@ -279,7 +281,7 @@ const CATALOG = [
 		name: 'Gestión de energía',
 		family: 'engineering',
 		difficulty: 2,
-		governs: 'Potencia disponible de la planta',
+		governs: 'Grilla de poder disponible',
 		requirements: [{ skill: 'mechanics', level: 2 }]
 	},
 	{
@@ -319,7 +321,7 @@ const CATALOG = [
 	},
 	{
 		code: 'capacitor',
-		name: 'Acumulador',
+		name: 'Capacitor',
 		family: 'engineering',
 		difficulty: 3,
 		governs: 'Capacidad del acumulador',

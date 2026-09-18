@@ -70,11 +70,25 @@ las que se buscaron:
 primer nivel y el crecimiento; las dos tablas salen de ahí. Dos listas escritas a
 mano son dos listas que se desfasan.
 
-Antes cada nivel costaba el triple que el anterior, y eso tenía un problema que
-sólo se ve al mirarlo con números: el nivel 5 costaba **apenas el doble** que los
-cuatro anteriores juntos, así que especializarse no dolía y el catálogo entero se
-terminaba en unas novecientas horas. El detalle del diagnóstico y de la decisión
-está en [la investigación](../RESEARCH.md).
+Antes cada nivel costaba **el triple** que el anterior, y eso tenía dos problemas
+que sólo se ven al mirarlos con números.
+
+El primero: una acción reparte `10 × minutos × dificultad`, que con dificultad 1
+son **600 XP por hora**. Con la curva vieja, llevar una habilidad de rango x1 al
+nivel 5 costaba 12.100 XP, o veinte horas. Los rangos de todo el catálogo suman
+48, así que **el catálogo entero al máximo eran unas 970 horas**: alguien que
+juegue dos horas por día lo terminaba en poco más de un año, y a partir de ahí no
+tenía nada que entrenar. Para un juego pensado en años, eso no es progresión: es
+una lista de pendientes con fecha de vencimiento.
+
+El segundo es más sutil: **el nivel 5 costaba apenas el doble que los cuatro
+anteriores juntos**, cuando debería costar mucho más. Con ×3 especializarse casi
+no dolía, así que el que juntaba experiencia terminaba llevando todo al 5 porque
+el último tramo no lo frenaba.
+
+Lo que **no** se tocó fue la experiencia por minuto, y conviene decir por qué:
+bajarla no hace el juego más largo, hace **cada sesión más aburrida**. El problema
+era la forma de la escalera, no el caudal, y se arregla donde está.
 
 ### El rango de cada habilidad
 
@@ -132,6 +146,11 @@ Minería (principal) recibe 600; Estiba y Prospección (secundarias), 90 cada un
 > `/piloto/habilidades`. Lo que sigue sin implementar es el laboratorio de más
 > abajo: hoy toda habilidad del catálogo está disponible desde el primer día.
 
+**Es la pieza más nuestra de todo el juego**, y la única que no sale de EVE. La
+premisa dice que los sistemas se replican; éste es el que no, porque lo asíncrono
+lo obliga: allá se entrena con un reloj que corre aunque nadie juegue, y acá
+jugar y progresar tienen que ser la misma cosa.
+
 Una acción no le paga experiencia a una habilidad: se la paga a la **familia** de
 la actividad. Minar deposita en el pozo de Extracción, y el jugador decide en qué
 habilidad de esa familia gastarlo.
@@ -183,7 +202,7 @@ otra pestaña; lo que decide es lo que hay en la base al escribir.
   las dos líneas es la decisión pendiente.
 - El **informe de cada acción** —el aviso y la bitácora— dice a qué pozo fue,
   cuánto había y cuánto quedó para gastar.
-- **`/piloto/habilidades`** tiene los seis pozos arriba, con cuántas habilidades
+- **`/piloto/habilidades`** tiene los ocho pozos arriba, con cuántas habilidades
   de la rama se pueden subir ahora mismo, y el catálogo entero abajo.
 
 ## Cómo se consigue una habilidad: el laboratorio
@@ -227,7 +246,7 @@ algo. Nadie prospecta un cinturón sin saber minar.
 Reglas para que el árbol no se vuelva un muro:
 
 - **Las habilidades de entrada (x1) nunca tienen requisitos.** Un piloto nuevo
-  siempre tiene seis puertas abiertas, una por familia.
+  siempre tiene ocho puertas abiertas, una por familia.
 - **Las cadenas son cortas**: como mucho dos saltos desde una habilidad de
   entrada hasta la más profunda de su rama.
 - **El requisito se mide en niveles, no en habilidades sueltas**: pedir
@@ -239,65 +258,202 @@ Las habilidades quedan en tres escalones: las de entrada, las que piden una de
 entrada, y las profundas que piden dos ramas a la vez. Esas últimas —Contactos,
 Guerra electrónica, Cartografía— son justamente las que definen a un especialista.
 
-## Catálogo inicial propuesto
+## El catálogo
 
-Seis familias. El multiplicador está entre paréntesis.
+**Ciento once habilidades en ocho familias.** Parece mucho y es el punto: un
+catálogo que se termina es un catálogo chico, y este juego se piensa en años. Lo
+que hace que no sea inabarcable no es el tamaño sino la forma — cada familia tiene
+una habilidad de entrada que cualquiera puede empezar, y de ahí sale una rama por
+oficio.
+
+**No todas mueven un número todavía.** Las de Combate, Industria y buena parte de
+Mando esperan a que exista la mecánica que gobiernan, y lo que las mantiene
+honestas es `TRAINABLE_FAMILIES`: una familia que ninguna acción paga no tiene
+pozo, así que **no se puede comprar nada en ella**. Si el número que una habilidad
+gobierna todavía no existe, la habilidad está en el árbol pero fuera de alcance.
+
+Las tablas salen de `game/skills.ts`. **Rango** es el multiplicador de costo,
+**Gobierna** es qué número mueve y **Pide** son los prerrequisitos.
 
 ### Pilotaje
 
-| Habilidad                 | Dif. | Requiere       | Gobierna                                  |
-| ------------------------- | :--: | -------------- | ----------------------------------------- |
-| Manejo de lanzaderas      |  x1  | —              | Requisito y bonos de las naves más chicas |
-| Navegación                |  x1  | —              | Velocidad de viaje dentro del sistema     |
-| Eficiencia de combustible |  x2  | Navegación II  | Consumo por salto y por maniobra          |
-| Astrogación               |  x3  | Navegación III | Saltos entre sistemas: tiempo y precisión |
+La familia de las **clases de nave**. Volar una clase que no se sabe volar es imposible, no penalizado: es el requisito duro más importante del juego.
+
+| Habilidad                 | Rango | Gobierna                                  | Pide                                |
+| ------------------------- | ----: | ----------------------------------------- | ----------------------------------- |
+| Manejo de lanzaderas      |    x1 | Requisito de la clase lanzadera           | —                                   |
+| Navegación                |    x1 | Velocidad de viaje dentro del sistema     | —                                   |
+| Maniobra                  |    x2 | Tiempo de alineación antes de salir       | Navegación 2                        |
+| Eficiencia de combustible |    x2 | Consumo por salto y por maniobra          | Navegación 2                        |
+| Naves ligeras             |    x2 | Requisito de la clase corbeta             | Manejo de lanzaderas 3              |
+| Astrogación               |    x3 | Saltos entre sistemas: tiempo y precisión | Navegación 3                        |
+| Naves industriales        |    x3 | Requisito de la clase industrial          | Naves ligeras 3                     |
+| Destructores              |    x3 | Requisito de la clase destructor          | Naves ligeras 3                     |
+| Cálculo de saltos         |    x4 | Alcance de salto                          | Astrogación 3                       |
+| Barcazas mineras          |    x4 | Requisito de la clase barcaza             | Naves industriales 3 · Minería 4    |
+| Pilotaje evasivo          |    x4 | Firma mientras se está en movimiento      | Maniobra 3                          |
+| Cruceros                  |    x5 | Requisito de la clase crucero             | Destructores 3                      |
+| Transportes rápidos       |    x6 | Requisito de la clase transporte          | Naves industriales 4 · Maniobra 4   |
+| Cargueros                 |    x6 | Requisito de la clase carguero            | Naves industriales 5                |
+| Naves de reconocimiento   |    x6 | Requisito de la clase explorador pesado   | Naves ligeras 5 · Escaneo 4         |
+| Exhumadoras               |    x6 | Requisito de la clase exhumadora          | Barcazas mineras 5                  |
+| Acorazados                |    x8 | Requisito de la clase acorazado           | Cruceros 5                          |
+| Naves capitales           |   x12 | Requisito de la clase capital             | Acorazados 5 · Vuelo en formación 4 |
 
 ### Ingeniería
 
-| Habilidad            | Dif. | Requiere                             | Gobierna                                        |
-| -------------------- | :--: | ------------------------------------ | ----------------------------------------------- |
-| Mecánica             |  x1  | —                                    | Reparaciones de casco y tiempo de mantenimiento |
-| Gestión de energía   |  x2  | Mecánica II                          | Cuántos módulos se pueden sostener encendidos   |
-| Ingeniería de bodega |  x2  | Estiba III                           | Capacidad efectiva de carga                     |
-| Ajuste de módulos    |  x3  | Mecánica III · Gestión de energía II | Requisito para módulos avanzados                |
+Todo lo que hace que un casco vuele y aguante. **Es la familia que ningún oficio puede saltear**: el minero necesita bodega y acumulador, el mercader blindaje para no perder la carga, el explorador energía.
+
+| Habilidad                | Rango | Gobierna                                           | Pide                              |
+| ------------------------ | ----: | -------------------------------------------------- | --------------------------------- |
+| Mecánica                 |    x1 | Estructura del casco y tiempo de reparación        | —                                 |
+| Gestión de energía       |    x2 | Potencia disponible de la planta                   | Mecánica 2                        |
+| Ingeniería de bodega     |    x2 | Capacidad efectiva de carga                        | Mecánica 2                        |
+| Blindaje                 |    x2 | Puntos de blindaje                                 | Mecánica 2                        |
+| Escudos                  |    x2 | Capacidad de escudo                                | Gestión de energía 2              |
+| Ajuste de módulos        |    x3 | Cómputo disponible; requisito de módulos avanzados | Mecánica 3 · Gestión de energía 2 |
+| Acumulador               |    x3 | Capacidad del acumulador                           | Gestión de energía 3              |
+| Recarga de escudos       |    x3 | Velocidad de recarga del escudo                    | Escudos 3                         |
+| Reparación de casco      |    x3 | Rendimiento de los módulos de reparación           | Mecánica 3                        |
+| Ingeniería de propulsión |    x4 | Empuje de los propulsores                          | Gestión de energía 3              |
+| Compensación de blindaje |    x4 | Resistencias del blindaje                          | Blindaje 4                        |
+| Compensación de escudos  |    x4 | Resistencias del escudo                            | Escudos 4                         |
+| Montaje de refuerzos     |    x4 | Requisito y penalización de los refuerzos de casco | Ajuste de módulos 3               |
+| Sistemas de emergencia   |    x4 | Qué queda encendido cuando falta potencia          | Gestión de energía 4              |
+| Termodinámica            |    x5 | Sobrecargar un módulo sin quemarlo                 | Ajuste de módulos 4               |
+| Ingeniería avanzada      |    x8 | Requisito de los módulos de escalón A              | Ajuste de módulos 5               |
 
 ### Extracción
 
-| Habilidad   | Dif. | Requiere    | Gobierna                                      |
-| ----------- | :--: | ----------- | --------------------------------------------- |
-| Minería     |  x1  | —           | Rendimiento por ciclo de extracción           |
-| Estiba      |  x1  | —           | Aprovechamiento del espacio de bodega         |
-| Refinado    |  x2  | Minería II  | Mineral en bruto convertido en material útil  |
-| Prospección |  x3  | Minería III | Afina la lectura: a qué ritmo repone el campo |
+Sacarlo de donde está: mineral, hielo y gas.
+
+| Habilidad                 | Rango | Gobierna                                          | Pide                                        |
+| ------------------------- | ----: | ------------------------------------------------- | ------------------------------------------- |
+| Minería                   |    x1 | Rendimiento por ciclo de láser                    | —                                           |
+| Estiba                    |    x1 | Cuánto compacta el mineral en bodega              | —                                           |
+| Supervisión de cinturón   |    x2 | Qué se ve de un cinturón sin escanear cada roca   | Minería 2                                   |
+| Prospección               |    x3 | Profundidad de la lectura de una roca             | Minería 3 · Escaneo 2                       |
+| Extracción de hielo       |    x3 | Rendimiento y ciclo de los cosechadores de hielo  | Minería 3                                   |
+| Explotación de anillos    |    x3 | Rendimiento en anillos planetarios                | Minería 3                                   |
+| Láseres de tira           |    x4 | Requisito y rendimiento de los láseres de tira    | Minería 4 · Barcazas mineras 1              |
+| Cristales de extracción   |    x4 | Cuánto dura un cristal y cuánto suma              | Láseres de tira 2                           |
+| Extracción de gas         |    x4 | Rendimiento de los aspiradores de nube            | Minería 4 · Escaneo 3                       |
+| Extracción planetaria     |    x4 | Qué se puede sacar de la superficie de un planeta | Minería 3 · Escaneo 3                       |
+| Recuperación de pecios    |    x4 | Qué se saca de una nave destruida                 | Mecánica 3 · Escaneo 3                      |
+| Rendimiento de extracción |    x5 | Bono general sobre todo lo que se extrae          | Minería 5                                   |
+| Extracción profunda       |    x5 | Acceso a los minerales que sólo hay sin ley       | Láseres de tira 4 · Prospección 4           |
+| Drones de extracción      |    x5 | Cuántos drones mineros se controlan               | Minería 4 · Drones 3                        |
+| Explotación industrial    |    x8 | Bono de rendimiento de las clases pesadas         | Exhumadoras 3 · Rendimiento de extracción 4 |
+
+### Industria
+
+Convertirlo en otra cosa. Es la familia más larga porque es la que más escalones tiene: refinar, fabricar componentes, fabricar productos.
+
+| Habilidad              | Rango | Gobierna                                       | Pide                                      |
+| ---------------------- | ----: | ---------------------------------------------- | ----------------------------------------- |
+| Refinado               |    x1 | Rendimiento del refinado en estación           | —                                         |
+| Fabricación            |    x1 | Requisito para fabricar; tiempo de trabajo     | —                                         |
+| Munición y cargas      |    x2 | Fabricar munición, cristales y cargas          | Fabricación 2                             |
+| Reciclaje              |    x2 | Qué se recupera al desarmar un módulo          | Refinado 2                                |
+| Componentes            |    x2 | Fabricar los componentes intermedios           | Fabricación 2                             |
+| Tasación de mena       |    x2 | Estimar el rinde de un lote antes de refinarlo | Refinado 2 · Análisis de materiales 2     |
+| Química industrial     |    x3 | Procesar gas y hielo en insumos utilizables    | Refinado 3                                |
+| Eficiencia de tiempo   |    x3 | Cuánto tarda un trabajo de fabricación         | Fabricación 3                             |
+| Planos y licencias     |    x3 | Cuántos planos se pueden tener en uso          | Fabricación 3                             |
+| Producción en serie    |    x3 | Cuántos trabajos simultáneos                   | Fabricación 4                             |
+| Eficiencia de material |    x4 | Cuánto material se ahorra por trabajo          | Fabricación 4                             |
+| Ingeniería de módulos  |    x4 | Fabricar módulos de escalón intermedio         | Componentes 3 · Ajuste de módulos 3       |
+| Cristalografía         |    x4 | Fabricar cristales de extracción               | Componentes 3 · Cristales de extracción 2 |
+| Fabricación avanzada   |    x5 | Fabricar módulos de escalón A                  | Ingeniería de módulos 4                   |
+| Construcción de cascos |    x6 | Fabricar cascos                                | Componentes 4 · Producción en serie 3     |
+| Industria de capital   |   x12 | Fabricar cascos y estructuras de clase capital | Construcción de cascos 5                  |
 
 ### Comercio
 
-| Habilidad           | Dif. | Requiere                      | Gobierna                               |
-| ------------------- | :--: | ----------------------------- | -------------------------------------- |
-| Regateo             |  x1  | —                             | Margen con la estación y comisión      |
-| Contabilidad        |  x2  | Regateo II                    | Impuesto de venta y tope de órdenes    |
-| Análisis de mercado |  x3  | Regateo III                   | Regiones del mercado que ves           |
-| Contactos           |  x4  | Regateo IV · Contabilidad III | Cuánto puede durar una orden publicada |
+Moverlo y venderlo. La única familia que gobierna números que no son de la nave.
+
+| Habilidad           | Rango | Gobierna                                         | Pide                                |
+| ------------------- | ----: | ------------------------------------------------ | ----------------------------------- |
+| Regateo             |    x1 | Margen con la estación y comisión del corredor   | —                                   |
+| Tasación            |    x2 | Ver el valor real de lo que se compra o se vende | Regateo 2                           |
+| Contabilidad        |    x2 | Impuesto de venta y cuántas órdenes podés llevar | Regateo 2                           |
+| Aranceles           |    x3 | Qué se paga al operar fuera de la propia bandera | Contabilidad 3                      |
+| Análisis de mercado |    x3 | Cuántas regiones del mercado ves                 | Regateo 3                           |
+| Corretaje           |    x4 | Comisión al publicar una orden                   | Contabilidad 4                      |
+| Contactos           |    x4 | Cuánto tiempo puede quedar publicada una orden   | Regateo 4 · Contabilidad 3          |
+| Contratos           |    x4 | Cuántos contratos propios se sostienen           | Corretaje 3                         |
+| Logística comercial |    x4 | Costo de mover carga por encargo                 | Contabilidad 3                      |
+| Especulación        |    x5 | Ver el histórico de precios y su tendencia       | Análisis de mercado 4               |
+| Redes comerciales   |    x6 | Alcance de las órdenes a distancia               | Análisis de mercado 5 · Contactos 4 |
 
 ### Combate
 
-| Habilidad          | Dif. | Requiere                            | Gobierna                                    |
-| ------------------ | :--: | ----------------------------------- | ------------------------------------------- |
-| Puntería           |  x1  | —                                   | Daño de las armas montadas                  |
-| Blindaje           |  x2  | Mecánica II                         | Resistencia del casco                       |
-| Escudos            |  x2  | Gestión de energía II               | Capacidad y recarga de escudos              |
-| Guerra electrónica |  x4  | Gestión de energía III · Escaneo II | Interferir, trabar o escapar de un enganche |
+Y, sobre todo, no perder la carga.
+
+| Habilidad                | Rango | Gobierna                                      | Pide                                 |
+| ------------------------ | ----: | --------------------------------------------- | ------------------------------------ |
+| Puntería                 |    x1 | Daño base de las armas montadas               | —                                    |
+| Enganche                 |    x2 | A cuántos blancos se apunta y a qué distancia | Puntería 2                           |
+| Cañones de masa          |    x2 | Daño cinético                                 | Puntería 3                           |
+| Emisores iónicos         |    x2 | Daño iónico                                   | Puntería 3 · Gestión de energía 2    |
+| Lanzas térmicas          |    x2 | Daño térmico                                  | Puntería 3                           |
+| Municiones               |    x2 | Qué cargas se pueden usar y cuánto rinden     | Puntería 2                           |
+| Cadencia                 |    x3 | Tiempo de ciclo de las armas                  | Puntería 4                           |
+| Precisión                |    x3 | Cuánto pega a blanco chico o rápido           | Enganche 3                           |
+| Drones                   |    x3 | Cuántos drones se controlan                   | Ajuste de módulos 2                  |
+| Guerra electrónica       |    x4 | Interferir, trabar o escapar de un enganche   | Gestión de energía 3 · Escaneo 2     |
+| Perturbación de sensores |    x4 | Bajar los sensores del otro                   | Guerra electrónica 3                 |
+| Inhibición de salto      |    x5 | Impedir que el otro salte                     | Guerra electrónica 4 · Astrogación 3 |
+| Artillería pesada        |    x6 | Armas de clase 5 en adelante                  | Cadencia 4 · Cruceros 3              |
 
 ### Ciencias
 
-| Habilidad              | Dif. | Requiere                     | Gobierna                                       |
-| ---------------------- | :--: | ---------------------------- | ---------------------------------------------- |
-| Escaneo                |  x2  | —                            | Cuánto revela una lectura: de qué es, y cuánto |
-| Análisis de materiales |  x2  | Escaneo II                   | Identificar lo que se extrae o se encuentra    |
-| Cartografía            |  x3  | Escaneo III · Astrogación II | Registrar rutas y sistemas no cartografiados   |
+Encontrar, entender y esconderse.
 
-> Escaneo es x2 y no tiene requisitos: es la puerta de Ciencias, la única familia
-> sin habilidad x1, porque su escalón de entrada ya pide oficio.
+| Habilidad              | Rango | Gobierna                                            | Pide                                |
+| ---------------------- | ----: | --------------------------------------------------- | ----------------------------------- |
+| Sensores               |    x1 | Alcance de los sensores pasivos                     | —                                   |
+| Escaneo                |    x2 | Alcance y calidad del escáner activo                | —                                   |
+| Análisis de materiales |    x2 | Identificar lo que se extrae o se encuentra         | Escaneo 2                           |
+| Sondas de exploración  |    x3 | Cuántas sondas se lanzan y cómo se ubican           | Escaneo 3                           |
+| Análisis de firmas     |    x3 | Distinguir qué es una señal antes de ir             | Sondas de exploración 2             |
+| Cartografía            |    x3 | Registrar rutas y sistemas no cartografiados        | Escaneo 3 · Astrogación 2           |
+| Perfil de firma        |    x4 | Bajar la propia firma: no ser encontrado            | Sensores 3                          |
+| Astrometría            |    x4 | Fuerza de escaneo: qué tan débil puede ser la señal | Sondas de exploración 3             |
+| Arqueología            |    x4 | Abrir yacimientos y restos                          | Análisis de firmas 3                |
+| Criptografía           |    x4 | Abrir depósitos de datos                            | Análisis de firmas 3                |
+| Contravigilancia       |    x5 | Detectar que a uno lo están escaneando              | Perfil de firma 4                   |
+| Rastreo                |    x5 | Encontrar una nave concreta y no una señal          | Astrometría 4                       |
+| Investigación          |    x5 | Mejorar planos: material y tiempo                   | Análisis de materiales 4            |
+| Física de salto        |    x6 | Entender y usar pasajes no cartografiados           | Cartografía 4 · Cálculo de saltos 3 |
+| Xenoarqueología        |    x8 | Los restos que nadie sabe leer todavía              | Arqueología 5 · Criptografía 4      |
+
+### Mando
+
+Lo que un piloto hace por otros. Casi todo espera a que existan las flotas.
+
+| Habilidad              | Rango | Gobierna                                     | Pide                     |
+| ---------------------- | ----: | -------------------------------------------- | ------------------------ |
+| Liderazgo              |    x1 | Cuánto se reparte de los bonos de mando      | —                        |
+| Negociación            |    x3 | Recompensa de los contratos de agente        | Liderazgo 2 · Regateo 3  |
+| Vuelo en formación     |    x4 | Cuántas naves coordina una flota             | Liderazgo 3              |
+| Tácticas de escolta    |    x4 | Bono a lo que se protege, no a uno mismo     | Liderazgo 3 · Enganche 3 |
+| Mando de flota         |    x6 | Bono que se reparte a toda la flota          | Vuelo en formación 3     |
+| Diplomacia corporativa |    x6 | Reputación ganada por operar con una bandera | Negociación 4            |
+| Doctrina de flota      |    x8 | Cuántos bonos de mando se sostienen a la vez | Mando de flota 4         |
+
+### Cómo crece sin desbordarse
+
+Tres reglas para cuando haya que agregar la habilidad ciento doce:
+
+1. **Una habilidad nueva mueve un número que ya existe, o entra con la mecánica
+   que lo crea.** Nunca antes. Es la regla de la cadena aplicada a este catálogo.
+2. **Cada familia tiene una sola habilidad de entrada de rango x1** —dos como
+   mucho—. Es la puerta, y una familia con cinco puertas no se siente como una
+   rama sino como una bolsa.
+3. **El rango sale de la escalera**, no del gusto. Si una habilidad parece merecer
+   un rango que la escalera no le da, lo que está mal es dónde se la puso en el
+   árbol.
 
 ## De dónde salen los primeros niveles
 

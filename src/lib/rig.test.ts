@@ -1,99 +1,48 @@
-/** El anillo reparte las ranuras parejo y la lista es su mismo índice. */
+/** Las ranuras del casco, agrupadas por bandeja y listas para dibujar. */
 
 import { describe, expect, it } from 'vitest';
 import { defaultFit } from './game/fitting';
 import { HULLS, getHull, STARTING_HULL } from './game/hulls';
 import { MODULES } from './game/modules';
-import {
-	RING_ORDER,
-	RING_RADIUS,
-	buildRingSlots,
-	buildSlotGroups,
-	moduleSummary,
-	ringOrder,
-	ringPositions
-} from './rig';
+import { SLOT_ORDER, buildSlotGroups, moduleSummary } from './rig';
 
-/** Un porcentaje escrito como "37.50%" vuelto número. */
-function percent(value: string): number {
-	return Number(value.replace('%', ''));
-}
+describe('las bandejas', () => {
+	const deFabrica = (code: string) => defaultFit(getHull(code)).map((module) => module.code);
 
-describe('las posiciones del anillo', () => {
-	it('arranca arriba, que es donde el ojo empieza a leer', () => {
-		// Con una sola categoría no hay cortes y el reparto es parejo desde las doce.
-		const [primera] = ringPositions([8]);
-
-		expect(percent(primera.left)).toBeCloseTo(50, 1);
-		expect(percent(primera.top)).toBeCloseTo(50 - RING_RADIUS, 1);
-	});
-
-	it('todas caen sobre el mismo círculo', () => {
-		for (const cuentas of [[1], [3], [1, 1, 2, 7], [3, 2, 3, 7], [2, 2, 4, 7]]) {
-			for (const { left, top } of ringPositions(cuentas)) {
-				const dx = percent(left) - 50;
-				const dy = percent(top) - 50;
-				expect(Math.hypot(dx, dy)).toBeCloseTo(RING_RADIUS, 1);
-			}
-		}
-	});
-
-	it('no repite lugar: dos ranuras nunca se pisan', () => {
-		for (const cuentas of [[2], [1, 1, 2, 7], [3, 2, 3, 7], [1, 2, 4, 7]]) {
-			const total = cuentas.reduce((suma, cuantas) => suma + cuantas, 0);
-			const lugares = ringPositions(cuentas).map(({ left, top }) => `${left}|${top}`);
-			expect(new Set(lugares).size).toBe(total);
-		}
-	});
-
-	it('sin categorías que separar, reparte parejo', () => {
-		const posiciones = ringPositions([12]);
-		const saltos = posiciones
-			.slice(1)
-			.map((p, i) => ((p.angle - posiciones[i].angle + 540) % 360) - 180);
-
-		for (const salto of saltos) expect(salto).toBeCloseTo(30, 1);
-	});
-
-	it('todas quedan a la misma distancia, sin importar las categorías', () => {
-		// La uniformidad es lo único que se ve bien acá. Separar las categorías con un
-		// hueco parece mejor idea de la que es: los siete internos esenciales son
-		// siempre siete, así que ocupan más de media vuelta y todo lo que varía queda
-		// amontonado en la otra mitad, con el doble de separación. El anillo se ve
-		// torcido aunque las cuentas cierren.
-		const posiciones = ringPositions([3, 2, 3, 7]);
-		const saltos = posiciones
-			.slice(1)
-			.map((p, i) => ((p.angle - posiciones[i].angle + 540) % 360) - 180);
-
-		const paso = 360 / 15;
-		for (const salto of saltos) expect(salto).toBeCloseTo(paso, 1);
-	});
-
-	it('una categoría vacía no ocupa lugar', () => {
-		// Un casco sin anclajes reparte sus ranuras como si esa categoría no
-		// existiera: un hueco reservado para algo que no está no significa nada.
-		expect(ringPositions([0, 2, 3, 7])).toEqual(ringPositions([2, 3, 7]));
-	});
-});
-
-describe('el orden del anillo', () => {
-	it('agrupa por categoría y deja los esenciales al final', () => {
+	it('reúnen todas las ranuras del casco, una sola vez', () => {
 		for (const hull of HULLS) {
-			const orden = ringOrder(hull);
-			const categorias = orden.map((index) => hull.slots[index].kind);
-			const esperado = [...categorias].sort(
-				(a, b) => RING_ORDER.indexOf(a) - RING_ORDER.indexOf(b)
+			const filas = buildSlotGroups(hull.code, deFabrica(hull.code), -1).flatMap((g) => g.rows);
+			expect(filas, hull.name).toHaveLength(hull.slots.length);
+			expect(new Set(filas.map((f) => f.index)).size, hull.name).toBe(hull.slots.length);
+		}
+	});
+
+	it('van en el orden de EVE: altos, medios, bajos y al final los refuerzos', () => {
+		for (const hull of HULLS) {
+			const orden = buildSlotGroups(hull.code, deFabrica(hull.code), -1).map((g) => g.kind);
+			const esperado = [...orden].sort(
+				(a, b) => SLOT_ORDER.indexOf(a as never) - SLOT_ORDER.indexOf(b as never)
 			);
-			expect(categorias).toEqual(esperado);
+			expect(orden, hull.name).toEqual(esperado);
 		}
 	});
 
-	it('recorre todas las ranuras del casco, una sola vez', () => {
-		for (const hull of HULLS) {
-			const orden = ringOrder(hull);
-			expect(orden).toHaveLength(hull.slots.length);
-			expect(new Set(orden).size).toBe(hull.slots.length);
+	it('el largo de cada bandeja es la terna del casco', () => {
+		// Es lo que reemplaza a la figura: dos naves se distinguen por la forma del
+		// bloque de ranuras, sin dibujar nada.
+		const mula = buildSlotGroups('mula', deFabrica('mula'), -1);
+		const vencejo = buildSlotGroups('vencejo', deFabrica('vencejo'), -1);
+		const largo = (grupos: ReturnType<typeof buildSlotGroups>, kind: string) =>
+			grupos.find((g) => g.kind === kind)?.rows.length ?? 0;
+
+		// La carguera lleva casi todo abajo; la exploradora, casi todo en el medio.
+		expect(largo(mula, 'low')).toBeGreaterThan(largo(mula, 'mid'));
+		expect(largo(vencejo, 'mid')).toBeGreaterThan(largo(vencejo, 'low'));
+	});
+
+	it('dice qué entra en cada una, porque el nombre ya no lo dice', () => {
+		for (const grupo of buildSlotGroups(STARTING_HULL, deFabrica(STARTING_HULL), -1)) {
+			expect(grupo.hint, grupo.label).not.toBe('');
 		}
 	});
 });
@@ -101,40 +50,26 @@ describe('el orden del anillo', () => {
 describe('las ranuras dibujadas', () => {
 	const hull = getHull(STARTING_HULL);
 	const deFabrica = defaultFit(hull).map((module) => module.code);
+	const filas = (selected: number) =>
+		buildSlotGroups(STARTING_HULL, deFabrica, selected).flatMap((g) => g.rows);
 
 	it('marcan como llena la que tiene algo montado', () => {
-		const slots = buildRingSlots(STARTING_HULL, deFabrica, -1);
-
-		for (const slot of slots) {
+		for (const slot of filas(-1)) {
 			expect(slot.filled).toBe(deFabrica[slot.index] !== '');
-			// Lo montado muestra clase y escalón; lo vacío, la clase de la ranura. Es
-			// lo que se lee adentro del círculo sin pasar el mouse.
-			expect(slot.badge).toMatch(slot.filled ? /^\d[A-E]$/ : /^c\d$/);
+			// La insignia dice **la clase y nada más**: es lo único que decide si un
+			// módulo entra. El escalón va en el nombre, sin cifrar.
+			expect(slot.badge).toMatch(/^\d$/);
 		}
 	});
 
 	it('sólo una queda elegida, y es la que se pidió', () => {
-		const slots = buildRingSlots(STARTING_HULL, deFabrica, 2);
-		const elegidas = slots.filter((slot) => slot.selected);
-
+		const elegidas = filas(2).filter((slot) => slot.selected);
 		expect(elegidas).toHaveLength(1);
 		expect(elegidas[0].index).toBe(2);
 	});
 
 	it('sin elegir ninguna, ninguna queda encendida', () => {
-		expect(buildRingSlots(STARTING_HULL, deFabrica, -1).some((s) => s.selected)).toBe(false);
-	});
-
-	it('la lista es el mismo índice del anillo', () => {
-		const slots = buildRingSlots(STARTING_HULL, deFabrica, 3);
-		const groups = buildSlotGroups(STARTING_HULL, deFabrica, 3);
-		const enLista = groups.flatMap((group) => group.rows);
-
-		// Las mismas ranuras, una sola vez cada una, con la misma elegida.
-		expect(enLista.map((s) => s.index).sort((a, b) => a - b)).toEqual(
-			slots.map((s) => s.index).sort((a, b) => a - b)
-		);
-		expect(enLista.filter((s) => s.selected).map((s) => s.index)).toEqual([3]);
+		expect(filas(-1).some((slot) => slot.selected)).toBe(false);
 	});
 });
 

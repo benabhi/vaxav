@@ -161,10 +161,10 @@ describe('comprar módulos', () => {
 		credit(db, piloto.id, 100_000, { kind: 'adjustment', memo: 'prueba' });
 		const antes = balance(db, piloto.id);
 
-		const recibo = buyFromStation(db, piloto, 'mining_laser_e1', 1);
+		const recibo = buyFromStation(db, piloto, 'mining_laser_i1', 1);
 
 		const hangar = stationContainer(db, piloto.id, deskFor(db, piloto)!.stationId);
-		expect(quantityOf(db, hangar.id, 'mining_laser_e1')).toBe(1);
+		expect(quantityOf(db, hangar.id, 'mining_laser_i1')).toBe(1);
 		expect(balance(db, piloto.id)).toBe(antes - recibo.total);
 		expect(auditBalance(db, piloto.id)).toBeNull();
 	});
@@ -172,7 +172,7 @@ describe('comprar módulos', () => {
 	it('cobra por encima del precio de referencia', async () => {
 		const db = seededDb();
 		const { piloto } = await conMineral(db, PUERTO, 0);
-		const cotizacion = quote(deskFor(db, piloto)!, 'mining_laser_e1');
+		const cotizacion = quote(deskFor(db, piloto)!, 'mining_laser_i1');
 
 		expect(cotizacion.ask).toBeGreaterThan(cotizacion.bid);
 	});
@@ -182,10 +182,10 @@ describe('comprar módulos', () => {
 		const { piloto } = await conMineral(db, PUERTO, 0);
 		const hangar = stationContainer(db, piloto.id, deskFor(db, piloto)!.stationId);
 
-		expect(() => buyFromStation(db, piloto, 'plant_a3', 1)).toThrow();
+		expect(() => buyFromStation(db, piloto, 'plant_ii3', 1)).toThrow();
 
 		// Lo que importa del rechazo: no quedó medio comprado.
-		expect(quantityOf(db, hangar.id, 'plant_a3')).toBe(0);
+		expect(quantityOf(db, hangar.id, 'plant_ii3')).toBe(0);
 		expect(auditBalance(db, piloto.id)).toBeNull();
 		expect(auditStacks(db, hangar.id)).toEqual([]);
 	});
@@ -205,7 +205,7 @@ describe('comprar módulos', () => {
 		const { piloto } = await conMineral(db, ESCARCHA, 0);
 		credit(db, piloto.id, 100_000, { kind: 'adjustment', memo: 'prueba' });
 
-		expect(() => buyFromStation(db, piloto, 'mining_laser_e1', 1)).toThrow(MarketError);
+		expect(() => buyFromStation(db, piloto, 'mining_laser_i1', 1)).toThrow(MarketError);
 	});
 
 	it('comprar y vender de inmediato siempre deja perdiendo', async () => {
@@ -214,8 +214,8 @@ describe('comprar módulos', () => {
 		credit(db, piloto.id, 100_000, { kind: 'adjustment', memo: 'prueba' });
 		const antes = balance(db, piloto.id);
 
-		buyFromStation(db, piloto, 'cargo_rack_e1', 1);
-		sellToStation(db, piloto, 'cargo_rack_e1', 1, 'station');
+		buyFromStation(db, piloto, 'cargo_rack_i1', 1);
+		sellToStation(db, piloto, 'cargo_rack_i1', 1, 'station');
 
 		expect(balance(db, piloto.id)).toBeLessThan(antes);
 	});

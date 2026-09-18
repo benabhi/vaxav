@@ -10,7 +10,7 @@ import type { IconName } from '$lib/icons';
 import type { ActionKind } from '$lib/game/actions';
 import type { MissionKind } from '$lib/game/agents';
 import type { DamageType } from '$lib/game/damage';
-import type { BonusTarget, CoreSystem, DockSize, SlotKind } from '$lib/game/hulls';
+import type { BonusTarget, DockSize, SlotKind } from '$lib/game/hulls';
 import { getItem, type Item, type ItemKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
 import { startingKit, startingLevels, type ProfessionCode } from '$lib/game/professions';
@@ -88,7 +88,9 @@ const PROFESSION_ICONS: Record<ProfessionCode, IconName> = {
 	hauler: 'package',
 	trader: 'scales',
 	escort: 'shield',
-	technician: 'wrench'
+	technician: 'wrench',
+	smelter: 'flame',
+	boatswain: 'users-three'
 };
 
 /** El ícono de Phosphor que le toca a un oficio. */
@@ -418,11 +420,32 @@ export function explorationIcon(explored: boolean): IconName {
 // --- Naves -------------------------------------------------------------------
 
 const SLOT_KINDS: Record<SlotKind, string> = {
-	hardpoint: 'Anclaje',
-	utility: 'Utilitario',
-	core: 'Esencial',
-	optional: 'Opcional'
+	high: 'Altos',
+	mid: 'Medios',
+	low: 'Bajos',
+	rig: 'Refuerzos'
 };
+
+/**
+ * Qué va en cada bandeja, en media línea.
+ *
+ * Existe porque **el nombre dejó de enseñar**. «Consola» decía sola qué iba
+ * adentro; «Medios» no dice nada, y ése es el precio de usar los nombres que el
+ * jugador de EVE ya tiene aprendidos. La pista lo paga: se lee una vez, al lado
+ * del rótulo de la fila, y después es ruido de fondo — que es exactamente lo que
+ * tiene que ser.
+ */
+const SLOT_HINTS: Record<SlotKind, string> = {
+	high: 'armas y herramientas',
+	mid: 'lo que se enciende',
+	low: 'lo que va atornillado',
+	rig: 'no se desmontan'
+};
+
+/** La media línea que dice qué entra en esa bandeja. */
+export function slotKindHint(kind: SlotKind): string {
+	return SLOT_HINTS[kind] ?? '';
+}
 
 /**
  * El dibujo de cada categoría de ranura.
@@ -432,20 +455,10 @@ const SLOT_KINDS: Record<SlotKind, string> = {
  * pueden verse igual.
  */
 const SLOT_ICONS: Record<SlotKind, IconName> = {
-	hardpoint: 'target',
-	utility: 'wrench',
-	core: 'gear-six',
-	optional: 'squares-four'
-};
-
-const CORE_SYSTEMS: Record<CoreSystem, string> = {
-	power_plant: 'Planta de energía',
-	thrusters: 'Propulsores',
-	jump_drive: 'Motor de salto',
-	distributor: 'Distribuidor',
-	sensors: 'Sensores',
-	life_support: 'Soporte vital',
-	tank: 'Tanque'
+	high: 'caret-up',
+	mid: 'lightning',
+	low: 'caret-down',
+	rig: 'anchor'
 };
 
 const DOCK_SIZES: Record<DockSize, string> = {
@@ -475,11 +488,6 @@ export function slotKindLabel(kind: SlotKind): string {
 /** El ícono de Phosphor que le toca a un tipo de ranura. */
 export function slotKindIcon(kind: SlotKind): IconName {
 	return SLOT_ICONS[kind] ?? 'circles-three';
-}
-
-/** Cómo se llama un interno esencial en pantalla. */
-export function coreSystemLabel(core: CoreSystem): string {
-	return CORE_SYSTEMS[core] ?? core;
 }
 
 /** En qué amarre entra la nave. */

@@ -1,9 +1,25 @@
 # Vaxav
 
-Juego web multijugador idle y textual: un piloto espacial y su nave. La visión y
-la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas. Las
+**EVE Online asíncrono, por acciones, en el navegador.** Ésa es la premisa y
+decide todo lo demás: los sistemas se replican de EVE y se adaptan a que nadie
+tenga que estar presente —se encarga una acción, tarda, y al volver hay un
+informe—. La piel es la de Elite Dangerous. Lo único que no viene de ninguno de
+los dos son **los pozos de experiencia por familia**, que son la pieza que hace
+que jugar y progresar sean la misma cosa.
+
+Ante una duda de diseño, la primera pregunta es **cómo lo resuelve EVE**; la
+segunda, **si se puede decidir antes de salir**. Y donde EVE ya tiene un nombre
+para algo —un presupuesto, una bandeja, un módulo, una habilidad— **se usa ese
+nombre en castellano**: inventar un sinónimo no lo hace más nuestro, lo hace más
+lento de aprender. **Dos excepciones**: los nombres de nave se inventan acá —una
+nave es un personaje, no una etiqueta— y la moneda son **créditos (CR)**, no ISK.
+
+La visión y la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar
+mecánicas. Las
 bases de los catálogos —habilidades, naves, módulos y materiales— y de dónde salen
-están en `docs/RESEARCH.md`.
+están en los documentos de sistema: [habilidades](docs/systems/SKILLS.md),
+[naves y módulos](docs/systems/SHIPS.md), [materiales](docs/systems/MATERIALS.md)
+y [economía](docs/systems/ECONOMY.md).
 
 **Ninguna mecánica entra sola.** Toda característica arrastra una cadena —verbo,
 insumo, fuente, aparato, llave, fábrica y lugar— y lo que no se cierra queda como
