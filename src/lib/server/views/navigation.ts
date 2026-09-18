@@ -150,6 +150,9 @@ export function buildAgentRows(
 			code: agent.code,
 			name: agent.name,
 			corporation: corporation.name,
+			// Para poder abrir su ficha desde la tarjeta: de quién es un agente es la
+			// mitad de lo que hace falta saber antes de pedirle trabajo.
+			corporationCode: corporation.code,
 			faction: name,
 			kind: missionKindLabel(agent.missionKind),
 			kindIcon: missionKindIcon(agent.missionKind),

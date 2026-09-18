@@ -19,9 +19,10 @@
 
 import type { Pilot } from '../db/schema';
 import type { Db } from '../db/types';
-import { buildAgentes, readAgentsQuery } from './agents';
+import { buildAgentes, buildFichaAgente, readAgentsQuery } from './agents';
 import { buildCorporacion, estacionesDe } from './corporation';
 import { buildMiembros, readMembersQuery } from './members';
+import { buildPerfilPiloto } from './pilot';
 import { buildPaginaReputacion } from './reputation';
 import { readFicha, sinPrefijo, type CorporationSection } from '$lib/fichas';
 import type { Ficha } from '$lib/tipos';
@@ -43,11 +44,66 @@ export function buildFicha(db: Db, row: Pilot, params: URLSearchParams): Ficha |
 
 	if (pedida.kind === 'corporacion')
 		return corporacion(db, row, pedida.code, pedida.section, propios);
+	if (pedida.kind === 'piloto') return piloto(db, row, pedida.code);
+	if (pedida.kind === 'agente') return agente(db, row, pedida.code);
 
-	// Las otras dos clases todavía no existen. Se devuelve `null` y la ventana no
-	// se abre, que es mejor que abrir una vacía.
 	return null;
 }
+
+/**
+ * La ficha de un piloto. **Una sola sección y sin pestañas**: lo público de una
+ * persona entra en una pantalla, y un selector de una sola cosa es un adorno que
+ * además promete que hay más.
+ */
+function piloto(db: Db, row: Pilot, callsign: string): Ficha | null {
+	const perfil = buildPerfilPiloto(db, row, callsign);
+	if (!perfil) return null;
+
+	return {
+		...VACIA,
+		kind: 'piloto',
+		code: perfil.callsign,
+		title: perfil.callsign,
+		// Cerrada, ni el oficio: el subtítulo también es un dato.
+		subtitle: perfil.closed ? '' : perfil.profession,
+		icon: 'identification-card',
+		pilot: perfil
+	};
+}
+
+/** La ficha de un agente, con la cuenta de por qué te atiende o por qué no. */
+function agente(db: Db, row: Pilot, code: string): Ficha | null {
+	const ficha = buildFichaAgente(db, row, code);
+	if (!ficha) return null;
+
+	return {
+		...VACIA,
+		kind: 'agente',
+		code: ficha.agent.code,
+		title: ficha.agent.name,
+		subtitle: ficha.agent.corporation,
+		icon: 'identification-badge',
+		agent: ficha
+	};
+}
+
+/**
+ * Lo que toda ficha tiene vacío.
+ *
+ * Cada clase llena lo suyo y deja el resto en nulo, que es lo que la pantalla
+ * pregunta para saber qué dibujar. Escribir los ocho campos en cada armador sería
+ * garantizar que el día que aparezca el noveno falte en alguno.
+ */
+const VACIA = {
+	section: '',
+	corporation: null,
+	reputation: null,
+	stations: null,
+	agents: null,
+	members: null,
+	pilot: null,
+	agent: null
+} as const;
 
 /** La ficha de una corporación, con la sección que se esté mirando. */
 function corporacion(
@@ -68,10 +124,12 @@ function corporacion(
 		: 'info';
 
 	return {
+		...VACIA,
 		kind: 'corporacion',
 		code: ficha.code,
 		title: ficha.name,
 		subtitle: ficha.kind,
+		icon: 'share-network',
 		section: cual,
 		corporation: ficha,
 		reputation:

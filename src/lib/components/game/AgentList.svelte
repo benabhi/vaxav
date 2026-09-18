@@ -22,6 +22,8 @@
 	import HudTable, { type Columna } from '../ui/HudTable.svelte';
 	import Paginator from '../ui/Paginator.svelte';
 	import Identicon from './Identicon.svelte';
+	import { page } from '$app/state';
+	import { hrefFicha } from '$lib/fichas';
 	import type { AgentesCorporacion } from '$lib/tipos';
 
 	interface Props {
@@ -179,9 +181,15 @@
 						size="1.6rem"
 						class={uno.open ? '' : 'opacity-50 saturate-[0.35]'}
 					/>
-					<span class="truncate font-display text-1 tracking-display text-text-strong uppercase">
+					<!-- El nombre abre su ficha: qué reparte, dónde para y qué le falta
+					     para recibirte, que es lo que la fila no tiene lugar para decir. -->
+					<a
+						href={hrefFicha(page.url, 'agente', uno.code)}
+						class="truncate font-display text-1 tracking-display text-text-strong uppercase
+							no-underline hover:text-accent-bright"
+					>
 						{uno.name}
-					</span>
+					</a>
 				</span>
 			</td>
 			<td class="py-2 font-display text-1 tracking-display text-accent-bright">{uno.level}</td>

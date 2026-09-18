@@ -20,12 +20,27 @@
  */
 
 import { asc, eq } from 'drizzle-orm';
-import { agent, body, corporation, station, system as systemTable, type Pilot } from '../db/schema';
+import {
+	agent,
+	body,
+	corporation,
+	station,
+	system as systemTable,
+	type Agent,
+	type Corporation,
+	type Pilot
+} from '../db/schema';
 import type { Db } from '../db/types';
 import { MISSION_KINDS, type MissionKind } from '$lib/game/agents';
 import { FACTIONS } from '$lib/game/factions';
-import { canBeHired, requiredReputation } from '$lib/game/reputation';
-import { missionKindIcon, missionKindLabel, roman } from '$lib/format';
+import {
+	REPUTATION_SCALE,
+	TIERS,
+	canBeHired,
+	requiredReputation,
+	tierForRaw
+} from '$lib/game/reputation';
+import { missionKindIcon, missionKindLabel, reputationLabel, roman } from '$lib/format';
 import { pilotStandings } from '../services/reputation';
 import { readListing, paginate, sift, type Ordenes } from './listing';
 import type {
@@ -33,8 +48,93 @@ import type {
 	ConsultaAgentes,
 	ConsultaSectorAgentes,
 	DirectorioAgentes,
+	FichaAgente,
 	FilaAgenteCorporacion
 } from '$lib/tipos';
+
+/**
+ * Dónde está sentado cada agente, en tres mapas.
+ *
+ * Se traen enteros y no de a uno: una corporación con veinte puestos no puede
+ * costar veinte viajes a la base, y el directorio del sector los pide para cien.
+ */
+function dondeSeSientan(db: Db) {
+	return {
+		puestos: new Map(
+			db
+				.select()
+				.from(station)
+				.all()
+				.map((uno) => [uno.id, uno])
+		),
+		cuerpos: new Map(
+			db
+				.select()
+				.from(body)
+				.all()
+				.map((uno) => [uno.id, uno])
+		),
+		sistemas: new Map(
+			db
+				.select()
+				.from(systemTable)
+				.all()
+				.map((uno) => [uno.id, uno])
+		)
+	};
+}
+
+type Ubicaciones = ReturnType<typeof dondeSeSientan>;
+
+/**
+ * La fila de un agente, escrita una sola vez.
+ *
+ * La piden tres: la lista de una corporación, el directorio del sector y la ficha
+ * de uno solo. Escrita tres veces sería garantizar que dentro de un mes una diga
+ * que te atiende y otra que no —la cuenta de si te recibe son dos escaleras y un
+ * umbral, y basta con que una copia se olvide de la bandera—.
+ *
+ * Recibe la reputación ya leída porque quien la llama tiene muchos agentes en la
+ * mano: preguntarla por fila sería ir a la base cien veces para contestar lo
+ * mismo.
+ */
+function filaAgente(
+	uno: Agent,
+	suya: Corporation | undefined,
+	donde: Ubicaciones,
+	conLaCorporacion: number,
+	conLaBandera: number
+): FilaAgenteCorporacion {
+	const puesto = donde.puestos.get(uno.stationId);
+	const cuerpo = puesto ? donde.cuerpos.get(puesto.bodyId) : undefined;
+	const sistema = cuerpo ? donde.sistemas.get(cuerpo.systemId) : undefined;
+	const kind = uno.missionKind as MissionKind;
+	const faccion = suya?.faction ?? '';
+	const bandera = faccion
+		? (FACTIONS[faccion as keyof typeof FACTIONS]?.name ?? 'Sin bandera')
+		: 'Sin bandera';
+
+	return {
+		code: uno.code,
+		name: uno.name,
+		kind: missionKindLabel(kind),
+		kindCode: uno.missionKind,
+		kindIcon: missionKindIcon(kind),
+		level: roman(uno.level),
+		levelValue: uno.level,
+		station: cuerpo?.name ?? '',
+		system: sistema?.name ?? '',
+		systemCode: sistema?.code ?? '',
+		corporation: suya?.name ?? '',
+		corporationCode: suya?.code ?? '',
+		open: canBeHired(uno.level, faccion, conLaCorporacion, conLaBandera),
+		// La misma frase que la ficha del lugar, palabra por palabra: el mismo hecho
+		// se dice igual en todos lados.
+		requirement: `Requiere ${requiredReputation(uno.level, faccion)} de reputación con ${
+			suya?.name ?? 'su corporación'
+		} o con ${bandera}`
+	};
+}
 
 /** Cuántos agentes entran en una página. El mismo número que el resto del juego. */
 export const AGENTS_PER_PAGE = 25;
@@ -128,61 +228,14 @@ export function buildAgentes(
 		.orderBy(asc(agent.level), asc(agent.id))
 		.all();
 
-	// Dónde está sentado cada uno. Dos mapas y no una consulta por agente: una
-	// corporación con veinte puestos no puede costar veinte viajes a la base.
-	const puestos = new Map(
-		db
-			.select()
-			.from(station)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
-	const cuerpos = new Map(
-		db
-			.select()
-			.from(body)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
-	const sistemas = new Map(
-		db
-			.select()
-			.from(systemTable)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
+	const donde = dondeSeSientan(db);
 
 	// Las dos escaleras del piloto con esta corporación y con su bandera.
 	const reputacion = pilotStandings(db, row.id);
 	const conLaCorporacion = reputacion.corporations[suya.code] ?? 0;
 	const conLaBandera = suya.faction ? (reputacion.factions[suya.faction] ?? 0) : 0;
-	const bandera = FACTIONS[suya.faction as keyof typeof FACTIONS]?.name ?? 'Sin bandera';
 
-	const todos: FilaAgenteCorporacion[] = suyos.map((uno) => {
-		const puesto = puestos.get(uno.stationId);
-		const cuerpo = puesto ? cuerpos.get(puesto.bodyId) : undefined;
-		const kind = uno.missionKind as MissionKind;
-		const needed = requiredReputation(uno.level, suya.faction);
-
-		return {
-			code: uno.code,
-			name: uno.name,
-			kind: missionKindLabel(kind),
-			kindCode: uno.missionKind,
-			kindIcon: missionKindIcon(kind),
-			level: roman(uno.level),
-			levelValue: uno.level,
-			station: cuerpo?.name ?? '',
-			system: cuerpo ? (sistemas.get(cuerpo.systemId)?.name ?? '') : '',
-			systemCode: cuerpo ? (sistemas.get(cuerpo.systemId)?.code ?? '') : '',
-			corporation: suya.name,
-			corporationCode: suya.code,
-			open: canBeHired(uno.level, suya.faction, conLaCorporacion, conLaBandera),
-			// La misma frase que la ficha del lugar, palabra por palabra: el mismo
-			// hecho se dice igual en todos lados.
-			requirement: `Requiere ${needed} de reputación con ${suya.name} o con ${bandera}`
-		};
-	});
+	const todos = suyos.map((uno) => filaAgente(uno, suya, donde, conLaCorporacion, conLaBandera));
 
 	const pasan = sift(todos, query, AGENT_FILTERS);
 	const pagina = paginate(pasan, query, AGENT_SORTS, AGENTS_PER_PAGE);
@@ -273,27 +326,7 @@ export function buildDirectorioAgentes(
 			.all()
 			.map((una) => [una.id, una])
 	);
-	const puestos = new Map(
-		db
-			.select()
-			.from(station)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
-	const cuerpos = new Map(
-		db
-			.select()
-			.from(body)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
-	const sistemas = new Map(
-		db
-			.select()
-			.from(systemTable)
-			.all()
-			.map((uno) => [uno.id, uno])
-	);
+	const donde = dondeSeSientan(db);
 
 	// Todo lo que el piloto tiene, de una consulta: son las dos escaleras de cada
 	// agente y hay uno por estación, así que preguntarlo por agente sería ir a la
@@ -307,36 +340,13 @@ export function buildDirectorioAgentes(
 		.all()
 		.map((uno) => {
 			const suya = corporaciones.get(uno.corporationId);
-			const puesto = puestos.get(uno.stationId);
-			const cuerpo = puesto ? cuerpos.get(puesto.bodyId) : undefined;
-			const sistema = cuerpo ? sistemas.get(cuerpo.systemId) : undefined;
-			const kind = uno.missionKind as MissionKind;
-
-			const conLaCorporacion = suya ? (reputacion.corporations[suya.code] ?? 0) : 0;
-			const conLaBandera = suya?.faction ? (reputacion.factions[suya.faction] ?? 0) : 0;
-			const bandera = suya?.faction
-				? (FACTIONS[suya.faction as keyof typeof FACTIONS]?.name ?? 'Sin bandera')
-				: 'Sin bandera';
-			const needed = requiredReputation(uno.level, suya?.faction ?? '');
-
-			return {
-				code: uno.code,
-				name: uno.name,
-				kind: missionKindLabel(kind),
-				kindCode: uno.missionKind,
-				kindIcon: missionKindIcon(kind),
-				level: roman(uno.level),
-				levelValue: uno.level,
-				station: cuerpo?.name ?? '',
-				system: sistema?.name ?? '',
-				systemCode: sistema?.code ?? '',
-				corporation: suya?.name ?? '',
-				corporationCode: suya?.code ?? '',
-				open: canBeHired(uno.level, suya?.faction ?? '', conLaCorporacion, conLaBandera),
-				// La misma frase que la ficha del lugar, palabra por palabra: el mismo
-				// hecho se dice igual en todos lados.
-				requirement: `Requiere ${needed} de reputación con ${suya?.name ?? 'su corporación'} o con ${bandera}`
-			};
+			return filaAgente(
+				uno,
+				suya,
+				donde,
+				suya ? (reputacion.corporations[suya.code] ?? 0) : 0,
+				suya?.faction ? (reputacion.factions[suya.faction] ?? 0) : 0
+			);
 		});
 
 	const pagina = paginate(sift(todos, query, SECTOR_FILTERS), query, SECTOR_SORTS, SECTOR_PER_PAGE);
@@ -351,5 +361,57 @@ export function buildDirectorioAgentes(
 		kinds: [...new Set(todos.map((uno) => uno.kindCode))]
 			.map((code) => ({ value: code, label: missionKindLabel(code as MissionKind) }))
 			.sort((a, b) => a.label.localeCompare(b.label, 'es'))
+	};
+}
+
+/**
+ * La ficha de un agente: quién es, dónde para y qué le falta para recibirte.
+ *
+ * Es la misma fila que aparece en las listas, con **la cuenta de por qué** al
+ * lado: el umbral que pide su nivel y las dos escaleras que lo pueden alcanzar.
+ * Es la pregunta que deja abierta la lista —«¿por qué éste no me atiende?»— y la
+ * lista no tiene lugar para contestarla sin volverse ilegible.
+ *
+ * Devuelve `null` si el código no existe: una URL escrita a mano no tiene por qué
+ * tirar abajo la pantalla que hay debajo de la ventana.
+ */
+export function buildFichaAgente(db: Db, row: Pilot, code: string): FichaAgente | null {
+	const uno = db.select().from(agent).where(eq(agent.code, code)).get();
+	if (!uno) return null;
+
+	const suya = db.select().from(corporation).where(eq(corporation.id, uno.corporationId)).get();
+	const reputacion = pilotStandings(db, row.id);
+	const conLaCorporacion = suya ? (reputacion.corporations[suya.code] ?? 0) : 0;
+	const conLaBandera = suya?.faction ? (reputacion.factions[suya.faction] ?? 0) : 0;
+
+	const faccion = suya?.faction ?? '';
+	const bandera = faccion ? (FACTIONS[faccion as keyof typeof FACTIONS]?.name ?? '') : '';
+	// El umbral en crudo, que es como se comparan las escaleras entre sí.
+	const umbral = requiredReputation(uno.level, faccion) * REPUTATION_SCALE;
+
+	/** Una de las dos escaleras, con su escalón y si alcanza el umbral. */
+	const escalera = (label: string, valor: number) => {
+		const escalon = tierForRaw(valor);
+		return {
+			label,
+			value: reputationLabel(valor),
+			tier: escalon.name,
+			reached: escalon.level,
+			tiers: TIERS.length,
+			enough: valor >= umbral
+		};
+	};
+
+	return {
+		agent: filaAgente(uno, suya, dondeSeSientan(db), conLaCorporacion, conLaBandera),
+		faction: bandera,
+		factionCode: faccion,
+		needed: reputationLabel(umbral),
+		// Las dos, y en este orden: la propia primero porque es la que uno mueve
+		// trabajando para ellos, y la de la bandera después porque abre de a muchas.
+		standings: [
+			escalera(suya?.name ?? 'Su corporación', conLaCorporacion),
+			...(bandera ? [escalera(bandera, conLaBandera)] : [])
+		]
 	};
 }

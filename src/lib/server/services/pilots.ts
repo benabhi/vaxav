@@ -582,3 +582,14 @@ export async function ensureSeedPilots(db: Db): Promise<number> {
 
 	return creados;
 }
+
+/**
+ * Abre o cierra la ficha del piloto para los demás.
+ *
+ * Es una preferencia de la cuenta y no un permiso por persona: vale para todos
+ * por igual. Alcanza para lo que se pidió —no ser mirado— y no obliga a inventar
+ * listas de permitidos ni amistades que el juego todavía no tiene.
+ */
+export function setProfilePrivacy(db: Db, row: Pilot, closed: boolean): void {
+	db.update(pilot).set({ private: closed }).where(eq(pilot.id, row.id)).run();
+}

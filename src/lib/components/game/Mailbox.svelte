@@ -42,6 +42,7 @@
 	import TextArea from '../forms/TextArea.svelte';
 	import ErrorCallout from '../forms/ErrorCallout.svelte';
 	import Label from '../typography/Label.svelte';
+	import { hrefFicha } from '$lib/fichas';
 	import CardTitle from '../typography/CardTitle.svelte';
 	import HudTable, { type Columna } from '../ui/HudTable.svelte';
 	import Paginator from '../ui/Paginator.svelte';
@@ -243,14 +244,30 @@
 				<div class="flex min-w-0 grow flex-col gap-2">
 					<CardTitle>{bandeja.open.subject}</CardTitle>
 
+					<!--
+						Los dos distintivos abren su ficha: lo primero que uno quiere saber de
+						un mensaje de alguien que no conoce es quién es. Van acá y no en la
+						tabla de arriba porque ahí la fila entera abre el mensaje, y un enlace
+						adentro le robaría el clic a lo que uno fue a hacer.
+					-->
 					<div class="flex w-full flex-wrap items-baseline gap-x-5 gap-y-1">
 						<span class="flex min-w-0 items-baseline gap-2">
 							<Label>De</Label>
-							<span class="truncate text-1 text-text-body">{bandeja.open.from}</span>
+							<a
+								href={hrefFicha(pagina.url, 'piloto', bandeja.open.from)}
+								class="truncate text-1 text-text-body no-underline hover:text-accent-bright"
+							>
+								{bandeja.open.from}
+							</a>
 						</span>
 						<span class="flex min-w-0 items-baseline gap-2">
 							<Label>Para</Label>
-							<span class="truncate text-1 text-text-body">{bandeja.open.to}</span>
+							<a
+								href={hrefFicha(pagina.url, 'piloto', bandeja.open.to)}
+								class="truncate text-1 text-text-body no-underline hover:text-accent-bright"
+							>
+								{bandeja.open.to}
+							</a>
 						</span>
 						<span class="flex items-baseline gap-2">
 							<Label>Fecha</Label>

@@ -34,6 +34,8 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import HudValue from '$lib/components/typography/HudValue.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
+	import { page } from '$app/state';
+	import { hrefFicha } from '$lib/fichas';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -807,9 +809,14 @@
 											class="shrink-0"
 										/>
 										<div class="flex min-w-0 flex-col items-start gap-[0.15rem]">
-											<span class="truncate font-display text-2 tracking-display text-text-strong">
+											<!-- El distintivo abre su ficha: quién es el que está parado al lado. -->
+											<a
+												href={hrefFicha(page.url, 'piloto', piloto.callsign)}
+												class="truncate font-display text-2 tracking-display text-text-strong
+													no-underline hover:text-accent-bright"
+											>
 												{piloto.callsign}
-											</span>
+											</a>
 											<span class="truncate text-[0.68rem] text-text-muted">
 												{piloto.corporation || 'Independiente'}
 											</span>

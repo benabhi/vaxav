@@ -83,6 +83,8 @@ export interface PilotoConectado {
 	readonly families: readonly RamaXp[];
 	/** Qué tan lejos llegó, en un solo número con su rango. */
 	readonly rating: IndicePiloto;
+	/** Si cerró su ficha para los demás. Lo lee Opciones, que es donde se cambia. */
+	readonly privateProfile: boolean;
 	/** Desde cuándo vuela, en milisegundos UTC. */
 	readonly since: number;
 	/**
@@ -489,6 +491,8 @@ export interface FilaAgente {
 	readonly code: string;
 	readonly name: string;
 	readonly corporation: string;
+	/** El código de su corporación, para abrir la ficha de ella desde la tarjeta. */
+	readonly corporationCode: string;
 	readonly faction: string;
 	readonly kind: string;
 	readonly kindIcon: IconName;
@@ -1006,13 +1010,91 @@ export interface Ficha {
 	/** Cómo se llama lo que se está mirando, y qué es. */
 	readonly title: string;
 	readonly subtitle: string;
-	/** Qué sección se está mirando. */
+	/** El ícono de la ventana, que dice de qué clase de ficha se trata. */
+	readonly icon: IconName;
+	/** Qué sección se está mirando. Vacío en las fichas de una sola. */
 	readonly section: string;
 	readonly corporation: Corporacion | null;
 	readonly reputation: PaginaReputacion | null;
 	readonly stations: readonly EstacionCorporacion[] | null;
 	readonly agents: AgentesCorporacion | null;
 	readonly members: Miembros | null;
+	readonly pilot: PerfilPiloto | null;
+	readonly agent: FichaAgente | null;
+}
+
+/**
+ * Lo público de un piloto: lo que cualquiera puede ver de cualquiera.
+ *
+ * **Dónde está parado no entra**, por lo mismo que no entra en el listado de
+ * miembros: eso es información operativa y una ficha no es un radar. Lo que entra
+ * es quién es, de dónde viene, a quién le responde y qué tan lejos llegó.
+ */
+export interface PerfilPiloto {
+	readonly callsign: string;
+	readonly profession: string;
+	readonly faction: string;
+	readonly factionCode: string;
+	/**
+	 * El color y el escudo de su bandera.
+	 *
+	 * Es lo que le da cara a la ficha: dos pilotos de dos banderas distintas tienen
+	 * que verse distintos de lejos, y el color de una facción es el mismo en todo el
+	 * juego. Viajan armados y no como código a resolver en la pantalla, igual que en
+	 * el resto de las vistas.
+	 */
+	readonly factionColor: string;
+	readonly factionCrest: string;
+	/** A quién le responde. Vacío quiere decir independiente. */
+	readonly corporation: string;
+	readonly corporationCode: string;
+	/** Desde cuándo vuela, en milisegundos UTC. */
+	readonly since: number;
+	/** El IPP y su rango, que es lo que dice qué tan armado está. */
+	readonly rating: IndicePiloto;
+	/**
+	 * Lo invertido en cada rama, para dibujar su hexágono.
+	 *
+	 * **Es la mitad de la ficha**: el número dice cuánto y la figura dice de qué
+	 * —una punta hacia Extracción es un minero, un hexágono parejo es alguien que
+	 * todavía no se decidió—, y eso no se lee en una cifra. Va sin los pozos: lo
+	 * que alguien tiene sin gastar es lo que puede ser mañana, y eso no se le
+	 * cuenta a un desconocido.
+	 */
+	readonly families: readonly RamaXp[];
+	/** Si sos vos: entonces la ves entera aunque la tengas cerrada. */
+	readonly mine: boolean;
+	/**
+	 * Si la cerró para los demás.
+	 *
+	 * Cerrada y ajena, lo único que viaja es el distintivo: negarla en la pantalla
+	 * pero mandar los datos igual sería no cerrarla.
+	 */
+	readonly closed: boolean;
+}
+
+/** Una escalera que puede alcanzar el umbral de un agente. */
+export interface EscaleraDeAgente {
+	readonly label: string;
+	readonly value: string;
+	readonly tier: string;
+	readonly reached: number;
+	readonly tiers: number;
+	/** Si por sí sola ya alcanza para que te atienda. */
+	readonly enough: boolean;
+}
+
+/**
+ * La ficha de un agente: la fila que ya aparece en las listas, con la cuenta de
+ * por qué te atiende o no al lado.
+ */
+export interface FichaAgente {
+	readonly agent: FilaAgenteCorporacion;
+	readonly faction: string;
+	readonly factionCode: string;
+	/** El umbral que pide su nivel, ya escrito. */
+	readonly needed: string;
+	readonly standings: readonly EscaleraDeAgente[];
 }
 
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */

@@ -196,6 +196,21 @@ propia desde el segundo en que existe**, que era la pregunta de verdad.
 
 Ver «El sello» en [corporaciones](CORPORATIONS.md#el-sello-la-cara-de-cada-una).
 
+## Su ficha
+
+El nombre de un agente —en la estación, en la lista de su corporación o en el
+directorio del sector— **abre su ficha**, que contesta lo que en una fila no entra:
+qué clase de trabajo reparte, de qué nivel, de quién es y dónde para.
+
+Y sobre todo contesta **por qué no te atiende**, que es la pregunta que la lista
+deja abierta. Dice el umbral que pide su nivel y dibuja **las dos escaleras** que
+lo pueden alcanzar —la de su corporación y la de su bandera— con cuánto tenés en
+cada una y si alcanza. Ahí se ve de un vistazo la regla de las dos escaleras: son
+dos caminos al mismo umbral, y el de la bandera abre de a muchos a la vez.
+
+La ventana es la misma de toda ficha del juego; el porqué está en
+[interfaz](INTERFACE.md#la-ficha-que-se-abre-desde-cualquier-nombre).
+
 ## Por decidir
 
 - Si la reputación puede ser **negativa**, y qué pasa cuando una facción te odia.

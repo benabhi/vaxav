@@ -17,13 +17,27 @@
 	import Icon from '../Icon.svelte';
 	import ProgressBar from '../meters/ProgressBar.svelte';
 	import { thousands } from '$lib/format';
+	import type { CapasHexagono } from './SkillHexagon.svelte';
 	import type { RamaXp } from '$lib/tipos';
 
 	interface Props {
 		families: readonly RamaXp[];
+		/**
+		 * Qué métricas se dicen, igual que en el hexágono.
+		 *
+		 * No es un segundo comportamiento: es la misma lista leyendo lo mismo que
+		 * dibuja la figura de al lado, y las dos tienen que decir lo mismo o una
+		 * desmiente a la otra. En la ficha ajena va sólo lo invertido —el pozo es lo
+		 * que alguien puede ser mañana y eso no se le cuenta a un desconocido—, y
+		 * ahí el total de «sin invertir» no se calla por prolijidad: decir «0 XP» de
+		 * algo que no se mandó sería afirmar una cosa falsa.
+		 */
+		layers?: CapasHexagono;
 	}
 
-	let { families }: Props = $props();
+	let { families, layers = 'both' }: Props = $props();
+
+	let muestraPozo = $derived(layers !== 'invested');
 
 	/**
 	 * De más a menos: el orden dice a qué se dedica el piloto. Desempata el pozo,
@@ -69,14 +83,16 @@
 						{thousands(rama.xp)}
 					</span>
 					<!-- El pozo sólo aparece si hay algo: un "+0" seis veces es ruido. -->
-					<span class="w-[3.5rem] text-right font-mono text-[0.78rem] text-data">
-						{rama.pool > 0 ? `+${thousands(rama.pool)}` : ''}
-					</span>
+					{#if muestraPozo}
+						<span class="w-[3.5rem] text-right font-mono text-[0.78rem] text-data">
+							{rama.pool > 0 ? `+${thousands(rama.pool)}` : ''}
+						</span>
+					{/if}
 				</span>
 			</div>
 
 			<ProgressBar percent={rama.share} />
-			{#if rama.pool > 0}
+			{#if muestraPozo && rama.pool > 0}
 				<ProgressBar percent={rama.poolShare} color="var(--color-data)" />
 			{/if}
 		</div>
@@ -96,11 +112,13 @@
 			<span class="font-mono text-[0.82rem] text-accent-bright">{thousands(total)} XP</span>
 		</span>
 		<div class="grow"></div>
-		<span class="flex shrink-0 items-baseline gap-2 whitespace-nowrap">
-			<span class="font-display text-[0.68rem] tracking-label text-accent-dim uppercase">
-				Sin invertir
+		{#if muestraPozo}
+			<span class="flex shrink-0 items-baseline gap-2 whitespace-nowrap">
+				<span class="font-display text-[0.68rem] tracking-label text-accent-dim uppercase">
+					Sin invertir
+				</span>
+				<span class="font-mono text-[0.82rem] text-data">{thousands(guardado)} XP</span>
 			</span>
-			<span class="font-mono text-[0.82rem] text-data">{thousands(guardado)} XP</span>
-		</span>
+		{/if}
 	</div>
 </div>

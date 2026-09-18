@@ -13,6 +13,8 @@
 <script lang="ts">
 	import Icon from '../Icon.svelte';
 	import Label from '../typography/Label.svelte';
+	import { page } from '$app/state';
+	import { hrefFicha } from '$lib/fichas';
 	import type { FilaAgente } from '$lib/tipos';
 	import AgentPortrait from './AgentPortrait.svelte';
 
@@ -34,13 +36,19 @@
 
 		<div class="flex w-full min-w-0 flex-col items-start gap-2 py-[0.85rem] pr-[0.85rem]">
 			<div class="flex w-full items-center gap-[0.6rem]">
-				<p
+				<!--
+					El nombre abre su ficha: de quién es, en qué otras estaciones para gente
+					suya y cuál de las dos escaleras le falta para recibirte. Acá entra el
+					nombre y poco más, y con eso no se sabe qué hacer.
+				-->
+				<a
+					href={hrefFicha(page.url, 'agente', agent.code)}
 					class="min-w-0 overflow-hidden font-display text-[0.95rem] font-bold tracking-display
-						text-ellipsis whitespace-nowrap uppercase
+						text-ellipsis whitespace-nowrap uppercase no-underline hover:text-accent-bright
 						{agent.open ? 'text-text-strong' : 'text-text-muted'}"
 				>
 					{agent.name}
-				</p>
+				</a>
 				<div class="grow"></div>
 				<!--
 					El nivel de las misiones que reparte, en romanos. Es el dato que
@@ -69,7 +77,13 @@
 				/>
 				<Label>{agent.kind}</Label>
 				<span class="text-accent-dim">·</span>
-				<Label>{agent.corporation}</Label>
+				<!-- De quién es: también enlazado, que es lo que decide si te atiende. -->
+				<a
+					href={hrefFicha(page.url, 'corporacion', agent.corporationCode)}
+					class="no-underline hover:text-accent-bright"
+				>
+					<Label>{agent.corporation}</Label>
+				</a>
 				<span class="text-accent-dim">·</span>
 				<Label>{agent.faction}</Label>
 			</div>

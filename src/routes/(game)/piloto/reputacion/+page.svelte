@@ -29,6 +29,7 @@
 	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
 	import FactionRose from '$lib/components/game/FactionRose.svelte';
+	import Identicon from '$lib/components/game/Identicon.svelte';
 	import SegmentBar from '$lib/components/meters/SegmentBar.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
 	import CardTitle from '$lib/components/typography/CardTitle.svelte';
@@ -124,6 +125,9 @@
 	 * pestaña, se comparte por mensaje y se cierra con el botón de atrás.
 	 */
 	let fichaDe = $derived((code: string) => hrefFicha(page.url, 'corporacion', code));
+
+	/** Y la de un agente, que contesta por qué te atiende o por qué todavía no. */
+	let fichaAgente = $derived((code: string) => hrefFicha(page.url, 'agente', code));
 
 	let hayFiltroCorp = $derived(Boolean(consulta.search || consulta.faction));
 	let hayFiltroAgentes = $derived(
@@ -263,7 +267,12 @@
 					>
 						<td class="py-[0.5rem] pr-3">
 							<span class="flex min-w-0 items-center gap-2">
-								<Icon name={una.icon} weight="bold" size="0.75rem" class="shrink-0 text-accent" />
+								<!--
+									El sello y no un ícono de rubro, igual que en las pestañas de
+									Corporación: entre cuarenta nombres, un emblema propio se encuentra
+									sin leer, y el ícono de rubro se repite en diez filas seguidas.
+								-->
+								<Identicon name={una.name} family="corporacion" size="1.6rem" />
 								<span class="flex min-w-0 flex-col items-start">
 									<!--
 										El nombre abre **su ficha**, no el mapa: ahí está qué es, quién la
@@ -382,17 +391,34 @@
 					>
 						<td class="py-[0.5rem] pr-3">
 							<span class="flex min-w-0 items-center gap-2">
-								<Icon
-									name={uno.kindIcon}
-									weight="bold"
-									size="0.75rem"
-									class="shrink-0 {uno.open ? 'text-accent' : 'text-text-muted'}"
+								<!--
+									El sello del agente, como en la lista de la corporación. El ícono de
+									la clase de misión no se pierde: baja al renglón de abajo, que es
+									donde dice qué reparte.
+								-->
+								<Identicon
+									name={uno.name}
+									family="agente"
+									size="1.6rem"
+									class={uno.open ? '' : 'opacity-50 saturate-[0.35]'}
 								/>
 								<span class="flex min-w-0 flex-col items-start">
-									<span class="truncate text-1 {uno.open ? 'text-text-strong' : 'text-text-muted'}">
+									<a
+										href={fichaAgente(uno.code)}
+										class="truncate text-1 no-underline hover:text-accent-bright
+											{uno.open ? 'text-text-strong' : 'text-text-muted'}"
+									>
 										{uno.name}
+									</a>
+									<span class="flex min-w-0 items-center gap-[0.3rem]">
+										<Icon
+											name={uno.kindIcon}
+											weight="bold"
+											size="0.65rem"
+											class="shrink-0 text-accent-dim"
+										/>
+										<Label>{uno.kind}</Label>
 									</span>
-									<Label>{uno.kind}</Label>
 								</span>
 							</span>
 						</td>

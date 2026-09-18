@@ -25,6 +25,8 @@
 	import HudTable, { type Columna } from '../ui/HudTable.svelte';
 	import Paginator from '../ui/Paginator.svelte';
 	import Identicon from './Identicon.svelte';
+	import { page } from '$app/state';
+	import { hrefFicha } from '$lib/fichas';
 	import type { Miembros } from '$lib/tipos';
 
 	interface Props {
@@ -43,11 +45,9 @@
 		 * formulario, que viaja por su cuenta.
 		 */
 		prefix?: string;
-		/** Qué hacer al apretar un distintivo, si hay algo que hacer. */
-		onPilot?: (callsign: string) => void;
 	}
 
-	let { miembros, hrefFor, hidden = {}, prefix = '', onPilot }: Props = $props();
+	let { miembros, hrefFor, hidden = {}, prefix = '' }: Props = $props();
 
 	let consulta = $derived(miembros.query);
 
@@ -162,28 +162,17 @@
 						title="Sello de {uno.callsign}"
 					/>
 					<!--
-						El distintivo abre su ficha donde hay ficha que abrir. Donde no, se
-						queda como texto: un nombre que parece un enlace y no lleva a ninguna
-						parte es peor que uno que no lo parece.
+						El distintivo abre su ficha, acá y en cualquier otra lista: la ventana
+						vive en el armazón del juego, así que no hace falta que quien use esta
+						tabla sepa nada de fichas.
 					-->
-					{#if onPilot}
-						<button
-							type="button"
-							onclick={() => onPilot(uno.callsign)}
-							class="cursor-pointer truncate border-0 bg-transparent p-0 text-left font-display
-								text-[0.8rem] font-bold tracking-display text-text-strong uppercase
-								hover:text-accent-bright"
-						>
-							{uno.callsign}
-						</button>
-					{:else}
-						<span
-							class="truncate font-display text-[0.8rem] font-bold tracking-display
-								text-text-strong uppercase"
-						>
-							{uno.callsign}
-						</span>
-					{/if}
+					<a
+						href={hrefFicha(page.url, 'piloto', uno.callsign)}
+						class="truncate font-display text-[0.8rem] font-bold tracking-display
+							text-text-strong uppercase no-underline hover:text-accent-bright"
+					>
+						{uno.callsign}
+					</a>
 					{#if uno.isYou}
 						<!-- La fila propia se encuentra sin leer: es la que uno busca primero. -->
 						<span class="flex shrink-0" title="Sos vos">

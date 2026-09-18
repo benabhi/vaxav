@@ -222,14 +222,21 @@ la siguiente:
   viaje, el aro de la puerta, el mosaico de la estación con su columna de
   secciones, el campo de rocas del cinturón y el vecindario en órbita de un
   planeta, una luna o una estrella.
-- ~~**`Piloto · Reputación`.**~~ El panorama: las banderas con su rosa y las
-  corporaciones que te conocen, cada una diciendo hasta qué nivel de agente te
-  abre. De agentes no hay lista y no la va a haber hasta que tengan número
-  propio: hoy quien decide si te atienden es el mayor entre su corporación y su
-  bandera, y eso se dice en la fila.
+- ~~**`Piloto · Reputación`.**~~ El panorama: las banderas con su rosa, y el
+  directorio del sector —todas las corporaciones y todos los agentes, te conozcan
+  o no— en dos listas que se alternan. Los agentes no llevan número propio: cada
+  fila dice hasta qué nivel te abre, que es el mayor entre su corporación y su
+  bandera.
+- ~~**Las fichas, enlazadas desde cualquier nombre.**~~ Corporación, piloto y
+  agente se abren en una ventana desde donde sea que aparezca su nombre, con su
+  estado en la URL. El piloto puede cerrar la suya desde Opciones.
 - **La ficha de tránsito tiene que variar según a dónde se va.** Hoy cuenta igual
   un salto a otro sistema, un viaje a un cinturón y uno a una estación, y no son
   el mismo viaje.
+- **En el teléfono, una tabla tiene que dibujarse como tarjetas.** Desplazarse a
+  lo ancho para leer una fila no es lo que uno hace con el pulgar. Lo resuelve
+  `HudTable` —que ya tiene las columnas declaradas como dato— y no cada pantalla:
+  ocho listados largos con ocho maquetas paralelas son ocho que se separan.
 
 ## Lo que se decide en el camino
 

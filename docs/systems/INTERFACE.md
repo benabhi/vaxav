@@ -350,6 +350,54 @@ una pantalla** con sus propios `buscar`, `orden` y `pagina`, y sin prefijo el
 buscador de la ficha filtraría la tabla de atrás. La URL queda más larga; a
 cambio, las dos cosas funcionan a la vez.
 
+**Y una ficha lleva a otra.** Desde la de un piloto se abre la de su corporación,
+y desde la de ésta la de cualquiera de sus agentes o de sus miembros, sin cerrar
+la ventana ni perder la pantalla de abajo. Es lo que vuelve navegable un sector de
+cuarenta corporaciones, y es de donde sale la idea: en EVE uno termina tres saltos
+adentro de una cadena de nombres que empezó en una lista.
+
+**El marco no se mueve.** La ventana grande es de ancho fijo, y de alto fijo
+cuando tiene secciones: una que se estira al cambiar de pestaña —cuatro datos en
+una, una tabla de veinticinco filas en otra— no se siente como una ventana con
+pestañas sino como cinco ventanas distintas. Lo que sobra se desplaza adentro. La
+ficha de una sola sección no tiene entre qué saltar, así que le alcanza con un
+piso que la salve de salir como una ranura.
+
+Las tres clases, y qué contesta cada una:
+
+| Ficha           | Qué muestra                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| **Corporación** | Las mismas cinco secciones del módulo, con las mismas tablas                                   |
+| **Piloto**      | La credencial pública: quién es, a quién le responde, desde cuándo vuela, su IPP y su hexágono |
+| **Agente**      | Qué reparte, dónde para, y **cuál de las dos escaleras** le falta para recibirte               |
+
+#### La ficha de un piloto es una credencial
+
+No una tabla de cuatro renglones. El que aprieta un distintivo quiere saber **con
+quién está hablando**, así que arriba va la banda de su bandera —su color al filo,
+su escudo de fondo, como en la credencial propia— con el sello, el distintivo, el
+oficio y a quién le responde; y abajo **el hexágono de sus ramas con sus cifras al
+lado**, que es la figura del piloto y dice por su silueta lo que el IPP dice por su
+tamaño.
+
+Es la credencial propia recortada a lo público: **sin créditos, sin dónde está
+parado y sin los pozos sin gastar**. Dónde está sería un radar, y el juego ya
+decidió que un listado de compañeros no lo es.
+
+#### Y se puede cerrar
+
+Desde `Opciones · Cuenta`, con el enlace a la propia ficha al lado: una preferencia
+sobre cómo te ven se decide mirando cómo te ven. Cerrada, de un piloto queda
+**sólo el distintivo** —que sigue apareciendo donde aparecía, en los miembros de su
+corporación o al pie de un mensaje— y el servidor no manda nada más: negarla en la
+pantalla pero mandar los datos igual sería no cerrarla.
+
+Y tiene **vista propia y no un cartel**: el sello apagado detrás de un ojo tachado,
+el distintivo y una línea que explica qué pasó. «No se puede» dicho con un renglón
+gris se lee como un error del juego; así se lee como lo que es —hay alguien, y
+eligió no mostrarse—. Es de la cuenta y vale para todos por igual: no hay listas
+de permitidos, porque el juego todavía no tiene amistades que declarar.
+
 ### La columna angosta de una estación
 
 **Una estación contesta tres preguntas y no una**, y las tres son listas largas
@@ -754,6 +802,15 @@ con ellos es **recorrer una columna**. De ahí tres reglas:
   sin leer el signo de cada fila.
 - **En pantalla angosta la tabla se desplaza dentro de su contenedor** y las
   columnas accesorias se esconden. La página nunca se desplaza en horizontal.
+
+**Lo que falta: en el teléfono una tabla no es una tabla.** Desplazarse a lo ancho
+para leer una fila es lo que hace una tabla cuando nadie decidió nada, no lo que
+uno quiere hacer con el pulgar. Lo que corresponde ahí es que **cada fila se
+dibuje como una tarjeta** —el dato principal grande arriba y los demás rotulados
+debajo— y que eso lo resuelva `HudTable` y no cada pantalla: son ocho listados
+largos y ocho maquetas paralelas serían ocho que se separan. Las columnas ya son
+un dato declarado —su rótulo, su ancho, si se esconde—, así que la pieza tiene
+con qué armar la tarjeta sin que nadie le explique nada. Queda pendiente.
 
 ### La zona de peligro
 
