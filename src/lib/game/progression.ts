@@ -13,16 +13,53 @@ import { truncate } from './math';
 export const MAX_LEVEL = 5;
 
 /**
- * Experiencia que cuesta *cada* nivel, antes del multiplicador de la habilidad.
- * Son potencias de tres: cada nivel cuesta el triple que el anterior.
+ * Cuánto crece el costo de un nivel al siguiente: **la raíz de 32**.
+ *
+ * Es la misma proporción que usa EVE, y la razón por la que la usa es la que nos
+ * sirve: con un crecimiento suave —el triple, que es lo que había acá— el nivel 5
+ * cuesta apenas el doble que los cuatro anteriores juntos, y entonces
+ * especializarse no duele. Con 5,66 el último nivel cuesta **cinco veces y media**
+ * lo que los cuatro juntos, y ahí el 5 deja de ser un trámite y pasa a ser una
+ * decisión de identidad.
+ *
+ * Es el número que hay que mover si las habilidades suben demasiado rápido. No el
+ * de la experiencia por minuto: bajar aquél no hace el juego más largo, hace cada
+ * sesión más aburrida.
  */
-export const LEVEL_COSTS: readonly number[] = [100, 300, 900, 2700, 8100];
+const CRECIMIENTO = Math.sqrt(32);
 
 /**
- * Experiencia acumulada necesaria para *tener* cada nivel, con el nivel 0 en
- * cero.
+ * Lo que cuesta el primer nivel.
+ *
+ * Cien, como siempre: **el nivel 1 se siente a los diez minutos de jugar** y eso
+ * había que cuidarlo. Lo que se empinó es lo que viene después.
  */
-export const LEVEL_THRESHOLDS: readonly number[] = [0, 100, 400, 1300, 4000, 12100];
+const COSTO_BASE = 100;
+
+/**
+ * Experiencia que cuesta *cada* nivel, antes del multiplicador de la habilidad.
+ *
+ * **Se calcula, no se escribe.** Dos listas a mano son dos listas que se
+ * desfasan: la de costos y la de umbrales tienen que decir lo mismo, y la única
+ * forma de garantizarlo es que una salga de la otra.
+ *
+ * Da 100 · 566 · 3.200 · 18.102 · 102.400.
+ */
+export const LEVEL_COSTS: readonly number[] = Array.from({ length: MAX_LEVEL }, (_, i) =>
+	Math.round(COSTO_BASE * CRECIMIENTO ** i)
+);
+
+/**
+ * Experiencia acumulada necesaria para *tener* cada nivel, con el nivel 0 en cero.
+ *
+ * Da 0 · 100 · 666 · 3.866 · 21.968 · 124.368. A seiscientos de experiencia por
+ * hora de acción, un rango x1 llega al nivel 5 en unas doscientas horas y un x16
+ * en más de tres mil. Ver docs/RESEARCH.md §4.
+ */
+export const LEVEL_THRESHOLDS: readonly number[] = LEVEL_COSTS.reduce(
+	(acumulado: number[], costo) => [...acumulado, acumulado[acumulado.length - 1] + costo],
+	[0]
+);
 
 /** Cuánta experiencia reparte un minuto de acción, antes de la dificultad. */
 export const XP_PER_MINUTE = 10;

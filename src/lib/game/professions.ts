@@ -16,8 +16,16 @@ import { getSkill } from './skills';
 /**
  * Experiencia inicial que reparte toda profesión, con el multiplicador de cada
  * habilidad ya aplicado.
+ *
+ * **Sale de la curva y no de un número redondo**, porque la curva se mueve y el
+ * presupuesto tiene que moverse con ella: escrito a mano, el día que se empine
+ * —como acaba de pasar— los seis oficios quedan pidiendo más de lo que hay.
+ *
+ * La forma que compra es la misma para los seis: **dos habilidades que el piloto
+ * hace bien y una que conoce**. Es lo que un oficio previo deja, y es lo que hace
+ * que ninguno empiece mejor que otro: empiezan distinto.
  */
-export const STARTING_XP_BUDGET = 1000;
+export const STARTING_XP_BUDGET = 2 * xpForLevel(2, 1) + xpForLevel(1, 2);
 
 /** Una habilidad que la profesión entrega ya entrenada, y a qué nivel. */
 export interface SkillGrant {
@@ -131,11 +139,13 @@ const CATALOG = [
 		code: 'hauler',
 		name: 'Transportista',
 		description: 'Llevó carga ajena media vida. Nadie mete más cosas en menos bodega.',
+		// Estiba y Navegación son el oficio; Eficiencia de combustible es lo que
+		// distingue al que vive de acarrear del que acarrea una vez: el margen de un
+		// viaje largo se lo come el tanque.
 		grants: [
 			{ skill: 'stowage', level: 2 },
 			{ skill: 'navigation', level: 2 },
-			{ skill: 'haggling', level: 1 },
-			{ skill: 'shuttle_handling', level: 1 }
+			{ skill: 'fuel_efficiency', level: 1 }
 		],
 		kit: [],
 		playable: false
@@ -144,13 +154,13 @@ const CATALOG = [
 		code: 'trader',
 		name: 'Mercader',
 		description: 'Empezó revendiendo en el muelle. Compra bien y sabe qué le están cobrando.',
+		// Regatear y saber acomodar lo que compró son el oficio; Contabilidad es lo
+		// que separa al que revende del que sabe cuánto le queda después del
+		// impuesto.
 		grants: [
 			{ skill: 'haggling', level: 2 },
-			{ skill: 'accounting', level: 1 },
-			{ skill: 'navigation', level: 1 },
-			{ skill: 'stowage', level: 1 },
-			{ skill: 'mechanics', level: 1 },
-			{ skill: 'shuttle_handling', level: 1 }
+			{ skill: 'stowage', level: 2 },
+			{ skill: 'accounting', level: 1 }
 		],
 		kit: [],
 		playable: false
@@ -159,11 +169,12 @@ const CATALOG = [
 		code: 'escort',
 		name: 'Escolta',
 		description: 'Cobró por proteger convoyes. Tira derecho y arregla lo que le rompen.',
+		// Puntería y Mecánica son el oficio; Blindaje es lo primero que aprende
+		// alguien que cobró por ponerse adelante.
 		grants: [
 			{ skill: 'gunnery', level: 2 },
 			{ skill: 'mechanics', level: 2 },
-			{ skill: 'navigation', level: 1 },
-			{ skill: 'shuttle_handling', level: 1 }
+			{ skill: 'armor', level: 1 }
 		],
 		kit: [],
 		playable: false
@@ -172,13 +183,13 @@ const CATALOG = [
 		code: 'technician',
 		name: 'Técnico',
 		description: 'Fue mecánico de hangar. Entiende la nave por dentro mejor que nadie.',
+		// Mecánica y Estiba son el oficio del hangar —abrir la nave y volver a
+		// cerrarla con todo adentro—; Gestión de energía es lo que lo vuelve técnico
+		// y no ayudante.
 		grants: [
 			{ skill: 'mechanics', level: 2 },
-			{ skill: 'power_management', level: 1 },
-			{ skill: 'mining', level: 1 },
-			{ skill: 'stowage', level: 1 },
-			{ skill: 'navigation', level: 1 },
-			{ skill: 'shuttle_handling', level: 1 }
+			{ skill: 'stowage', level: 2 },
+			{ skill: 'power_management', level: 1 }
 		],
 		kit: [],
 		playable: false

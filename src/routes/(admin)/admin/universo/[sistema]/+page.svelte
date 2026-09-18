@@ -32,7 +32,14 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import TreeBranch from '$lib/components/ui/TreeBranch.svelte';
 	import { ADMIN_ROUTE } from '$lib/admin';
-	import { suggestedBodyName, type BodyKind } from '$lib/game/universe';
+	import {
+		ATMOSPHERES,
+		BODY_CLASSES,
+		STAR_CLASSES,
+		suggestedBodyName,
+		type BodyKind
+	} from '$lib/game/universe';
+	import { atmosphereLabel, bodyClassLabel, starClassLabel } from '$lib/format';
 	import type { FilaConstruccion } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
@@ -171,6 +178,36 @@
 		{ value: 'si', label: 'Ya descubierto' },
 		{ value: 'no', label: 'Hay que explorarlo' }
 	];
+
+	/**
+	 * Los atributos que reemplazaron a la descripción escrita a mano.
+	 *
+	 * El constructor ya no pide un párrafo: pide **de qué está hecho** el cuerpo,
+	 * y la frase que ve el jugador se arma sola con eso. Un campo de texto libre
+	 * significaba escribir mil descripciones para doscientos sistemas, y que cada
+	 * una quedara vieja en cuanto alguien tocara un número.
+	 *
+	 * Cada lista empieza con «sin definir» porque no siempre corresponde: un
+	 * cinturón no tiene composición y una estrella no tiene atmósfera.
+	 */
+	const SIN_DEFINIR = { value: '', label: 'Sin definir' };
+	const COMPOSICION = [
+		SIN_DEFINIR,
+		...BODY_CLASSES.map((una) => ({ value: una, label: bodyClassLabel(una) }))
+	];
+	const ATMOSFERA = [
+		SIN_DEFINIR,
+		...ATMOSPHERES.map((una) => ({ value: una, label: atmosphereLabel(una) }))
+	];
+	const ESPECTRO = [
+		SIN_DEFINIR,
+		...STAR_CLASSES.map((una) => ({ value: una, label: starClassLabel(una) }))
+	];
+
+	/** Sólo un planeta o una luna tienen de qué estar hechos. */
+	function esMundo(kind: string): boolean {
+		return kind === 'planet' || kind === 'moon';
+	}
 
 	/** Elegir una fila abre su ficha: es lo que uno quiere el noventa por ciento de las veces. */
 	function elegir(uno: FilaConstruccion) {
@@ -466,8 +503,6 @@
 							</label>
 						{/if}
 
-						<TextField label="Descripción" name="description" value={sistema.description} />
-
 						<div class="grid w-full grid-cols-3 gap-3"></div>
 
 						<HudButton type="submit" busy={envio.busy} variant="primary">Guardar</HudButton>
@@ -534,7 +569,22 @@
 							hint="En unidades del juego, desde lo que orbita. De acá sale el tiempo de viaje."
 						/>
 
-						<TextField label="Descripción" name="description" />
+						<!--
+							De qué está hecho, que es lo que arma su descripción. Sólo aparece lo
+							que corresponde al tipo: ofrecerle atmósfera a un cinturón sería
+							ofrecer un dato imposible, y el servicio lo rechaza igual.
+						-->
+						{#if esMundo(nuevoTipo)}
+							<SelectField label="Composición" name="bodyClass" options={COMPOSICION} />
+							<SelectField label="Atmósfera" name="atmosphere" options={ATMOSFERA} />
+						{:else if nuevoTipo === 'star'}
+							<SelectField
+								label="Clase espectral"
+								name="starClass"
+								options={ESPECTRO}
+								hint="De acá sale el clima de todo el sistema: la zona templada de una enana roja está mucho más cerca que la de una amarilla."
+							/>
+						{/if}
 
 						<SelectField label="Descubrimiento" name="explored" options={CONOCIMIENTO} />
 
@@ -570,7 +620,28 @@
 								min="0"
 								value={String(cuerpo.orbitDistance)}
 							/>
-							<TextField label="Descripción" name="description" value={cuerpo.description} />
+							{#if esMundo(cuerpo.kind)}
+								<SelectField
+									label="Composición"
+									name="bodyClass"
+									options={COMPOSICION}
+									value={cuerpo.bodyClass}
+								/>
+								<SelectField
+									label="Atmósfera"
+									name="atmosphere"
+									options={ATMOSFERA}
+									value={cuerpo.atmosphere}
+								/>
+							{:else if cuerpo.kind === 'star'}
+								<SelectField
+									label="Clase espectral"
+									name="starClass"
+									options={ESPECTRO}
+									value={cuerpo.starClass}
+									hint="De acá sale el clima de todo el sistema."
+								/>
+							{/if}
 
 							<!--
 								Con los dos estados nombrados y no como casilla: de una casilla

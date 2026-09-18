@@ -150,8 +150,7 @@ export const actions: Actions = {
 					security: entero(datos.get('security')),
 					controllingFaction: String(datos.get('controllingFaction') ?? ''),
 					capitalOf:
-						datos.get('capital') === 'on' ? String(datos.get('controllingFaction') ?? '') : '',
-					description: String(datos.get('description') ?? '')
+						datos.get('capital') === 'on' ? String(datos.get('controllingFaction') ?? '') : ''
 				},
 				locals.pilot?.id ?? null
 			);

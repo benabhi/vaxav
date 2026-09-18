@@ -35,7 +35,7 @@
 	import Identicon from './Identicon.svelte';
 	import MemberList from './MemberList.svelte';
 	import StationList from './StationList.svelte';
-	import SkillHexagon from './SkillHexagon.svelte';
+	import SkillWheel from './SkillWheel.svelte';
 	import ReputationLadder from './ReputationLadder.svelte';
 	import {
 		CORPORATION_SECTIONS,
@@ -360,7 +360,7 @@
 						>
 							<div class="flex w-full justify-center sm:w-[14rem] sm:shrink-0">
 								<div class="w-full max-w-[14rem]">
-									<SkillHexagon families={uno.families} layers="invested" />
+									<SkillWheel families={uno.families} layers="invested" />
 								</div>
 							</div>
 							<div class="w-full min-w-0 flex-[1_1_0]">

@@ -32,21 +32,42 @@ describe('la curva', () => {
 		expect([...LEVEL_THRESHOLDS]).toEqual(esperado);
 	});
 
-	it('cobra cada nivel al triple que el anterior', () => {
+	/*
+	 * La raíz de 32, que es la de EVE. Con el triple que había antes, el nivel 5
+	 * costaba apenas el doble que los cuatro anteriores juntos y especializarse no
+	 * dolía; con esto cuesta cinco veces y media lo que los cuatro juntos.
+	 */
+	it('cobra cada nivel 5,66 veces el anterior', () => {
 		for (let i = 1; i < LEVEL_COSTS.length; i++) {
-			expect(LEVEL_COSTS[i]).toBe(LEVEL_COSTS[i - 1] * 3);
+			expect(LEVEL_COSTS[i] / LEVEL_COSTS[i - 1]).toBeCloseTo(Math.sqrt(32), 2);
 		}
 	});
 
+	it('deja el nivel 1 a diez minutos de juego', () => {
+		// Cien de experiencia son diez minutos de acción a dificultad 1. Es lo que
+		// hace que el primer nivel se sienta enseguida, y no se toca.
+		expect(xpForLevel(1, 1)).toBe(100);
+	});
+
+	/*
+	 * El último nivel es el que separa a un piloto de otro: tiene que costar mucho
+	 * más que todo lo anterior junto, o llevar todo al 5 se vuelve una rutina.
+	 */
+	it('hace del nivel 5 una decisión y no un trámite', () => {
+		const hastaCuatro = xpForLevel(4, 1);
+		const elQuinto = xpForLevel(5, 1) - hastaCuatro;
+		expect(elQuinto / hastaCuatro).toBeGreaterThan(4);
+	});
+
 	it('da la tabla del diseño para una habilidad fácil', () => {
-		// 100 · 400 · 1.300 · 4.000 · 12.100, tal como está documentado.
+		// 100 · 666 · 3.866 · 21.968 · 124.368, tal como está documentado.
 		const tabla = [0, 1, 2, 3, 4, 5].map((nivel) => xpForLevel(nivel, 1));
-		expect(tabla).toEqual([0, 100, 400, 1300, 4000, 12100]);
+		expect(tabla).toEqual([0, 100, 666, 3866, 21968, 124368]);
 	});
 
 	it('encarece de forma proporcional con el multiplicador', () => {
 		for (const dificultad of DIFFICULTIES) {
-			expect(xpForLevel(MAX_LEVEL, dificultad)).toBe(12100 * dificultad);
+			expect(xpForLevel(MAX_LEVEL, dificultad)).toBe(124368 * dificultad);
 		}
 	});
 
@@ -61,8 +82,8 @@ describe('traducir experiencia a nivel', () => {
 		expect(levelFromXp(0, 1)).toBe(0);
 		expect(levelFromXp(99, 1)).toBe(0);
 		expect(levelFromXp(100, 1)).toBe(1);
-		expect(levelFromXp(399, 1)).toBe(1);
-		expect(levelFromXp(12100, 1)).toBe(5);
+		expect(levelFromXp(665, 1)).toBe(1);
+		expect(levelFromXp(124368, 1)).toBe(5);
 	});
 
 	it('no pasa del nivel máximo', () => {
@@ -80,18 +101,21 @@ describe('traducir experiencia a nivel', () => {
 
 	it('dice lo que falta para el próximo nivel', () => {
 		expect(xpToNextLevel(0, 1)).toBe(100);
-		expect(xpToNextLevel(100, 1)).toBe(300);
+		expect(xpToNextLevel(100, 1)).toBe(566);
+		// Con multiplicador, el umbral se escala igual que el costo: el nivel 1 de
+		// una x2 cuesta 200, así que a los 150 le faltan 50.
 		expect(xpToNextLevel(150, 2)).toBe(50);
 	});
 
 	it('al máximo ya no tiene nada que pedir', () => {
-		expect(xpToNextLevel(12100, 1)).toBeNull();
+		expect(xpToNextLevel(124368, 1)).toBeNull();
 	});
 
 	it('mide el avance dentro del nivel', () => {
 		expect(levelProgress(100, 1)).toBe(0);
-		expect(levelProgress(250, 1)).toBe(0.5);
-		expect(levelProgress(12100, 1)).toBe(1);
+		// La mitad del segundo nivel: 100 de piso, 666 de techo, 383 en el medio.
+		expect(levelProgress(383, 1)).toBe(0.5);
+		expect(levelProgress(124368, 1)).toBe(1);
 	});
 });
 

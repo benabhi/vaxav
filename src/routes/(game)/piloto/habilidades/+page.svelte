@@ -16,6 +16,10 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import HudButton from '$lib/components/buttons/HudButton.svelte';
+	import HudLink from '$lib/components/buttons/HudLink.svelte';
+	import Paginator from '$lib/components/ui/Paginator.svelte';
+	import { page } from '$app/state';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { CONTROL_HEIGHTS } from '$lib/components/buttons/estilos';
 	import TitledPanel from '$lib/components/cards/TitledPanel.svelte';
 	import ErrorCallout from '$lib/components/forms/ErrorCallout.svelte';
@@ -26,7 +30,6 @@
 	import Eyebrow from '$lib/components/typography/Eyebrow.svelte';
 	import Label from '$lib/components/typography/Label.svelte';
 	import { roman, thousands } from '$lib/format';
-	import type { FilaArbol } from '$lib/tipos';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -41,36 +44,52 @@
 		{ code: 'bloqueadas', label: 'Bloqueadas' }
 	] as const;
 
-	let familia = $state('');
-	let estado = $state<(typeof ESTADOS)[number]['code']>('todas');
-	let busqueda = $state('');
 	/** Qué fila está desplegada, o vacío si ninguna. */
 	let abierta = $state('');
 
-	function coincide(skill: FilaArbol): boolean {
-		if (familia && skill.family !== familia) return false;
-		if (estado === 'entrenadas' && !skill.trained) return false;
-		if (estado === 'disponibles' && !skill.canInvest) return false;
-		if (estado === 'bloqueadas' && (skill.canInvest || skill.maxed)) return false;
+	let consulta = $derived(tree.query);
 
-		const texto = busqueda.trim().toLowerCase();
-		if (!texto) return true;
-		return (
-			skill.name.toLowerCase().includes(texto) ||
-			skill.familyName.toLowerCase().includes(texto) ||
-			skill.governs.toLowerCase().includes(texto)
-		);
+	/**
+	 * Qué recorte hay puesto, para poder ofrecer quitarlo.
+	 *
+	 * La página cuenta: quedarse en la cinco de un árbol que ahora tiene dos es una
+	 * pantalla vacía sin explicación, y «Quitar filtros» es la salida.
+	 */
+	let filtrando = $derived(
+		consulta.family !== '' ||
+			consulta.state !== 'todas' ||
+			consulta.search !== '' ||
+			consulta.page > 1
+	);
+
+	/** La URL con un parámetro cambiado, conservando todo lo demás. */
+	function conParametro(cambios: Record<string, string>): string {
+		const params = new SvelteURLSearchParams(page.url.searchParams);
+		for (const [clave, valor] of Object.entries(cambios)) {
+			if (valor) params.set(clave, valor);
+			else params.delete(clave);
+		}
+		// Cambiar el recorte vuelve a la primera página: lo que había en la cinco ya
+		// no está donde estaba.
+		if (!('pagina' in cambios)) params.delete('pagina');
+		const texto = params.toString();
+		return texto ? `?${texto}` : '?';
 	}
 
-	let visibles = $derived(tree.skills.filter(coincide));
-
-	/** Si hay algún filtro puesto, para poder ofrecer limpiarlos. */
-	let filtrando = $derived(familia !== '' || estado !== 'todas' || busqueda.trim() !== '');
-
-	function limpiar() {
-		familia = '';
-		estado = 'todas';
-		busqueda = '';
+	/**
+	 * Los campos vacíos no viajan en la URL.
+	 *
+	 * Un formulario `GET` manda todo, incluso lo que no se llenó, y la barra queda
+	 * con `?buscar=&rama=` colgando. Una URL que se comparte tiene que poder leerse.
+	 */
+	function alEnviar(evento: SubmitEvent & { currentTarget: HTMLFormElement }) {
+		const vacios = [...evento.currentTarget.elements].filter(
+			(campo): campo is HTMLInputElement => campo instanceof HTMLInputElement && campo.value === ''
+		);
+		for (const campo of vacios) campo.disabled = true;
+		setTimeout(() => {
+			for (const campo of vacios) campo.disabled = false;
+		});
 	}
 </script>
 
@@ -91,15 +110,20 @@
 	detail="{tree.trained} de {tree.total} entrenadas"
 	class="w-full"
 >
-	<div class="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+	<!--
+		**Dos filas de cuatro**, y no una de ocho. Con ocho ramas en una sola fila cada
+		pozo queda de una pulgada y el nombre se corta; en dos filas parejas cada uno
+		tiene ancho para decir cuánto hay y cuántas habilidades se pueden subir, que
+		es lo que se viene a leer.
+	-->
+	<div class="grid w-full grid-cols-2 gap-2 xs:grid-cols-4">
 		{#each tree.pools as pozo (pozo.family)}
-			<button
-				type="button"
-				onclick={() => (familia = familia === pozo.family ? '' : pozo.family)}
-				aria-pressed={familia === pozo.family}
+			<a
+				href={conParametro({ rama: consulta.family === pozo.family ? '' : pozo.family })}
+				aria-current={consulta.family === pozo.family ? 'true' : undefined}
 				class="flex cursor-pointer flex-col items-start gap-1 border border-t-[2px] px-[0.6rem]
 					py-2 text-left transition-[background-color,border-color]
-					{familia === pozo.family
+					{consulta.family === pozo.family
 					? 'border-border-soft border-t-accent-bright bg-surface-strong shadow-glow'
 					: pozo.xp > 0
 						? 'border-border-soft border-t-border bg-surface hover:bg-surface-hover'
@@ -126,14 +150,21 @@
 				<span class="font-display text-[0.58rem] tracking-label text-text-muted uppercase">
 					{pozo.affordable > 0 ? `${pozo.affordable} para subir` : 'sin alcance'}
 				</span>
-			</button>
+			</a>
 		{/each}
 	</div>
+
+	<Paginator
+		page={consulta.page}
+		pages={tree.pages}
+		href={(n) => conParametro({ pagina: String(n) })}
+		class="mt-3"
+	/>
 </TitledPanel>
 
 <ErrorCallout message={form?.error} />
 
-<TitledPanel title="Árbol" detail="{visibles.length} de {tree.total}" class="w-full">
+<TitledPanel title="Árbol" detail="{tree.found} de {tree.total}" class="w-full">
 	<!--
 		Los filtros. Van arriba de la lista porque son lo primero que se usa.
 
@@ -141,12 +172,17 @@
 		donde el buscador es más alto que los botones que tiene al lado se ve
 		desprolija aunque nadie sepa señalar por qué.
 	-->
-	<div class="mb-3 flex w-full flex-wrap items-center gap-2 border-b border-border-soft pb-3">
+	<form
+		method="GET"
+		onsubmit={alEnviar}
+		class="mb-3 flex w-full flex-wrap items-center gap-2 border-b border-border-soft pb-3"
+	>
 		<label class="flex min-w-0 flex-[1_1_12rem] items-center gap-2">
 			<Icon name="magnifying-glass" weight="bold" size="0.8rem" class="shrink-0 text-accent-dim" />
 			<input
 				type="search"
-				bind:value={busqueda}
+				name="buscar"
+				value={consulta.search}
 				placeholder="Buscar por nombre o por lo que mejora"
 				class="{CONTROL_HEIGHTS['2']} w-full min-w-0 border border-border-soft bg-field px-2
 					font-body text-[0.78rem] text-text-strong transition-[border-color,box-shadow]
@@ -155,33 +191,45 @@
 			/>
 		</label>
 
+		<!-- La rama elegida viaja con el envío: buscar no la pierde. -->
+		<input type="hidden" name="rama" value={consulta.family} />
+
+		<!--
+			Los estados son enlaces y no botones, como el paginador y el orden de las
+			tablas: cada recorte es una URL, así que se comparte, se vuelve con el botón
+			de atrás y se recarga sin perderlo.
+		-->
 		<div class="flex flex-wrap items-center gap-1">
 			{#each ESTADOS as opcion (opcion.code)}
-				<HudButton
+				<HudLink
+					href={conParametro({ estado: opcion.code === 'todas' ? '' : opcion.code })}
 					size="2"
-					variant={estado === opcion.code ? 'primary' : 'outline'}
-					aria-pressed={estado === opcion.code}
-					onclick={() => (estado = opcion.code)}
+					variant={consulta.state === opcion.code ? 'primary' : 'outline'}
 				>
 					{opcion.label}
-				</HudButton>
+				</HudLink>
 			{/each}
 		</div>
 
+		<HudButton type="submit" size="2" variant="outline">
+			<Icon name="magnifying-glass" weight="bold" size="0.6rem" />
+			Buscar
+		</HudButton>
+
 		{#if filtrando}
-			<HudButton size="2" variant="ghost" onclick={limpiar}>
+			<HudLink href="?" size="2" variant="ghost">
 				<Icon name="x" weight="bold" size="0.6rem" />
 				Limpiar
-			</HudButton>
+			</HudLink>
 		{/if}
-	</div>
+	</form>
 
-	{#if visibles.length === 0}
+	{#if tree.skills.length === 0}
 		<BodyText>No hay habilidades que cumplan con eso. Probá aflojando los filtros.</BodyText>
 	{/if}
 
 	<div class="flex w-full flex-col">
-		{#each visibles as skill (skill.code)}
+		{#each tree.skills as skill (skill.code)}
 			{@const desplegada = abierta === skill.code}
 			<div
 				class="w-full border-l-[3px] transition-[background-color,border-color]

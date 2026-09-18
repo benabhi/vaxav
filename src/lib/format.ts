@@ -19,12 +19,16 @@ import { REPUTATION_SCALE } from '$lib/game/reputation';
 import { getSkill, type Requirement, type SkillFamily } from '$lib/game/skills';
 import {
 	SERVICES,
+	type Atmosphere,
+	type BodyClass,
 	type BodyKind,
 	type GateBearing,
 	type CorporationKind,
 	type Government,
 	type SecurityLevel,
-	type StationServiceKind
+	type StarClass,
+	type StationServiceKind,
+	type ThreatLevel
 } from '$lib/game/universe';
 
 /** Una habilidad va del 0 al 5, así que su ficha son cinco estrellas. */
@@ -96,9 +100,11 @@ const SKILL_FAMILIES: Record<SkillFamily, string> = {
 	piloting: 'Pilotaje',
 	engineering: 'Ingeniería',
 	extraction: 'Extracción',
+	industry: 'Industria',
 	trade: 'Comercio',
 	combat: 'Combate',
-	science: 'Ciencias'
+	science: 'Ciencias',
+	command: 'Mando'
 };
 
 /**
@@ -111,9 +117,11 @@ const SKILL_FAMILY_ICONS: Record<SkillFamily, IconName> = {
 	piloting: 'compass',
 	engineering: 'wrench',
 	extraction: 'diamond',
+	industry: 'factory',
 	trade: 'scales',
 	combat: 'crosshair',
-	science: 'atom'
+	science: 'atom',
+	command: 'users'
 };
 
 /**
@@ -217,6 +225,84 @@ export function bodyKindLabel(kind: BodyKind): string {
 /** El ícono de Phosphor que le toca a un tipo de cuerpo. */
 export function bodyKindIcon(kind: BodyKind): IconName {
 	return BODY_ICONS[kind] ?? 'circles-three';
+}
+
+const BODY_CLASSES_ES: Record<BodyClass, string> = {
+	rocky: 'Rocoso',
+	gas: 'Gaseoso',
+	ice: 'Helado',
+	ocean: 'Oceánico',
+	volcanic: 'Volcánico'
+};
+
+/** De qué está hecho un planeta o una luna. */
+export function bodyClassLabel(bodyClass: BodyClass): string {
+	return BODY_CLASSES_ES[bodyClass] ?? bodyClass;
+}
+
+const ATMOSPHERES_ES: Record<Atmosphere, string> = {
+	none: 'Sin atmósfera',
+	thin: 'Fina',
+	breathable: 'Respirable',
+	dense: 'Densa',
+	toxic: 'Tóxica'
+};
+
+/** Qué se respira, si se respira. */
+export function atmosphereLabel(atmosphere: Atmosphere): string {
+	return ATMOSPHERES_ES[atmosphere] ?? atmosphere;
+}
+
+/**
+ * La clase espectral, con la letra **y** lo que la letra quiere decir.
+ *
+ * La letra sola no la sabe nadie que no venga de la astronomía, y es la que
+ * decide el clima de todo el sistema: es la peor de todas para hacerse la
+ * misteriosa.
+ */
+const STAR_CLASSES_ES: Record<StarClass, string> = {
+	O: 'O · gigante azul',
+	B: 'B · azul blanca',
+	A: 'A · blanca',
+	F: 'F · blanca amarillenta',
+	G: 'G · enana amarilla',
+	K: 'K · enana naranja',
+	M: 'M · enana roja'
+};
+
+export function starClassLabel(starClass: StarClass): string {
+	return STAR_CLASSES_ES[starClass] ?? starClass;
+}
+
+const THREATS_ES: Record<ThreatLevel, string> = {
+	calm: 'Tranquilo',
+	watched: 'Vigilado',
+	exposed: 'Expuesto',
+	hostile: 'Hostil'
+};
+
+/** Cómo se llama en pantalla el riesgo de un lugar. */
+export function threatLabel(threat: ThreatLevel): string {
+	return THREATS_ES[threat] ?? threat;
+}
+
+/**
+ * Qué significa ese riesgo, **con todas las letras**.
+ *
+ * Va aparte de la descripción del lugar a propósito. Una advertencia metida
+ * adentro de un párrafo de ambientación no la lee nadie: a la tercera pantalla el
+ * párrafo se saltea entero. Si un piloto puede perder la carga o la nave por
+ * salir a un lugar, eso se dice en su propio renglón y sin rodeos.
+ */
+const THREAT_NOTES: Record<ThreatLevel, string> = {
+	calm: 'Zona patrullada. Un pirata acá es una rareza.',
+	watched: 'Las patrullas pasan, pero tarde: puede aparecer un pirata.',
+	exposed: 'Fuera del alcance de las patrullas. Un piloto acá puede ser atacado.',
+	hostile: 'Sin vigilancia. Acá atacan, y nadie va a responder.'
+};
+
+export function threatNote(threat: ThreatLevel): string {
+	return THREAT_NOTES[threat] ?? '';
 }
 
 /** Cómo se llama un módulo de estación en pantalla. */

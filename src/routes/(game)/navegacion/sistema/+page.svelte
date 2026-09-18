@@ -315,7 +315,11 @@
 
 			<TitledPanel title="Ficha del sistema" class="w-full">
 				<div class="flex w-full flex-col items-start gap-4">
-					<BodyText>{system.description}</BodyText>
+					<div class="flex w-full flex-col gap-1">
+						{#each system.description as frase (frase)}
+							<BodyText>{frase}</BodyText>
+						{/each}
+					</div>
 					<div class="grid w-full grid-cols-2 gap-4">
 						{@render reading('Región', system.region)}
 						{@render reading('Constelación', system.constellation)}

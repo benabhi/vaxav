@@ -23,11 +23,11 @@ describe('el panorama de una inversión', () => {
 
 		const plan = investmentFor('navigation', xp, niveles, pozos);
 
-		// Tiene 100 y el nivel 2 pide 400: el salto cuesta la diferencia, no el
+		// Tiene 100 y el nivel 2 pide 666: el salto cuesta la diferencia, no el
 		// umbral entero.
 		expect(plan.level).toBe(1);
 		expect(plan.nextLevel).toBe(2);
-		expect(plan.cost).toBe(300);
+		expect(plan.cost).toBe(566);
 	});
 
 	it('escala con la dificultad de la habilidad', () => {
@@ -39,7 +39,7 @@ describe('el panorama de una inversión', () => {
 	});
 
 	it('deja invertir cuando el pozo alcanza justo', () => {
-		const { xp, niveles, pozos } = piloto(1, 300);
+		const { xp, niveles, pozos } = piloto(1, 566);
 
 		const plan = investmentFor('navigation', xp, niveles, pozos);
 

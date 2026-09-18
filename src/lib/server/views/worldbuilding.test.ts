@@ -19,8 +19,7 @@ function sistemaPelado(db: Db, name: string) {
 			government: 'corporate',
 			security: 70,
 			controllingFaction: 'dominion',
-			capitalOf: '',
-			description: ''
+			capitalOf: ''
 		},
 		null
 	);
@@ -36,7 +35,9 @@ function conEstacion(db: Db, systemId: number, parentId: number, services: 'ship
 			kind: 'station',
 			parentId,
 			orbitDistance: 120,
-			description: '',
+			bodyClass: '',
+			atmosphere: '',
+			starClass: '',
 			explored: true
 		},
 		null

@@ -1,10 +1,10 @@
 <!--
 	La experiencia del piloto repartida por rama del árbol: la lista que acompaña
-	al hexágono.
+	a la rueda.
 
 	La figura dice bien *cuál* y mal *cuánto*; esto dice las cifras exactas. Es la
 	regla de toda figura del proyecto —siempre va con su lista al lado, leyendo los
-	mismos datos— y por eso las dos métricas de acá son las dos del hexágono: lo
+	mismos datos— y por eso las dos métricas de acá son las dos de la rueda: lo
 	invertido en naranja, el pozo en cian.
 
 	Las seis ramas salen siempre, incluso en cero: una rama vacía también informa
@@ -17,13 +17,13 @@
 	import Icon from '../Icon.svelte';
 	import ProgressBar from '../meters/ProgressBar.svelte';
 	import { thousands } from '$lib/format';
-	import type { CapasHexagono } from './SkillHexagon.svelte';
+	import type { CapasRueda } from './SkillWheel.svelte';
 	import type { RamaXp } from '$lib/tipos';
 
 	interface Props {
 		families: readonly RamaXp[];
 		/**
-		 * Qué métricas se dicen, igual que en el hexágono.
+		 * Qué métricas se dicen, igual que en la rueda.
 		 *
 		 * No es un segundo comportamiento: es la misma lista leyendo lo mismo que
 		 * dibuja la figura de al lado, y las dos tienen que decir lo mismo o una
@@ -32,7 +32,7 @@
 		 * ahí el total de «sin invertir» no se calla por prolijidad: decir «0 XP» de
 		 * algo que no se mandó sería afirmar una cosa falsa.
 		 */
-		layers?: CapasHexagono;
+		layers?: CapasRueda;
 	}
 
 	let { families, layers = 'both' }: Props = $props();
@@ -70,7 +70,7 @@
 					Las tres cifras van juntas y en un solo grupo: si la fila no entra,
 					bajan las tres de una y no queda un "+440" suelto en su propio
 					renglón. Lo invertido en naranja y el pozo en cian, los mismos dos
-					colores con los que el hexágono dibuja las mismas dos cosas.
+					colores con los que la rueda dibuja las mismas dos cosas.
 				-->
 				<span class="flex shrink-0 items-baseline gap-2">
 					<span class="font-mono text-[0.68rem] whitespace-nowrap text-text-muted">

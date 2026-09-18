@@ -127,7 +127,7 @@ distintos.
 
 Toda pantalla importante tiene **una figura**: un dibujo propio que dice lo que la
 pantalla dice, pero por su forma. El anillo de equipamiento en Nave, el árbol de
-cuerpos en Sistema, el hexágono de ramas en Piloto.
+cuerpos en Sistema, la rueda de ramas en Piloto.
 
 Existe por una razón concreta. Un juego de paneles apilados es coherente y
 **monótono**: todas las pantallas se ven igual, y la que se está mirando se
@@ -135,7 +135,7 @@ reconoce por el título y no por la pantalla. La figura le da a cada una algo qu
 es suyo sin sacarla del lenguaje.
 
 El examen es uno solo: **si el dibujo se ve igual con datos distintos, es
-decoración y sobra**. El hexágono de un minero y el de un artillero son dos
+decoración y sobra**. La rueda de un minero y la de un artillero son dos
 siluetas distintas; un anillo con el escudo montado y otro sin él se distinguen
 de lejos. Eso es lo que separa una figura de un adorno.
 

@@ -9,6 +9,8 @@
 import { eq } from 'drizzle-orm';
 import { body, gate, system as systemTable, type Body, type Pilot } from '../db/schema';
 import { railsFor } from '$lib/tree';
+import { describeSystem } from '$lib/descriptions';
+import { systemDescriptions } from './descriptions';
 import type { Db } from '../db/types';
 import { currentAction } from '../services/actions';
 import { beltDeposits, miningPlan, miningSource } from '../services/mining';
@@ -49,6 +51,7 @@ import {
 	SERVICES,
 	SERVICE_ORDER,
 	securityLevel,
+	threatLevel,
 	type SecurityLevel,
 	type StationServiceKind
 } from '$lib/game/universe';
@@ -58,6 +61,8 @@ import {
 	bearingLabel,
 	bodyKindIcon,
 	bodyKindLabel,
+	threatLabel,
+	threatNote,
 	corporationKindLabel,
 	cubicMeters,
 	explorationIcon,
@@ -91,6 +96,7 @@ import type {
 	FilaAgente,
 	FilaCuerpo,
 	CampoRocas,
+	Riesgo,
 	Roca,
 	Sistema,
 	Ubicacion
@@ -248,9 +254,11 @@ function transit(db: Db, row: Pilot): Ubicacion {
 		name: destino ? `Rumbo a ${destino.name}` : 'En tránsito',
 		kind: leg?.kindLabel ?? 'Viaje',
 		icon: leg?.icon ?? 'rocket-launch',
-		description:
-			'La nave está en camino. Cuando llegue vas a poder atracar, ' +
-			'reconfigurarla y volver a dar órdenes.',
+		description: [
+			'La nave está en camino. Cuando llegue vas a poder atracar, reconfigurarla y volver a ' +
+				'dar órdenes.'
+		],
+		risk: null,
 		parent: '',
 		system: '',
 		systemCode: '',
@@ -289,8 +297,10 @@ function nowhere(): Ubicacion {
 		name: 'Sin ubicación',
 		kind: '',
 		icon: 'map-pin',
-		description:
-			'No hay un cuerpo asignado a este piloto. Puede que la base no tenga universo cargado.',
+		description: [
+			'No hay un cuerpo asignado a este piloto. Puede que la base no tenga universo cargado.'
+		],
+		risk: null,
 		parent: '',
 		system: '',
 		systemCode: '',
@@ -355,11 +365,14 @@ export function buildLocationView(db: Db, row: Pilot): Ubicacion {
 	// lista, hay que escanear, y eso es lo que hace que esconderse signifique algo.
 	const presentes = isStation ? pilotsAt(db, detail.body.id, row.id) : NADIE;
 
+	const lectura = systemDescriptions(db, detail.system.id).get(detail.body.id);
+
 	return {
 		name: detail.body.name,
 		kind: bodyKindLabel(detail.body.kind),
 		icon: bodyKindIcon(detail.body.kind),
-		description: detail.body.description,
+		description: lectura?.sentences ?? [],
+		risk: riskOf(detail.system.security, lectura?.atEdge ?? false, isStation),
 		parent: detail.parent?.name ?? '',
 		system: detail.system.name,
 		systemCode: detail.system.code,
@@ -450,6 +463,23 @@ function buildOrbita(db: Db, detail: BodyDetail): Orbita | null {
 	};
 }
 
+/**
+ * El aviso de riesgo del lugar, o ninguno.
+ *
+ * **Atracado no lo lleva nadie**: adentro de una estación no te ataca nadie, y
+ * ponerle un cartel de peligro a un hangar sería el tipo de advertencia que
+ * enseña a ignorar las advertencias. Sale sólo a cielo abierto, que es donde
+ * significa algo.
+ *
+ * Va en su propio renglón y no adentro de la descripción: una advertencia
+ * escondida en un párrafo de ambientación no la lee nadie.
+ */
+function riskOf(security: number, atEdge: boolean, isStation: boolean): Riesgo | null {
+	if (isStation) return null;
+	const nivel = threatLevel(security, atEdge);
+	return { level: nivel, label: threatLabel(nivel), note: threatNote(nivel) };
+}
+
 /** Un campo apagado: acá no hay rocas ni nada que escanear. */
 const SIN_VERBO: Procedencia = {
 	verb: '',
@@ -495,6 +525,11 @@ export function buildBodyRows(
 	const filas: FilaCuerpo[] = [];
 	const guias = railsFor(nodes);
 
+	// Todas las descripciones del sistema de una vez: armarlas fila por fila sería
+	// un N+1 por cuerpo, y el árbol ya se trae entero en una consulta.
+	const descripciones =
+		nodes.length > 0 ? systemDescriptions(db, nodes[0].body.systemId) : new Map();
+
 	for (const [indice, node] of nodes.entries()) {
 		const esAqui = node.body.code === here;
 
@@ -520,7 +555,7 @@ export function buildBodyRows(
 			explorationIcon: explorationIcon(node.body.explored),
 			distance,
 			travelLabel,
-			description: node.body.description,
+			description: descripciones.get(node.body.id)?.sentences ?? [],
 			isStation: node.station !== null,
 			corporation: node.corporation?.name ?? '',
 			corporationKind: node.corporation ? corporationKindLabel(node.corporation.kind) : '',
@@ -614,7 +649,7 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 function uncharted(): Sistema {
 	return {
 		name: 'Sin cartografiar',
-		description: 'La base no tiene universo cargado. Corré `npm run db:seed` para sembrarlo.',
+		description: ['La base no tiene universo cargado. Corré `npm run db:seed` para sembrarlo.'],
 		region: '',
 		constellation: '',
 		controlledBy: '',
@@ -889,7 +924,9 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 
 	return {
 		name: system.name,
-		description: system.description,
+		description: describeSystem({
+			capitalOf: system.capitalOf ? factionName(system.capitalOf) : ''
+		}),
 		region: overview.region.name,
 		constellation: overview.constellation.name,
 		controlledBy: system.controllingFaction

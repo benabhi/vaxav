@@ -169,6 +169,20 @@
       "when": 1789706648126,
       "tag": "0023_cuddly_mystique",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1789739442547,
+      "tag": "0024_absent_stephen_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1789739448775,
+      "tag": "0025_yummy_cable",
+      "breakpoints": true
     }
   ]
 }

@@ -50,9 +50,12 @@ import {
 	oppositeBearing,
 	securityProblem,
 	suggestedSecurity,
+	type Atmosphere,
+	type BodyClass,
 	type BodyKind,
 	type GateBearing,
 	type Government,
+	type StarClass,
 	type StationServiceKind
 } from '$lib/game/universe';
 import { neighbourOf, sameHex, type Hex } from '$lib/game/galaxy';
@@ -268,7 +271,6 @@ export interface SystemDraft {
 	readonly controllingFaction: string;
 	/** Código de la facción de la que es capital, o vacío. */
 	readonly capitalOf: string;
-	readonly description: string;
 }
 
 /** Que la facción exista, si se declaró alguna. */
@@ -365,8 +367,7 @@ export function createSystem(
 				government: draft.government,
 				security: draft.security,
 				controllingFaction: draft.controllingFaction,
-				capitalOf: draft.capitalOf,
-				description: draft.description.trim()
+				capitalOf: draft.capitalOf
 				// Sin coordenadas: nace en el origen, que es como se reconoce a un
 				// sistema que todavía no tiene lugar en la grilla. Se lo gana al
 				// conectarle una puerta, no tecleándolo.
@@ -383,7 +384,11 @@ export function createSystem(
 				parentId: null,
 				kind: 'star',
 				orbitDistance: 0,
-				description: ''
+				// Una amarilla, que es la que menos compromete: de la clase de la
+				// estrella sale el clima de todo el sistema, y una G deja las órbitas
+				// habituales en bandas razonables. Se cambia editando la estrella, que
+				// es donde vive el dato.
+				starClass: 'G'
 			})
 			.returning()
 			.get();
@@ -430,8 +435,7 @@ export function updateSystem(
 				government: draft.government,
 				security: draft.security,
 				controllingFaction: draft.controllingFaction,
-				capitalOf: draft.capitalOf,
-				description: draft.description.trim()
+				capitalOf: draft.capitalOf
 				// La posición no se edita acá: es del mapa, no de la ficha. Moverla a
 				// mano rompería la coherencia con los rumbos de sus puertas, que es lo
 				// único que hace legible al mapa.
@@ -532,8 +536,20 @@ export interface BodyDraft {
 	/** De qué cuelga. Nulo sólo para una estrella, que es raíz. */
 	readonly parentId: number | null;
 	readonly orbitDistance: number;
-	readonly description: string;
 	readonly explored: boolean;
+	/**
+	 * De qué está hecho, si es planeta o luna. Vacío en todo lo demás.
+	 *
+	 * Estos tres campos son lo que el constructor escribe **en lugar de una
+	 * descripción**: la frase que ve el jugador se arma sola con `describeBody`.
+	 * Un campo de texto libre acá significaba escribir mil descripciones a mano y
+	 * que cada una quedara vieja en cuanto alguien tocara un número.
+	 */
+	readonly bodyClass: BodyClass | '';
+	/** Qué se respira, si es planeta o luna. Vacío en todo lo demás. */
+	readonly atmosphere: Atmosphere | '';
+	/** La clase espectral, si es una estrella. Vacío en todo lo demás. */
+	readonly starClass: StarClass | '';
 }
 
 /** Los cuerpos de un sistema, con el padre ya resuelto. */
@@ -541,11 +557,30 @@ export function bodiesOf(db: Db, systemId: number): readonly Body[] {
 	return db.select().from(body).where(eq(body.systemId, systemId)).all();
 }
 
+/**
+ * Que los atributos correspondan al tipo de cuerpo.
+ *
+ * Un cinturón con atmósfera o una estación de hielo no son datos raros: son
+ * datos **imposibles**, y si entran a la base la descripción derivada empieza a
+ * decir disparates sin que nadie sepa de dónde salieron.
+ */
+function checkAttributes(draft: BodyDraft): void {
+	const esMundo = draft.kind === 'planet' || draft.kind === 'moon';
+	if (!esMundo && (draft.bodyClass !== '' || draft.atmosphere !== '')) {
+		throw new BuilderError('Sólo un planeta o una luna tienen composición y atmósfera.');
+	}
+	if (draft.kind !== 'star' && draft.starClass !== '') {
+		throw new BuilderError('Sólo una estrella tiene clase espectral.');
+	}
+}
+
 /** Que el cuerpo pueda existir ahí: tipo, padre y órbita. */
 function checkBody(db: Db, systemId: number, draft: BodyDraft): Body | null {
 	if (!draft.name.trim()) throw new BuilderError('El cuerpo necesita un nombre.');
 	if (draft.orbitDistance < 0)
 		throw new BuilderError('La distancia orbital no puede ser negativa.');
+
+	checkAttributes(draft);
 
 	if (draft.kind === 'star') {
 		if (draft.parentId !== null) throw new BuilderError('Una estrella no orbita nada.');
@@ -597,7 +632,9 @@ export function createBody(
 				kind: draft.kind,
 				orbitDistance: draft.orbitDistance,
 				explored: draft.explored,
-				description: draft.description.trim()
+				bodyClass: draft.bodyClass,
+				atmosphere: draft.atmosphere,
+				starClass: draft.starClass
 			})
 			.returning()
 			.get();
@@ -653,7 +690,9 @@ export function updateBody(db: Db, bodyId: number, draft: BodyDraft, actorId: nu
 				parentId: draft.parentId,
 				orbitDistance: draft.orbitDistance,
 				explored: draft.explored,
-				description: draft.description.trim()
+				bodyClass: draft.bodyClass,
+				atmosphere: draft.atmosphere,
+				starClass: draft.starClass
 			})
 			.where(eq(body.id, bodyId))
 			.run();
@@ -1223,8 +1262,10 @@ export function growFromGate(
 			kind: 'gate',
 			parentId: starOf(db, creado.id).id,
 			orbitDistance: 0,
-			description: '',
-			explored: true
+			explored: true,
+			bodyClass: '',
+			atmosphere: '',
+			starClass: ''
 		},
 		oppositeBearing(suelta.bearing),
 		actorId
@@ -1329,8 +1370,7 @@ export function blankSystem(constellationId: number): SystemDraft {
 		government: 'corporate',
 		security: suggestedSecurity('corporate', true),
 		controllingFaction: '',
-		capitalOf: '',
-		description: ''
+		capitalOf: ''
 	};
 }
 

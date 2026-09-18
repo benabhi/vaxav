@@ -24,7 +24,15 @@ import {
 import { ACTION_KINDS } from '$lib/game/actions';
 import { CONTAINER_KINDS } from '$lib/game/items';
 import { MISSION_KINDS } from '$lib/game/agents';
-import { BODY_KINDS, GATE_BEARINGS, GOVERNMENTS, STATION_SERVICES } from '$lib/game/universe';
+import {
+	ATMOSPHERES,
+	BODY_CLASSES,
+	BODY_KINDS,
+	GATE_BEARINGS,
+	GOVERNMENTS,
+	STAR_CLASSES,
+	STATION_SERVICES
+} from '$lib/game/universe';
 import { CORPORATION_KINDS } from '$lib/game/corporations';
 import { SANCTION_KINDS } from '$lib/sanctions';
 
@@ -292,9 +300,7 @@ export const system = sqliteTable(
 		 * El índice único lo hace cumplir: **una capital por facción**, y ninguna
 		 * restricción sobre los que no lo son.
 		 */
-		capitalOf: text('capital_of').notNull().default(''),
-
-		description: text('description').notNull().default('')
+		capitalOf: text('capital_of').notNull().default('')
 	},
 	(table) => [
 		uniqueIndex('system_code_idx').on(table.code),
@@ -338,7 +344,33 @@ export const body = sqliteTable(
 		 */
 		explored: integer('explored', { mode: 'boolean' }).notNull().default(true),
 
-		description: text('description').notNull().default('')
+		/**
+		 * De qué está hecho, si es planeta o luna. Vacío en todo lo demás.
+		 *
+		 * Estos tres campos reemplazan a la vieja columna `description`. Lo que
+		 * antes era una frase escrita a mano —«gigante gaseoso», «sin
+		 * atmósfera»— ahora es dato consultable, y la frase se arma sola con
+		 * `describeBody`. El texto a mano no escalaba a doscientos sistemas y,
+		 * peor, se quedaba viejo sin que nada lo notara.
+		 */
+		bodyClass: text('body_class', { enum: [...BODY_CLASSES, ''] })
+			.notNull()
+			.default(''),
+
+		/** Qué se respira, si es planeta o luna. Vacío en todo lo demás. */
+		atmosphere: text('atmosphere', { enum: [...ATMOSPHERES, ''] })
+			.notNull()
+			.default(''),
+
+		/**
+		 * La clase espectral, si es una estrella. Vacío en todo lo demás.
+		 *
+		 * Una letra que le pone clima a todo el sistema: la banda térmica de cada
+		 * órbita se mide en proporción a la zona templada de esta estrella.
+		 */
+		starClass: text('star_class', { enum: [...STAR_CLASSES, ''] })
+			.notNull()
+			.default('')
 	},
 	(table) => [
 		uniqueIndex('body_code_idx').on(table.code),

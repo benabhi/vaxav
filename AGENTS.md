@@ -1,7 +1,9 @@
 # Vaxav
 
 Juego web multijugador idle y textual: un piloto espacial y su nave. La visión y
-la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas.
+la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar mecánicas. Las
+bases de los catálogos —habilidades, naves, módulos y materiales— y de dónde salen
+están en `docs/RESEARCH.md`.
 
 **Ninguna mecánica entra sola.** Toda característica arrastra una cadena —verbo,
 insumo, fuente, aparato, llave, fábrica y lugar— y lo que no se cierra queda como
@@ -74,6 +76,13 @@ la rama se borra. En GitHub existe solamente `main`.
   son parte de lo que ve el jugador. Los grupos de rutas entre paréntesis van en
   inglés, porque no son URL.
 - **Comentarios, documentación y textos del juego en español.**
+- **El texto que el juego genera solo es técnico y se calla.** Describe lo que la
+  cosa **es**, nunca lo que vale —«campo denso de asteroides», no «de mineral
+  común»—; no repite lo que ya dice un rótulo al lado; no esconde advertencias
+  adentro de un párrafo, que van en su propio renglón; y cuando no tiene nada que
+  agregar **no dice nada**. La ambientación con imagen y ritmo se sigue
+  escribiendo a mano y es para lo que tiene carácter y no atributos: un mineral,
+  una corporación, un agente. Ver «La voz» en `docs/DESIGN.md`.
 - `src/lib/game/` no importa SvelteKit ni la base de datos: son reglas puras y
   testeables. La interfaz y los servicios la consumen, nunca al revés. **No está
   bajo `server/` a propósito**: la necesitan los dos lados, y bajo `$lib/server`

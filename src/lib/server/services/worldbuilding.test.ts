@@ -16,6 +16,7 @@ import { isValidHex, neighbourOf } from '$lib/game/galaxy';
 import {
 	BuilderError,
 	allRegions,
+	type BodyDraft,
 	bodiesOf,
 	bodyBlockers,
 	connectGates,
@@ -59,7 +60,6 @@ function borrador(db: Db, cambios: Partial<SystemDraft> = {}): SystemDraft {
 		security: 70,
 		controllingFaction: 'dominion',
 		capitalOf: '',
-		description: '',
 		...cambios
 	};
 }
@@ -215,7 +215,9 @@ describe('borrar un sistema', () => {
 				kind: 'planet',
 				parentId: star.id,
 				orbitDistance: 40,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -228,7 +230,9 @@ describe('borrar un sistema', () => {
 				kind: 'moon',
 				parentId: planeta.id,
 				orbitDistance: 3,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -241,7 +245,9 @@ describe('borrar un sistema', () => {
 				kind: 'station',
 				parentId: luna.id,
 				orbitDistance: 1,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -277,13 +283,15 @@ describe('borrar un sistema', () => {
 });
 
 /** Un cuerpo de puerta, que es lo único que `createGate` no arma solo. */
-function puerta(parentId: number, name = 'Puerta Norte') {
+function puerta(parentId: number, name = 'Puerta Norte'): BodyDraft {
 	return {
 		name,
 		kind: 'gate' as const,
 		parentId,
 		orbitDistance: 400,
-		description: '',
+		bodyClass: '',
+		atmosphere: '',
+		starClass: '',
 		explored: true
 	};
 }
@@ -301,7 +309,9 @@ describe('los cuerpos', () => {
 				kind: 'planet',
 				parentId: star.id,
 				orbitDistance: 40,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -319,7 +329,9 @@ describe('los cuerpos', () => {
 					kind: 'moon',
 					parentId: planeta.id,
 					orbitDistance: 3,
-					description: '',
+					bodyClass: '',
+					atmosphere: '',
+					starClass: '',
 					explored: true
 				},
 				null
@@ -335,7 +347,9 @@ describe('los cuerpos', () => {
 					kind: 'star',
 					parentId: planeta.id,
 					orbitDistance: 0,
-					description: '',
+					bodyClass: '',
+					atmosphere: '',
+					starClass: '',
 					explored: true
 				},
 				null
@@ -357,7 +371,9 @@ describe('los cuerpos', () => {
 					kind: 'planet',
 					parentId: ajeno.id,
 					orbitDistance: 40,
-					description: '',
+					bodyClass: '',
+					atmosphere: '',
+					starClass: '',
 					explored: true
 				},
 				null
@@ -380,7 +396,9 @@ describe('los cuerpos', () => {
 				kind: 'planet',
 				parentId: star.id,
 				orbitDistance: 40,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -393,7 +411,9 @@ describe('los cuerpos', () => {
 				kind: 'moon',
 				parentId: planeta.id,
 				orbitDistance: 3,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -408,7 +428,9 @@ describe('los cuerpos', () => {
 					kind: 'planet',
 					parentId: luna.id,
 					orbitDistance: 40,
-					description: '',
+					bodyClass: '',
+					atmosphere: '',
+					starClass: '',
 					explored: true
 				},
 				null
@@ -427,7 +449,9 @@ describe('los cuerpos', () => {
 				kind: 'planet',
 				parentId: star.id,
 				orbitDistance: 40,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -440,7 +464,9 @@ describe('los cuerpos', () => {
 				kind: 'moon',
 				parentId: planeta.id,
 				orbitDistance: 3,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -461,7 +487,9 @@ describe('los cuerpos', () => {
 				kind: 'station',
 				parentId: star.id,
 				orbitDistance: 8,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -794,7 +822,9 @@ describe('los cinturones', () => {
 				kind: 'belt',
 				parentId: star.id,
 				orbitDistance: 300,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -871,7 +901,9 @@ describe('la constancia', () => {
 				kind: 'planet',
 				parentId: star.id,
 				orbitDistance: 40,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
@@ -895,7 +927,9 @@ describe('la constancia', () => {
 				kind: 'planet',
 				parentId: star.id,
 				orbitDistance: 40,
-				description: '',
+				bodyClass: '',
+				atmosphere: '',
+				starClass: '',
 				explored: true
 			},
 			null
