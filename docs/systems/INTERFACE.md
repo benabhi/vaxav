@@ -290,19 +290,65 @@ un punto en el medio, que es exactamente lo que pasa.
 
 Quién entra en las listas:
 
-| Quién             | Cuándo aparece                                           |
-| ----------------- | -------------------------------------------------------- |
-| Las banderas      | **Siempre**, tengas número o no: son el marco del sector |
-| Las corporaciones | Sólo si te conocen, más la tuya aunque esté en cero      |
-| Los agentes       | **Nunca**: no tienen un número propio con vos            |
+| Quién             | Cuándo aparece                                                               |
+| ----------------- | ---------------------------------------------------------------------------- |
+| Las banderas      | **Siempre**, tengas número o no: son el marco del sector                     |
+| Las corporaciones | **Todas**, te conozcan o no                                                  |
+| Los agentes       | **Todos**, con el nivel que te abren —no con un número propio, que no tienen |
 
-Lo último es lo primero que uno busca ahí, así que la pantalla lo contesta en vez
-de callarlo. Un agente no lleva reputación propia: te atiende el que esté a la
-altura del **mayor** entre lo que tiene su corporación y lo que tiene su bandera.
-Por eso cada fila dice hasta qué nivel te abre, y por eso ahí se vuelve visible la
-regla de las dos escaleras: una corporación en el primer escalón puede abrir el
-tercero porque su bandera llegó ahí. Una tercera lista vacía sería la pantalla
-cartel que el proyecto ya borró una vez.
+**Van todos y no sólo los conocidos**, y es la decisión que vuelve útil la
+pantalla. La reputación se gana con cualquiera, así que uno en cero no es ruido:
+es el que todavía no trabajaste. Saber que existe, de qué bandera es y en qué
+sistema está es la mitad de la decisión de a dónde ir, y una lista recortada a
+los que ya te conocen contesta bien sólo cuando ya no hace falta preguntarlo.
+
+Que los agentes estén **sin número propio** es lo primero que uno nota, así que la
+pantalla lo contesta en vez de callarlo. Te atiende el que esté a la altura del
+**mayor** entre lo que tiene su corporación y lo que tiene su bandera, y por eso
+cada fila dice hasta qué nivel te abre. Ahí se vuelve visible la regla de las dos
+escaleras: una corporación en el primer escalón puede abrir el tercero porque su
+bandera llegó ahí.
+
+Las dos listas largas van **una por vez**, con un selector arriba que lleva su
+cuenta. Apiladas la página era inmensa —dos tablas paginadas con sus dos barras de
+recorte— y para llegar a la segunda había que pasar por toda la primera. De paso
+resuelve que las dos quieran los mismos parámetros: como se dibuja una por vez,
+el selector decide quién los interpreta.
+
+### La ficha que se abre desde cualquier nombre
+
+Un nombre que aparece en una lista **lleva a lo que ese nombre es**. Es lo que
+hace que un directorio de cuarenta corporaciones sea navegable en vez de ser
+cuarenta cadenas de texto: se aprieta una y se ve qué es, quién la opera, dónde
+tiene puestos, quién reparte trabajo ahí y qué piensa de vos.
+
+**Es una ventana y no una pantalla.** Llevar a alguien al módulo Corporación para
+mostrarle una ajena —con el Neocom marcando «Corporación» y las pestañas de uno al
+lado— la hace leer como si fuera la suya; y sacar cada ficha a su propia ruta
+agregaría el tercer nivel de navegación que este proyecto no tiene. La ventana se
+abre encima, se mira y se cierra.
+
+**Muestra lo mismo que el módulo**, con las mismas secciones y las mismas piezas:
+la tabla de agentes y la de miembros son literalmente las de las pestañas, con su
+buscador y su paginado. Una ficha ajena que muestre menos que la propia obliga a
+preguntarse qué falta. Lo único que cambia es lo que es del que mira: **«Alistarse»
+no se dibuja si ya respondés a otra**, porque no es que no se pueda apretar, es
+que primero hay que renunciar.
+
+Se dibuja **una sola vez, en el armazón del juego**, y no en cada pantalla que
+quiera ofrecerla: una ventana que sólo se puede abrir desde algunas pantallas es
+media función. El servidor la arma en el `load` del layout, y **sólo la sección
+que se esté mirando**: traer las cinco para mostrar una sería cinco consultas por
+cada nombre que alguien aprieta.
+
+Su estado vive **en la URL**, como todo recorte de este juego: cuál está abierta,
+qué sección y por dónde va su listado. Así una ficha se manda por mensaje, se abre
+en otra pestaña, se cierra con el botón de atrás y se recarga sin perderla; una
+ventana que sólo existe en la memoria del navegador no se puede compartir con
+nadie. Y por eso sus parámetros llevan el prefijo `f_`: **abajo de la ventana hay
+una pantalla** con sus propios `buscar`, `orden` y `pagina`, y sin prefijo el
+buscador de la ficha filtraría la tabla de atrás. La URL queda más larga; a
+cambio, las dos cosas funcionan a la vez.
 
 ### La columna angosta de una estación
 
@@ -553,19 +599,19 @@ Con ochenta componentes, «fijarse si ya existe» no pasa solo: hay que pregunta
 pieza por pieza, y para eso hace falta saber qué hay. Esta tabla es el mapa, por
 carpeta; los archivos están en `src/lib/components/`.
 
-| Carpeta       | Para qué                                          | Lo que más se usa                                                                           |
-| ------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                      |
-| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                          |
-| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                      |
-| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`    |
-| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                     |
-| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `Identicon`, `PilotCredential` |
-| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                       |
-| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                      |
-| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                           |
-| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                             |
-| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                     |
+| Carpeta       | Para qué                                          | Lo que más se usa                                                                                        |
+| ------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `ui/`         | Lo estructural, sin saber de qué habla el juego   | `HudTable`, `Modal`, `Popover`, `HoverCard`, `Paginator`, `TreeBranch`                                   |
+| `cards/`      | Paneles y recuadros                               | `Panel`, `TitledPanel`, `FloatingPanel`, `StatRow`                                                       |
+| `buttons/`    | Lo que se aprieta                                 | `HudButton`, `HudLink`                                                                                   |
+| `forms/`      | Campos y avisos de formulario                     | `TextField`, `SelectField`, `ColorField`, `ErrorCallout`, `SuccessCallout`, `ChoiceCard`                 |
+| `typography/` | Los seis tamaños de texto del HUD                 | `Label`, `CardTitle`, `BodyText`, `HudValue`, `DisplayTitle`, `Eyebrow`                                  |
+| `game/`       | Piezas que sí saben del juego                     | `ConfirmAction`, `ActionSource`, `GalaxyMap`, `GalaxyStage`, `Identicon`, `PilotCredential`, `InfoSheet` |
+| `admin/`      | Sólo del cuartel                                  | `GateRose`, `EventTrace`, `EventLine`                                                                    |
+| `meters/`     | Barras y medidores                                | `ProgressBar`, `SegmentBar`, `ChargeBar`, `SkillMeter`                                                   |
+| `layout/`     | El marco de las pantallas públicas                | `PageShell`, `Section`, `Bounded`                                                                        |
+| `shell/`      | El marco del juego: Neocom, barra de estado, chat | `GameShell`, `AdminShell`, `Neocom`, `ChatDock`                                                          |
+| `brand/`      | Logotipo y marca                                  | `Wordmark`, `LogoImage`                                                                                  |
 
 Tres que conviene conocer antes de escribir una pantalla nueva, porque son las
 que más se reinventan sin querer:

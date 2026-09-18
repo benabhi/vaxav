@@ -37,9 +37,19 @@
 		 * los suyos.
 		 */
 		hidden?: Readonly<Record<string, string>>;
+		/**
+		 * El prefijo de los campos del formulario.
+		 *
+		 * Vacío en una pantalla y con prefijo en la ventana de una ficha: abajo de la
+		 * ventana hay otra pantalla con sus propios `buscar` y `pagina`, y sin esto
+		 * el buscador de la ficha filtraría la tabla de atrás. Los enlaces ya lo
+		 * resuelven por su cuenta —`hrefFor` los arma—; esto es para lo que manda el
+		 * formulario, que viaja por su cuenta.
+		 */
+		prefix?: string;
 	}
 
-	let { agentes, hrefFor, hidden = {} }: Props = $props();
+	let { agentes, hrefFor, hidden = {}, prefix = '' }: Props = $props();
 
 	let consulta = $derived(agentes.query);
 
@@ -83,13 +93,19 @@
 	{/each}
 
 	<div class="w-full min-w-0 xs:w-[12rem]">
-		<TextField label="Buscar" name="buscar" size="1" value={consulta.search} placeholder="Nombre" />
+		<TextField
+			label="Buscar"
+			name="{prefix}buscar"
+			size="1"
+			value={consulta.search}
+			placeholder="Nombre"
+		/>
 	</div>
 
 	<div class="w-full min-w-0 xs:w-[10rem]">
 		<SelectField
 			label="Reparte"
-			name="clase"
+			name="{prefix}clase"
 			size="1"
 			onchange={alCambiar}
 			value={consulta.kind}
@@ -113,10 +129,10 @@
 	</HudLink>
 
 	<!-- Conservan el orden al filtrar: sin esto, buscar lo perdería. -->
-	<input type="hidden" name="orden" value={consulta.sort} />
-	<input type="hidden" name="dir" value={consulta.dir} />
+	<input type="hidden" name="{prefix}orden" value={consulta.sort} />
+	<input type="hidden" name="{prefix}dir" value={consulta.dir} />
 	{#if consulta.onlyOpen}
-		<input type="hidden" name="atienden" value="1" />
+		<input type="hidden" name="{prefix}atienden" value="1" />
 	{/if}
 
 	<HudButton type="submit" variant="primary" size="1">

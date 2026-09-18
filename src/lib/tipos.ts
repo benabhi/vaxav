@@ -992,6 +992,29 @@ export interface Orbita {
 	readonly satellites: readonly CuerpoVecino[];
 }
 
+/**
+ * Lo que se muestra en la ventana de una ficha.
+ *
+ * Una ficha es **una ventana y no una pantalla**: se abre encima de donde
+ * estabas, se mira y se cierra. Trae **una sola sección armada**, la que se está
+ * mirando; las otras vienen en nulo porque traer las cinco para mostrar una
+ * sería cinco consultas por cada nombre que alguien aprieta.
+ */
+export interface Ficha {
+	readonly kind: string;
+	readonly code: string;
+	/** Cómo se llama lo que se está mirando, y qué es. */
+	readonly title: string;
+	readonly subtitle: string;
+	/** Qué sección se está mirando. */
+	readonly section: string;
+	readonly corporation: Corporacion | null;
+	readonly reputation: PaginaReputacion | null;
+	readonly stations: readonly EstacionCorporacion[] | null;
+	readonly agents: AgentesCorporacion | null;
+	readonly members: Miembros | null;
+}
+
 /** Una ranura del casco, ya resuelta para dibujar en el anillo o en la lista. */
 export interface FilaRanura {
 	readonly index: number;

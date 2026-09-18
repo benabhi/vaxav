@@ -28,6 +28,7 @@ import { unreadCount } from '$lib/server/services/log';
 import { unreadMessages } from '$lib/server/services/messages';
 import { getBodyById } from '$lib/server/services/universe';
 import { buildInforme } from '$lib/server/views/log';
+import { buildFicha } from '$lib/server/views/sheets';
 import { buildPilotView } from '$lib/server/views/pilot';
 import { actionIcon, actionLabel } from '$lib/format';
 import { canEnterAdmin } from '$lib/admin';
@@ -102,6 +103,11 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		// Y el botón de terminar la orden, sólo con **su** llave. Es una herramienta
 		// para probar el juego, no una del juego: ver `/terminar`.
 		canRush: locals.permissions.has(RUSH_PERMISSION),
+		// **La ficha que se esté mirando, si hay alguna.** Se arma acá y no en cada
+		// pantalla porque una ventana que sólo se puede abrir desde algunas pantallas
+		// es media función: el nombre de una corporación tiene que llevar a su ficha
+		// esté donde esté. Sin parámetro no cuesta nada, que es el caso normal.
+		ficha: buildFicha(db, pilot, url.searchParams),
 		activeModule: module?.code ?? '',
 		activeTab: tab?.route ?? '',
 		tabs: module?.tabs ?? [],

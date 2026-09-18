@@ -28,7 +28,6 @@
 	import HudLink from '$lib/components/buttons/HudLink.svelte';
 	import SelectField from '$lib/components/forms/SelectField.svelte';
 	import TextField from '$lib/components/forms/TextField.svelte';
-	import CorporationSheet from '$lib/components/game/CorporationSheet.svelte';
 	import FactionRose from '$lib/components/game/FactionRose.svelte';
 	import SegmentBar from '$lib/components/meters/SegmentBar.svelte';
 	import BodyText from '$lib/components/typography/BodyText.svelte';
@@ -41,6 +40,7 @@
 	import Paginator from '$lib/components/ui/Paginator.svelte';
 	import { page } from '$app/state';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { hrefFicha } from '$lib/fichas';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -116,12 +116,14 @@
 	}
 
 	/**
-	 * Qué corporación se está mirando en la ventana. Vacío, ninguna.
+	 * El enlace que abre la ficha de una corporación.
 	 *
-	 * Ventana y no pantalla: llevar a `/corporacion` con otra puesta se lee como si
-	 * fuera la tuya, con el Neocom marcando tu módulo y tus pestañas al lado.
+	 * **Ventana y no pantalla**: llevar a `/corporacion` con otra puesta se lee como
+	 * si fuera la tuya, con el Neocom marcando tu módulo y tus pestañas al lado. Y
+	 * **enlace y no botón** porque la ventana vive en la URL: así se abre en otra
+	 * pestaña, se comparte por mensaje y se cierra con el botón de atrás.
 	 */
-	let fichaCorp = $state('');
+	let fichaDe = $derived((code: string) => hrefFicha(page.url, 'corporacion', code));
 
 	let hayFiltroCorp = $derived(Boolean(consulta.search || consulta.faction));
 	let hayFiltroAgentes = $derived(
@@ -265,18 +267,16 @@
 								<span class="flex min-w-0 flex-col items-start">
 									<!--
 										El nombre abre **su ficha**, no el mapa: ahí está qué es, quién la
-										opera, dónde tiene puestos y qué piensa de vos, y desde ahí sale
-										el enlace al mapa. Saltar directo al mapa contesta una sola de
-										esas preguntas y se saltea las otras cuatro.
+										opera, dónde tiene puestos, quién reparte trabajo y qué piensa de
+										vos, y desde ahí sale el enlace al mapa. Saltar directo al mapa
+										contesta una sola de esas preguntas y se saltea las otras cuatro.
 									-->
-									<button
-										type="button"
-										onclick={() => (fichaCorp = una.code)}
-										class="cursor-pointer truncate border-0 bg-transparent p-0 text-left text-1
-											text-text-strong hover:text-accent-bright"
+									<a
+										href={fichaDe(una.code)}
+										class="truncate text-1 text-text-strong no-underline hover:text-accent-bright"
 									>
 										{una.name}
-									</button>
+									</a>
 									{#if una.mine}
 										<Label>Respondés a ella</Label>
 									{/if}
@@ -397,14 +397,12 @@
 							</span>
 						</td>
 						<td class="py-[0.5rem] pr-3">
-							<button
-								type="button"
-								onclick={() => (fichaCorp = uno.corporationCode)}
-								class="block w-full cursor-pointer truncate border-0 bg-transparent p-0 text-left
-									text-1 text-text-body hover:text-accent-bright"
+							<a
+								href={fichaDe(uno.corporationCode)}
+								class="block truncate text-1 text-text-body no-underline hover:text-accent-bright"
 							>
 								{uno.corporation}
-							</button>
+							</a>
 						</td>
 						<td class="hidden py-[0.5rem] pr-3 md:table-cell">
 							<!-- El sistema lleva al mapa, con él elegido. -->
@@ -466,6 +464,3 @@
 		</BodyText>
 	</div>
 </Panel>
-
-<!-- La ficha de la corporación que se esté mirando, encima de todo. -->
-<CorporationSheet bind:code={fichaCorp} />

@@ -33,11 +33,21 @@
 		hrefFor: (cambios: Record<string, string>) => string;
 		/** Lo que el formulario tiene que arrastrar para no perder dónde estaba. */
 		hidden?: Readonly<Record<string, string>>;
+		/**
+		 * El prefijo de los campos del formulario.
+		 *
+		 * Vacío en una pantalla y con prefijo en la ventana de una ficha: abajo de la
+		 * ventana hay otra pantalla con sus propios `buscar` y `pagina`, y sin esto
+		 * el buscador de la ficha filtraría la tabla de atrás. Los enlaces ya lo
+		 * resuelven por su cuenta —`hrefFor` los arma—; esto es para lo que manda el
+		 * formulario, que viaja por su cuenta.
+		 */
+		prefix?: string;
 		/** Qué hacer al apretar un distintivo, si hay algo que hacer. */
 		onPilot?: (callsign: string) => void;
 	}
 
-	let { miembros, hrefFor, hidden = {}, onPilot }: Props = $props();
+	let { miembros, hrefFor, hidden = {}, prefix = '', onPilot }: Props = $props();
 
 	let consulta = $derived(miembros.query);
 
@@ -81,7 +91,7 @@
 	<div class="w-full min-w-0 xs:w-[12rem]">
 		<TextField
 			label="Buscar"
-			name="buscar"
+			name="{prefix}buscar"
 			size="1"
 			value={consulta.search}
 			placeholder="Distintivo"
@@ -95,7 +105,7 @@
 	<div class="w-full min-w-0 xs:w-[10rem]">
 		<SelectField
 			label="Oficio"
-			name="oficio"
+			name="{prefix}oficio"
 			size="1"
 			onchange={alCambiar}
 			value={consulta.profession}
@@ -104,8 +114,8 @@
 	</div>
 
 	<!-- El orden viaja en la URL: sin esto, filtrar lo perdería. -->
-	<input type="hidden" name="orden" value={consulta.sort} />
-	<input type="hidden" name="dir" value={consulta.dir} />
+	<input type="hidden" name="{prefix}orden" value={consulta.sort} />
+	<input type="hidden" name="{prefix}dir" value={consulta.dir} />
 
 	<HudButton type="submit" size="1" variant="primary">
 		<Icon name="magnifying-glass" weight="bold" size="0.7rem" />

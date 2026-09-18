@@ -124,8 +124,17 @@ export function buildReputacion(
  * Cuatro consultas y no una por estación: una corporación con seis puestos no
  * puede costar seis viajes a la base cada vez que alguien abre su ficha.
  */
-export function estacionesDe(db: Db, corporationId: number): EstacionCorporacion[] {
-	const puestos = db.select().from(station).where(eq(station.corporationId, corporationId)).all();
+export function estacionesDe(db: Db, cual: number | string): EstacionCorporacion[] {
+	// Por código o por identificador, según quién pregunte: la ficha ya tiene la
+	// fila en la mano y la ventana tiene el código de la URL. Resolverlo acá evita
+	// que la ventana vuelva a buscar una fila que este módulo va a buscar igual.
+	const suyo =
+		typeof cual === 'number'
+			? cual
+			: (db.select({ id: corporation.id }).from(corporation).where(eq(corporation.code, cual)).get()
+					?.id ?? 0);
+
+	const puestos = db.select().from(station).where(eq(station.corporationId, suyo)).all();
 	const cuerpos = new Map(
 		db
 			.select()

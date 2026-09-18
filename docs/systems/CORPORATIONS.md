@@ -188,6 +188,23 @@ alta —el que entró primero tiene el identificador más bajo— y no se reacom
 alfabéticamente, que sería mentir sobre quién estaba antes. La mecánica compartida
 está en [arquitectura](ARCHITECTURE.md#toda-lista-larga-se-recorta-igual).
 
+### Y la de otra, en una ventana
+
+Las cuatro pestañas de arriba son de **la tuya**. Cualquier otra se mira en una
+ventana que se abre desde su nombre, aparezca donde aparezca: en el panorama de
+reputación, en la lista de agentes o en la fila de un mensaje.
+
+Muestra **lo mismo que el módulo** —qué es, dónde estaría tu reputación con ella,
+qué puestos opera, quién reparte trabajo y quiénes vuelan ahí— con las mismas
+tablas y los mismos filtros: una ficha ajena que muestre menos que la propia
+obliga a preguntarse qué falta. Las del mundo son públicas, así que no hay nada
+que esconder; lo único que cambia es que **«Alistarse» no se dibuja si ya
+respondés a otra**, porque ahí primero hay que renunciar.
+
+Va en una ventana y no en el módulo porque en el módulo se leería como si fuera la
+tuya. El porqué completo —y por qué su estado viaja en la URL— está en
+[interfaz](INTERFACE.md#la-ficha-que-se-abre-desde-cualquier-nombre).
+
 ## El sello: la cara de cada una
 
 Ninguna corporación queda sin emblema, y nadie tuvo que dibujar cuarenta:

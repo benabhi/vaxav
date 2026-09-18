@@ -12,12 +12,13 @@
 	import type { Snippet } from 'svelte';
 	import { ADMIN_ENTRY } from '$lib/admin';
 	import type { Tab } from '$lib/navigation';
-	import type { AccionEnCurso, Informe } from '$lib/tipos';
+	import type { AccionEnCurso, Ficha, Informe } from '$lib/tipos';
 	import ActionNotice from '../game/ActionNotice.svelte';
 	import ChatDock from './ChatDock.svelte';
 	import Neocom from './Neocom.svelte';
 	import StatusBar from './StatusBar.svelte';
 	import TabBar from './TabBar.svelte';
+	import InfoSheet from '../game/InfoSheet.svelte';
 
 	interface Props {
 		children: Snippet;
@@ -35,6 +36,14 @@
 		admin?: boolean;
 		/** Si puede terminar su orden al instante. Herramienta de pruebas. */
 		canRush?: boolean;
+		/**
+		 * La ficha que se esté mirando, si hay alguna.
+		 *
+		 * Se dibuja acá y no en cada pantalla porque una ventana que sólo se puede
+		 * abrir desde algunas pantallas es media función: el nombre de una
+		 * corporación tiene que llevar a su ficha esté donde esté.
+		 */
+		ficha?: Ficha | null;
 	}
 
 	let {
@@ -47,7 +56,8 @@
 		notice = null,
 		notices = [],
 		admin = false,
-		canRush = false
+		canRush = false,
+		ficha = null
 	}: Props = $props();
 
 	/** La clave con la que el navegador recuerda si la barra quedó desplegada. */
@@ -113,4 +123,10 @@
 			<ActionNotice report={notice} />
 		{/key}
 	{/if}
+
+	<!--
+		La ficha va acá abajo, una sola vez para todo el juego: la URL dice a quién
+		se está mirando y la ventana aparece encima de la pantalla que sea.
+	-->
+	<InfoSheet {ficha} />
 </div>
