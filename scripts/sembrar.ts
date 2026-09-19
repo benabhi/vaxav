@@ -3,11 +3,20 @@
  *
  *     npm run db:seed
  *
- * Es idempotente: se puede correr las veces que haga falta. Crea lo que falta,
- * actualiza lo que cambió en el plano y no duplica nada, así que corregir un
- * dato es editar `src/lib/server/game/universe.ts` y volver a correrlo.
+ * Es idempotente: se puede correr las veces que haga falta y no duplica nada.
+ * Pero **sólo crea lo que falta; lo que ya está no lo toca en nada**, ni un
+ * nombre, ni una órbita, ni una columna vacía. Puede haberlo editado alguien
+ * desde el constructor, y la siembra no tiene forma de saber si el plano es más
+ * nuevo o más viejo que la base.
  *
- * El esquema es cosa de las migraciones; esto sólo pone contenido.
+ * De ahí se sigue lo que cuesta caro olvidarse: **corregir un dato del plano y
+ * volver a sembrar no lo corrige en la base**, y una columna recién agregada por
+ * una migración se queda vacía en todos los cuerpos que ya existían. Para eso va
+ * un guión de una sola vez, como `scripts/atributos-de-cuerpos.ts`. Lo que sí
+ * nace bien del plano es una base vacía.
+ *
+ * El plano está en `src/lib/game/universe.ts`. El esquema es cosa de las
+ * migraciones; esto sólo pone contenido.
  */
 
 import Database from 'better-sqlite3';
