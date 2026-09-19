@@ -134,6 +134,24 @@ Qué se hizo, quién lo hizo, con qué se verificó y **qué quedó abierto**. E
 informe de un agente es materia prima, no la respuesta: lo que llega a benabhi es
 el resultado, en la voz del proyecto y sin relleno.
 
+**El «quién lo hizo» se escribe siempre, al pie y en un par de renglones: qué
+agentes intervinieron y qué aportó cada uno.** benabhi no ve los informes ni sabe
+a quién se despachó, así que sin ese cierre una respuesta no deja ver de dónde
+salió cada cosa —si un número lo trajo una investigación o lo puso alguien de
+memoria, si una pantalla la miró el diseñador o nadie— ni qué costó llegar hasta
+ahí. Es la contraparte de responder por el gasto: si despachar cuesta, benabhi
+tiene derecho a ver en qué se gastó.
+
+- **Qué aportó, no que participó.** «El auditor encontró la doble cobranza del
+  refino» sirve; «intervino el auditor» ocupa el mismo renglón y no dice nada.
+- **Va también cuando no intervino nadie**, y se dice con todas las letras:
+  contestado de memoria, o mirando tal archivo y tal otro. Eso es información y
+  no una disculpa: le avisa a benabhi que esa respuesta no la verificó ningún
+  agente.
+- **Es un cierre, no un acta.** Una línea por agente, sin tablas y sin pegar el
+  informe de nadie. El resumen se suma al resultado; no lo reemplaza ni lo repite
+  con otras palabras.
+
 # Principios del proyecto
 
 **Estas reglas tienen prioridad sobre cualquier criterio por defecto.** Si una
