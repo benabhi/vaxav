@@ -42,13 +42,19 @@ import {
 	deleteSystem,
 	disconnectGate,
 	setGateClosed,
-	setStation
+	setStation,
+	updateBody,
+	type BodyDraft
 } from '../src/lib/server/services/worldbuilding';
 import {
 	GATE_BEARINGS,
 	romanNumeral,
+	type Atmosphere,
+	type BodyClass,
+	type BodyKind,
 	type GateBearing,
-	type Government
+	type Government,
+	type StarClass
 } from '../src/lib/game/universe';
 import { neighbourOf, type Hex } from '../src/lib/game/galaxy';
 import { bearingLabel } from '../src/lib/format';
@@ -92,6 +98,97 @@ function mezclar<T>(lista: readonly T[]): T[] {
 		[copia[i], copia[j]] = [copia[j], copia[i]];
 	}
 	return copia;
+}
+
+// --- Los atributos de cada cuerpo --------------------------------------------
+//
+// El plano oficial escribe de qué está hecho cada cuerpo uno por uno. Acá son
+// sesenta sistemas y nadie los va a escribir a mano, así que se derivan de lo
+// que el cuerpo es. **No pretende ser un generador de planetas**: alcanza con
+// que ninguno salga diciendo un disparate, porque de estos tres campos se arma
+// la frase que el jugador lee en pantalla y una incoherencia ahí se nota antes
+// que cualquier otra cosa del mapa.
+//
+// El vocabulario es **el mismo del plano oficial** —`BODY_CLASSES`,
+// `ATMOSPHERES` y la secuencia espectral—. Si la demo inventara valores propios,
+// los filtros del mapa estarían mirando dos galaxias que no se pueden comparar,
+// que es justo lo contrario de para lo que existe esta herramienta.
+
+/** De qué está hecho un planeta. Repetir un valor es lo que le da su peso. */
+const CLASES_DE_PLANETA: readonly BodyClass[] = [
+	'rocky',
+	'rocky',
+	'rocky',
+	'gas',
+	'gas',
+	'ice',
+	'ocean',
+	'volcanic'
+];
+
+/** Una luna es chica y fría: no retiene gas ni le sobra agua para un océano. */
+const CLASES_DE_LUNA: readonly BodyClass[] = ['rocky', 'rocky', 'ice'];
+
+/**
+ * Qué puede haber en el aire sobre cada clase de cuerpo.
+ *
+ * La atmósfera sale de la composición y no de un sorteo aparte, que es lo único
+ * que hace falta para que la descripción derivada no se contradiga sola: no hay
+ * gigantes gaseosos con aire respirable ni bolas de hielo con atmósfera densa.
+ */
+const ATMOSFERAS_DE: Readonly<Record<BodyClass, readonly Atmosphere[]>> = {
+	rocky: ['none', 'none', 'thin', 'breathable'],
+	gas: ['dense', 'dense', 'toxic'],
+	ice: ['none', 'thin'],
+	ocean: ['breathable', 'dense'],
+	volcanic: ['toxic', 'toxic', 'thin']
+};
+
+/**
+ * Las clases espectrales que se reparten, con el peso de la secuencia real: las
+ * frías son la mayoría y las azules casi no existen.
+ *
+ * No es ambientación. De la clase de la estrella sale **a qué distancia está la
+ * zona templada**, así que repartirlas es lo que hace que la misma órbita sea
+ * templada en un sistema y hielo en el de al lado. Con sesenta estrellas G el
+ * mapa no tendría climas que mirar.
+ */
+const CLASES_DE_ESTRELLA: readonly StarClass[] = [
+	'M',
+	'M',
+	'M',
+	'M',
+	'K',
+	'K',
+	'K',
+	'G',
+	'G',
+	'F',
+	'A',
+	'B',
+	'O'
+];
+
+/**
+ * Los tres atributos que le tocan a un cuerpo por ser lo que es.
+ *
+ * Van juntos y listos para volcar en el `BodyDraft` porque **el servicio los
+ * valida cruzados**: sólo un planeta o una luna tienen composición y atmósfera, y
+ * sólo una estrella tiene clase espectral. Pedirlos por separado invitaría a
+ * armar la combinación prohibida y enterarse recién al guardar.
+ *
+ * Un cinturón, una estación y una puerta se van con los tres vacíos, y eso **es
+ * lo correcto y no un hueco**: son lugares, no mundos.
+ */
+function atributosDe(kind: BodyKind): Pick<BodyDraft, 'bodyClass' | 'atmosphere' | 'starClass'> {
+	if (kind === 'star') {
+		return { bodyClass: '', atmosphere: '', starClass: unoDe(CLASES_DE_ESTRELLA) };
+	}
+	if (kind === 'planet' || kind === 'moon') {
+		const bodyClass = unoDe(kind === 'planet' ? CLASES_DE_PLANETA : CLASES_DE_LUNA);
+		return { bodyClass, atmosphere: unoDe(ATMOSFERAS_DE[bodyClass]), starClass: '' };
+	}
+	return { bodyClass: '', atmosphere: '', starClass: '' };
 }
 
 // --- El contenido ------------------------------------------------------------
@@ -505,14 +602,29 @@ for (const faccion of PLAN) {
 				government,
 				security: entre(min, max),
 				controllingFaction: faccion.code,
-				capitalOf: esCapital ? faccion.code : '',
-				description: esCapital
-					? `El corazón de ${faccion.code === 'dominion' ? 'El Dominio' : faccion.code === 'concord' ? 'La Concordia' : 'El Pacto'}.`
-					: ''
+				capitalOf: esCapital ? faccion.code : ''
 			},
 			null
 		);
 		conteo.sistemas++;
+
+		// La estrella nace G porque `createSystem` no tiene de dónde sacar otra
+		// cosa, y sesenta soles iguales dejan el mapa sin climas que comparar. Se
+		// le pone la suya acá, que es **donde vive el dato**: de la clase sale la
+		// zona templada, y de ahí la banda térmica de cada órbita del sistema.
+		updateBody(
+			db,
+			star.id,
+			{
+				name: star.name,
+				kind: 'star',
+				parentId: star.parentId,
+				orbitDistance: star.orbitDistance,
+				explored: star.explored,
+				...atributosDe('star')
+			},
+			null
+		);
 
 		// **Algunos binarios, pocos.** Una segunda estrella es raíz, no cuelga de la
 		// primera: un sistema binario tiene dos soles y cada uno lo suyo.
@@ -525,8 +637,8 @@ for (const faccion of PLAN) {
 					kind: 'star',
 					parentId: null,
 					orbitDistance: 0,
-					description: 'La compañera, más chica y más fría.',
-					explored: true
+					explored: true,
+					...atributosDe('star')
 				},
 				null
 			);
@@ -545,8 +657,8 @@ for (const faccion of PLAN) {
 					kind: 'planet',
 					parentId: star.id,
 					orbitDistance: 60 + i * entre(40, 120),
-					description: '',
-					explored: true
+					explored: true,
+					...atributosDe('planet')
 				},
 				null
 			);
@@ -563,8 +675,8 @@ for (const faccion of PLAN) {
 					kind: 'station',
 					parentId: ultimo,
 					orbitDistance: entre(1, 6),
-					description: '',
-					explored: true
+					explored: true,
+					...atributosDe('station')
 				},
 				null
 			);
@@ -624,8 +736,8 @@ for (const faccion of PLAN) {
 					kind: 'gate',
 					parentId: estrellaDe(fuente),
 					orbitDistance: entre(300, 800),
-					description: '',
-					explored: true
+					explored: true,
+					...atributosDe('gate')
 				},
 				rumbo,
 				null
@@ -638,8 +750,8 @@ for (const faccion of PLAN) {
 					kind: 'gate',
 					parentId: star.id,
 					orbitDistance: entre(300, 800),
-					description: '',
-					explored: true
+					explored: true,
+					...atributosDe('gate')
 				},
 				oppositeBearing(rumbo),
 				null
@@ -694,8 +806,8 @@ for (let i = 0; i < 9 && todos.length > 4; i++) {
 				kind: 'gate',
 				parentId: estrellaDe(uno),
 				orbitDistance: entre(300, 900),
-				description: '',
-				explored: true
+				explored: true,
+				...atributosDe('gate')
 			},
 			rumboUno,
 			null
@@ -708,8 +820,8 @@ for (let i = 0; i < 9 && todos.length > 4; i++) {
 				kind: 'gate',
 				parentId: estrellaDe(otro),
 				orbitDistance: entre(300, 900),
-				description: '',
-				explored: true
+				explored: true,
+				...atributosDe('gate')
 			},
 			rumboOtro,
 			null
@@ -753,8 +865,8 @@ for (let i = 0; i < 4; i++) {
 				kind: 'gate',
 				parentId: estrellaDe(donde),
 				orbitDistance: entre(300, 900),
-				description: '',
-				explored: true
+				explored: true,
+				...atributosDe('gate')
 			},
 			rumbo,
 			null
