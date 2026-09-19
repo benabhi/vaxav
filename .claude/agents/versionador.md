@@ -103,8 +103,11 @@ código que prueban.
 - **La base**: vive en `data/` y no se versiona. Tampoco los retratos que sube el
   jugador.
 - **`/build`, `/.svelte-kit`, `test-results`, `node_modules`.**
-- **`.claude/`**, que es donde viven las reglas de los agentes. Quedan fuera del
-  repositorio a propósito.
+- **`.claude/`, salvo `.claude/agents/`.** Las reglas de los agentes se versionan
+  —son del proyecto tanto como el protocolo, y afuera del repositorio se pierden
+  al cambiar de máquina—; el resto de `.claude/` son ajustes locales y queda
+  afuera. En `.gitignore` eso son dos líneas, `.claude/*` y `!.claude/agents/`, y
+  el orden importa: la negación va después, o no reabre nada.
 
 `package-lock.json` **sí se versiona**: el entorno tiene que ser reproducible.
 

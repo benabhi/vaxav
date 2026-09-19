@@ -401,5 +401,13 @@ El proyecto es de benabhi y **sólo** de benabhi.
 - **Nunca** incluir "Generated with Claude Code", firmas, emojis de bot ni
   menciones a Claude o a asistentes de IA en mensajes de commit, descripciones
   de PR, README ni ningún archivo versionado.
+- **Esto es sobre autoría y crédito, no sobre cómo se llaman las herramientas.**
+  Lo que la regla evita es que el proyecto parezca hecho por otro. Un
+  identificador técnico que nombra una herramienta del entorno —el `tools:` de un
+  archivo de agente, el nombre de un ejecutable, una variable— no atribuye nada,
+  no se puede renombrar sin romper lo que nombra, y no cuenta como mención. Lo
+  que sí cuenta, y sigue prohibido con la misma fuerza, es todo lo que reparta
+  crédito: co-autores, firmas, "Generated with…", emojis de bot y menciones en
+  prosa.
 - Los mensajes de commit se escriben en español, en modo imperativo, explicando
   el porqué del cambio.
