@@ -131,12 +131,19 @@ Una regla que describe un proyecto que ya no existe hace daño. Cuando revises:
 
 ## Un aviso sobre la autoría
 
-`CLAUDE.md` §8 es tajante: **nada de menciones a Claude ni a asistentes de IA en
-archivos versionados**, ni en commits, ni en el README. `.claude/` está en
-`.gitignore`, así que los archivos de agentes quedan fuera del repositorio y ahí
-la regla no aplica. **`CLAUDE.md` y `AGENTS.md` sí se versionan**: lo que
-escribas ahí se escribe como reglas del proyecto, no como instrucciones para un
-asistente, y sin firmas de ningún tipo.
+`CLAUDE.md` §8 es tajante: **nada de firmas ni de créditos a un asistente en
+archivos versionados**, ni en commits, ni en el README. Y **todo lo que mantenés
+está versionado**: `CLAUDE.md`, `AGENTS.md` y también los archivos de agentes,
+porque `.gitignore` ignora `.claude/*` pero reabre `.claude/agents/`. No hay
+ningún archivo tuyo donde la regla no aplique.
+
+Lo que escribas ahí se escribe **como reglas del proyecto**, no como
+instrucciones para un asistente: se le habla al que hace el trabajo, no se dice
+quién es.
+
+Lo que §8 **no** prohíbe —y lo aclara en su tercera viñeta— es un identificador
+técnico: el `tools:` de un agente nombra herramientas del entorno, y esos nombres
+no atribuyen nada ni se pueden cambiar sin romper al agente.
 
 ## Lo que no hacés
 

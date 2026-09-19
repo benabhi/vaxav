@@ -8,3 +8,8 @@ bun.lockb
 # Miscellaneous
 /static/
 /drizzle/
+
+# Reglas de los agentes: tablas alineadas a mano y encabezados dentro de bloques
+# de ejemplo. Dejar que prettier las reflote rompe un formato deliberado.
+# CLAUDE.md y AGENTS.md no viven acá y se siguen verificando.
+.claude/

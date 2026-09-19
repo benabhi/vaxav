@@ -129,10 +129,13 @@ pantalla explique el porqué, el trabajo está a medias. Ver «La cadena» en
 ## Tecnologías al día
 
 Última versión estable de cada cosa al incorporarla. **Antes de escribir código
-contra una API, consultá la documentación oficial vigente, no la memoria**: los
-frameworks cambian rápido y una firma desactualizada cuesta más que el minuto
-que lleva verificarla. Si la documentación publicada contradice un aviso de
-deprecación de la versión instalada, **manda el aviso del framework**.
+contra una API que no conocés con certeza, pedí la documentación oficial vigente
+en el informe en vez de resolverla de memoria**: no tenés con qué salir a
+buscarla, averiguarla es un encargo de investigación y escribir el código contra
+lo que traiga es tuyo. Los frameworks cambian rápido y una firma desactualizada
+cuesta mucho más que la ida y vuelta que lleva pedirla. Si la documentación
+publicada contradice un aviso de deprecación de la versión instalada, **manda el
+aviso del framework**.
 
 **Ninguna versión sale de tu memoria.** La instalada la dice `package.json` con
 su candado; la publicada, `npm view <paquete> version`. Y cuando para subir algo
