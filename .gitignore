@@ -30,4 +30,6 @@ data/*.db*
 # Retratos de pilotos: los sube el jugador, no van al repositorio
 data/retratos/
 
-.claude/
+# Agentes: sus reglas se versionan, el resto de .claude/ son ajustes locales
+.claude/*
+!.claude/agents/
