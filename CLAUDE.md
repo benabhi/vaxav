@@ -21,16 +21,16 @@ se contesta y no se despacha. Todo lo demás tiene dueño, incluido git.
 Cada agente conoce sólo al coordinador. **No se conocen entre sí, no se hablan y
 no se nombran.** Todo pasa por acá.
 
-| Agente         | Para qué                                                               | Escribe en                                                                |
-| -------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `investigador` | Cómo lo resuelve EVE, patrones de juegos asíncronos, nombres canónicos | nada: devuelve un informe                                                 |
-| `disenador`    | El lenguaje visual, los componentes, las figuras, el responsivo        | `src/lib/components/`, `src/app.css`, marcado `.svelte`                   |
-| `codificador`  | Reglas del juego, servicios, vistas, rutas, esquema y migraciones      | `src/lib/game/`, `src/lib/server/`, `src/routes/`, `drizzle/`, `scripts/` |
-| `testeador`    | Planifica, escribe y corre los tests                                   | `**/*.test.ts`, `e2e/`                                                    |
-| `auditor`      | Exploits, fugas de economía, fórmulas rotas, validaciones que faltan   | nada: devuelve hallazgos                                                  |
-| `documentador` | `docs/`, y verificar que lo documentado sea lo implementado            | `docs/`, `README.md`                                                      |
-| `versionador`  | Ramas, commits, mensajes, merge a `main`, push y recuperación          | el historial, `.gitignore`, `.gitattributes`                              |
-| `actualizador` | Las reglas de todos, incluidas éstas                                   | `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`                               |
+| Agente         | Para qué                                                                         | Escribe en                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `investigador` | Cómo lo resuelve EVE, patrones de juegos asíncronos, nombres canónicos           | nada: devuelve un informe                                                                                             |
+| `disenador`    | El lenguaje visual, los componentes, las figuras, el responsivo                  | `src/lib/components/`, `src/app.css`, marcado `.svelte`                                                               |
+| `codificador`  | Reglas del juego, servicios, vistas, rutas, esquema, migraciones y configuración | `src/lib/game/`, `src/lib/server/`, `src/routes/`, `drizzle/`, `scripts/`, `data/`, la configuración y `package.json` |
+| `testeador`    | Planifica, escribe y corre los tests                                             | `**/*.test.ts`, `e2e/`                                                                                                |
+| `auditor`      | Exploits, fugas de economía, fórmulas rotas, validaciones que faltan             | nada: devuelve hallazgos                                                                                              |
+| `documentador` | `docs/`, y verificar que lo documentado sea lo implementado                      | `docs/`, `README.md`                                                                                                  |
+| `versionador`  | Ramas, commits, mensajes, merge a `main`, push y recuperación                    | el historial, `.gitignore`, `.gitattributes`                                                                          |
+| `actualizador` | Las reglas de todos, incluidas éstas                                             | `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`                                                                           |
 
 **Nadie escribe fuera de su columna.** Es lo que hace que dos agentes no se pisen
 y que un informe alcance para saber qué cambió.
