@@ -23,7 +23,7 @@ no se nombran.** Todo pasa por acá.
 
 | Agente         | Para qué                                                                         | Escribe en                                                                                                            |
 | -------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `investigador` | Cómo lo resuelve EVE, patrones de juegos asíncronos, nombres canónicos           | nada: devuelve un informe                                                                                             |
+| `investigador` | Lo de afuera del repositorio: EVE, el género asíncrono, documentación, versiones | nada: devuelve un informe                                                                                             |
 | `disenador`    | El lenguaje visual, los componentes, las figuras, el responsivo                  | `src/lib/components/`, `src/app.css`, marcado `.svelte`                                                               |
 | `codificador`  | Reglas del juego, servicios, vistas, rutas, esquema, migraciones y configuración | `src/lib/game/`, `src/lib/server/`, `src/routes/`, `drizzle/`, `scripts/`, `data/`, la configuración y `package.json` |
 | `testeador`    | Planifica, escribe y corre los tests                                             | `**/*.test.ts`, `e2e/`                                                                                                |
