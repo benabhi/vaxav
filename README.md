@@ -11,7 +11,8 @@ punta, sobre SQLite.
 > Se puede crear un piloto, entrar, ver su ficha y su árbol de habilidades,
 > recorrer el sistema, viajar entre cuerpos, invertir la experiencia ganada y
 > armar la nave. El menú muestra sólo lo que funciona y crece a medida que se
-> construye. La hoja de ruta está en [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> construye. Qué existe, qué está colgando y con qué se engancha cada cosa está
+> en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Cómo levantarlo
 
@@ -54,15 +55,17 @@ npm run lint                 # formato y reglas
 npm run test:e2e             # el humo de rutas, con su propia base
 ```
 
-El humo levanta la aplicación compilada y recorre las 23 rutas: es el que atrapa
-una pestaña declarada en el árbol de navegación y sin archivo de ruta.
+El humo levanta la aplicación compilada y recorre todas las rutas declaradas —las
+públicas, las del juego y las del cuartel—: es el que atrapa una pestaña declarada
+en el árbol de navegación y sin archivo de ruta. La lista no está escrita en el
+test, sale de los propios árboles, así que una pestaña nueva entra sola.
 
 ## Estructura
 
 ```
 ├── drizzle/                 Migraciones del esquema
 ├── data/                    Base SQLite local (ignorada por git)
-├── docs/DESIGN.md           Visión del juego, identidad visual y hoja de ruta
+├── docs/DESIGN.md           Visión del juego, la cadena, la voz e identidad visual
 ├── e2e/                     El humo de rutas
 ├── scripts/sembrar.ts       Carga el universo en la base
 ├── static/                  Fuentes, íconos y escudos, servidos tal cual

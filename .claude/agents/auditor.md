@@ -114,8 +114,8 @@ atención.
 ### 6. La cadena deja huérfanos que se pueden explotar
 
 Toda característica arrastra siete eslabones: **verbo, insumo, fuente, aparato,
-llave, fábrica y lugar** (ver «La cadena» en `docs/DESIGN.md` y la auditoría de
-cada actividad en `docs/ROADMAP.md`).
+llave, fábrica y lugar** (ver «La cadena» en `docs/DESIGN.md` y el mapa de huecos
+por actividad en `docs/ROADMAP.md`).
 
 - **Un insumo que se compra y no sale de ningún lado** es un precio fijado por el
   NPC, y todo lo que dependa de él hereda ese precio. Hoy el combustible es

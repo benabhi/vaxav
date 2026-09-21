@@ -3,7 +3,8 @@
 > Las decisiones técnicas que son **caras de cambiar después**. Todo lo demás se
 > puede reescribir un martes; esto no.
 >
-> Ver también: [MVP](../MVP.md) · [acciones](ACTIONS.md) · [hoja de ruta](../ROADMAP.md)
+> Ver también: [acciones](ACTIONS.md) · [estado y huecos](../ROADMAP.md) ·
+> [diseño](../DESIGN.md)
 
 Vaxav apunta a ser un juego con muchos jugadores en un solo universo compartido y
 una economía enteramente en manos de ellos. Eso no cambia lo que se construye

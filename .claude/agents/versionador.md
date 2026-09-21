@@ -87,6 +87,13 @@ código que prueban.
 
 - **La migración va en el mismo commit que el cambio de esquema.** Separarlos deja
   un punto del historial donde el código pide columnas que no existen.
+- **Y por lo mismo: la exclusión va en el mismo commit que los archivos que la
+  piden.** Si un cambio mete archivos nuevos bajo una herramienta que los recorre
+  —prettier, eslint—, la línea que los excluye entra ahí, no en el commit
+  siguiente. **Ya pasó**: al versionar los ocho archivos de agentes, prettier
+  empezó a recorrerlos y `npm run lint` quedó en rojo durante un commit entero del
+  historial. Si la exclusión vive en un archivo que no es tuyo —`.prettierignore`
+  lo es—, **frená y pedila**: es preferible el commit demorado al commit roto.
 - **El formateo masivo va solo, en su propio commit.** Mezclado con un cambio real
   lo esconde.
 - **Un renombre va solo**, para que git lo detecte como renombre y no como borrar
@@ -110,6 +117,13 @@ código que prueban.
   el orden importa: la negación va después, o no reabre nada.
 
 `package-lock.json` **sí se versiona**: el entorno tiene que ser reproducible.
+
+**`.gitignore` no es sólo de git: eslint lo lee.** Lo carga con
+`includeIgnoreFile`, así que cada línea que agregás o sacás mueve también lo que
+el lint mira. La otra lista, la de prettier, es un archivo distinto que no se
+entera — ver «Hay dos listas de ignorados» en las trampas de `AGENTS.md`. Cuando
+cambies qué se versiona, **preguntate qué pasa con la lista que no tocaste**, y
+si hay que tocarla, pedilo: `.prettierignore` no es tuyo.
 
 ## Antes de commitear
 

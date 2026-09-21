@@ -14,10 +14,11 @@ nombre en castellano**: inventar un sinónimo no lo hace más nuestro, lo hace m
 lento de aprender. **Dos excepciones**: los nombres de nave se inventan acá —una
 nave es un personaje, no una etiqueta— y la moneda son **créditos (CR)**, no ISK.
 
-La visión y la hoja de ruta están en `docs/DESIGN.md`; leerlo antes de agregar
-mecánicas. Las
-bases de los catálogos —habilidades, naves, módulos y materiales— y de dónde salen
-están en los documentos de sistema: [habilidades](docs/systems/SKILLS.md),
+La visión está en `docs/DESIGN.md` y el estado —qué existe, qué está colgando y
+con qué se engancha cada cosa— en `docs/ROADMAP.md`, que es un mapa de huecos y
+no una hoja de ruta: no promete ningún orden. Leerlos antes de agregar mecánicas.
+Las bases de los catálogos —habilidades, naves, módulos y materiales— y de dónde
+salen están en los documentos de sistema: [habilidades](docs/systems/SKILLS.md),
 [naves y módulos](docs/systems/SHIPS.md), [materiales](docs/systems/MATERIALS.md)
 y [economía](docs/systems/ECONOMY.md).
 
@@ -150,3 +151,9 @@ la rama se borra. En GitHub existe solamente `main`.
 - Para medir una pantalla en el navegador, el panel tiene que estar **visible**:
   con el panel oculto la página no se redibuja y `getComputedStyle` devuelve
   valores viejos.
+- **Hay dos listas de ignorados y no se mueven juntas.** `eslint.config.js` no
+  tiene la suya: carga `.gitignore` con `includeIgnoreFile`, así que lo que git
+  ignora, eslint también. Prettier no lo mira: usa `.prettierignore`, que es otro
+  archivo y no se entera de nada. **Cambiar qué se versiona mueve una lista y deja
+  la otra donde estaba.** Pasó al versionar las reglas de los agentes: dejaron de
+  estar ignoradas, prettier empezó a recorrerlas y `npm run lint` quedó en rojo.

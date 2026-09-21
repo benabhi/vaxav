@@ -1,198 +1,359 @@
-# Hoja de ruta
+# Estado y huecos
 
-> El orden en que se construye Vaxav y por qué ese orden. Cada etapa deja algo que
-> se puede jugar; ninguna es sólo andamio.
+> Qué existe hoy en Vaxav, qué está colgando y con qué se engancha cada cosa.
+> **Mira para atrás y no promete nada**: es un mapa, no un plan.
 >
-> Ver también: [MVP](MVP.md) · [arquitectura](systems/ARCHITECTURE.md)
+> Ver también: [arquitectura](systems/ARCHITECTURE.md) · «La cadena» en
+> [DESIGN.md](DESIGN.md)
 
-## Hecho
+## Cómo se lee este mapa
 
-| Qué                    | Qué dejó                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| Esqueleto              | SvelteKit, estructura, configuración, tests                                  |
-| Estilos y portada      | El sistema de diseño y la página pública                                     |
-| Pilotos                | Alta en cuatro pasos, ingreso, sesión, base propia                           |
-| Interfaz               | El HUD de Elite Dangerous, el Neocom y las pestañas                          |
-| El universo en la base | Región, constelación, sistema, cuerpo y estación como filas; Ánfora sembrado |
-| Naves                  | Cinco cascos, catálogo de módulos, la calculadora de equipamiento            |
-| Motor de acciones      | Encolar, resolver perezoso e idempotente, informar. Primera acción: viajar   |
-| Habilidades            | Curva, prerrequisitos, pozo por familia y la pantalla del árbol              |
-| Bitácora               | El registro paginado de cada acción resuelta, con su aviso al volver         |
+Ninguna mecánica entra sola: toda característica arrastra **siete eslabones**
+—verbo, insumo, fuente, aparato, llave, fábrica y lugar— y el eslabón que falta
+deja un **huérfano**. Ver «La cadena» en [DESIGN.md](DESIGN.md).
 
-## Lo que falta
+La leyenda mide **una sola cosa: si el juego lo hace**.
 
-El diagnóstico que ordenó todo esto: el juego tenía las piezas y casi ninguna se
-tocaba con las demás. De los 25 atributos que calcula una nave, **dos** movían una
-mecánica; de las 23 habilidades, **trece** no alteraban ningún número; la bodega
-era una cifra sin contenido y los créditos no los escribía nadie.
+| Marca | Qué quiere decir                                                             |
+| ----- | ---------------------------------------------------------------------------- |
+| ✅    | Existe y anda: hay código que lo ejecuta                                     |
+| 🔨    | Decidido y escrito —en un documento de sistema o en el catálogo—, sin efecto |
+| ❌    | Ni siquiera eso: falta la decisión, los números, o las dos cosas             |
+| —     | No aplica a esta cadena                                                      |
 
-De eso ya se pagó buena parte: la bodega tiene contenido, el rendimiento de
-extracción decide cuánto traés, los créditos existen y ocho habilidades dejaron de
-ser decorativas. El circuito de un minero cierra de punta a punta —viajar, minar,
-volver, vender, comprar, montar— y hay un mercado entre jugadores donde los
-precios los deciden ellos. Lo que falta es lo que lo hace crecer: aprender
-habilidades nuevas, refinar lo que se saca, salir del sistema y fabricar.
+Dos aclaraciones, que es donde un mapa como éste se vuelve mentira si se afloja:
 
-Cerrar el primer circuito completo es lo que convierte eso en un juego: elegir
-minero, viajar al cinturón, minar, volver a una estación, vender, comprar algo
-mejor y desbloquear habilidades nuevas.
+- **Una llave es ✅ cuando la habilidad mueve un número o abre una puerta**, no
+  cuando está en el catálogo. Las 111 habilidades existen; **quince** hacen algo,
+  y las otras 96 son 🔨.
+- **Un eslabón con dos mitades en distinto estado va en dos filas.** No se
+  promedia: una fuente a medias no es media fuente, es una que anda por un lado y
+  no existe por el otro.
 
-Las etapas van por **dependencia**: sin contenedor el mineral no tiene dónde caer,
-sin mineral no hay qué vender, sin plata no hay con qué comprar.
+## El mapa de los huecos
 
-### 0 · Desmontaje y enderezado · **hecho**
+Ocho actividades y 66 eslabones: **24 ✅, 29 🔨 y 9 ❌**, más cuatro que no
+aplican. **Ninguna cadena está entera.** La que más se acerca es comerciar, que
+tiene todos sus eslabones andando y una sola llave muerta colgando.
 
-La única que no agrega un verbo. Va primera porque las siguientes tocan los mismos
-archivos.
+### Minar mineral
 
-- ~~Fuera las pantallas cartel y la maqueta del chat.~~
-- ~~**Mensajes, de vuelta en el Neocom.** La entrada se había sacado por llevar a
-  una puerta cerrada; vuelve con el sistema detrás: mandar por distintivo, las
-  dos bandejas sobre una sola fila, el abierto al lado de la lista y el aviso de
-  los que no abriste.~~
-- ~~Resolver una acción pasa a ser un despachador por clase.~~
-- ~~El sistema sale de dónde está el piloto, no de una constante.~~
-- ~~Ofrecer sólo la profesión que tiene algo que hacer.~~
-- ~~La calificación A-E pasa a ser el escalón tecnológico.~~
-- ~~Enderezar la documentación que quedó vieja.~~
+| Eslabón    | Qué es                                             |     |
+| ---------- | -------------------------------------------------- | --- |
+| El verbo   | Extraer de una roca leída                          | ✅  |
+| El insumo  | Ninguno: el láser común no gasta nada              | ✅  |
+| La fuente  | Cinturones con rocas que se agotan y reponen       | ✅  |
+| La fuente  | Ocho minerales por nivel de seguridad              | 🔨  |
+| El aparato | Láser de extracción, recolectores                  | ✅  |
+| La llave   | Minería, Prospección, Gestión de energía           | ✅  |
+| La llave   | Estiba, Rendimiento de extracción                  | 🔨  |
+| La fábrica | Lente focal + silicio                              | 🔨  |
+| El lugar   | Los dos cinturones de Ánfora; la estación que paga | ✅  |
 
-### 1 · Ítems, bodega y libro mayor · **hecho**
+**Es la cadena más recorrida y no está cerrada.** El catálogo tiene **cuatro**
+minerales de los ocho, y hay dos habilidades que el jugador razonablemente cree
+que sirven y no tocan nada: **Estiba** sólo aparece como regalo de profesión, y
+**Rendimiento de extracción** —que por nombre debería ser el bono general— no la
+lee nadie, porque el bono de extracción lo mueve **Minería**. Una llave que se
+llama igual que el número que no mueve es peor que una llave que falta.
 
-- ~~Contenedores, montones de ítems y los dos libros —créditos e ítems—.~~
-- ~~La bodega de la nave y la de la estación, con lo que se baja de una ranura.~~
-- ~~El minero sale con su equipo de minería puesto.~~
+Lo que sí cierra por adentro: la estabilidad del acumulador recorta el
+rendimiento cuando el equipamiento no alcanza, y por eso **Gestión de energía**
+es mecánica sin tener un verbo propio.
 
-### 2 · Minar · **hecho**
+### Minar con láser de tira
 
-- ~~Cinturones con contenido y agotamiento compartido que se recupera solo.~~
-- ~~La acción de extraer, con la regla del piso de tiempo.~~
-- ~~La bodega con capacidad real, y el informe contando el botín.~~
-- ~~Confirmar antes de encargar una orden.~~
+| Eslabón    | Qué es                                               |     |
+| ---------- | ---------------------------------------------------- | --- |
+| El verbo   | Extraer en serie                                     | 🔨  |
+| El insumo  | **Cristal de extracción, que se gasta**              | 🔨  |
+| La fuente  | El mismo cinturón, más rápido                        | 🔨  |
+| El aparato | Láser de tira, sólo en barcaza                       | 🔨  |
+| La llave   | Láseres de tira, Cristales, Barcazas, Cristalografía | 🔨  |
+| La fábrica | Cristalografía, en taller de estación                | 🔨  |
+| El lugar   | Cinturón + taller que fabrique cristales             | 🔨  |
 
-Se volvieron mecánicos la bodega, el rendimiento de extracción y la estabilidad
-del acumulador, y con ellos **Minería, Ingeniería de bodega, Estiba y Gestión de
-energía**.
+Propuesta entera y **cierra sola**: es la más completa de las cadenas que no
+existen, y por eso sigue siendo la mejor candidata a construirse de una vez. Las
+cuatro habilidades **ya están en el catálogo** y ninguna gatea nada; además
+**Cristalografía es de Industria**, que hoy no tiene de dónde sacar experiencia,
+así que entraría como una llave que no se puede fabricar. Ver el cristal de
+extracción como cadena de ejemplo en [materiales](systems/MATERIALS.md).
 
-### 3 · El mercado regional · **hecho**
+### Refinar
 
-- ~~Comprar y vender contra la estación, con su asiento en los dos libros.~~
-- ~~Órdenes de compra y de venta entre pilotos, con garantía.~~
-- ~~Comisión al publicar e impuesto al vender, los dos con piso.~~
-- ~~El mercado en el Neocom, con alcance por regiones.~~
-- ~~Propiedades: qué tenés y dónde, en toda la galaxia.~~
-- ~~El historial de precios de cada ítem.~~
-- ~~Acordar una orden es una acción: lleva tiempo y paga Comercio.~~
-- ~~Las órdenes vencen, y cuánto duran lo decide Contactos.~~
+| Eslabón    | Qué es                         |     |
+| ---------- | ------------------------------ | --- |
+| El verbo   | Convertir mineral en material  | ❌  |
+| El insumo  | El mineral, que se consume     | ✅  |
+| La fuente  | La minería                     | ✅  |
+| El aparato | La refinería de la estación    | 🔨  |
+| La llave   | Refinado, Tasación de mena     | 🔨  |
+| La fábrica | No aplica                      | —   |
+| El lugar   | Cuatro de las cinco estaciones | ✅  |
 
-Acá el bucle se cerró por primera vez: viajás, minás, volvés, cobrás y comprás.
-El mercado es **la única puerta para conseguir módulos**, y con él las cuatro
-habilidades de Comercio dejaron de ser adornos: **Regateo** mueve la horquilla y
-la comisión, **Contabilidad** el impuesto y cuántas órdenes podés llevar,
-**Análisis de mercado** hasta dónde ves y **Contactos** cuánto dura lo que
-publicás. Ver [el mercado](systems/MARKET.md).
+**El verbo no existe y es el hueco más barato de todos.** El insumo, la fuente y
+el lugar están: la baldosa «Refinería» está sembrada en Puerto Ánfora, el Muelle
+de los Anillos, la Planta Escarcha y el Hábitat Talo, y no abre nada. Los doce
+refinados están escritos en [materiales](systems/MATERIALS.md) y ninguno es un
+ítem del catálogo, que sólo conoce minerales y módulos. Va ❌ y no 🔨 por una
+razón concreta: **la merma no tiene número en ningún documento**, y sin merma
+refinar es una conversión sin decisión adentro.
 
-### 3b · El escáner y las rocas · **hecho**
+Y hay un aparato que promete el verbo antes de que exista: el módulo **Refinería
+de a bordo** dice «convierte en el sitio y te ahorra el viaje», y lo único que
+hace es quitar 30 de bodega.
 
-- ~~Un cinturón deja de ser un tanque de mineral y pasa a ser un campo de rocas.~~
-- ~~Cada roca trae lo suyo, se agota y desaparece; el campo repone solo.~~
-- ~~Escanear **una roca** es una acción, con su módulo como requisito duro.~~
-- ~~La lectura es por piloto, tiene profundidad según habilidad y vence al día.~~
-- ~~Sin lectura vigente no se puede minar: la piedra es un bulto en el radar.~~
+### Saltar a otro sistema
 
-Ir al cinturón dejó de ser un botón que siempre devuelve lo mismo. Se volvieron
-mecánicos el **alcance de sensores** y dos habilidades que no movían ningún
-número, **Escaneo** y **Prospección**, y **Ciencias** pasó a tener por fin una
-fuente de experiencia: escanear es la única acción que la paga, y por eso pesa por
-encima de uno. Ver [el universo](systems/UNIVERSE.md).
+| Eslabón    | Qué es                                        |     |
+| ---------- | --------------------------------------------- | --- |
+| El verbo   | Cruzar una puerta                             | ✅  |
+| El insumo  | **Combustible**, que se consume y no vuelve   | ✅  |
+| La fuente  | **Hielo → helio-3**, escrito y sin construir  | 🔨  |
+| La fuente  | Repostar con plata, que no tiene ni precio    | ❌  |
+| El aparato | Calibrador de salto y depósito auxiliar       | ✅  |
+| La llave   | Astrogación                                   | ✅  |
+| La llave   | Eficiencia de combustible                     | 🔨  |
+| La fábrica | Tubo de contención + uranio                   | 🔨  |
+| El lugar   | La puerta como cuerpo; el cuartel las conecta | ✅  |
+| El lugar   | Un segundo sistema al que llegar              | ❌  |
 
-### 4 · Requisitos de habilidad e inyecciones · **a medias**
+**El huérfano más viejo del juego, y es peor de lo que este documento decía.** No
+es sólo que el combustible no salga del hielo: **no hay forma de repostar**. El
+asiento `refuel` está declarado en el libro y no lo escribe nadie; lo único que
+rellena un tanque es la siembra, y sólo si quedó en cero. Un piloto que gasta sus
+saltos se queda sin ellos.
 
-- ~~Los módulos y los cascos declaran qué habilidades piden.~~
-- ~~Se hacen cumplir al volar y al equipar, en dos lugares y sólo dos.~~
-- Las habilidades se desbloquean inyectándolas en el laboratorio de una estación.
-- La pantalla de habilidades muestra qué módulos y qué cascos abre cada una.
+Dos cosas más que estaban marcadas de más:
 
-El escalón dejó de ser una etiqueta: el E no pide nada —es el que vuela una nave
-de astillero— y el A pide la habilidad de su sistema. Con eso, entrenar dejó de
-ser un número que sube y pasó a ser una llave.
+- **Eficiencia de combustible no descuenta nada.** La fórmula del salto acepta el
+  porcentaje y todos los que la llaman le pasan cero.
+- **El universo oficial es un solo sistema y ninguna puerta.** La puerta existe
+  como cuerpo y el constructor del cuartel las conecta a mano; la siembra de
+  prueba arma sesenta sistemas con las suyas. La galaxia que reparte
+  `npm run db:seed` es Ánfora y nada más, así que el verbo no tiene adónde
+  llevarte.
 
-De ahí salió una regla que condiciona todo lo que venga: **sólo se gatea con
-habilidades que se puedan entrenar**. La experiencia se deposita por rama, así que
-pedir una de una rama sin fuente sería cerrar la puerta con la llave adentro.
-Ingeniería consigue la suya con el taller de la etapa 7, y Combate con el combate.
-Ver [naves](systems/SHIPS.md).
+### Fabricar un módulo
 
-Lo que falta —la inyección y el laboratorio— va después de vender porque un
-inyector cuesta plata: al revés sería una reja sin llave.
+| Eslabón    | Qué es                                          |     |
+| ---------- | ----------------------------------------------- | --- |
+| El verbo   | Fabricar                                        | ❌  |
+| El insumo  | Componentes y refinados                         | 🔨  |
+| La fuente  | Refinado y fabricación de componentes           | 🔨  |
+| El aparato | El taller de la estación                        | 🔨  |
+| La llave   | Fabricación, Componentes, Ingeniería de módulos | 🔨  |
+| La fábrica | No aplica: es la fábrica                        | —   |
+| El lugar   | Hábitat Talo, la única con taller               | ✅  |
 
-### El cuartel general · **a medias**
+Los ocho componentes están escritos y ninguno existe como ítem. Las tres
+habilidades están en el catálogo y son **de Industria**, la familia sin pozo: no
+se podrían entrenar aunque el verbo apareciera mañana.
 
-Va fuera de la numeración porque **no es una etapa del circuito**: no agrega un
-verbo al juego, agrega herramientas para operarlo. Se construye en paralelo, y por
-eso no empuja para atrás a las etapas que siguen.
+### Escanear y explorar
 
-- ~~Roles, permisos y el guardia del área.~~
-- ~~El registro de eventos, escribiendo desde los servicios que ya existen.~~
-- ~~La pantalla que lo lista, con su traza de actividad, sus filtros y su
-  paginado.~~
-- ~~El constructor de sistemas: estrellas, planetas, estaciones y las puertas
-  conectadas a mano.~~
-- La pantalla para administrar roles: crearlos, cambiarles permisos y
-  asignárselos.
-- La ficha de piloto desde administración, y las estadísticas.
-- El mapa de la galaxia. La grilla de hexágonos ya está: cada sistema tiene su
-  casilla y se la gana al conectar una puerta. Falta dibujarla —en lienzo, con
-  zoom y filtros— primero en el cuartel, que es donde hace falta para ver
-  callejones sin salida y ramales sueltos, y después en el juego.
+| Eslabón    | Qué es                                          |     |
+| ---------- | ----------------------------------------------- | --- |
+| El verbo   | Escanear una roca                               | ✅  |
+| El verbo   | Escanear un sistema, un cuerpo o a alguien      | ❌  |
+| El insumo  | **Sondas**, que se gastan                       | 🔨  |
+| La fuente  | Circuito impreso + silicio                      | 🔨  |
+| El aparato | Escáner de superficie, amplificador de sensores | ✅  |
+| El aparato | Lanzador de sondas                              | ❌  |
+| La llave   | Escaneo, Prospección                            | ✅  |
+| La llave   | Sondas, Astrometría, Análisis de firmas         | 🔨  |
+| La fábrica | Taller: circuito impreso + silicio              | 🔨  |
+| El lugar   | Cualquier sistema; lo que se encuentra está ahí | 🔨  |
 
-El orden no es caprichoso: el registro va **primero** porque es lo que hace
-auditables a todas las herramientas que vengan después. Una que crea entidades sin
-dejar constancia es una que nadie puede revisar, y agregarle el registro más tarde
-significa que lo que pasó hasta entonces se perdió. Ver
-[administración](systems/ADMIN.md).
+**Escanear una roca cierra de punta a punta** —el verbo, el escáner, las dos
+habilidades y el cinturón donde se hace— y el instrumento para explorar es el
+mismo: leer una piedra desconocida y leer un sistema al que nadie fue son la
+misma operación. Lo que falta no es el instrumento sino el lugar adonde llevarlo,
+y eso llega con la puerta.
 
-### 5 · Refinar
+**Y su reverso, que es la misma cadena:** el **Amortiguador de firma** ya está
+montable y baja catorce puntos de una firma **que no lee ningún verbo**, y
+**Perfil de firma** sigue sin efecto. Es un aparato construido antes que la
+mecánica que lo justifica; diseñar los dos lados juntos es lo que evita terminar
+con dos sistemas parecidos que no se hablan.
 
-La refinería convierte mineral en material, con su merma.
+### Comerciar
 
-### 6 · La puerta y el segundo sistema
+| Eslabón    | Qué es                                                |     |
+| ---------- | ----------------------------------------------------- | --- |
+| El verbo   | Comprar y vender, contra la estación y entre pilotos  | ✅  |
+| El insumo  | Créditos                                              | ✅  |
+| La fuente  | Todo lo demás                                         | ✅  |
+| El aparato | Ninguno                                               | —   |
+| La llave   | Regateo, Contabilidad, Análisis de mercado, Contactos | ✅  |
+| La llave   | Corretaje                                             | 🔨  |
+| La fábrica | No aplica                                             | —   |
+| El lugar   | Cuatro de las cinco estaciones tienen mercado         | ✅  |
 
-Las puertas estelares como cuerpos del sistema, el salto como acción, y el
-combustible que se gasta. Se vuelven mecánicos el alcance de salto y la eficiencia
-de combustible.
+**La cadena más cerrada del juego**: no le falta ningún eslabón y lo único que
+cuelga es una llave que no hace nada. Regateo mueve la horquilla y la comisión,
+Contabilidad el impuesto y cuántas órdenes se pueden llevar, Análisis de mercado
+hasta dónde se ve y Contactos cuánto dura lo publicado. **Corretaje** está en el
+catálogo y no hace nada: la comisión del corredor la mueve Regateo. Ver
+[el mercado](systems/MARKET.md).
 
-- ~~La puerta como cuerpo, con su rumbo de la roseta y su gemela del otro lado.~~
-- ~~El tanque con contenido: la nave guarda cuánto combustible le queda.~~
-- ~~El salto como acción, con su costo y su tiempo dichos **antes** de apretar, y
-  la pantalla de tránsito que dice de dónde a dónde.~~
-- El combustible con nombre —helio-3— y dónde se carga: repostar en una estación,
-  y el hielo del que sale.
-- Repartir mineral propio y precios propios al segundo sistema, para que sea un
-  lugar y no un pasillo.
+### Combatir
 
-### 7 · El taller
+| Eslabón    | Qué es                                      |     |
+| ---------- | ------------------------------------------- | --- |
+| El verbo   | Disparar                                    | ❌  |
+| El insumo  | Cargas cinéticas, iónicas y térmicas        | 🔨  |
+| La fuente  | Fabricación                                 | 🔨  |
+| El aparato | Cañón de masa, emisor iónico, lanza térmica | ✅  |
+| La llave   | Las trece habilidades de Combate            | 🔨  |
+| La llave   | Un pozo del que sacarles la experiencia     | ❌  |
+| La fábrica | Taller                                      | 🔨  |
+| El lugar   | Ninguno                                     | ❌  |
 
-Recetas de módulos a partir de materiales refinados. El escalón marca qué
-materiales pide: el de entrada se hace con lo de los Anillos, el de arriba exige
-lo que sólo sale del Cinturón Exterior.
+**Los aparatos entraron antes que el verbo.** Las tres armas se montan, el daño
+por tipo se calcula, los puntos de vida efectivos también, y **ningún servicio
+lee esos números**: viven en la ficha de la nave y ahí se quedan. Puntería,
+Escudos y Blindaje son las tres únicas de la familia que mueven algo, y lo que
+mueven no lo consume nadie —el mismo huérfano del Amortiguador de firma—.
 
-## Después
+Y hay un ❌ que no es del combate sino de más arriba: **la familia no tiene pozo
+de experiencia**, así que sus trece habilidades no se pueden entrenar ni aunque
+el verbo apareciera mañana.
 
-En orden de valor, no de dificultad: corporaciones, exploración de sistemas
-nuevos, drones, combate, y estaciones de jugador. Cada uno espera a que el
-circuito de abajo aguante su peso.
+### Los huérfanos más grandes
 
-De ésos, el más cercano es **explorar**, y el mecanismo ya está construido: leer
-una piedra desconocida es lo mismo que leer un sistema al que nadie fue. Lo que
-falta no es el instrumento sino el lugar adonde llevarlo, y eso llega con la
-puerta estelar de la etapa 6. Ver [universo](systems/UNIVERSE.md).
+Ordenados por lo que cuesta dejarlos abiertos, no por lo que cuesta cerrarlos:
+
+1. **El combustible no tiene fuente ni forma de reponerse.** Lo que se gasta
+   saltando no vuelve por ningún camino del juego.
+2. **Cuatro de las ocho familias no tienen de dónde sacar experiencia.**
+   Ingeniería, Industria, Combate y Mando suman **52 de las 111 habilidades**, y
+   hoy ninguna se puede entrenar: la experiencia se deposita por rama y sólo
+   Pilotaje, Extracción, Ciencias y Comercio reciben depósitos. De ahí sale la
+   regla que condiciona todo lo que venga: **sólo se gatea con habilidades que se
+   puedan entrenar**, porque pedir una de una rama sin fuente es cerrar la puerta
+   con la llave adentro.
+3. **De las 111 habilidades, quince mueven algo**, y tres de ésas —Puntería,
+   Escudos y Blindaje— mueven números que ningún verbo lee.
+4. **La bandeja de refuerzos está vacía.** Los cinco cascos tienen sus ranuras de
+   refuerzo y su presupuesto de calibración, y el catálogo no tiene **un solo
+   refuerzo**: es la única bandeja que no se puede llenar.
+5. **La reputación no tiene fuente.** Está guardada como libro, se dibuja en la
+   escalera, decide hasta qué nivel de agente se llega, y **nada la escribe**: la
+   fuente declarada son las misiones y las misiones no existen. Todo piloto está
+   en cero para siempre.
+6. **El universo oficial es un sistema sin puertas.**
+7. **Dos aparatos prometen verbos que no existen**: la Refinería de a bordo y el
+   Amortiguador de firma.
+
+## Lo que existe
+
+Registro de lo que está construido y andando. No es una promesa cumplida: es
+inventario.
+
+| Qué                   | Qué dejó                                                                                                    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Cuenta y piloto       | Alta en cuatro pasos, ingreso, sesión, suspensión                                                           |
+| Interfaz              | El HUD de Elite Dangerous, el Neocom, las pestañas y 97 componentes propios                                 |
+| El universo           | Región, constelación, sistema, cuerpo, cinturón, puerta y estación como filas; Ánfora sembrado              |
+| El mapa de la galaxia | Grilla de hexágonos en lienzo, con arrastre, zoom y filtros, en el cuartel y en la cabina                   |
+| Naves                 | Cinco cascos, 34 módulos, cuatro bandejas y cuatro presupuestos                                             |
+| Equipamiento          | La ficha de la nave como herramienta: tres columnas y los presupuestos siempre a la vista                   |
+| Bodega                | Bahías con la barra partida por contenido, búsqueda, filtro, orden, paginado y créditos por m³              |
+| Motor de acciones     | Encolar, resolver perezoso e idempotente, informar. Cinco clases: viajar, saltar, minar, acordar y escanear |
+| Habilidades           | 111 en ocho familias, la curva, los prerrequisitos, el pozo por rama, el árbol y el IPP                     |
+| Profesiones           | Ocho, una por familia, **sin ninguna consecuencia mecánica**                                                |
+| Minería               | Cinturones con rocas que se agotan y se reponen solas                                                       |
+| El escáner            | La lectura por piloto, con profundidad según habilidad, que vence al día                                    |
+| Mercado               | Contra la estación y entre pilotos: comisión, impuesto, alcance por regiones, historial de precios          |
+| Billetera             | Créditos, el libro de asientos y el de ítems                                                                |
+| Propiedades           | Qué tenés y dónde, en toda la galaxia                                                                       |
+| Mensajes              | Dos bandejas sobre una fila, enviados, archivados y el aviso de lo que no abriste                           |
+| Corporaciones         | Alistarse y renunciar, miembros, ubicaciones, agentes y la escalera de reputación                           |
+| Fichas                | Corporación, piloto y agente en una ventana, desde cualquier nombre, con su estado en la URL                |
+| Presencia             | Quién más está parado en la misma estación                                                                  |
+| Bitácora              | El registro paginado de cada acción resuelta, con su aviso al volver                                        |
+| El cuartel            | Roles y permisos, registro de eventos, moderación, ficha de piloto y constructor de sistemas                |
+
+### Los catálogos, en cifras
+
+| Catálogo           | Hoy                                                               |
+| ------------------ | ----------------------------------------------------------------- |
+| Habilidades        | 111 en ocho familias; **quince** mueven algo                      |
+| Familias con pozo  | Cuatro de ocho                                                    |
+| Cascos             | 5, ninguno con clase declarada                                    |
+| Módulos            | 34 —27 de escalón I y 7 de II—, **ningún refuerzo**               |
+| Bandejas           | Altos, medios, bajos y refuerzos                                  |
+| Ítems              | Minerales y módulos; ni refinados, ni componentes, ni consumibles |
+| Minerales          | 4 de los 8 previstos                                              |
+| Profesiones        | 8                                                                 |
+| Clases de acción   | 5                                                                 |
+| Sistemas sembrados | 1, con 2 cinturones, 5 estaciones y 0 puertas                     |
+
+## Por qué un mapa y no una hoja de ruta
+
+Este documento fue mucho tiempo una lista de etapas numeradas con dependencias, y
+**quedó dieciséis commits atrasado**. No por olvido: una etapa numerada es una
+promesa sobre cómo se va a trabajar, y acá se trabaja sobre la marcha, eligiendo
+qué construir cuando conviene. Un orden que nadie pensaba seguir se desactualiza
+al primer desvío, y a partir de ahí el documento miente dos veces: sobre lo que
+está hecho y sobre lo que viene.
+
+Un mapa de huecos no tiene ese problema porque **no promete nada**. Mira para
+atrás, se corrige leyendo el código, y **hace mejor el trabajo sobre la marcha en
+vez de pelearlo**: cuando hay ganas de construir algo, dice con qué se engancha y
+qué se cierra de arrastre. Es lo que `AGENTS.md` ya pide como regla central —«no
+hace falta cerrarla de una vez, pero sí saber dónde están los huecos»— puesto por
+escrito.
+
+**Las marcas se verifican contra el código, no contra lo que este documento decía
+antes.** Un mapa de huecos con marcas viejas es peor que no tenerlo, porque se le
+cree.
+
+## Ideas sin orden
+
+Cosas decididas o propuestas que no entraron. **No hay orden y la lista no es una
+cola**: se agarra la que convenga el día que convenga. Lo que se conserva es el
+razonamiento de qué se engancha con qué, que es lo único que ahorra trabajo a la
+hora de elegir.
+
+| Idea                          | Qué cierra                                                                            | Conviene tener antes  |
+| ----------------------------- | ------------------------------------------------------------------------------------- | --------------------- |
+| **Refinar**                   | El verbo que falta, los doce refinados y la merma                                     | Nada                  |
+| **Repostar**                  | Que el combustible se pueda reponer con plata                                         | Nada                  |
+| **El hielo**                  | La fuente del combustible: cosechador, cuatro hielos, helio-3                         | Refinar               |
+| **Los refuerzos**             | La bandeja vacía: catálogo, calibración que se gasta, siete habilidades de Ingeniería | Nada                  |
+| **Las clases de nave**        | `Hull.class` y las habilidades de clase como requisito duro                           | Nada                  |
+| **Componentes y fabricar**    | El verbo, los ocho componentes y las recetas por módulo                               | Refinar               |
+| **El generador de módulos**   | Familias más fórmula de clase y escalón, para no escribirlos a mano                   | Fabricar              |
+| **Barcazas y cristales**      | La cadena del láser de tira, entera                                                   | Fabricar              |
+| **Sondas y firmas**           | Explorar y su reverso: encontrar y esconderse                                         | Fabricar              |
+| **El gas**                    | Aspirador, tres gases y nubes que hay que escanear                                    | Escanear              |
+| **El segundo sistema**        | Que la puerta lleve a un lugar y no a un pasillo: mineral propio y precios propios    | Puertas sembradas     |
+| **Inyecciones y laboratorio** | Que desbloquear una habilidad cueste plata                                            | Vender                |
+| **Misiones**                  | La fuente de la reputación, que hoy no tiene ninguna                                  | Agentes, que ya están |
+
+Los enganches que importan más que la lista:
+
+- **Refinar antes que fabricar, y fabricar antes que generar módulos.** Fabricar
+  sin refinar no tiene insumo, y generar módulos sin saber con qué se fabrican es
+  generar la mitad de cada uno.
+- **Los refuerzos no dependen de nada y cierran una bandeja entera.** La ranura y
+  el presupuesto ya están en los cinco cascos; falta el catálogo. Se pueden
+  fabricar con material refinado hasta que existan los restos.
+- **El hielo cierra el huérfano más viejo.** Si hay que elegir una sola por
+  impacto, es ésa; si hay que elegir una sola por costo, es refinar.
+- **La inyección va después de vender**, porque un inyector cuesta plata: al
+  revés sería una reja sin llave. Y el laboratorio no es hoy uno de los ocho
+  servicios de estación, así que entra con su baldosa o entra en otro lado.
 
 ### Las cargas del láser, y por qué el árbol tiene que crecer
 
-Un láser de extracción va a pedir **una carga específica para cada mineral**, como
-en EVE: no se pica iridio con la carga del silicato. La carga es un consumible que
-se compra, se lleva en la bodega y se gasta, y **cada tipo de carga tiene su
-habilidad**.
+Un láser de extracción va a pedir **una carga específica para cada mineral**,
+como en EVE: no se pica iridio con la carga del silicato. La carga es un
+consumible que se compra, se lleva en la bodega y se gasta, y **cada tipo de
+carga tiene su habilidad**.
 
 Eso hace tres cosas a la vez. Le da al mineral escaso una segunda barrera que no
 es el viaje —hay que tener la carga y saber usarla—; convierte la bodega en una
@@ -201,35 +362,46 @@ mineral; y **alarga el árbol de habilidades**, que es el punto.
 
 Porque el catálogo de habilidades **se quiere grande a propósito**. Un juego idle
 se mide en meses, y un árbol que se termina es un juego que se termina. Las
-veintitrés de hoy son el esqueleto del primer circuito, no el destino: cada
-sistema que se agregue —cargas, drones, fabricación, combate— trae las suyas, y
-ésa es la forma en que el juego se hace largo sin inventar números más grandes.
+ciento once de hoy son el esqueleto, no el destino: cada sistema que se agregue
+—cargas, drones, fabricación, combate— trae las suyas, y ésa es la forma en que
+el juego se hace largo sin inventar números más grandes. Lo que hace falta antes
+que más habilidades es que las que hay tengan de dónde entrenarse: **cincuenta y
+dos están en ramas sin pozo**.
 
-El detalle fino de todo esto se decide **cuando el circuito esté cerrado**.
-Afinarlo antes sería balancear una economía que todavía no existe.
+El detalle fino se decide **cuando haya economía que balancear**. Afinarlo antes
+sería balancear una que todavía no existe.
+
+### El cuartel general
+
+Va aparte porque **no agrega un verbo al juego**: agrega herramientas para
+operarlo, y por eso nunca empuja para atrás a nada del mapa.
+
+- ~~Roles, permisos y el guardia del área.~~
+- ~~El registro de eventos, escribiendo desde los servicios que ya existen.~~
+- ~~La pantalla que lo lista, con su traza de actividad, sus filtros y su
+  paginado.~~
+- ~~El constructor de sistemas: estrellas, planetas, estaciones y las puertas
+  conectadas a mano.~~
+- ~~La ficha de piloto: identidad, contraseña, créditos, mudarlo de lugar,
+  sancionar, levantar la sanción y darle roles.~~
+- ~~El mapa de la galaxia, en lienzo, con arrastre, zoom y filtros, primero en el
+  cuartel y después en la cabina.~~
+- La pantalla para administrar roles: crearlos, cambiarles los permisos y
+  borrarlos. **El servicio ya lo hace todo** —crear, editar, borrar, otorgar y
+  revocar—; lo único que falta es la pantalla, porque asignar roles se hace desde
+  la ficha del piloto y lo demás no se hace desde ningún lado.
+- Las estadísticas del sector.
+
+El registro de eventos fue **primero** y no por casualidad: es lo que hace
+auditables a todas las herramientas que vengan después. Una que crea entidades
+sin dejar constancia es una que nadie puede revisar, y agregarle el registro más
+tarde significa que lo que pasó hasta entonces se perdió. Ver
+[administración](systems/ADMIN.md).
 
 ### Anotado y sin hacer
 
-Cosas decididas que no entraron todavía, para que no se pierdan entre una etapa y
-la siguiente:
+Cosas decididas que no entraron todavía, para que no se pierdan:
 
-- ~~**La ruta, dibujada mientras se viaja.**~~ En el mapa va en cian con el guión
-  corriendo hacia el destino, y en el árbol del sistema el cuerpo al que se va
-  queda marcado en cian mientras el de dónde se salió sigue en naranja. Es la
-  base de lo que va a necesitar el autopiloto para mostrar un recorrido de varios
-  saltos.
-- ~~**Cada ubicación visitable con identidad propia.**~~ Las seis: la banda del
-  viaje, el aro de la puerta, el mosaico de la estación con su columna de
-  secciones, el campo de rocas del cinturón y el vecindario en órbita de un
-  planeta, una luna o una estrella.
-- ~~**`Piloto · Reputación`.**~~ El panorama: las banderas con su rosa, y el
-  directorio del sector —todas las corporaciones y todos los agentes, te conozcan
-  o no— en dos listas que se alternan. Los agentes no llevan número propio: cada
-  fila dice hasta qué nivel te abre, que es el mayor entre su corporación y su
-  bandera.
-- ~~**Las fichas, enlazadas desde cualquier nombre.**~~ Corporación, piloto y
-  agente se abren en una ventana desde donde sea que aparezca su nombre, con su
-  estado en la URL. El piloto puede cerrar la suya desde Opciones.
 - **La ficha de tránsito tiene que variar según a dónde se va.** Hoy cuenta igual
   un salto a otro sistema, un viaje a un cinturón y uno a una estación, y no son
   el mismo viaje.
@@ -237,150 +409,20 @@ la siguiente:
   lo ancho para leer una fila no es lo que uno hace con el pulgar. Lo resuelve
   `HudTable` —que ya tiene las columnas declaradas como dato— y no cada pantalla:
   ocho listados largos con ocho maquetas paralelas son ocho que se separan.
+- **Un contenedor tiene que decir de qué bahía es.** La pantalla de la bodega ya
+  dibuja las bahías como lista aunque hoy haya una sola, porque las barcazas van
+  a tener bodega de mineral aparte y las cargueras su bahía de flota. Del lado de
+  los datos todavía no hay con qué distinguirlas.
 
-## La auditoría de las cadenas
+### Lo lejano
 
-Ninguna mecánica entra sola: toda característica arrastra **siete eslabones**
-—verbo, insumo, fuente, aparato, llave, fábrica y lugar— y la que tenga huecos no
-está lista. Ver «La cadena» en [DESIGN.md](DESIGN.md).
+En orden de valor y no de dificultad: corporaciones de jugadores, exploración de
+sistemas nuevos, drones, combate y estaciones de jugador. Cada uno espera a que
+el circuito de abajo aguante su peso.
 
-Esto es el estado de cada actividad, que es lo que dice qué conviene construir
-antes. Leyenda: ✅ existe · 🔨 diseñado · ❌ hueco sin fecha.
-
-### Minar mineral
-
-| Eslabón    | Qué es                                   |                 |
-| ---------- | ---------------------------------------- | --------------- |
-| El verbo   | Extraer de una roca                      | ✅              |
-| El insumo  | Nada, con láser común                    | ✅              |
-| La fuente  | Cinturones, ocho minerales por seguridad | 🔨 (hay cuatro) |
-| El aparato | Láser de extracción                      | ✅              |
-| La llave   | Minería, Estiba, Prospección             | ✅              |
-| La fábrica | Lente focal + silicio                    | 🔨              |
-| El lugar   | El cinturón; la estación que compra      | ✅              |
-
-**Es la única cadena casi cerrada.** Le falta la fábrica del láser y la mitad de
-los minerales.
-
-### Minar con láser de tira
-
-| Eslabón    | Qué es                                       |     |
-| ---------- | -------------------------------------------- | --- |
-| El verbo   | Extraer en serie                             | 🔨  |
-| El insumo  | **Cristal de extracción, que se gasta**      | 🔨  |
-| La fuente  | El mismo cinturón, más rápido                | 🔨  |
-| El aparato | Láser de tira, sólo en barcaza               | 🔨  |
-| La llave   | Láseres de tira, Cristales, Barcazas mineras | 🔨  |
-| La fábrica | Cristalografía, en taller de estación        | 🔨  |
-| El lugar   | Cinturón + taller que fabrique cristales     | 🔨  |
-
-Todo propuesto, y **cierra sola**: es la cadena más completa de las nuevas, y por
-eso es la mejor candidata a ser la primera que se construya entera.
-
-### Refinar
-
-| Eslabón    | Qué es                        |                         |
-| ---------- | ----------------------------- | ----------------------- |
-| El verbo   | Convertir mineral en material | ❌                      |
-| El insumo  | El mineral, que se consume    | ✅                      |
-| La fuente  | La minería                    | ✅                      |
-| El aparato | La refinería de la estación   | ✅ (el servicio existe) |
-| La llave   | Refinado, Tasación de mena    | ✅ / 🔨                 |
-| La fábrica | No aplica                     | —                       |
-| El lugar   | Estación con refinería        | ✅                      |
-
-**El verbo no existe**: el servicio de refinería está sembrado en las estaciones y
-no hace nada. Es el hueco más barato de cerrar de todos los que hay.
-
-### Saltar a otro sistema
-
-| Eslabón    | Qué es                                 |     |
-| ---------- | -------------------------------------- | --- |
-| El verbo   | Cruzar una puerta                      | ✅  |
-| El insumo  | **Combustible**, que se consume        | ✅  |
-| La fuente  | **Hielo → helio-3**                    | ❌  |
-| El aparato | Motor de salto y tanque                | ✅  |
-| La llave   | Astrogación, Eficiencia de combustible | ✅  |
-| La fábrica | Tubo de contención + uranio            | 🔨  |
-| El lugar   | La puerta; la estación que reabastece  | ✅  |
-
-El huérfano declarado en `DESIGN.md`: **el combustible se compra y no sale de
-ningún lado.** La cadena del hielo lo cierra.
-
-### Fabricar un módulo
-
-| Eslabón    | Qué es                                          |                         |
-| ---------- | ----------------------------------------------- | ----------------------- |
-| El verbo   | Fabricar                                        | ❌                      |
-| El insumo  | Componentes y refinados                         | 🔨                      |
-| La fuente  | Refinado y fabricación de componentes           | 🔨                      |
-| El aparato | El taller de la estación                        | ✅ (el servicio existe) |
-| La llave   | Fabricación, Componentes, Ingeniería de módulos | 🔨                      |
-| La fábrica | No aplica: es la fábrica                        | —                       |
-| El lugar   | Estación con taller                             | ✅                      |
-
-### Escanear y explorar
-
-| Eslabón    | Qué es                                           |                 |
-| ---------- | ------------------------------------------------ | --------------- |
-| El verbo   | Escanear un sistema, un cuerpo o a alguien       | ❌ (sólo rocas) |
-| El insumo  | **Sondas**, que se gastan                        | 🔨              |
-| La fuente  | Circuito impreso + silicio                       | 🔨              |
-| El aparato | Lanzador de sondas, amplificador                 | 🔨              |
-| La llave   | Escaneo, Sondas, Astrometría, Análisis de firmas | 🔨              |
-| La fábrica | Taller                                           | 🔨              |
-| El lugar   | Cualquier sistema; lo que se encuentra está ahí  | 🔨              |
-
-**Y su reverso, que es la misma cadena:** el amortiguador de firma y Perfil de
-firma son el aparato y la llave de _no ser encontrado_. Diseñarlos juntos es lo que
-evita terminar con dos sistemas parecidos que no se hablan.
-
-### Comerciar
-
-| Eslabón    | Qué es                           |         |
-| ---------- | -------------------------------- | ------- |
-| El verbo   | Comprar y vender                 | ✅      |
-| El insumo  | Créditos                         | ✅      |
-| La fuente  | Todo lo demás                    | ✅      |
-| El aparato | Ninguno                          | —       |
-| La llave   | Regateo, Contabilidad, Corretaje | ✅ / 🔨 |
-| La fábrica | No aplica                        | —       |
-| El lugar   | Estación con mercado             | ✅      |
-
-### Combatir
-
-Sin verbo. **Toda la familia de Combate es hoy un conjunto de llaves sin puerta**,
-y la propuesta de la sección 5.6 no cambia eso: entra cuando entre el combate.
-
-## Las etapas de los catálogos
-
-En orden de dependencia y no de entusiasmo. Cada una deja algo jugable y cada una
-cierra huérfanos concretos.
-
-| #     | Etapa                       | Qué entra                                                              | Estado                     |
-| ----- | --------------------------- | ---------------------------------------------------------------------- | -------------------------- |
-| **A** | **La curva**                | Rangos hasta x16, la escalera de ×5,66, devolver lo invertido          | **Hecho**                  |
-| **B** | **Las ocho familias**       | Industria y Mando; 111 habilidades; una profesión por familia          | **Hecho**                  |
-| **C** | **Las bandejas**            | Altos, medios, bajos y refuerzos; internos a atributos; escalones I/II | **Hecho**                  |
-| **D** | **Las clases de nave**      | `Hull.class` y las habilidades de clase como requisito duro            | Falta                      |
-| **E** | **Refinar**                 | El verbo, los refinados, la merma                                      | Falta                      |
-| **F** | **Componentes y fabricar**  | El verbo, los componentes, recetas por módulo                          | Falta                      |
-| **G** | **Los refuerzos**           | Catálogo, calibración que se gasta, siete habilidades de Ingeniería    | Falta — la bandeja ya está |
-| **H** | **El generador de módulos** | Familias más fórmula de clase y escalón, para no escribirlos a mano    | Falta                      |
-| **I** | **El hielo**                | Cosechador, cuatro hielos, helio-3                                     | Falta                      |
-| **J** | **Barcazas y cristales**    | Clase barcaza, láser de tira, cristales, bodega de mineral             | Falta                      |
-| **K** | **Escanear**                | Sondas, firmas, encontrar y esconderse                                 | Falta                      |
-| **L** | **El gas**                  | Aspirador, tres gases, nubes que hay que escanear                      | Falta                      |
-
-Tres notas de orden que importan más que la lista:
-
-- **E antes que F, y F antes que H.** Fabricar sin refinar no tiene insumo, y
-  generar módulos sin saber con qué se fabrican es generar la mitad de cada uno.
-- **G no depende de nada y cierra una bandeja vacía.** Los refuerzos ya tienen su
-  ranura en los cinco cascos y su presupuesto en la calculadora; falta el
-  catálogo. Se pueden fabricar con material refinado hasta que existan los restos.
-- **I cierra el huérfano más viejo del juego**: el combustible se compra en la
-  estación y no sale de ningún lado. Si hay que elegir una sola, es ésa.
+De ésos el más cercano es **explorar**, porque el mecanismo ya está construido:
+leer una piedra desconocida es lo mismo que leer un sistema al que nadie fue.
+Falta el lugar adonde llevarlo. Ver [universo](systems/UNIVERSE.md).
 
 ## Lo que se decide en el camino
 
@@ -388,14 +430,15 @@ Preguntas cuya respuesta **cambia el diseño y no sólo los números**. No está
 por olvido: están porque construir lo que depende de ellas antes de contestarlas
 es trabajo que después hay que deshacer.
 
-| Pregunta                                          | Se necesita en | Por qué importa                                                                                                                                |
-| ------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| ¿Se puede encolar más de una acción?              | Etapa 2        | Con una sola, las cadenas largas son una fila de espera; con varias, el pozo por familia se llena mucho más rápido y la curva pide otro número |
-| ¿El mineral se agota por sistema o por cinturón?  | Etapa 2        | Decide si a una corporación le conviene instalarse en un lugar                                                                                 |
-| ¿El mapa es fijo o generado?                      | Etapa 6        | Un generador obliga a que toda descripción y todo balance sea derivado                                                                         |
-| ¿La fabricación tarda tiempo real?                | Taller         | Si tarda, compite con minar y es otra acción; si no, el técnico no tiene qué hacer mientras                                                    |
-| ¿Los planos son objeto comerciable?               | Taller         | Comerciables abren una economía entera; fijos por habilidad quitan una capa                                                                    |
-| ¿Cuánto rinde el escalón II sobre el I?           | Módulos        | Si es mucho, el equipo decide más que el piloto; si es poco, subir de escalón no es una meta                                                   |
-| ¿Las variantes de calidad del mineral son ítems?  | Materiales     | Ítems distintos es más simple de mercado y multiplica el catálogo por cuatro                                                                   |
-| ¿Qué le pasa al piloto cuando pierde la nave?     | Combate        | Está decidido que vuelve; falta dónde, con qué y cuánto tarda                                                                                  |
-| ¿Cuánto PvP directo y cuánto conflicto indirecto? | Combate        | Decide si el mapa se disputa con naves o con precios                                                                                           |
+| Pregunta                                                    | Hace falta para                        | Por qué importa                                                                                                                             |
+| ----------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| ¿Se puede encolar más de una acción?                        | Cualquier cadena larga                 | Con una sola, una cadena larga es una fila de espera; con varias, el pozo por familia se llena mucho más rápido y la curva pide otro número |
+| ¿El mineral se agota por sistema o por cinturón?            | Minería                                | Decide si a una corporación le conviene instalarse en un lugar                                                                              |
+| ¿El mapa es fijo o generado?                                | El segundo sistema                     | Un generador obliga a que toda descripción y todo balance sea derivado                                                                      |
+| ¿La fabricación tarda tiempo real?                          | El taller                              | Si tarda, compite con minar y es otra acción; si no, el técnico no tiene qué hacer mientras                                                 |
+| ¿Los planos son objeto comerciable?                         | El taller                              | Comerciables abren una economía entera; fijos por habilidad quitan una capa                                                                 |
+| ¿Cuánto rinde el escalón II sobre el I?                     | Módulos                                | Si es mucho, el equipo decide más que el piloto; si es poco, subir de escalón no es una meta                                                |
+| ¿Las variantes de calidad del mineral son ítems?            | Materiales                             | Ítems distintos es más simple de mercado y multiplica el catálogo por cuatro                                                                |
+| ¿De dónde sale la experiencia de las cuatro ramas sin pozo? | Ingeniería, Industria, Combate y Mando | Sin respuesta, 52 habilidades son inalcanzables y ninguna puede usarse como requisito                                                       |
+| ¿Qué le pasa al piloto cuando pierde la nave?               | Combate                                | Está decidido que vuelve; falta dónde, con qué y cuánto tarda                                                                               |
+| ¿Cuánto PvP directo y cuánto conflicto indirecto?           | Combate                                | Decide si el mapa se disputa con naves o con precios                                                                                        |
