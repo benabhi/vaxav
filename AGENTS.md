@@ -151,3 +151,9 @@ la rama se borra. En GitHub existe solamente `main`.
 - Para medir una pantalla en el navegador, el panel tiene que estar **visible**:
   con el panel oculto la página no se redibuja y `getComputedStyle` devuelve
   valores viejos.
+- **Hay dos listas de ignorados y no se mueven juntas.** `eslint.config.js` no
+  tiene la suya: carga `.gitignore` con `includeIgnoreFile`, así que lo que git
+  ignora, eslint también. Prettier no lo mira: usa `.prettierignore`, que es otro
+  archivo y no se entera de nada. **Cambiar qué se versiona mueve una lista y deja
+  la otra donde estaba.** Pasó al versionar las reglas de los agentes: dejaron de
+  estar ignoradas, prettier empezó a recorrerlas y `npm run lint` quedó en rojo.

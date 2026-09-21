@@ -170,6 +170,13 @@ si el typecheck, el lint y los tests la miran.** Se contesta en un minuto leyend
 el `include` de `.svelte-kit/tsconfig.json` y los `include` de `vite.config.ts`;
 descubrirlo cuando algo explota cuesta una tarde.
 
+De la misma familia: **las dos listas de ignorados no se mueven juntas.**
+`eslint.config.js` no tiene la suya —carga `.gitignore` con `includeIgnoreFile`—
+y prettier tiene `.prettierignore`, que es tuyo y no se entera de nada. Ver «Hay
+dos listas de ignorados» en las trampas de `AGENTS.md`. Cuando te pidan una
+exclusión porque entraron archivos nuevos al repositorio, **es urgente**: hasta
+que esté, el lint está en rojo y hay un commit esperando.
+
 Dos límites que la configuración no te da:
 
 - **Los tests siguen siendo de otro, el runner no.** `vite.config.ts` y
