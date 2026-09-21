@@ -21,16 +21,16 @@ se contesta y no se despacha. Todo lo demás tiene dueño, incluido git.
 Cada agente conoce sólo al coordinador. **No se conocen entre sí, no se hablan y
 no se nombran.** Todo pasa por acá.
 
-| Agente         | Para qué                                                                         | Escribe en                                                                                                            |
-| -------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `investigador` | Lo de afuera del repositorio: EVE, el género asíncrono, documentación, versiones | nada: devuelve un informe                                                                                             |
-| `disenador`    | El lenguaje visual, los componentes, las figuras, el responsivo                  | `src/lib/components/`, `src/app.css`, marcado `.svelte`                                                               |
-| `codificador`  | Reglas del juego, servicios, vistas, rutas, esquema, migraciones y configuración | `src/lib/game/`, `src/lib/server/`, `src/routes/`, `drizzle/`, `scripts/`, `data/`, la configuración y `package.json` |
-| `testeador`    | Planifica, escribe y corre los tests                                             | `**/*.test.ts`, `e2e/`                                                                                                |
-| `auditor`      | Exploits, fugas de economía, fórmulas rotas, validaciones que faltan             | nada: devuelve hallazgos                                                                                              |
-| `documentador` | `docs/`, y verificar que lo documentado sea lo implementado                      | `docs/`, `README.md`                                                                                                  |
-| `versionador`  | Ramas, commits, mensajes, merge a `main`, push y recuperación                    | el historial, `.gitignore`, `.gitattributes`                                                                          |
-| `actualizador` | Las reglas de todos, incluidas éstas                                             | `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`                                                                           |
+| Agente         | Para qué                                                                            | Escribe en                                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `investigador` | Lo de afuera del repositorio: EVE, el género asíncrono, documentación, versiones    | nada: devuelve un informe                                                                                             |
+| `disenador`    | El lenguaje visual, los componentes, las figuras, el responsivo                     | `src/lib/components/`, `src/app.css`, marcado `.svelte`                                                               |
+| `codificador`  | Reglas del juego, servicios, vistas, rutas, esquema, migraciones y configuración    | `src/lib/game/`, `src/lib/server/`, `src/routes/`, `drizzle/`, `scripts/`, `data/`, la configuración y `package.json` |
+| `testeador`    | Planifica, escribe y corre los tests                                                | `**/*.test.ts`, `e2e/`                                                                                                |
+| `auditor`      | Exploits, fugas de economía, fórmulas rotas, validaciones que faltan                | nada: devuelve hallazgos                                                                                              |
+| `documentador` | `docs/`, el estado del proyecto, y verificar que lo documentado sea lo implementado | `docs/`, `README.md`                                                                                                  |
+| `versionador`  | Ramas, commits, mensajes, merge a `main`, push y recuperación                       | el historial, `.gitignore`, `.gitattributes`                                                                          |
+| `actualizador` | Las reglas de todos, incluidas éstas                                                | `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`                                                                           |
 
 **Nadie escribe fuera de su columna.** Es lo que hace que dos agentes no se pisen
 y que un informe alcance para saber qué cambió.
@@ -74,6 +74,20 @@ No es un ritual: es el orden en que cada paso deja de costar el doble.
    desenredarlo después.
 
 Los pasos que no aportan se saltean. Los que sí, no.
+
+**El sexto no se saltea cuando el trabajo cambió qué hace el juego.** El
+`documentador` es la fuente de verdad del estado del proyecto, y ese estado vive
+en el mapa de huecos de `docs/ROADMAP.md`: qué existe, qué está colgando y con
+qué se engancha cada cosa. Si el mapa no se actualiza cuando el trabajo cae, la
+fuente de verdad miente **con autoridad**, que es peor que no tenerla — ya pasó,
+y el documento llegó a estar dieciséis commits atrasado. Cuando haga falta saber
+cómo está el proyecto de verdad, el encargo es suyo.
+
+Y el límite, o la regla sale cara: **preguntar qué dice un documento no es un
+encargo.** Eso se lee y se contesta, como cualquier pregunta de dos archivos. Lo
+que sí es un encargo es **verificar que lo que dice siga siendo cierto** contra
+el código, que es trabajo de comparar catálogo por catálogo y no de abrir un
+archivo.
 
 ## Qué hacer con lo que vuelve
 
