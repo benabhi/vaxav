@@ -55,8 +55,10 @@ npm run lint                 # formato y reglas
 npm run test:e2e             # el humo de rutas, con su propia base
 ```
 
-El humo levanta la aplicación compilada y recorre las 23 rutas: es el que atrapa
-una pestaña declarada en el árbol de navegación y sin archivo de ruta.
+El humo levanta la aplicación compilada y recorre todas las rutas declaradas —las
+públicas, las del juego y las del cuartel—: es el que atrapa una pestaña declarada
+en el árbol de navegación y sin archivo de ruta. La lista no está escrita en el
+test, sale de los propios árboles, así que una pestaña nueva entra sola.
 
 ## Estructura
 
