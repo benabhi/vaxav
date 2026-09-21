@@ -425,8 +425,10 @@ nada al equiparlas, y eso se ve antes de abrir la ficha.
 Cada uno es bueno en **una cosa distinta**: dos cascos con el mismo bono serían el
 mismo casco con otro nombre, y hay una prueba que lo impide.
 
-> En el MVP, las de exploración y combate se pueden armar pero su ventaja queda
-> latente: todavía no existen esas actividades.
+> El Vencejo y la Alabarda se pueden armar, pero su ventaja está **latente**: la
+> exploración y el combate todavía no existen como actividades, así que sus bonos
+> mueven números que ningún verbo lee. Están igual para que el hangar nazca con
+> variedad y para probar el sistema de bonos contra algo que no sea minería.
 
 ## Las clases de nave
 

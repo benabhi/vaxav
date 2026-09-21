@@ -95,8 +95,7 @@ la mecánica es la intención de diseño y los números están para corregirse.
 
 | Documento                                            | De qué trata                                                                    |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [El MVP](MVP.md)                                     | Qué es lo mínimo que ya es Vaxav, y qué queda afuera                            |
-| [Hoja de ruta](ROADMAP.md)                           | El orden en que se construye, y por qué ese orden                               |
+| [Estado y huecos](ROADMAP.md)                        | Qué existe, qué está colgando y con qué se engancha cada cosa                   |
 | [Arquitectura](systems/ARCHITECTURE.md)              | Las decisiones técnicas caras de cambiar después                                |
 | [Habilidades](systems/SKILLS.md)                     | Niveles 0–5, multiplicadores, curva de XP, prerrequisitos y catálogo            |
 | [Acciones, tiempo y experiencia](systems/ACTIONS.md) | Cómo se calcula la duración, cómo se resuelve y cómo se reparte la XP           |
@@ -473,15 +472,13 @@ está: entra convertido en una decisión que se toma **al dar la orden**. Así e
 el combate, que es una tirada sembrada al salir y un informe al volver; y así va a
 entrar todo lo demás que en EVE se juega en vivo.
 
-## Hoja de ruta
+## Dónde está el juego
 
-Está en su propio documento: [ROADMAP.md](ROADMAP.md). El resumen es que el
-camino al MVP pasa por los cimientos que no se ven (roles, libro mayor,
-resolución idempotente), el universo en la base, las naves, el motor de acciones,
-la minería y, por último, la gente: chat y mensajes.
-
-Lo que define al MVP y lo que queda deliberadamente afuera está en
-[MVP.md](MVP.md).
+En su propio documento: [ROADMAP.md](ROADMAP.md). **No es un plan y no promete un
+orden**, porque acá se construye sobre la marcha: es el mapa de las cadenas por
+actividad, con cada eslabón marcado según el juego lo haga, lo tenga escrito o no
+lo tenga. Se consulta para dos cosas —qué existe hoy y qué se cierra de arrastre
+si se agarra tal cosa— y se corrige leyendo el código, no leyéndose a sí mismo.
 
 ## Decisiones técnicas
 

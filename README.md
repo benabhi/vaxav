@@ -11,7 +11,8 @@ punta, sobre SQLite.
 > Se puede crear un piloto, entrar, ver su ficha y su árbol de habilidades,
 > recorrer el sistema, viajar entre cuerpos, invertir la experiencia ganada y
 > armar la nave. El menú muestra sólo lo que funciona y crece a medida que se
-> construye. La hoja de ruta está en [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> construye. Qué existe, qué está colgando y con qué se engancha cada cosa está
+> en [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Cómo levantarlo
 
@@ -62,7 +63,7 @@ una pestaña declarada en el árbol de navegación y sin archivo de ruta.
 ```
 ├── drizzle/                 Migraciones del esquema
 ├── data/                    Base SQLite local (ignorada por git)
-├── docs/DESIGN.md           Visión del juego, identidad visual y hoja de ruta
+├── docs/DESIGN.md           Visión del juego, la cadena, la voz e identidad visual
 ├── e2e/                     El humo de rutas
 ├── scripts/sembrar.ts       Carga el universo en la base
 ├── static/                  Fuentes, íconos y escudos, servidos tal cual
