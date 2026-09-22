@@ -335,5 +335,13 @@ export function refit(
 		}
 
 		saveFit(tx, found, codes);
+
+		// **El tanque se recorta acá y no al mirarlo.** Desmontar un depósito
+		// auxiliar deja la nave con más combustible del que ahora le entra, y eso
+		// venía sobreviviendo hasta el próximo salto con dos vistas tapándolo con un
+		// `Math.min`. Lo que no entra se derrama: la bodega puede negarse porque la
+		// carga se puede dejar en tierra, y el combustible ya está adentro del
+		// tanque, así que no hay dónde ponerlo.
+		setFuel(tx, found, found.fuel);
 	});
 }

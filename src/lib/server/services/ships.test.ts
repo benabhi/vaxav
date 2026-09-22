@@ -483,6 +483,43 @@ describe('el tanque', () => {
 		expect(fill(db, vacia).fuel).toBe(fuelCapacity(db, nave));
 	});
 
+	/*
+	 * **Lo que no entra se derrama, y se derrama al desmontar.**
+	 *
+	 * Un depósito auxiliar bajado deja la nave con más combustible del que ahora le
+	 * cabe. La bodega puede negarse a ese cambio porque la carga se puede dejar en
+	 * tierra; el combustible ya está adentro del tanque y no hay dónde ponerlo, así
+	 * que se recorta. Que se recorte **en la base y no al mirarlo** es lo que evita
+	 * que dos vistas lo tapen con un `Math.min` y la nave siga guardando un número
+	 * imposible.
+	 */
+	it('desmontar un depósito auxiliar recorta lo que ya no entra', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const nave = activeShip(db, piloto.id)!;
+		const codes = shipFit(db, nave).map((module) => module.code);
+		const baja = shipHull(nave).slots.findIndex(
+			(slot, index) => slot.kind === 'low' && slot.size >= 2 && codes[index] === ''
+		);
+		// La capacidad se mide antes: la lee del equipamiento guardado, así que
+		// después de montar el depósito ya contesta la grande.
+		const chico = fuelCapacity(db, nave);
+
+		saveFit(
+			db,
+			nave,
+			codes.map((code, index) => (index === baja ? 'fuel_tank_i2' : code))
+		);
+		const grande = fill(db, activeShip(db, piloto.id)!);
+		expect(grande.fuel).toBeGreaterThan(chico);
+
+		refit(db, piloto, codes);
+
+		const despues = activeShip(db, piloto.id)!;
+		expect(despues.fuel).toBe(fuelCapacity(db, despues));
+		expect(despues.fuel).toBeLessThan(grande.fuel);
+	});
+
 	/* Sólo las vacías: una a medio tanque saltó, y rellenarla sería un regalo. */
 	it('el relleno de la siembra no toca una nave a medio tanque', async () => {
 		const db = seededDb();
