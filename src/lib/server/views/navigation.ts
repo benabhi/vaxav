@@ -20,11 +20,18 @@ import { activeShip, pilotSkillLevels, shipFit, shipReadout } from '../services/
 import { situation } from '../services/status';
 import { NADIE, pilotsAt } from '../services/presence';
 import { SURVEY_REFINE_SKILL, SURVEY_SKILL, depthLabel, surveyAge } from '$lib/game/prospecting';
-import { grantingModules, leversFor, type Fitted, type Lever, type Need } from '$lib/game/sourcing';
+import {
+	grantingModules,
+	hullGrant,
+	leversFor,
+	type Fitted,
+	type Lever,
+	type Need
+} from '$lib/game/sourcing';
 import { getSkill } from '$lib/game/skills';
 import { getProfession } from '$lib/game/professions';
 import type { SkillLevels } from '$lib/game/fitting';
-import type { BonusTarget } from '$lib/game/hulls';
+import type { BonusTarget, Hull } from '$lib/game/hulls';
 import {
 	bodyDetail,
 	bodyDistance,
@@ -667,24 +674,71 @@ function uncharted(): Sistema {
 }
 
 /**
- * Las rocas del cinturón, cada una con lo que el piloto sabe de ella.
+ * Lo que pide viajar, en un solo lugar.
  *
- * Una roca sin lectura vigente sale **sin identificar**: se ve el bulto pero no
- * de qué es ni cuánto tiene. Eso es lo que le da trabajo al escáner, y lo que
- * convierte llegar a un cinturón desconocido en algo que hacer en vez de una
- * lista que ya venía escrita.
+ * Está acá arriba y no escrito en cada constructor porque **las dos pantallas que
+ * ofrecen el verbo tienen que pedir lo mismo**: el árbol del sistema y el mapa.
+ * Dos copias de una lista de requisitos son dos que se desfasan, y la que se
+ * desfasa miente en una sola de las dos pantallas, que es la forma más cara de
+ * mentir.
  *
- * Cada roca identificada trae ya resuelto **cuánto traería y cuánto tardaría con
- * esta nave y esta bodega**, y no sólo cuánto queda en la piedra: "quedan 4.800
- * unidades" no dice nada; "traés 225 y tardás 38 minutos" dice si vale la pena.
+ * No es un requisito duro: los propulsores son un atributo del casco desde que
+ * los internos esenciales dejaron de ser módulos. Sigue declarado porque **la
+ * cadena se muestra igual cuando está completa**: el aviso dice de dónde sale el
+ * número y qué auxiliar lo mejora, que es lo que el piloto mira antes de comprar.
+ *
+ * Saltar no tiene lista: cruzar una puerta no pide ninguna pieza montada. Lo
+ * suyo lo arma `fuenteDeLaPuerta`.
  */
-/** Lo que un verbo pide, escrito: qué pieza y qué hay puesto en su lugar. */
-function aparatos(fitted: readonly Fitted[]): Aparato[] {
-	return fitted.map((uno) => ({
-		requirement: uno.need.label,
-		name: uno.module?.name ?? '',
-		fitted: uno.module !== null
-	}));
+const NEEDS_TRAVEL: readonly Need[] = [{ grant: 'thrust', label: 'Propulsores' }];
+
+/**
+ * Lo que un verbo pide, escrito: qué pieza, de dónde sale y qué la mejora.
+ *
+ * **Lo que el casco trae de fábrica no es una carencia.** Mientras esto resolvía
+ * los requisitos sólo contra los módulos montados, una nave recién salida del
+ * astillero leía «Falta: Propulsores» y —peor— se le escondían la velocidad y el
+ * alcance, porque los efectos sólo se prometen con todo puesto. Ahora la pieza
+ * dice de dónde sale: del casco, de un módulo, o de ninguno de los dos.
+ *
+ * El auxiliar viaja **aparte del casco** y no pisándolo: el propulsor auxiliar
+ * suma encima de los propulsores de fábrica, no los reemplaza, y decir sólo el
+ * módulo dejaría al piloto creyendo que sin él la nave no se mueve.
+ */
+function aparatos(hull: Hull, fitted: readonly Fitted[]): Aparato[] {
+	return fitted.map((uno) => {
+		const montado = uno.module?.name ?? '';
+		// Del casco: el módulo que haya, si hay alguno, es la mejora y no la fuente.
+		if (hullGrant(hull, uno.need.grant) > 0) {
+			return {
+				requirement: uno.need.label,
+				source: 'hull' as const,
+				name: hull.name,
+				upgrade: montado,
+				fitted: true
+			};
+		}
+		return aparatoDeModulo(uno.need.label, montado);
+	});
+}
+
+/**
+ * Una pieza que sólo puede venir de un módulo montado: el escáner, el láser.
+ *
+ * Ningún casco viene con uno puesto, así que acá sí «falta» quiere decir que hay
+ * que comprarlo. Es el caso contrario al de los propulsores y por eso se escribe
+ * aparte: mezclarlos en una función con un `if` de dos modos sería juntar dos
+ * reglas distintas en un archivo, y el que llegue después tendría que entender
+ * las dos para tocar una.
+ */
+function aparatoDeModulo(requirement: string, name: string): Aparato {
+	return {
+		requirement,
+		source: name === '' ? 'missing' : 'module',
+		name,
+		upgrade: '',
+		fitted: name !== ''
+	};
 }
 
 /**
@@ -759,7 +813,8 @@ function fuenteDeVerbo(
 		return {
 			verb,
 			blockers: ['Necesitás una nave.'],
-			modules: needs.map((need) => ({ requirement: need.label, name: '', fitted: false })),
+			// Sin nave no hay casco del que puedan salir: todo falta.
+			modules: needs.map((need) => aparatoDeModulo(need.label, '')),
 			levers: [],
 			effects: [],
 			next: []
@@ -767,20 +822,33 @@ function fuenteDeVerbo(
 	}
 
 	const llaves = leversFor(target, readout.hull, pilotSkillLevels(db, row.id));
-	const puestos = grantingModules(shipFit(db, nave), needs);
+	const piezas = aparatos(readout.hull, grantingModules(shipFit(db, nave), needs));
 
 	return {
 		verb,
 		blockers,
-		modules: aparatos(puestos),
+		modules: piezas,
 		levers: palancas(llaves),
-		// Lo que rinde sólo se promete si está todo puesto: una nave a la que le
-		// falta el tanque no salta, y decir su alcance sería prometer un salto.
-		effects: puestos.every((uno) => uno.module) ? effects : [],
+		// Lo que rinde sólo se promete si hay con qué, venga del casco o de un
+		// módulo: una nave a la que le falta el láser no extrae, y decir su
+		// rendimiento sería prometer una extracción.
+		effects: piezas.every((pieza) => pieza.fitted) ? effects : [],
 		next: siguientePalanca(llaves)
 	};
 }
 
+/**
+ * Las rocas del cinturón, cada una con lo que el piloto sabe de ella.
+ *
+ * Una roca sin lectura vigente sale **sin identificar**: se ve el bulto pero no
+ * de qué es ni cuánto tiene. Eso es lo que le da trabajo al escáner, y lo que
+ * convierte llegar a un cinturón desconocido en algo que hacer en vez de una
+ * lista que ya venía escrita.
+ *
+ * Cada roca identificada trae ya resuelto **cuánto traería y cuánto tardaría con
+ * esta nave y esta bodega**, y no sólo cuánto queda en la piedra: "quedan 4.800
+ * unidades" no dice nada; "traés 225 y tardás 38 minutos" dice si vale la pena.
+ */
 function buildBelt(
 	db: Db,
 	row: Pilot,
@@ -867,7 +935,7 @@ function buildBelt(
 			scanSource: {
 				verb: 'Escanear',
 				blockers: [orderBlocked, plan.blocked].filter(Boolean),
-				modules: [{ requirement: 'Escáner', name: plan.module, fitted: plan.module !== '' }],
+				modules: [aparatoDeModulo('Escáner', plan.module)],
 				levers: palancas(plan.levers),
 				effects: [{ label: 'Lectura', value: depthLabel(plan.depth) }],
 				next: siguienteLectura(niveles)
@@ -877,13 +945,7 @@ function buildBelt(
 				// Sólo lo que es de la nave: por qué **esta** roca no se puede picar lo
 				// dice la fila, que es donde vive esa razón.
 				blockers: [orderBlocked].filter(Boolean),
-				modules: [
-					{
-						requirement: 'Láser de extracción',
-						name: fuente.module,
-						fitted: fuente.module !== ''
-					}
-				],
+				modules: [aparatoDeModulo('Láser de extracción', fuente.module)],
 				levers: palancas(fuente.levers),
 				effects:
 					fuente.perHour > 0
@@ -958,7 +1020,7 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			db,
 			row,
 			'Viajar',
-			[{ grant: 'thrust', label: 'Propulsores' }],
+			NEEDS_TRAVEL,
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(readout?.speed ?? 0)} ud/h` }],
 			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
@@ -1196,7 +1258,7 @@ export function buildGalaxia(
 			db,
 			row,
 			'Viajar',
-			[{ grant: 'thrust', label: 'Propulsores' }],
+			NEEDS_TRAVEL,
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(shipReadout(db, row)?.speed ?? 0)} ud/h` }],
 			ahora.orderBlocked ? [ahora.orderBlocked] : []

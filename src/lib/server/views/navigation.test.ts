@@ -652,7 +652,14 @@ describe('la pestaña Galaxia', () => {
 		expect(bajas.matches).toEqual(['ocaso']);
 	});
 
-	it('el verbo del mapa es viajar, y dice de dónde sale', async () => {
+	/*
+	 * Los propulsores **son del casco** desde que los internos esenciales dejaron
+	 * de ser módulos, así que una nave de astillero los tiene sin llevar nada
+	 * puesto. Mientras la procedencia los resolvía sólo contra las ranuras, esa
+	 * nave leía «Falta: Propulsores» y —lo caro— se le escondía la velocidad,
+	 * porque los efectos sólo se prometen con todo puesto.
+	 */
+	it('el verbo del mapa es viajar, y dice que los propulsores son del casco', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
 
@@ -660,6 +667,16 @@ describe('la pestaña Galaxia', () => {
 
 		expect(vista.travelSource.verb).toBe('Viajar');
 		expect(vista.travelSource.modules.map((uno) => uno.requirement)).toEqual(['Propulsores']);
+
+		const [propulsores] = vista.travelSource.modules;
+		expect(propulsores.source).toBe('hull');
+		expect(propulsores.fitted).toBe(true);
+		// El nombre que se muestra es el del casco, y no hay auxiliar montado.
+		expect(propulsores.name).toBe('Pioner');
+		expect(propulsores.upgrade).toBe('');
+
+		// Y por lo tanto la velocidad se ve: es el dato por el que alguien abre esto.
+		expect(vista.travelSource.effects.map((efecto) => efecto.label)).toEqual(['Velocidad']);
 	});
 
 	// El mapa también ofrece **saltar**, para cuando ya estás parado en la puerta.

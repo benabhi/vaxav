@@ -809,12 +809,40 @@ export interface Procedencia {
 	readonly next: readonly string[];
 }
 
-/** Un módulo que un verbo necesita: qué hace falta, y qué hay puesto. */
+/**
+ * De dónde sale la pieza con la que un verbo funciona.
+ *
+ * Son tres estados y no dos, y el que faltaba es el que más se usa: desde que los
+ * internos esenciales son atributos del casco, **la mayoría de los verbos corren
+ * con lo que la nave trae de fábrica**. Mientras esto fue un booleano, una nave
+ * de astillero leía «Falta: Propulsores» y se quedaba sin ver su propia velocidad.
+ */
+export type FuenteAparato =
+	/** Lo trae el casco. `upgrade` dice qué módulo suma encima, si hay alguno. */
+	| 'hull'
+	/** Lo pone un módulo montado, que es el único que puede ponerlo. */
+	| 'module'
+	/** No lo pone nadie: es lo que hay que comprar para que el verbo exista. */
+	| 'missing';
+
+/** Una pieza que un verbo necesita: qué hace falta, de dónde sale y qué la mejora. */
 export interface Aparato {
-	/** Qué clase de pieza pide: «Motor de salto», «Escáner». */
+	/** Qué clase de pieza pide: «Propulsores», «Motor de salto», «Escáner». */
 	readonly requirement: string;
-	/** El módulo montado que lo cumple, o vacío si falta. */
+	readonly source: FuenteAparato;
+	/**
+	 * Cómo se llama lo que la cumple: el casco si viene de fábrica, el módulo
+	 * montado si no. Vacío sólo cuando falta.
+	 */
 	readonly name: string;
+	/**
+	 * El módulo que suma **encima** de lo que el casco trae, o vacío si no hay.
+	 *
+	 * Va aparte y no pisando a `name` porque un propulsor auxiliar no reemplaza a
+	 * los propulsores: los mejora. Sólo puede venir con `source: 'hull'`.
+	 */
+	readonly upgrade: string;
+	/** Si el verbo tiene con qué. Falso sólo cuando la pieza falta. */
 	readonly fitted: boolean;
 }
 

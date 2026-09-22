@@ -184,11 +184,15 @@ Tres reglas, y ninguna es opcional:
    aparte ni en una ayuda: junto al botón, con el nivel que hace falta y el que se
    tiene. Si falta, el motivo se lee sin buscarlo; si sobra, también, porque saber
    que estás sobrado es parte de decidir qué mejorar después.
-2. **Toda acción que exista gracias a un módulo lo nombra.** Minar aparece porque
-   hay un láser montado, prospectar porque hay un escáner, saltar porque hay un
-   motor de salto y un tanque. El verbo tiene que llevar encima **de qué aparato
-   salió**, o el jugador no puede razonar al revés —«quiero hacer esto, ¿qué me
-   falta?»— que es justamente como se compra el próximo módulo.
+2. **Toda acción que exista gracias a una pieza la nombra, y dice de dónde
+   sale.** Minar aparece porque hay un láser montado y prospectar porque hay un
+   escáner; viajar, en cambio, corre con los propulsores que **trae el casco**, y
+   un auxiliar montado suma encima en vez de reemplazarlos. Son tres cosas
+   distintas —del casco, de un módulo, o falta— y el aviso las distingue: decir
+   «falta» de algo que ninguna nave puede montar manda a comprar lo que no
+   existe. El verbo tiene que llevar encima **de qué aparato salió**, o el
+   jugador no puede razonar al revés —«quiero hacer esto, ¿qué me falta?»— que es
+   justamente como se compra el próximo módulo.
 3. **Y al revés: lo que no se puede hacer dice por qué no se puede.** Un verbo que
    directamente no aparece enseña menos que uno apagado con su motivo al lado. La
    ficha de un módulo que no está montado también es información: es la lista de

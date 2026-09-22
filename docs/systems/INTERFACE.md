@@ -882,10 +882,10 @@ La regla es de diseño y está escrita entera en
 [«La cadena»](../DESIGN.md#la-cadena-se-muestra-o-no-existe). Acá está **cómo se
 dibuja**, que es lo que hay que copiar cuando se agrega un verbo nuevo.
 
-**Toda acción del juego lleva su procedencia**: qué módulos necesita montados,
-qué habilidades cambian su resultado, qué rinde hoy, qué daría el escalón
-siguiente y por qué no se puede ahora mismo. Vive en un solo tipo, `Procedencia`
-(`src/lib/tipos.ts`), y se dibuja con un solo componente.
+**Toda acción del juego lleva su procedencia**: con qué piezas funciona y de dónde
+sale cada una, qué habilidades cambian su resultado, qué rinde hoy, qué daría el
+escalón siguiente y por qué no se puede ahora mismo. Vive en un solo tipo,
+`Procedencia` (`src/lib/tipos.ts`), y se dibuja con un solo componente.
 
 **Dónde aparece, y por qué en dos lugares:**
 
@@ -916,24 +916,61 @@ sabe de cuál habla.
    scroll al que no se puede entrar es un recorte.
 
 **Todo lo que puede ser varios, es una lista.** No hay ni un campo singular en
-`Procedencia`, y es a propósito: saltar ya necesita **dos** módulos —motor y
-tanque—, viajar tiene dos habilidades que lo mueven, y un verbo puede estar
-bloqueado por más de una razón. Un campo que empieza en singular obliga a
-reescribir el tipo, las vistas y la pantalla el día que aparezca el segundo, que
-es siempre antes de lo que parece.
+`Procedencia`, y es a propósito: viajar ya tiene dos habilidades que lo mueven, un
+verbo puede estar bloqueado por más de una razón, y un verbo puede pedir más de
+una pieza —refinar va a pedir la refinería y una bodega donde poner lo que sale—.
+Un campo que empieza en singular obliga a reescribir el tipo, las vistas y la
+pantalla el día que aparezca el segundo, que es siempre antes de lo que parece.
 
-**Los rótulos son palabras del juego, no del diseño.** «Módulo», «Habilidades»,
+**Los rótulos son palabras del juego, no del diseño.** «Pieza», «Habilidades»,
 «Mejora». Acá decía «Aparato» y «Llaves», que es el vocabulario con que
 [la cadena](../DESIGN.md#la-cadena) se piensa: sirve para razonar y no lo
 entiende nadie que no haya leído el documento.
 
+Y decía «Módulo», que dejó de ser cierto: **la mayoría de estas piezas las trae el
+casco**, y un rótulo que promete un módulo arriba de un renglón que dice «del
+casco» se contradice solo. «Pieza» es verdad para las dos fuentes.
+
+#### De dónde sale cada pieza
+
+Son cuatro renglones distintos, y la diferencia no es cosmética: dicen si hay algo
+que comprar o no.
+
+| Caso                | Cómo se lee                                             | Ejemplo                      |
+| ------------------- | ------------------------------------------------------- | ---------------------------- |
+| Del casco           | La pieza, y al lado el modelo que la trae               | Propulsores · del casco Mula |
+| Del casco, mejorado | Debajo, con un más y «suma encima»                      | + Propulsor auxiliar         |
+| De un módulo        | El nombre del módulo montado, que es el único que puede | Láser de extracción          |
+| Falta               | En rojo, con el nombre de lo que hay que conseguir      | Falta: Escáner               |
+
+El renglón decía sólo un nombre, y con eso una nave recién salida del astillero
+leía **«Falta: Propulsores»** por algo que ninguna nave puede montar: los
+propulsores son un atributo del casco desde que
+[los internos esenciales dejaron de ser módulos](SHIPS.md#los-internos-esenciales-se-fueron-y-era-el-problema).
+Y fallaba peor de lo que parece, porque **el aviso escondía lo que la nave rinde
+mientras algo «faltaba»**: la velocidad no salía justo en la nave que no tenía
+ningún problema.
+
+Tres reglas sostienen los cuatro casos:
+
+- **Una lista vacía no es una carencia.** Un verbo que no pide ninguna pieza
+  —cruzar una puerta— no está incompleto: no pide nada, y muestra lo que rinde
+  como cualquier otro.
+- **El auxiliar suma, no reemplaza.** Va en su propio renglón debajo del casco.
+  Escrito en uno solo se lee como que sin él la nave no se mueve, que es lo
+  contrario de lo que pasa, y es la distinción que decide si conviene montarlo.
+- **«Falta» quiere decir que hay que comprarlo.** Los únicos verbos cuya pieza no
+  la trae ningún casco son escanear y extraer; ahí «falta» es verdad y es la lista
+  de compras.
+
 #### Al agregar un verbo nuevo
 
-1. El servicio que lo resuelve devuelve **qué módulo lo habilita y qué
-   habilidades lo mueven**, no sólo si se puede. El módulo sale de
-   `grantingModules` y las habilidades de `leversFor` (`src/lib/game/sourcing.ts`),
-   que leen la misma tabla que usa la calculadora: una lista escrita a mano al
-   lado se desfasa el día que nadie mira.
+1. El servicio que lo resuelve devuelve **qué pieza lo habilita, de dónde sale y
+   qué habilidades lo mueven**, no sólo si se puede. El módulo montado sale de
+   `grantingModules`, lo que el casco trae de fábrica de `hullGrant` y las
+   habilidades de `leversFor` (`src/lib/game/sourcing.ts`), que leen la misma
+   tabla que usa la calculadora: una lista escrita a mano al lado se desfasa el
+   día que nadie mira.
 2. La vista arma la `Procedencia`. Si el verbo se mueve por porcentajes, alcanza
    con `fuenteDeVerbo`; si tiene efectos que no son un porcentaje —como la lectura
    del escáner— se arma a mano.
@@ -945,12 +982,12 @@ entiende nadie que no haya leído el documento.
 
 #### Dónde está puesto
 
-| Verbo    | Módulos                     | Habilidades                                |
-| -------- | --------------------------- | ------------------------------------------ |
-| Viajar   | Propulsores                 | Navegación, y la del bono de rol del casco |
-| Saltar   | Motor de salto **y** tanque | Astrogación                                |
-| Escanear | Escáner                     | Escaneo, Prospección                       |
-| Extraer  | Láser de extracción         | Minería, y la del bono de rol del casco    |
+| Verbo    | Piezas                            | Habilidades                                |
+| -------- | --------------------------------- | ------------------------------------------ |
+| Viajar   | Propulsores, del casco            | Navegación, y la del bono de rol del casco |
+| Saltar   | **Ninguna**                       | **Ninguna**                                |
+| Escanear | Escáner, de un módulo             | Escaneo, Prospección                       |
+| Extraer  | Láser de extracción, de un módulo | Minería, y la del bono de rol del casco    |
 
 Los verbos del mercado —comprar, vender, acordar— todavía no la llevan: no
 dependen de un módulo de la nave, pero sí de habilidades como Regateo, que hoy no

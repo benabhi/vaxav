@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { grantingModule, grantingModules, leverOf, leversFor } from './sourcing';
+import { grantingModule, grantingModules, hullGrant, leverOf, leversFor } from './sourcing';
 import { SKILL_BONUSES } from './fitting';
 import { HULLS, STARTING_HULL, getHull } from './hulls';
 import { EMPTY, MODULES } from './modules';
@@ -39,6 +39,51 @@ describe('el módulo que habilita un verbo', () => {
 		const encontrado = grantingModule([flojo, fuerte], 'miningYield');
 
 		expect(encontrado?.code).toBe(fuerte.code);
+	});
+});
+
+/*
+ * La otra mitad de «de dónde sale esto»: **lo que el casco trae de fábrica**.
+ *
+ * Es la que faltaba y la que produjo el aviso absurdo: resolviendo la cadena sólo
+ * contra las ranuras, una nave de astillero leía «Falta: Propulsores» mientras se
+ * movía perfectamente. Lo que estos tests cuidan es que cada columna del casco
+ * conteste por su verbo y que **extraer siga siendo la excepción**.
+ */
+describe('lo que el casco aporta sin llevar nada montado', () => {
+	it('contesta con su propia columna, una por verbo', () => {
+		// Se prueba sobre la lanzadera inicial porque sus cinco columnas valen cinco
+		// números distintos: una tabla cruzada —el tanque contestando la bodega—
+		// pasaría inadvertida con un casco de números repetidos.
+		const pioner = getHull(STARTING_HULL);
+
+		expect(hullGrant(pioner, 'cargo')).toBe(pioner.cargo);
+		expect(hullGrant(pioner, 'thrust')).toBe(pioner.thrust);
+		expect(hullGrant(pioner, 'jumpPower')).toBe(pioner.jumpPower);
+		expect(hullGrant(pioner, 'fuel')).toBe(pioner.fuel);
+		expect(hullGrant(pioner, 'sensorRange')).toBe(pioner.sensorRange);
+	});
+
+	/*
+	 * **Ningún casco viene con el láser puesto**, y por eso extraer es el único
+	 * verbo cuyo aparato hay que comprar. Si esto contestara el número del casco,
+	 * la pantalla diría que se puede minar con una nave pelada.
+	 */
+	it('no aporta extracción en ningún casco del catálogo', () => {
+		expect(HULLS.map((hull) => hullGrant(hull, 'miningYield'))).toEqual(HULLS.map(() => 0));
+	});
+
+	/*
+	 * Y al revés: **el resto de los esenciales los trae todo casco**. Es lo que
+	 * hace que una nave recién salida del astillero se mueva, salte, cargue y vea
+	 * sin que el piloto monte una sola pieza.
+	 */
+	it('todo casco trae propulsores, motor, tanque, bodega y sensores', () => {
+		for (const hull of HULLS) {
+			for (const grant of ['thrust', 'jumpPower', 'fuel', 'cargo', 'sensorRange'] as const) {
+				expect(hullGrant(hull, grant)).toBeGreaterThan(0);
+			}
+		}
 	});
 });
 
