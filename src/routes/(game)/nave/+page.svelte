@@ -37,7 +37,6 @@
 	import { roundHalfEven } from '$lib/game/math';
 	import { DAMAGE_TYPES } from '$lib/game/damage';
 	import { buildReadout, fitFromCodes, maxedSkills } from '$lib/game/fitting';
-	import { jumpsWithFuel } from '$lib/game/jumps';
 	import { getHull } from '$lib/game/hulls';
 	import { availableForSlot } from '$lib/game/inventory';
 	import { getModule } from '$lib/game/modules';
@@ -129,9 +128,6 @@
 	 * `140 / 120` se lee como un error del juego.
 	 */
 	let combustible = $derived(Math.min(ship.fuel, hoja.fuel));
-
-	/** Los saltos que permite lo que hay, no lo que entraría con el tanque lleno. */
-	let saltos = $derived(jumpsWithFuel(combustible, hoja.mass));
 
 	/**
 	 * Cuánto cambiaría una magnitud, o `null` si no cambia.
@@ -324,6 +320,20 @@
 		}));
 	});
 
+	/**
+	 * Movilidad: lo que la nave **usa hoy** para moverse.
+	 *
+	 * Acá había dos renglones más, «Saltos» y «Alcance», y los dos prometían un
+	 * límite que ya no existe: cruzar una puerta es gratis, no pide alcance y tarda
+	 * lo mismo para cualquier nave. **Un dato se muestra en las naves que lo usan,
+	 * no en todas.**
+	 *
+	 * No es un descarte, es una espera: cuando exista el motor de salto de las
+	 * capitales —el que cruza sin puerta y quema combustible— el alcance y la
+	 * autonomía vuelven acá, y vuelven **sólo en los cascos que lo tengan**. Hoy no
+	 * lo tiene ninguno, y escribir esa condición antes que el verbo es hacer la ruta
+	 * antes que el camino.
+	 */
 	let mobility = $derived([
 		{
 			label: 'Masa',
@@ -339,23 +349,6 @@
 			value: thousands(hoja.speed),
 			unit: 'u/s',
 			delta: cambio(readout.speed, hoja.speed),
-			lowerIsBetter: false
-		},
-		{
-			label: 'Alcance',
-			value: tenths(hoja.jumpRange),
-			unit: 'al',
-			delta: cambio(readout.jumpRange, hoja.jumpRange),
-			lowerIsBetter: false
-		},
-		{
-			// **Los saltos que puede hacer ahora**, no los que entrarían con el tanque
-			// lleno. La ficha de una nave a medio tanque que promete la autonomía de
-			// una llena es la clase de cifra que deja a alguien tirado.
-			label: 'Saltos',
-			value: String(saltos),
-			unit: '',
-			delta: cambio(jumpsWithFuel(combustible, readout.mass), saltos),
 			lowerIsBetter: false
 		}
 	]);
@@ -518,10 +511,10 @@
 			</span>
 			<!--
 				La caja de la unidad se dibuja **siempre**, tenga unidad o no. Si sólo
-				existiera cuando hay algo que escribir, las filas sin unidad —saltos,
-				combustible, firma— se correrían a la derecha para ocupar ese lugar y las
-				cifras dejarían de caer en una columna, que es justamente lo que hace que
-				esto se lea como un tablero.
+				existiera cuando hay algo que escribir, las filas sin unidad —hoy sólo la
+				firma— se correrían a la derecha para ocupar ese lugar y las cifras dejarían
+				de caer en una columna, que es justamente lo que hace que esto se lea como
+				un tablero.
 			-->
 			<span class="w-[2.2rem] shrink-0 text-1 text-text-muted">{row.unit ?? ''}</span>
 		</div>

@@ -311,11 +311,17 @@
 			</div>
 
 			<!--
-				La nave, en una línea: el rol, el tanque y las tres capas, en el mismo
-				orden en que se las come el daño. El detalle entero está a una pestaña de
-				distancia; el combustible viene acá igual porque es el único de estos
-				números que **se gasta**, y el que decide si el próximo salto se puede
-				dar. Un dato así no puede costar dos pestañas mirarlo.
+				La nave, en una línea: el rol y las tres capas, en el mismo orden en que se
+				las come el daño. El detalle entero está a una pestaña de distancia.
+
+				**Acá estaban el tanque y cuántos saltos quedaban, y ya no.** Cruzar una
+				puerta no cuesta combustible, así que las dos cifras prometían un límite que
+				no existe: un dato se muestra en las naves que lo usan, y hoy no lo usa
+				ninguna.
+
+				No es un descarte, es una espera: con el motor de salto de las capitales
+				—el que cruza sin puerta y quema— el combustible vuelve a esta línea, y
+				vuelve **sólo en las naves que lo tengan**.
 			-->
 			{#if pilot.ship}
 				<div
@@ -337,16 +343,6 @@
 					<div class="grow"></div>
 
 					<span class="flex flex-wrap items-center gap-3">
-						<span class="flex items-baseline gap-1">
-							<Label>Combustible</Label>
-							<span class="font-mono text-[0.78rem] whitespace-nowrap text-data">
-								{pilot.ship.fuel}
-							</span>
-						</span>
-						<span class="flex items-baseline gap-1">
-							<Label>Saltos</Label>
-							<span class="font-mono text-[0.78rem] text-accent-bright">{pilot.ship.jumps}</span>
-						</span>
 						<span class="flex items-baseline gap-1">
 							<Label>Escudo</Label>
 							<span class="font-mono text-[0.78rem] text-data">{pilot.ship.shield}</span>

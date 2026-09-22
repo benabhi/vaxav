@@ -1,11 +1,9 @@
-/** Cruzar una puerta: nunca gratis, nunca instantáneo, nunca sin alcance. */
+/** Cruzar una puerta: gratis, nunca instantáneo y siempre igual para todos. */
 
 import { describe, expect, it } from 'vitest';
 import { TENTHS } from './fitting';
 import {
-	JUMP_FLOOR_PERCENT,
 	MIN_JUMP_FUEL,
-	REFERENCE_JUMP_RANGE,
 	SECONDS_PER_LIGHT_YEAR,
 	jumpFuel,
 	jumpProblem,
@@ -17,46 +15,52 @@ import {
 
 /** Una nave capaz de cruzar, lista para retocarle lo que el test necesite. */
 function nave(cambios: Partial<JumpShip> = {}): JumpShip {
-	return { jumpRange: REFERENCE_JUMP_RANGE, mass: 400, fuel: 40, flyable: true, ...cambios };
+	return { flyable: true, ...cambios };
 }
 
 describe('cuánto tarda', () => {
-	it('con el alcance de referencia, la distancia manda', () => {
-		expect(jumpSeconds(TENTHS, REFERENCE_JUMP_RANGE)).toBe(SECONDS_PER_LIGHT_YEAR);
-		expect(jumpSeconds(2 * TENTHS, REFERENCE_JUMP_RANGE)).toBe(2 * SECONDS_PER_LIGHT_YEAR);
-	});
-
-	it('más alcance es menos tiempo, y menos alcance es más', () => {
-		const referencia = jumpSeconds(TENTHS, REFERENCE_JUMP_RANGE);
-		expect(jumpSeconds(TENTHS, REFERENCE_JUMP_RANGE * 2)).toBeLessThan(referencia);
-		expect(jumpSeconds(TENTHS, Math.floor(REFERENCE_JUMP_RANGE / 2))).toBeGreaterThan(referencia);
+	it('lo dice la distancia de la puerta y nada más', () => {
+		expect(jumpSeconds(TENTHS)).toBe(SECONDS_PER_LIGHT_YEAR);
+		expect(jumpSeconds(2 * TENTHS)).toBe(2 * SECONDS_PER_LIGHT_YEAR);
 	});
 
 	/*
-	 * El techo de eficiencia es parte del balance, no un efecto colateral: por
-	 * muchos bonos que junte nadie salta en cero.
+	 * **La misma puerta tarda lo mismo para todos.** Es la consecuencia directa de
+	 * que la puerta haga el trabajo: sin esto, el equipo volvería a decidir cuánto
+	 * se tarda en cruzar, que es justamente lo que se sacó.
 	 */
-	it('nunca baja del piso, por mucho alcance que tenga', () => {
-		const base = SECONDS_PER_LIGHT_YEAR;
-		const piso = (base * JUMP_FLOOR_PERCENT) / 100;
+	it('no depende de la nave: sólo recibe la distancia', () => {
+		expect(jumpSeconds).toHaveLength(1);
+	});
 
-		for (const alcance of [100, 1_000, 100_000]) {
-			expect(jumpSeconds(TENTHS, alcance)).toBeGreaterThanOrEqual(piso);
-		}
+	/*
+	 * **El número se escribe a mano y sale de `docs/systems/ACTIONS.md`**, que dice
+	 * «240 s por año luz». Derivarlo de la constante del módulo haría que moverla
+	 * mueva también la expectativa, y entonces el test no vigilaría nada: quien
+	 * cambie el ritmo del cruce tiene que cambiar el documento en el mismo commit.
+	 */
+	it('un año luz de puerta son cuatro minutos', () => {
+		expect(jumpSeconds(TENTHS)).toBe(240);
+		expect(jumpSeconds(25)).toBe(600);
 	});
 
 	it('nunca es menos de un segundo, ni con una distancia mínima', () => {
-		expect(jumpSeconds(1, 100_000)).toBeGreaterThanOrEqual(1);
-		expect(jumpSeconds(0, REFERENCE_JUMP_RANGE)).toBeGreaterThanOrEqual(1);
+		expect(jumpSeconds(1)).toBeGreaterThanOrEqual(1);
+		expect(jumpSeconds(0)).toBeGreaterThanOrEqual(1);
 	});
 
-	it('no acepta una nave sin motor ni una distancia negativa', () => {
-		expect(() => jumpSeconds(TENTHS, 0)).toThrow(RangeError);
-		expect(() => jumpSeconds(-1, REFERENCE_JUMP_RANGE)).toThrow(RangeError);
+	it('no acepta una distancia negativa', () => {
+		expect(() => jumpSeconds(-1)).toThrow(RangeError);
 	});
 });
 
-describe('cuánto consume', () => {
+/*
+ * El consumo está **dormido**: cruzar una puerta no gasta nada y ningún verbo
+ * llama a estas dos funciones todavía. Se prueban igual porque son la regla que
+ * el motor de salto de las capitales va a usar tal cual, y una regla sin prueba
+ * es una que se rompe sin que nadie se entere.
+ */
+describe('cuánto consumiría un salto sin puerta', () => {
 	/*
 	 * Sin la distancia, un salto corto costaría lo mismo que uno largo y
 	 * convendría siempre el más largo: la galaxia se quedaría sin geografía.
@@ -85,7 +89,7 @@ describe('cuánto consume', () => {
 	});
 
 	/*
-	 * La autonomía de la ficha y el gasto real salen de la misma función: si se
+	 * La autonomía de la ficha y el gasto salen de la misma función: si se
 	 * calcularan aparte, la nave podría decir «te quedan tres saltos» y quedarse
 	 * sin combustible en el segundo.
 	 */
@@ -100,8 +104,18 @@ describe('cuánto consume', () => {
 });
 
 describe('si se puede cruzar', () => {
-	it('con nave, alcance y tanque, se puede', () => {
+	it('con una nave que vuela y una puerta abierta, se puede', () => {
 		expect(jumpProblem(nave(), TENTHS)).toBeNull();
+	});
+
+	/*
+	 * **Lo que no pide.** Cualquier nave cruza cualquier puerta: no hay alcance que
+	 * ganarse con equipo ni tanque que llenar, y por eso lo único que decide es que
+	 * la nave se pueda volar. Con la distancia más larga que cualquier alcance de
+	 * casco del catálogo, sigue dando que sí.
+	 */
+	it('no pide alcance ni combustible, por lejos que esté', () => {
+		expect(jumpProblem(nave(), 500)).toBeNull();
 	});
 
 	it('una nave que no vuela no salta', () => {
@@ -112,28 +126,13 @@ describe('si se puede cruzar', () => {
 		expect(jumpProblem(nave(), null)).not.toBeNull();
 	});
 
-	it('sin motor de salto, tampoco', () => {
-		expect(jumpProblem(nave({ jumpRange: 0 }), TENTHS)).not.toBeNull();
+	it('una puerta cerrada no se cruza', () => {
+		expect(jumpProblem(nave(), TENTHS, true)).toContain('cerrado');
 	});
 
-	/*
-	 * Es lo que convierte al alcance en mecánica: una puerta más lejos de lo que
-	 * la nave llega es una puerta que hay que ganarse con equipo.
-	 */
-	it('no se cruza una puerta más lejos que el alcance', () => {
-		const problema = jumpProblem(nave({ jumpRange: 20 }), 30);
-		expect(problema).not.toBeNull();
-		expect(problema).toContain('alcanza');
-	});
-
-	it('sin combustible suficiente, dice cuánto falta', () => {
-		const problema = jumpProblem(nave({ fuel: 0 }), TENTHS);
-		expect(problema).toContain('combustible');
-	});
-
-	/* El orden importa: lo que no se arregla comprando se dice primero. */
-	it('una nave que no vuela lo dice antes que el combustible', () => {
-		expect(jumpProblem(nave({ flyable: false, fuel: 0 }), TENTHS)).toContain('volar');
+	/* El orden importa: lo que no se arregla de ninguna forma se dice primero. */
+	it('una nave que no vuela lo dice antes que la puerta cerrada', () => {
+		expect(jumpProblem(nave({ flyable: false }), TENTHS, true)).toContain('volar');
 	});
 });
 

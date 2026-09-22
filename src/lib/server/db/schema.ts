@@ -585,10 +585,16 @@ export const ship = sqliteTable(
 		 * equipamiento —sale del casco más los módulos— y vive en la ficha; esto es
 		 * cuánto hay ahora, que es estado de la partida y por eso está en la base.
 		 *
-		 * Sólo se gasta **saltando**. Moverse dentro de un sistema no consume nada,
-		 * y eso es a propósito: un piloto sin combustible se queda sin poder salir
-		 * del sistema, no tirado en el vacío. La peor situación posible es estar en
-		 * un lugar donde todavía se puede minar, vender y comprar.
+		 * **Hoy no lo gasta nada.** Cruzar una puerta es gratis —la puerta hace el
+		 * trabajo— y moverse dentro de un sistema tampoco consume: la columna se
+		 * llena al salir del astillero y se queda quieta. Espera al motor de salto
+		 * de las capitales, el que cruza entre sistemas no adyacentes y sin puerta,
+		 * que es lo único que va a quemarlo.
+		 *
+		 * Se queda en la base y no se saca porque **es estado de la partida**: el día
+		 * que ese verbo exista, lo que un piloto tenga en el tanque tiene que ser lo
+		 * que venía teniendo, y una columna que se borra y se vuelve a crear empieza
+		 * en cero para todos.
 		 */
 		fuel: integer('fuel').notNull().default(0),
 

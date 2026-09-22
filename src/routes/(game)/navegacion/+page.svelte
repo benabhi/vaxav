@@ -339,10 +339,10 @@
 		La puerta: adónde lleva y qué cuesta, **antes** de apretar.
 
 		Un salto que se cobra después de ordenarlo es un salto que nadie puede
-		planear, y planear es la mitad de lo que se hace en un juego de naves. Por
-		eso el tiempo y el combustible se muestran siempre, incluso cuando no se
-		puede cruzar: saber que faltan doce unidades es lo que dice qué hacer, y un
-		"no podés" sin cifras no dice nada.
+		planear, y planear es la mitad de lo que se hace en un juego de naves. Lo
+		único que cobra cruzar es **tiempo** —la puerta hace el trabajo y no pide
+		nada a cambio—, y ese tiempo se muestra siempre, incluso cuando no se puede
+		cruzar: un "no podés" sin cifras no dice nada.
 	-->
 	{#if place.gate}
 		<div class="w-full min-w-0 flex-[2_1_0]">
@@ -417,28 +417,9 @@
 										<span class="font-mono text-[0.85rem] text-data">{place.gate.distance}</span>
 									</div>
 									<div class="flex flex-col items-start gap-1">
-										<Label>Alcance</Label>
-										<span class="font-mono text-[0.85rem] text-text-body">{place.gate.range}</span>
-									</div>
-									<div class="flex flex-col items-start gap-1">
 										<Label>Duración</Label>
 										<span class="font-mono text-[0.85rem] text-accent-bright">
 											{place.gate.duration}
-										</span>
-									</div>
-									<div class="flex flex-col items-start gap-1">
-										<Label>Combustible</Label>
-										<!--
-									Lo que cuesta sobre lo que hay: la resta es la pregunta, y
-									hacerla de memoria entre dos pantallas es lo que hace que un
-									juego se sienta incómodo.
-								-->
-										<span
-											class="font-mono text-[0.85rem] {place.gate.fuel > place.gate.fuelInTank
-												? 'text-danger'
-												: 'text-data'}"
-										>
-											{place.gate.fuel} de {place.gate.fuelInTank} u
 										</span>
 									</div>
 								</div>
@@ -458,10 +439,10 @@
 							{/if}
 
 							<!--
-						Con confirmación, como toda orden: un salto compromete tiempo real y
-						además **gasta combustible que no vuelve**. El diálogo repite lo que
-						cuesta en vez de preguntar a secas, porque un aviso que sólo pregunta
-						se aprende a apretar sin leer.
+						Con confirmación, como toda orden: cruzar no cuesta nada, pero
+						compromete tiempo real y mientras dure no hay otra orden que dar. El
+						diálogo repite lo que cuesta en vez de preguntar a secas, porque un
+						aviso que sólo pregunta se aprende a apretar sin leer.
 					-->
 							<ConfirmAction
 								formAction="?/saltar"
@@ -472,13 +453,9 @@
 								readings={[
 									{ label: 'Llegás a', value: place.gate.arrival },
 									{ label: 'Distancia', value: place.gate.distance },
-									{ label: 'Duración', value: place.gate.duration },
-									{
-										label: 'Combustible',
-										value: `${place.gate.fuel} de ${place.gate.fuelInTank} u`
-									}
+									{ label: 'Duración', value: place.gate.duration }
 								]}
-								note="El combustible se gasta al llegar y no vuelve. Mientras dure el salto no vas a poder dar otra orden."
+								note="Mientras dure el salto no vas a poder dar otra orden."
 								source={place.gate.source}
 							>
 								{#snippet trigger(abrir)}

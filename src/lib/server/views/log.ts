@@ -156,8 +156,13 @@ function buildLoot(raw: string): GananciaCarga | null {
  * Lo que costó un salto, para que el informe lo cuente.
  *
  * Un informe tiene que decir **todo lo que pasó**: si la acción gastó algo, el
- * gasto es parte del relato y no un detalle interno. Un salto que no dice cuánto
- * combustible se llevó obliga a abrir la ficha de la nave y restar de memoria.
+ * gasto es parte del relato y no un detalle interno.
+ *
+ * **El renglón del combustible sólo sale en los informes viejos**, y tiene que
+ * seguir saliendo: cruzar una puerta dejó de costar, pero los saltos que sí
+ * costaron lo guardaron en su JSON y un informe que reescribe el pasado no sirve
+ * para nada. Por eso cada campo se mira antes de escribirlo en vez de darlo por
+ * seguro.
  */
 function buildJump(raw: string): { label: string; value: string }[] {
 	let parsed: unknown;

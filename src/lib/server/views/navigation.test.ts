@@ -546,7 +546,7 @@ describe('la pestaña Galaxia', () => {
 		// Las dos mitades: el viaje hasta la puerta y el salto de después.
 		expect(salida.travelDistance).toMatch(/ ud$/);
 		expect(salida.travelDuration).not.toBe('');
-		expect(salida.fuel).toMatch(/ u$/);
+		expect(salida.duration).not.toBe('');
 		expect(salida.standingThere).toBe(false);
 	});
 
@@ -677,6 +677,24 @@ describe('la pestaña Galaxia', () => {
 
 		// Y por lo tanto la velocidad se ve: es el dato por el que alguien abre esto.
 		expect(vista.travelSource.effects.map((efecto) => efecto.label)).toEqual(['Velocidad']);
+	});
+
+	/*
+	 * **Cruzar una puerta no sale de ninguna pieza ni de ninguna habilidad**: la
+	 * puerta hace el trabajo. Nombrar el motor de salto o Astrogación acá sería
+	 * mandar a comprar y a entrenar cosas que no cambian nada de este verbo.
+	 */
+	it('el salto no nombra ningún módulo ni ninguna habilidad', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const vista = buildGalaxia(db, piloto);
+
+		expect(vista.jumpSource.verb).toBe('Saltar');
+		expect(vista.jumpSource.modules).toEqual([]);
+		expect(vista.jumpSource.levers).toEqual([]);
+		expect(vista.jumpSource.effects).toEqual([]);
+		expect(vista.jumpSource.next).toEqual([]);
 	});
 
 	// El mapa también ofrece **saltar**, para cuando ya estás parado en la puerta.

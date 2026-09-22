@@ -33,16 +33,13 @@ export interface NaveDelPiloto {
 	readonly shield: string;
 	readonly armor: string;
 	readonly structure: string;
-	/**
-	 * Lo que hay en el tanque sobre lo que entra: `113 / 120`.
-	 *
-	 * Va en la credencial y no sólo en la ficha de la nave porque es un número que
-	 * se agota y que decide si el próximo salto se puede dar. Un dato así no puede
-	 * vivir a dos pestañas de distancia: mirarlo tiene que ser gratis.
+	/*
+	 * Acá viajaban el tanque y la autonomía, y los dos contestaban una pregunta que
+	 * ya no existe: cruzar una puerta es gratis, así que nada de lo que la
+	 * credencial pudiera decir del combustible decidía si el próximo salto se podía
+	 * dar. Vuelven cuando exista el motor de salto de las capitales —el que cruza
+	 * sin puerta y quema— y vuelven sólo para las naves que lo lleven.
 	 */
-	readonly fuel: string;
-	/** Cuántos saltos permite lo que hay, no lo que entraría con el tanque lleno. */
-	readonly jumps: string;
 	/** Si la configuración que lleva se puede volar. */
 	readonly flyable: boolean;
 }
@@ -683,11 +680,11 @@ export interface PuntaTramo {
 }
 
 /**
- * Una puerta vista desde adentro: adónde lleva y qué cuesta cruzarla.
+ * Una puerta vista desde adentro: adónde lleva, cuánto tarda y si se puede.
  *
- * **Todo se dice antes de apretar.** Un salto que se cobra después de ordenarlo
- * es un salto que nadie puede planear, y planear es la mitad de lo que se hace en
- * un juego de naves.
+ * **Todo se dice antes de apretar.** Cruzar no se cobra —la puerta hace el
+ * trabajo— pero sí tarda y sí se puede estar cerrada, y eso hay que saberlo antes
+ * de ordenarlo: planear es la mitad de lo que se hace en un juego de naves.
  */
 export interface SalidaPuerta {
 	/**
@@ -715,11 +712,13 @@ export interface SalidaPuerta {
 	/** Cuánto tarda, en segundos, y escrito. */
 	readonly seconds: number;
 	readonly duration: string;
-	/** Cuánto combustible cuesta, y cuánto hay. */
-	readonly fuel: number;
-	readonly fuelInTank: number;
-	/** El alcance de la nave, para comparar con la distancia. */
-	readonly range: string;
+	/*
+	 * Acá viajaban el costo en combustible, lo que había en el tanque y el alcance
+	 * de la nave. Los tres valían cuando cruzar se pagaba; hoy la puerta hace el
+	 * trabajo, tarda lo mismo para cualquier nave y no pide nada, así que los tres
+	 * salían en cero y en blanco. El insumo y el alcance vuelven con el motor de
+	 * salto de las capitales, que salta sin puerta y sí los gasta.
+	 */
 	/** Por qué no se puede, o vacío si se puede. */
 	readonly blocked: string;
 	/** Qué módulo permite saltar y qué habilidades lo mejoran. */
@@ -2324,7 +2323,11 @@ export interface SalidaGalaxia {
 	/** Qué cuesta el salto, ya escrito. */
 	readonly distance: string;
 	readonly duration: string;
-	readonly fuel: string;
+	/*
+	 * Al lado de la duración iba lo que costaba el salto. Cruzar es gratis, así que
+	 * el renglón salía siempre vacío; el costo vuelve con el motor de salto de las
+	 * capitales, que es el que va a quemar algo.
+	 */
 	/** Si el piloto ya está parado en esa puerta. */
 	readonly standingThere: boolean;
 	/** Por qué no se puede cruzar, o vacío. */

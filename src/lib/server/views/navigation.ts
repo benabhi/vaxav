@@ -50,7 +50,7 @@ import { FACTIONS } from '$lib/game/factions';
 import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
-import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
+import { jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
 import { canBeHired, requiredReputation } from '$lib/game/reputation';
 import { NO_STANDINGS, pilotStandings, type PilotStandings } from '../services/reputation';
 import {
@@ -231,16 +231,14 @@ function transit(db: Db, row: Pilot): Ubicacion {
 	const origen = orden?.originBodyId ? getBodyById(db, orden.originBodyId) : null;
 	const destino = orden?.destinationBodyId ? getBodyById(db, orden.destinationBodyId) : null;
 
-	// La distancia y el combustible sólo existen si esto es un salto: un viaje
-	// dentro del sistema no quema nada y su distancia ya la dice el árbol. Se
-	// vuelven a calcular acá en vez de guardarse en la orden porque `resolveJump`
-	// también los recalcula al llegar, y dos cuentas que tienen que dar lo mismo
-	// es mejor que dos números que pueden desfasarse.
+	// La distancia sólo existe si esto es un salto: la de un viaje dentro del
+	// sistema ya la dice el árbol. Se vuelve a leer acá en vez de guardarse en la
+	// orden porque es un dato de la puerta y no del viaje, y guardarlo sería tener
+	// dos copias que pueden desfasarse.
 	const puerta =
 		orden?.kind === JUMP_KIND && origen
 			? db.select().from(gate).where(eq(gate.bodyId, origen.id)).get()
 			: undefined;
-	const readout = puerta ? shipReadout(db, row) : null;
 
 	const leg: Tramo | null = orden
 		? {
@@ -253,7 +251,11 @@ function transit(db: Db, row: Pilot): Ubicacion {
 				durationSeconds: orden.durationSeconds,
 				duration: remainingLabel(orden.durationSeconds),
 				distance: puerta ? lightYears(puerta.jumpDistance) : '',
-				fuel: puerta && readout ? `${jumpFuel(puerta.jumpDistance, readout.mass)} u` : ''
+				// **Vacío siempre**: cruzar una puerta no consume nada. El campo sigue
+				// en el tipo porque la pantalla lo dibuja bajo un `if`, así que con la
+				// cadena vacía el renglón no aparece; sacarlo del todo es una línea de
+				// marcado, que no es de esta columna.
+				fuel: ''
 			}
 		: null;
 
@@ -577,13 +579,13 @@ export function buildBodyRows(
 }
 
 /**
- * Lo que hay del otro lado de una puerta, y qué cuesta cruzarla.
+ * Lo que hay del otro lado de una puerta, cuánto tarda y si se puede cruzar.
  *
- * **Todo se calcula antes de apretar.** Un salto que se cobra después de
- * ordenarlo es un salto que nadie puede planear, y planear es la mitad de lo que
- * se hace en un juego de naves. El motivo por el que no se puede sale de
- * `jumpProblem`, que es puro y lo comparte el servicio: el botón apagado y el
- * rechazo del servidor dicen exactamente lo mismo.
+ * **Todo se calcula antes de apretar.** Cruzar no cuesta nada ni pide alcance
+ * —la puerta hace el trabajo y tarda lo mismo para cualquier nave—, así que lo
+ * que hay para saber antes es adónde lleva, cuánto lleva y por qué no se puede.
+ * El motivo sale de `jumpProblem`, que es puro y lo comparte el servicio: el
+ * botón apagado y el rechazo del servidor dicen exactamente lo mismo.
  */
 function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 	if (cuerpo.kind !== 'gate') return null;
@@ -597,26 +599,18 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 		: null;
 
 	const readout = shipReadout(db, row);
-	const nave = activeShip(db, row.id);
 
 	const tenths = gemela ? puerta.jumpDistance : null;
-	const alcance = readout?.jumpRange ?? 0;
-	const masa = readout?.mass ?? 0;
-	const tanque = nave?.fuel ?? 0;
 
 	const problema =
-		readout === null || nave === null
+		readout === null
 			? 'Necesitás una nave para saltar.'
-			: jumpProblem(
-					{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
-					tenths,
-					puerta.closed
-				);
+			: jumpProblem({ flyable: readout.flyable }, tenths, puerta.closed);
 
-	// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que
-	// faltan doce de combustible es lo que dice qué hacer, y un panel en blanco
-	// con un "no podés" no dice nada.
-	const segundos = tenths !== null && alcance > 0 ? jumpSeconds(tenths, alcance) : 0;
+	// El tiempo se muestra **aunque no se pueda cruzar**: es lo que dice si vale la
+	// pena arreglar lo que falta, y un panel en blanco con un «no podés» no dice
+	// nada. Sale de la distancia de la puerta y de nada más.
+	const segundos = tenths === null ? 0 : jumpSeconds(tenths);
 
 	return {
 		bearing: puerta.bearing,
@@ -627,28 +621,32 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 		distance: tenths === null ? '' : lightYears(tenths),
 		seconds: segundos,
 		duration: segundos > 0 ? remainingLabel(segundos) : '',
-		fuel: tenths === null ? 0 : jumpFuel(tenths, masa),
-		fuelInTank: tanque,
-		range: lightYears(alcance),
 		blocked: problema ?? '',
-		// El motor de salto es el requisito duro y Astrogación la palanca: sin el
-		// primero no hay verbo, con más de la segunda el mismo salto tarda menos.
-		// **Saltar pide dos piezas**, y es el caso que obligó a que esto sea una
-		// lista: sin motor no hay salto, y sin tanque no hay con qué pagarlo.
-		source: fuenteDeVerbo(
-			db,
-			row,
-			'Saltar',
-			[
-				{ grant: 'jumpPower', label: 'Motor de salto' },
-				{ grant: 'fuel', label: 'Tanque' }
-			],
-			'jump_range',
-			[{ label: 'Alcance', value: lightYears(alcance) }],
-			// El mismo motivo que apaga el botón, dicho una sola vez: sale de
-			// `jumpProblem`, que también usa el servicio para rechazar la orden.
-			problema ? [problema] : []
-		)
+		source: fuenteDeLaPuerta(problema)
+	};
+}
+
+/**
+ * De dónde sale cruzar una puerta: de la puerta.
+ *
+ * **No usa `fuenteDeVerbo` porque no hay nada que ese constructor pueda contar.**
+ * Cruzar no pide ningún módulo montado —la puerta hace el trabajo— y ninguna
+ * habilidad lo mejora: no hay aparato, no hay llave y no hay palanca. Un aviso
+ * que igual nombrara el motor de salto o Astrogación estaría mandando a comprar
+ * y a entrenar cosas que no cambian nada de este verbo, que es peor que no decir
+ * nada.
+ *
+ * Lo que sí queda es la mitad que importa cuando el botón está apagado: **por qué
+ * no se puede**.
+ */
+function fuenteDeLaPuerta(problema: string | null): Procedencia {
+	return {
+		verb: 'Saltar',
+		blockers: problema ? [problema] : [],
+		modules: [],
+		levers: [],
+		effects: [],
+		next: []
 	};
 }
 
@@ -1122,10 +1120,6 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 	const nombres = new Map(cuerpos.map((uno) => [uno.id, uno]));
 
 	const readout = shipReadout(db, row);
-	const nave = activeShip(db, row.id);
-	const alcance = readout?.jumpRange ?? 0;
-	const masa = readout?.mass ?? 0;
-	const tanque = nave?.fuel ?? 0;
 	const velocidad = readout?.speed ?? REFERENCE_SPEED;
 
 	const salidas: SalidaGalaxia[] = [];
@@ -1139,15 +1133,11 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 		if (!alla || !cuerpo) continue;
 
 		const problema =
-			readout === null || nave === null
+			readout === null
 				? 'Necesitás una nave para saltar.'
-				: jumpProblem(
-						{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
-						salida.jumpDistance,
-						salida.closed
-					);
+				: jumpProblem({ flyable: readout.flyable }, salida.jumpDistance, salida.closed);
 
-		const segundos = alcance > 0 ? jumpSeconds(salida.jumpDistance, alcance) : 0;
+		const segundos = jumpSeconds(salida.jumpDistance);
 		// Cuánto hay hasta la puerta, que es el viaje que esta pantalla sí ordena. La
 		// cuenta es la misma que la del árbol del sistema, con la misma velocidad, así
 		// que las dos pantallas no pueden prometer duraciones distintas.
@@ -1162,11 +1152,9 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 			travelDistance: `${thousands(hasta)} ud`,
 			travelDuration: remainingLabel(travelDurationSeconds(hasta, velocidad)),
 			distance: lightYears(salida.jumpDistance),
-			// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que
-			// faltan doce de combustible es lo que dice qué hacer, y un renglón en
-			// blanco con un «no podés» no dice nada.
+			// El tiempo se muestra **aunque no se pueda cruzar**: un renglón en blanco
+			// con un «no podés» no dice nada.
 			duration: segundos > 0 ? remainingLabel(segundos) : '',
-			fuel: `${jumpFuel(salida.jumpDistance, masa)} u`,
 			standingThere: row.locationId === salida.bodyId,
 			blocked: problema ?? ''
 		});
@@ -1267,20 +1255,13 @@ export function buildGalaxia(
 		// se cruza —el mapa manda a Ubicación, que es la pantalla del lugar— pero
 		// con una orden en curso aquella pantalla muestra el viaje y no la puerta:
 		// el camino no lleva a ninguna parte y hay que decirlo acá.
-		jumpSource: fuenteDeVerbo(
-			db,
-			row,
-			'Saltar',
-			[
-				{ grant: 'jumpPower', label: 'Motor de salto' },
-				{ grant: 'fuel', label: 'Tanque' }
-			],
-			'jump_range',
-			[{ label: 'Alcance', value: lightYears(shipReadout(db, row)?.jumpRange ?? 0) }],
-			// La orden en curso primero: con la nave en camino da igual que falte
-			// combustible, y «ya hay una orden» es lo que hay que leer para saber qué
-			// hacer. Es el mismo criterio que el del cinturón.
-			[ahora.orderBlocked, exits.find((una) => una.standingThere)?.blocked ?? ''].filter(Boolean)
+		//
+		// La orden en curso primero: es lo que hay que leer para saber qué hacer, y
+		// es el mismo criterio que el del cinturón.
+		jumpSource: fuenteDeLaPuerta(
+			[ahora.orderBlocked, exits.find((una) => una.standingThere)?.blocked ?? ''].filter(
+				Boolean
+			)[0] ?? null
 		)
 	};
 }

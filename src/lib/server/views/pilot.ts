@@ -12,12 +12,11 @@ import type { Db } from '../db/types';
 import { getFaction } from '$lib/game/factions';
 import { getProfession } from '$lib/game/professions';
 import { roundHalfEven } from '$lib/game/math';
-import { jumpsWithFuel } from '$lib/game/jumps';
 import { RATING_RANKS, nextRankFor, pilotIndex, rankFor } from '$lib/game/rating';
 import { SKILL_FAMILIES, SKILL_LIST } from '$lib/game/skills';
 import { skillXp } from '../services/pilots';
 import { pools } from '../services/pools';
-import { activeShip, shipReadout } from '../services/ships';
+import { shipReadout } from '../services/ships';
 import { situation } from '../services/status';
 import { factionCrest, skillFamilyIcon, skillFamilyLabel, thousands } from '$lib/format';
 import type {
@@ -111,15 +110,14 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 	const ahora = situation(db, row);
 	const pozos = pools(db, row.id);
 
-	// La nave, resumida: el nombre, el rol, las tres capas y el tanque. El detalle
-	// entero está a una pestaña de distancia y no tiene por qué repetirse acá; el
-	// combustible sí, porque es lo único de la lista que **se gasta** y que decide
-	// si el próximo salto se puede dar.
+	// La nave, resumida: el nombre, el rol y las tres capas. El detalle entero está
+	// a una pestaña de distancia y no tiene por qué repetirse acá.
+	//
+	// El tanque y la autonomía estaban en esta lista porque decidían si el próximo
+	// salto se podía dar; hoy cruzar una puerta no gasta nada, así que no deciden
+	// nada y una cifra que no decide nada en la credencial es ruido permanente.
+	// Vuelven con el motor de salto de las capitales, que salta sin puerta.
 	const readout = shipReadout(db, row);
-	const nave = activeShip(db, row.id);
-	// Acotado igual que en la ficha: desmontar un tanque deja la nave con más
-	// combustible del que ahora le entra, y mostrar `140 / 120` es mostrar un error.
-	const combustible = nave ? Math.min(nave.fuel, readout?.fuel ?? 0) : 0;
 	const ship: NaveDelPiloto | null = readout
 		? {
 				name: readout.hull.name,
@@ -127,8 +125,6 @@ export function buildPilotView(db: Db, row: Pilot): PilotoConectado {
 				shield: thousands(readout.shield),
 				armor: thousands(readout.armor),
 				structure: thousands(readout.structure),
-				fuel: `${combustible} / ${readout.fuel}`,
-				jumps: String(jumpsWithFuel(combustible, readout.mass)),
 				flyable: readout.flyable
 			}
 		: null;
