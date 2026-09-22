@@ -42,19 +42,24 @@ import {
 	deleteBody,
 	deleteSystem,
 	disconnectGate,
+	setDeposits,
 	setGateClosed,
 	setStation,
 	updateBody,
-	type BodyDraft
+	type BodyDraft,
+	type DepositDraft
 } from '../src/lib/server/services/worldbuilding';
+import { seedAsteroids } from '../src/lib/server/services/asteroids';
 import {
 	GATE_BEARINGS,
 	romanNumeral,
+	securityLevel,
 	type Atmosphere,
 	type BodyClass,
 	type BodyKind,
 	type GateBearing,
 	type Government,
+	type SecurityLevel,
 	type StarClass
 } from '../src/lib/game/universe';
 import { neighbourOf, type Hex } from '../src/lib/game/galaxy';
@@ -343,6 +348,49 @@ const SERVICIOS = ['shipyard', 'outfitting', 'storage', 'market', 'refinery'] as
  */
 const SEPARACION_BINARIA = 120;
 
+/**
+ * Los minerales de un cinturón, por cajón de seguridad del sistema.
+ *
+ * La regla es la de [los materiales](../docs/systems/MATERIALS.md): «lo común
+ * está en todos lados; lo valioso, sólo donde no hay quien te cuide». De ahí que
+ * la lista sea **acumulativa** y no excluyente: bajar de cajón agrega mineral,
+ * no lo reemplaza, y por eso un sistema sin ley sigue teniendo con qué llenar
+ * una bodega barata.
+ *
+ * El tope y la reposición de cada mineral **no se inventan acá**: son los del
+ * plano oficial —los Anillos de Ánfora para los dos comunes, el Cinturón
+ * Exterior para los dos raros—, así un cinturón de prueba rinde lo mismo que el
+ * que el jugador ya conoce y no hay dos balances midiendo lo mismo.
+ *
+ * `lawless` repite lo de `low` porque los dos minerales sin ley de la tabla
+ * —brecha platinífera y núcleo uranífero— todavía no existen en el catálogo.
+ */
+const COMUNES: readonly DepositDraft[] = [
+	{ ore: 'ferrous_silicate', capacity: 60_000, regenPerHour: 3_000 },
+	{ ore: 'carbon_chondrite', capacity: 40_000, regenPerHour: 2_000 }
+];
+const DE_SEGURIDAD_MEDIA: DepositDraft = { ore: 'pyroxene', capacity: 9_000, regenPerHour: 260 };
+const DE_SEGURIDAD_BAJA: DepositDraft = { ore: 'iridium_vein', capacity: 2_400, regenPerHour: 60 };
+
+const MINERALES_POR_SEGURIDAD: Readonly<Record<SecurityLevel, readonly DepositDraft[]>> = {
+	high: COMUNES,
+	medium: [...COMUNES, DE_SEGURIDAD_MEDIA],
+	low: [...COMUNES, DE_SEGURIDAD_MEDIA, DE_SEGURIDAD_BAJA],
+	lawless: [...COMUNES, DE_SEGURIDAD_MEDIA, DE_SEGURIDAD_BAJA]
+};
+
+/**
+ * Qué tan afuera del último planeta cae el cinturón, en unidades de distancia.
+ *
+ * Se mide desde la órbita del planeta más lejano y no desde la estrella, porque
+ * un cinturón metido entre los planetas se lee como un error de siembra: en el
+ * plano oficial el Cinturón Exterior está justamente afuera de todo. La banda es
+ * angosta para que siga quedando más cerca que las puertas, que es lo que hace
+ * que minar en casa sea más cómodo que cruzar.
+ */
+const CINTURON_TRAS_EL_ULTIMO_MIN = 60;
+const CINTURON_TRAS_EL_ULTIMO_MAX = 200;
+
 /** Cuántos pasos cerrados se plantan, si hay candidatos que no aíslen a nadie. */
 const PASOS_CERRADOS = 3;
 
@@ -352,6 +400,7 @@ const conteo: Record<string, number> = {
 	sistemas: 0,
 	'estrellas dobles': 0,
 	cuerpos: 0,
+	cinturones: 0,
 	estaciones: 0,
 	puertas: 0,
 	atajos: 0,
@@ -1019,6 +1068,62 @@ for (let i = 0; plantoAlgo && i < 4; i++) {
 	} catch {
 		// Otro rumbo ocupado. Se saltea.
 	}
+}
+
+/**
+ * Un cinturón por sistema, con lo que la seguridad deja haber.
+ *
+ * **Sin esto, sesenta sistemas no tienen dónde minar.** El único verbo de
+ * extracción que existe pide un cinturón y la galaxia de prueba no plantaba
+ * ninguno: el jugador cruzaba media galaxia para mirar planetas y volver. Un
+ * sistema al que se viaja para nada es peor que uno que no está.
+ *
+ * Qué mineral hay lo decide **la seguridad y no el dado**, que es la regla del
+ * documento de materiales. Así el número de seguridad ya significa algo antes de
+ * que exista el riesgo que lo justifica, y la galaxia se lee como un gradiente y
+ * no como sesenta cinturones iguales.
+ *
+ * **Va al final del guión a propósito.** Cada tirada corre todas las que vienen
+ * después, así que sembrar cinturones dentro del bucle de los sistemas habría
+ * redibujado la galaxia entera: otros gobiernos, otras órbitas, otros rumbos.
+ * Acá abajo no queda nada a lo que correrle el dado.
+ */
+for (const systemId of todos) {
+	const sistema = db.select().from(systemTable).where(eq(systemTable.id, systemId)).get();
+	if (!sistema) continue;
+
+	const cuerpos = db.select().from(bodyTable).where(eq(bodyTable.systemId, systemId)).all();
+	// Idempotente por sistema: el que ya tiene cinturón se saltea entero. Volver a
+	// sortearle la órbita no lo movería —`createBody` se negaría por el código
+	// repetido— pero sí correría el dado del resto.
+	if (cuerpos.some((uno) => uno.kind === 'belt')) continue;
+
+	const ultimaOrbita = cuerpos
+		.filter((uno) => uno.kind === 'planet')
+		.reduce((lejos, uno) => Math.max(lejos, uno.orbitDistance), 0);
+
+	const cinturon = createBody(
+		db,
+		systemId,
+		{
+			name: `Cinturón de ${sistema.name}`,
+			kind: 'belt',
+			parentId: estrellaDe(systemId),
+			orbitDistance: ultimaOrbita + entre(CINTURON_TRAS_EL_ULTIMO_MIN, CINTURON_TRAS_EL_ULTIMO_MAX),
+			explored: true,
+			...atributosDe('belt')
+		},
+		null
+	);
+
+	setDeposits(db, cinturon.id, MINERALES_POR_SEGURIDAD[securityLevel(sistema.security)], null);
+	// El cinturón nació sin plano —los depósitos llegan recién acá— así que la
+	// tanda que `createBody` le intentó dar salió vacía. Se le da ahora, o quedaría
+	// pelado hasta que pasara el tiempo de reposición.
+	seedAsteroids(db, cinturon.id);
+
+	conteo.cuerpos++;
+	conteo.cinturones++;
 }
 
 console.log('Galaxia de prueba sembrada:');
