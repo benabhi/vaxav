@@ -64,8 +64,8 @@ crece: por eso todo lo que se lleva obliga a dejar otra cosa.
    orden y salir.
 2. **Texto, no gráficos.** La interfaz imita una terminal de a bordo. La riqueza
    está en los números y en la descripción, no en la animación.
-3. **Todo cuesta algo.** Combustible, espacio de bodega, desgaste. Las decisiones
-   duelen porque cierran otras puertas.
+3. **Todo cuesta algo.** Tiempo, espacio de bodega, masa encima, desgaste. Las
+   decisiones duelen porque cierran otras puertas.
 4. **El mundo es compartido.** Los precios, los recursos y los peligros dependen
    de lo que hagan los demás pilotos, no de un guion.
 5. **Nunca hace falta estar.** Lo que en otro juego pide reflejos, acá se decide
@@ -138,17 +138,26 @@ es a la vez elegir una historia y una planilla de bonos.
 pensarla entera antes de empezar es lo que separa un sistema de un atributo
 suelto.
 
-El salto entre sistemas sirve de ejemplo porque tiene todos los eslabones:
+Extraer mineral sirve de ejemplo porque es **la cadena que el juego recorre todos
+los días** y se le ven los siete eslabones:
 
-| Eslabón        | En el salto                                  |
-| -------------- | -------------------------------------------- |
-| **El verbo**   | Cruzar una puerta                            |
-| **El insumo**  | Helio-3, que se consume                      |
-| **La fuente**  | Hielo lunar, que hay que minar y refinar     |
-| **El aparato** | Motor de salto y tanque, que se montan       |
-| **La llave**   | Astrogación y Eficiencia de combustible      |
-| **La fábrica** | Los materiales con que se construye el motor |
-| **El lugar**   | La estación que refina, vende y repara       |
+| Eslabón        | En la extracción                                        |
+| -------------- | ------------------------------------------------------- |
+| **El verbo**   | Extraer de una roca leída                               |
+| **El insumo**  | Ninguno: el láser común no gasta nada                   |
+| **La fuente**  | Los cinturones, con rocas que se agotan y se reponen    |
+| **El aparato** | El láser de extracción, que se monta y ocupa una ranura |
+| **La llave**   | Minería, Prospección y Gestión de energía               |
+| **La fábrica** | La lente focal y el silicio con que se construye        |
+| **El lugar**   | El cinturón donde se hace y la estación que paga        |
+
+**El insumo en blanco no es un eslabón que falta**: un láser común no quema nada,
+y ésa es la decisión. El día que se quiera un consumible ahí, la respuesta no es
+cobrarle munición al láser que ya existe sino otro verbo con otro aparato —el
+láser de tira y sus cristales—, que es otra cadena y está escrita entera en
+[materiales](systems/MATERIALS.md#consumibles). Cuál de los siete eslabones anda
+hoy y cuál está escrito nada más se lleva en
+[estado y huecos](ROADMAP.md#minar-mineral), que es donde viven las marcas.
 
 Un eslabón que falta no rompe nada de entrada: deja un **huérfano**, y los
 huérfanos son exactamente el diagnóstico con el que arrancó este proyecto. Un
@@ -164,13 +173,42 @@ mirar dónde están los huecos.**
 ### No hace falta cerrarla de una vez
 
 La regla no es «no entra hasta estar completa», que sería no entregar nunca. Es
-**saber dónde están los huecos y que cada uno tenga fecha**, no olvido. El
-combustible puede empezar comprándose en la estación y recién después salir del
-hielo; lo que no puede es que nadie sepa que esa fuente falta.
+**saber dónde están los huecos y que cada uno tenga fecha**, no olvido. Los ocho
+minerales pueden entrar cuatro por vez y el láser puede comprarse hecho antes de
+que exista con qué fabricarlo; lo que no puede es que nadie sepa que esa fábrica
+falta.
 
 Y hay una consecuencia de orden: **el insumo entra con el verbo que lo gasta, no
-antes**. Agregar helio-3 sin la puerta que lo consume es fabricar un huérfano a
-propósito.
+antes**. El caso testigo es el helio-3: está en el catálogo de ítems, tiene
+volumen y precio, y **el mercado no lo muestra**, porque hoy no hay ningún verbo
+que lo queme. Ponerlo a la venta sería cobrarle a alguien por algo que no puede
+usar, que es fabricar un huérfano a propósito.
+
+### Un eslabón se puede ir, y hay que decir adónde
+
+El salto entre sistemas fue el ejemplo de esta sección durante todo el proyecto:
+cruzar una puerta quemaba helio-3 por masa y distancia, pedía que el alcance del
+motor llegara, y tenía los siete eslabones puestos. **Ya no.** Cruzar una puerta
+es gratis, no pide nada y la misma puerta tarda lo mismo para cualquier nave; el
+porqué —que es el argumento entero y no una nota— está en
+[acciones](systems/ACTIONS.md#cruzar-es-gratis).
+
+Lo que importa acá es qué le pasó a la cadena, porque es la parte que se repite:
+el insumo, el aparato y la llave **no se borraron, se mudaron**. Van a ser del
+motor de salto de las capitales, el que cruza entre sistemas no vecinos y sin
+puerta. Hasta que ese verbo exista, **el combustible no tiene consumidor** y
+quedan cinco piezas sin verbo: el tanque, el depósito auxiliar, el calibrador de
+salto, Astrogación y Eficiencia de combustible.
+
+De ahí salen dos reglas que valen para cualquier mecánica que se dé vuelta:
+
+- **Un eslabón que se va dice a qué verbo se fue y qué lo despierta.** «Dormido»
+  es una decisión con fecha; «sin uso» es un olvido con otro nombre.
+- **Un número que ya no consume nadie se deja de mostrar.** El alcance y la
+  autonomía salieron de la ficha de la nave, y el tanque y los saltos que
+  quedaban, de la credencial: el mismo día que dejaron de decidir algo, porque
+  una cifra en pantalla es una promesa de que sirve para algo. Vuelven con el
+  verbo, y **sólo en las naves que lo tengan**.
 
 ### La cadena se muestra, o no existe
 
@@ -201,20 +239,27 @@ Tres reglas, y ninguna es opcional:
 **Y la llave no es lo mismo que la palanca.** Son dos relaciones distintas, y
 mostrarlas iguales fue lo que confundió desde el principio:
 
-|                | Qué es                                  | Qué pasa sin ella             |
-| -------------- | --------------------------------------- | ----------------------------- |
-| **La llave**   | Habilita. El escáner, el motor de salto | El verbo **no existe**        |
-| **La palanca** | Mejora. Escaneo, Astrogación, Minería   | El verbo existe y rinde menos |
+|                | Qué es                                       | Qué pasa sin ella             |
+| -------------- | -------------------------------------------- | ----------------------------- |
+| **La llave**   | Habilita. El escáner, el láser de extracción | El verbo **no existe**        |
+| **La palanca** | Mejora. Escaneo, Navegación, Minería         | El verbo existe y rinde menos |
 
 Una es un requisito y la otra una recompensa. Un aviso que las mezcla deja al
 jugador sin saber si le falta comprar algo o le falta entrenar, que son dos días
 de juego distintos.
 
-El caso testigo es el salto: el panel de la puerta dice la distancia, el alcance
-de la nave, cuánto tarda y cuánto quema **antes** de apretar, y cuando no se
-puede, el motivo sale de la misma función pura que usa el servidor para
-rechazarlo. El botón apagado y el rechazo del servidor dicen lo mismo, y el
-jugador nunca aprieta algo que va a rebotar.
+El caso testigo de lo primero es extraer: el aviso del botón dice con qué láser
+se hace, qué habilidades mueven el rendimiento, cuánto rinde hoy y cuánto daría
+el nivel siguiente, **antes** de apretar.
+
+El caso testigo de lo segundo es el salto: el panel de la puerta dice adónde
+lleva y cuánto tarda, y cuando no se puede, el motivo sale de la misma función
+pura que usa el servidor para rechazarlo. El botón apagado y el rechazo del
+servidor dicen lo mismo, y el jugador nunca aprieta algo que va a rebotar. Es
+también el testigo de la mitad contraria: **un verbo que no pide nada no inventa
+requisitos para tener algo que mostrar**. Cruzar no nombra ningún módulo ni
+ninguna habilidad, porque ninguna de las dos cosas cambia el cruce, y un aviso
+que las nombrara mandaría a gastar en lo que no sirve.
 
 Cómo se dibuja —dónde va, qué lleva y qué hacer al agregar un verbo nuevo— está
 en [la procedencia de una acción](systems/INTERFACE.md#la-procedencia-de-una-acción).
@@ -225,11 +270,13 @@ deja, y esa explicación es interfaz, no documentación.**
 ### Cada eslabón reusa lo que ya existe
 
 La cadena se alarga rápido, así que cada eslabón tiene que apoyarse en maquinaria
-que ya esté: el combustible es un ítem como cualquier otro, se compra por el
-mercado que ya existe, se refina en la refinería que ya existe y se gasta con la
-misma constante con la que la ficha de la nave calcula la autonomía. Un eslabón
-que inventa su propio sistema paralelo multiplica el costo de todos los que
-vengan después.
+que ya esté: el combustible **es un ítem como cualquier otro**, y por eso el día
+que un verbo lo queme se va a comprar por el mercado que ya existe, se va a
+llevar en la bodega que ya existe y se va a cargar con la misma cuenta con la que
+la ficha de la nave calculaba la autonomía. La alternativa —un botón de repostar
+con su propia economía al costado— habría que volver a atarla el día que el
+helio-3 salga del hielo y lo venda un jugador. Un eslabón que inventa su propio
+sistema paralelo multiplica el costo de todos los que vengan después.
 
 ## Identidad visual
 
@@ -276,9 +323,9 @@ el juego no tiene con nadie.
 | Clase                 | Quién habla          | Cómo suena                                                                         | Ejemplo                                                                   |
 | --------------------- | -------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | **Aviso del sistema** | La nave, el servidor | Seco, presente, sin adorno. Dice qué pasa o qué falta, nunca por qué te lo merecés | «Acá no hay nada que extraer.»                                            |
-| **Rótulo**            | La interfaz          | Un sustantivo. Ni una frase, ni una pregunta, ni un verbo conjugado                | «Combustible», «Alcance», «Duración»                                      |
+| **Rótulo**            | La interfaz          | Un sustantivo. Ni una frase, ni una pregunta, ni un verbo conjugado                | «Bodega», «Distancia», «Duración»                                         |
 | **Ambientación**      | El mundo             | Acá sí hay prosa: describe cosas, no le habla al jugador                           | «Roca gris con vetas de hierro. El pan de todos los días en los Anillos.» |
-| **Informe**           | La bitácora          | Casi no es prosa: un sustantivo y filas de dato y cifra, con su unidad             | «Salto · Llegada: Puerta Sur · Combustible: −7 u»                         |
+| **Informe**           | La bitácora          | Casi no es prosa: un sustantivo y filas de dato y cifra, con su unidad             | «Salto · Llegada: Puerta Sur · Distancia: 1,4 al»                         |
 
 La confusión más fácil es meter ambientación en un aviso. La descripción de un
 mineral puede tener imagen y ritmo porque describe **una cosa**; un aviso que se

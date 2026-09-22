@@ -189,7 +189,17 @@ jugador hay otro jugador.
 
 **La estación no revende mineral.** Lo compra para procesarlo; un mostrador que lo
 devolviera al catálogo convertiría el circuito minero en un botón que se aprieta
-sin salir del hangar.
+sin salir del hangar. De las tres clases de ítem que existen —mineral, módulo y
+combustible—, el mostrador **vende módulos y nada más**.
+
+**Y no todo lo que existe se comercia.** El catálogo del mostrador se arma del
+catálogo de ítems entero y filtra lo que hoy se puede comprar o vender, así que el
+**combustible queda afuera**: desde que
+[cruzar una puerta es gratis](ACTIONS.md#cruzar-es-gratis) no lo consume ningún
+verbo, y un renglón con precio para algo que nadie puede usar es una promesa de
+mecánica. El día que vuelva a la mesa vuelve con **su rama del árbol**, que se fue
+con él: las ramas de primer nivel son las clases de ítem, así que es una línea y
+no una migración.
 
 ### Es una banda, no un precio
 

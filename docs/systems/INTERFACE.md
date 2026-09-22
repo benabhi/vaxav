@@ -218,14 +218,17 @@ La respuesta es no fingir que sí. Mientras la nave está en camino:
   distancia, estado— salen en blanco o, peor, describen el lugar que se dejó
   atrás. Un panel que miente es peor que un panel que no está.
 - **En su lugar va el tramo**, que es lo único verdadero ahí: de dónde a dónde,
-  qué se quema, cuánto tarda.
+  qué distancia y cuánto tarda.
 - **Cada punta lleva su sistema**, con bandera, gobierno y nivel de ley. En un
   salto los dos sistemas son distintos y ésa es toda la gracia del salto; y como
   la ficha del lugar está apagada, **no hay ninguna otra pantalla** donde mirar a
   qué se está entrando justo cuando uno quiere saberlo.
-- La distancia y el combustible **sólo aparecen si hubo un salto detrás**. Un
-  viaje dentro del sistema no quema nada, y una fila en blanco miente más que una
-  fila que no está.
+- La distancia **sólo aparece si hubo un salto detrás**: un viaje dentro del
+  sistema ya la dice el árbol, y una fila en blanco miente más que una fila que no
+  está. Al lado iba lo que el salto quemaba y salió con el cobro; ver
+  [cruzar es gratis](ACTIONS.md#cruzar-es-gratis). La bitácora sí lo sigue
+  mostrando **en los informes viejos**: un informe cuenta lo que pasó el día que
+  pasó, y reescribirlo hacia atrás lo vuelve inútil.
 
 Es la misma idea que el indicador, un nivel más abajo: el título de la pantalla
 deja de ser dónde estás y pasa a ser **adónde vas**.
@@ -785,15 +788,17 @@ dice quién sos, y en un juego de progresión eso no es el nombre: es la silueta
 aquello a lo que le dedicaste el tiempo. La tarjeta contesta las dos preguntas de
 un vistazo, y un botón la abre en grande junto a las cifras exactas de cada rama.
 
-Abajo del todo, **la franja de la nave**: el casco, su rol, el tanque y las tres
-capas en el orden en que se las come el daño. El detalle entero está a una pestaña
-de distancia y no se repite acá —salvo el combustible, que viene igual porque es
-el único de esos números que **se gasta**, y el que decide si el próximo salto se
-puede dar—. Un dato así no puede costar dos pestañas mirarlo.
+Abajo del todo, **la franja de la nave**: el casco, su rol y las tres capas en el
+orden en que se las come el daño. El detalle entero está a una pestaña de
+distancia y no se repite acá.
 
-Es una regla, no una excepción: **lo que se agota se muestra donde se lo va a
-extrañar**, no sólo en su ficha. El combustible aparece en la nave, en la
-credencial, junto al botón de saltar y en el informe del viaje.
+La regla que decide qué se repite es **lo que se agota se muestra donde se lo va a
+extrañar**, no sólo en su ficha. Y tiene su reverso, que es el que se acaba de
+aplicar: **lo que no se agota no se repite en ningún lado**. Acá estaban el tanque
+y cuántos saltos quedaban, y salieron el día que
+[cruzar una puerta dejó de costar](ACTIONS.md#cruzar-es-gratis): las dos cifras
+prometían un límite que no existe. Vuelven con el verbo que las gaste, y **sólo en
+las naves que lo lleven**.
 
 #### No hay foto, hay sello
 
@@ -993,11 +998,19 @@ Los verbos del mercado —comprar, vender, acordar— todavía no la llevan: no
 dependen de un módulo de la nave, pero sí de habilidades como Regateo, que hoy no
 mueve ningún número. Entran cuando esa habilidad sea mecánica.
 
-Y hay un hueco anotado: **Eficiencia de combustible no mueve nada todavía**. El
-salto la nombra en la hoja de ruta pero `jumpFuel` recibe su bono en cero, así que
-no aparece entre las habilidades de saltar. Aparece el día que lo mueva, no antes:
-prometer una habilidad que no hace nada es el huérfano que la cadena existe para
-evitar.
+**Saltar con las dos columnas vacías es el caso que más enseña.** Nombraba el
+motor de salto, el tanque y Astrogación, y desde que
+[cruzar es gratis](ACTIONS.md#cruzar-es-gratis) ninguna de las tres cosas cambia
+nada del cruce: un aviso que las siguiera nombrando mandaría a comprar y a
+entrenar para nada, que es peor que no decir nada. Lo que le queda es la mitad que
+importa con el botón apagado —por qué no se puede—, y por eso su procedencia se
+arma a mano en vez de salir de `fuenteDeVerbo`.
+
+Y hay un hueco anotado: **Eficiencia de combustible sigue sin aparecer en ningún
+verbo**. Ya es una fila de la tabla de bonos y resuelve su porcentaje, pero nada
+lo lee, así que no tiene dónde mostrarse. Aparece el día que un verbo lo gaste, no
+antes: prometer una habilidad que no hace nada es el huérfano que la cadena existe
+para evitar.
 
 ## Reglas de diseño
 

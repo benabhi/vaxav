@@ -24,17 +24,25 @@ La leyenda mide **una sola cosa: si el juego lo hace**.
 Dos aclaraciones, que es donde un mapa como éste se vuelve mentira si se afloja:
 
 - **Una llave es ✅ cuando la habilidad mueve un número o abre una puerta**, no
-  cuando está en el catálogo. Las 111 habilidades existen; **quince** hacen algo,
-  y las otras 96 son 🔨.
+  cuando está en el catálogo. Las 111 habilidades existen; **quince** mueven
+  algún número y las otras 96 son 🔨. Y hay un escalón intermedio que la marca no
+  distingue y conviene decir: **cinco de esas quince mueven un número que ningún
+  verbo lee**, así que la cadena que las nombra sigue abierta igual.
 - **Un eslabón con dos mitades en distinto estado va en dos filas.** No se
   promedia: una fuente a medias no es media fuente, es una que anda por un lado y
   no existe por el otro.
 
 ## El mapa de los huecos
 
-Ocho actividades y 66 eslabones: **24 ✅, 29 🔨 y 9 ❌**, más cuatro que no
+Nueve actividades y 73 eslabones: **21 ✅, 32 🔨 y 11 ❌**, más nueve que no
 aplican. **Ninguna cadena está entera.** La que más se acerca es comerciar, que
 tiene todos sus eslabones andando y una sola llave muerta colgando.
+
+Las nueve no son ocho más una nueva: **saltar se partió en dos** el día que
+cruzar una puerta pasó a ser gratis. Lo que la puerta dejó de usar —el
+combustible, el tanque, las dos habilidades— no desapareció del mapa, se mudó a
+la actividad que lo va a gastar, que es la única forma de que un eslabón suelto
+siga teniendo dueño.
 
 ### Minar mineral
 
@@ -95,8 +103,10 @@ extracción como cadena de ejemplo en [materiales](systems/MATERIALS.md).
 **El verbo no existe y es el hueco más barato de todos.** El insumo, la fuente y
 el lugar están: la baldosa «Refinería» está sembrada en Puerto Ánfora, el Muelle
 de los Anillos, la Planta Escarcha y el Hábitat Talo, y no abre nada. Los doce
-refinados están escritos en [materiales](systems/MATERIALS.md) y ninguno es un
-ítem del catálogo, que sólo conoce minerales y módulos. Va ❌ y no 🔨 por una
+refinados están escritos en [materiales](systems/MATERIALS.md) y **sólo uno es un
+ítem del catálogo**: el helio-3, que entró por la puerta de al lado y que el
+mercado no muestra. Refinar no tiene todavía adónde dejar lo que saque. Va ❌ y no
+🔨 por una
 razón concreta: **la merma no tiene número en ningún documento**, y sin merma
 refinar es una conversión sin decisión adentro.
 
@@ -106,34 +116,72 @@ hace es quitar 30 de bodega.
 
 ### Saltar a otro sistema
 
-| Eslabón    | Qué es                                        |     |
-| ---------- | --------------------------------------------- | --- |
-| El verbo   | Cruzar una puerta                             | ✅  |
-| El insumo  | **Combustible**, que se consume y no vuelve   | ✅  |
-| La fuente  | **Hielo → helio-3**, escrito y sin construir  | 🔨  |
-| La fuente  | Repostar con plata, que no tiene ni precio    | ❌  |
-| El aparato | Calibrador de salto y depósito auxiliar       | ✅  |
-| La llave   | Astrogación                                   | ✅  |
-| La llave   | Eficiencia de combustible                     | 🔨  |
-| La fábrica | Tubo de contención + uranio                   | 🔨  |
-| El lugar   | La puerta como cuerpo; el cuartel las conecta | ✅  |
-| El lugar   | Un segundo sistema al que llegar              | ❌  |
+| Eslabón    | Qué es                                         |     |
+| ---------- | ---------------------------------------------- | --- |
+| El verbo   | Cruzar una puerta                              | ✅  |
+| El insumo  | Ninguno: la puerta hace el trabajo             | —   |
+| La fuente  | No aplica: no hay insumo que reponer           | —   |
+| El aparato | Ninguno: cualquier nave cruza cualquier puerta | —   |
+| La llave   | Ninguna: ninguna habilidad cambia el cruce     | —   |
+| La fábrica | No aplica                                      | —   |
+| El lugar   | La puerta como cuerpo; el cuartel las conecta  | ✅  |
+| El lugar   | Un segundo sistema al que llegar               | ❌  |
 
-**El huérfano más viejo del juego, y es peor de lo que este documento decía.** No
-es sólo que el combustible no salga del hielo: **no hay forma de repostar**. El
-asiento `refuel` está declarado en el libro y no lo escribe nadie; lo único que
-rellena un tanque es la siembra, y sólo si quedó en cero. Un piloto que gasta sus
-saltos se queda sin ellos.
+**Era el huérfano más viejo del juego y dejó de serlo por un cambio de regla, no
+por haberse construido.** Cruzar una puerta pasó a ser gratis: no cuesta
+combustible, no pide alcance y la misma puerta tarda lo mismo para cualquier
+nave. El argumento entero está en
+[cruzar es gratis](systems/ACTIONS.md#cruzar-es-gratis); en una línea, **la
+puerta es el único camino entre sistemas**, así que un tanque vacío no dejaría a
+nadie lento sino varado.
 
-Dos cosas más que estaban marcadas de más:
+Lo que queda es una cadena de tres eslabones —un verbo, un lugar y nada más— y un
+solo hueco, que es el de siempre: **el universo oficial es un solo sistema y
+ninguna puerta**. La puerta existe como cuerpo y el constructor del cuartel las
+conecta a mano; la siembra de prueba arma sesenta sistemas con las suyas. La
+galaxia que reparte `npm run db:seed` es Ánfora y nada más, así que el verbo no
+tiene adónde llevarte.
 
-- **Eficiencia de combustible no descuenta nada.** La fórmula del salto acepta el
-  porcentaje y todos los que la llaman le pasan cero.
-- **El universo oficial es un solo sistema y ninguna puerta.** La puerta existe
-  como cuerpo y el constructor del cuartel las conecta a mano; la siembra de
-  prueba arma sesenta sistemas con las suyas. La galaxia que reparte
-  `npm run db:seed` es Ánfora y nada más, así que el verbo no tiene adónde
-  llevarte.
+Los eslabones que se fueron **no se borraron: se mudaron** a la actividad que
+sigue.
+
+### Saltar sin puerta
+
+| Eslabón    | Qué es                                                     |     |
+| ---------- | ---------------------------------------------------------- | --- |
+| El verbo   | El motor de salto: cruzar entre sistemas no vecinos        | ❌  |
+| El insumo  | **Combustible**: ítem del catálogo, fuera del mercado      | 🔨  |
+| La fuente  | **Hielo → helio-3**, escrito y sin construir               | 🔨  |
+| La fuente  | Comprarlo hecho: tiene precio y el repostaje está escrito  | 🔨  |
+| El aparato | El motor de salto de una capital                           | ❌  |
+| El aparato | Tanque, depósito auxiliar y calibrador de salto, montables | 🔨  |
+| La llave   | Astrogación y Eficiencia de combustible                    | 🔨  |
+| La fábrica | Tubo de contención + uranio                                | 🔨  |
+| El lugar   | Un sistema no vecino al que saltar                         | ❌  |
+
+**No existe una línea de esto, y aun así tiene seis eslabones escritos**: es la
+cadena que heredó todo lo que el salto por puerta dejó de usar. El helio-3 es un
+ítem del catálogo con volumen y precio que **el mercado no muestra**, el consumo
+por masa y su eficiencia están calculados y probados, el repostaje está escrito y
+sin llamadores, y tres piezas se montan sin gobernar nada.
+
+Son **huérfanos declarados y con fecha**, que es lo que
+[la cadena](DESIGN.md#no-hace-falta-cerrarla-de-una-vez) permite, y la fecha es
+la misma para los seis: el día que exista el motor de salto de las capitales. Ver
+[las capitales](systems/SHIPS.md#la-cadena) para lo que arrastra ese verbo, que
+es bastante más que un salto.
+
+Dos anotaciones que valen para elegir:
+
+- **Eficiencia de combustible ya resuelve su porcentaje** —es una fila más de la
+  tabla de bonos— y no lo lee nadie. Antes ni eso: la fórmula lo aceptaba y todos
+  los que la llamaban le pasaban cero.
+- **Astrogación mueve el alcance de salto y ningún verbo lee ese número.** Sigue
+  abriendo una puerta —es requisito del calibrador de salto de escalón II—, pero
+  es un requisito para montar una pieza que tampoco gobierna nada. Y hay un
+  cruce que conviene resolver cuando el verbo entre: por nombre el alcance
+  debería moverlo **Cálculo de saltos**, que no lo lee nadie, igual que pasa con
+  Minería y Rendimiento de extracción.
 
 ### Fabricar un módulo
 
@@ -225,27 +273,32 @@ el verbo apareciera mañana.
 
 Ordenados por lo que cuesta dejarlos abiertos, no por lo que cuesta cerrarlos:
 
-1. **El combustible no tiene fuente ni forma de reponerse.** Lo que se gasta
-   saltando no vuelve por ningún camino del juego.
-2. **Cuatro de las ocho familias no tienen de dónde sacar experiencia.**
+1. **Cuatro de las ocho familias no tienen de dónde sacar experiencia.**
    Ingeniería, Industria, Combate y Mando suman **52 de las 111 habilidades**, y
    hoy ninguna se puede entrenar: la experiencia se deposita por rama y sólo
    Pilotaje, Extracción, Ciencias y Comercio reciben depósitos. De ahí sale la
    regla que condiciona todo lo que venga: **sólo se gatea con habilidades que se
    puedan entrenar**, porque pedir una de una rama sin fuente es cerrar la puerta
    con la llave adentro.
-3. **De las 111 habilidades, quince mueven algo**, y tres de ésas —Puntería,
-   Escudos y Blindaje— mueven números que ningún verbo lee.
-4. **La bandeja de refuerzos está vacía.** Los cinco cascos tienen sus ranuras de
+2. **De las 111 habilidades, quince mueven algo**, y cinco de ésas —Puntería,
+   Escudos, Blindaje, Astrogación y Eficiencia de combustible— mueven números que
+   ningún verbo lee.
+3. **La bandeja de refuerzos está vacía.** Los cinco cascos tienen sus ranuras de
    refuerzo y su presupuesto de calibración, y el catálogo no tiene **un solo
    refuerzo**: es la única bandeja que no se puede llenar.
-5. **La reputación no tiene fuente.** Está guardada como libro, se dibuja en la
+4. **La reputación no tiene fuente.** Está guardada como libro, se dibuja en la
    escalera, decide hasta qué nivel de agente se llega, y **nada la escribe**: la
    fuente declarada son las misiones y las misiones no existen. Todo piloto está
    en cero para siempre.
-6. **El universo oficial es un sistema sin puertas.**
-7. **Dos aparatos prometen verbos que no existen**: la Refinería de a bordo y el
-   Amortiguador de firma.
+5. **El universo oficial es un sistema sin puertas.**
+6. **Cuatro aparatos prometen verbos que no existen**: la Refinería de a bordo,
+   el Amortiguador de firma, el calibrador de salto y el depósito auxiliar.
+7. **El combustible no tiene consumidor.** Bajó del primer puesto al último y no
+   por haberse arreglado: cruzar una puerta dejó de gastarlo, así que ya no deja
+   a nadie varado y pasó a ser un huérfano tranquilo, con su verbo anotado —el
+   motor de salto de las capitales— y sin nada que se rompa mientras tanto. Sigue
+   en la lista porque **un insumo sin consumidor no se arregla solo**: o llega el
+   verbo, o algún día hay que sacarlo.
 
 ## Lo que existe
 
@@ -278,18 +331,18 @@ inventario.
 
 ### Los catálogos, en cifras
 
-| Catálogo           | Hoy                                                               |
-| ------------------ | ----------------------------------------------------------------- |
-| Habilidades        | 111 en ocho familias; **quince** mueven algo                      |
-| Familias con pozo  | Cuatro de ocho                                                    |
-| Cascos             | 5, ninguno con clase declarada                                    |
-| Módulos            | 34 —27 de escalón I y 7 de II—, **ningún refuerzo**               |
-| Bandejas           | Altos, medios, bajos y refuerzos                                  |
-| Ítems              | Minerales y módulos; ni refinados, ni componentes, ni consumibles |
-| Minerales          | 4 de los 8 previstos                                              |
-| Profesiones        | 8                                                                 |
-| Clases de acción   | 5                                                                 |
-| Sistemas sembrados | 1, con 2 cinturones, 5 estaciones y 0 puertas                     |
+| Catálogo           | Hoy                                                                     |
+| ------------------ | ----------------------------------------------------------------------- |
+| Habilidades        | 111 en ocho familias; **quince** mueven algo                            |
+| Familias con pozo  | Cuatro de ocho                                                          |
+| Cascos             | 5, ninguno con clase declarada                                          |
+| Módulos            | 34 —27 de escalón I y 7 de II—, **ningún refuerzo**                     |
+| Bandejas           | Altos, medios, bajos y refuerzos                                        |
+| Ítems              | Minerales, módulos y un refinado: el helio-3, que el mercado no muestra |
+| Minerales          | 4 de los 8 previstos                                                    |
+| Profesiones        | 8                                                                       |
+| Clases de acción   | 5                                                                       |
+| Sistemas sembrados | 1, con 2 cinturones, 5 estaciones y 0 puertas                           |
 
 ## Por qué un mapa y no una hoja de ruta
 
@@ -318,21 +371,21 @@ cola**: se agarra la que convenga el día que convenga. Lo que se conserva es el
 razonamiento de qué se engancha con qué, que es lo único que ahorra trabajo a la
 hora de elegir.
 
-| Idea                          | Qué cierra                                                                            | Conviene tener antes  |
-| ----------------------------- | ------------------------------------------------------------------------------------- | --------------------- |
-| **Refinar**                   | El verbo que falta, los doce refinados y la merma                                     | Nada                  |
-| **Repostar**                  | Que el combustible se pueda reponer con plata                                         | Nada                  |
-| **El hielo**                  | La fuente del combustible: cosechador, cuatro hielos, helio-3                         | Refinar               |
-| **Los refuerzos**             | La bandeja vacía: catálogo, calibración que se gasta, siete habilidades de Ingeniería | Nada                  |
-| **Las clases de nave**        | `Hull.class` y las habilidades de clase como requisito duro                           | Nada                  |
-| **Componentes y fabricar**    | El verbo, los ocho componentes y las recetas por módulo                               | Refinar               |
-| **El generador de módulos**   | Familias más fórmula de clase y escalón, para no escribirlos a mano                   | Fabricar              |
-| **Barcazas y cristales**      | La cadena del láser de tira, entera                                                   | Fabricar              |
-| **Sondas y firmas**           | Explorar y su reverso: encontrar y esconderse                                         | Fabricar              |
-| **El gas**                    | Aspirador, tres gases y nubes que hay que escanear                                    | Escanear              |
-| **El segundo sistema**        | Que la puerta lleve a un lugar y no a un pasillo: mineral propio y precios propios    | Puertas sembradas     |
-| **Inyecciones y laboratorio** | Que desbloquear una habilidad cueste plata                                            | Vender                |
-| **Misiones**                  | La fuente de la reputación, que hoy no tiene ninguna                                  | Agentes, que ya están |
+| Idea                          | Qué cierra                                                                                             | Conviene tener antes    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------- |
+| **Refinar**                   | El verbo que falta, los doce refinados y la merma                                                      | Nada                    |
+| **El salto sin puerta**       | El consumidor que le falta al combustible: el tanque, el depósito, el calibrador y sus dos habilidades | Las capitales           |
+| **El hielo**                  | La fuente del combustible: cosechador, cuatro hielos, helio-3                                          | Refinar y un consumidor |
+| **Los refuerzos**             | La bandeja vacía: catálogo, calibración que se gasta, siete habilidades de Ingeniería                  | Nada                    |
+| **Las clases de nave**        | `Hull.class` y las habilidades de clase como requisito duro                                            | Nada                    |
+| **Componentes y fabricar**    | El verbo, los ocho componentes y las recetas por módulo                                                | Refinar                 |
+| **El generador de módulos**   | Familias más fórmula de clase y escalón, para no escribirlos a mano                                    | Fabricar                |
+| **Barcazas y cristales**      | La cadena del láser de tira, entera                                                                    | Fabricar                |
+| **Sondas y firmas**           | Explorar y su reverso: encontrar y esconderse                                                          | Fabricar                |
+| **El gas**                    | Aspirador, tres gases y nubes que hay que escanear                                                     | Escanear                |
+| **El segundo sistema**        | Que la puerta lleve a un lugar y no a un pasillo: mineral propio y precios propios                     | Puertas sembradas       |
+| **Inyecciones y laboratorio** | Que desbloquear una habilidad cueste plata                                                             | Vender                  |
+| **Misiones**                  | La fuente de la reputación, que hoy no tiene ninguna                                                   | Agentes, que ya están   |
 
 Los enganches que importan más que la lista:
 
@@ -342,8 +395,11 @@ Los enganches que importan más que la lista:
 - **Los refuerzos no dependen de nada y cierran una bandeja entera.** La ranura y
   el presupuesto ya están en los cinco cascos; falta el catálogo. Se pueden
   fabricar con material refinado hasta que existan los restos.
-- **El hielo cierra el huérfano más viejo.** Si hay que elegir una sola por
-  impacto, es ésa; si hay que elegir una sola por costo, es refinar.
+- **El hielo ya no cierra nada solo.** Era la que más impacto tenía mientras el
+  combustible se gastaba; ahora sería darle una fuente a un insumo que nadie
+  consume, que es el mismo huérfano con un eslabón más. Primero el verbo que
+  gasta, después la fuente. Si hay que elegir una sola por costo, sigue siendo
+  refinar.
 - **La inyección va después de vender**, porque un inyector cuesta plata: al
   revés sería una reja sin llave. Y el laboratorio no es hoy uno de los ocho
   servicios de estación, así que entra con su baldosa o entra en otro lado.

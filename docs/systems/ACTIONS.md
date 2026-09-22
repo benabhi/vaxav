@@ -109,51 +109,86 @@ El caso que define el bucle. Un piloto está en Puerto Ánfora y quiere minar.
    distancia, de Navegación, de la nave y de sus módulos: 12 minutos.
 2. **El contador corre.** El piloto cierra la pestaña y se va a hacer otra cosa.
 3. **Al volver**, la acción ya venció: informe de viaje, posición nueva y
-   +120 XP a Navegación, +18 a Eficiencia de combustible.
+   +120 XP al pozo de Pilotaje.
 4. **Ordena minar.** 41 minutos, calculados como en el ejemplo de arriba.
-5. **Al volver**, el segundo informe: 148 m³ en bodega, +600 XP a Minería y +90 a
-   cada secundaria.
+5. **Al volver**, el segundo informe: 148 m³ en bodega y +600 XP al pozo de
+   Extracción, que después se reparte comprando niveles.
 6. **Decide**: seguir minando, volver a vender, o gastar el viaje en otra cosa.
    La bodega llena obliga a elegir, que es de lo que se trata.
 
 ## Saltar
 
 Cruzar una puerta estelar es una acción como cualquier otra —tiene inicio,
-duración y resolución perezosa— con tres diferencias que la hacen la primera que
-**consume algo**.
+duración y resolución perezosa— con una sola diferencia: **es la única que cambia
+de sistema**.
 
 **Se salta parado en la puerta.** No desde cualquier lado del sistema: hay que
 viajar hasta ella primero. Eso es lo que hace que la distancia orbital de una
 puerta importe —una puerta lejos de la estrella cuesta un viaje largo antes del
 salto— y lo que ata el mapa de adentro del sistema con el de la galaxia.
 
-**Cuánto tarda y cuánto quema se sabe antes de apretar.** Los dos números están
-en la pantalla junto al botón, y también en el cartel de confirmación:
+### Cruzar es gratis
+
+**No cuesta combustible, no pide alcance, y la misma puerta tarda lo mismo para
+cualquier nave.** Lo único que hay para saber antes de apretar es cuánto tarda:
 
 ```
-duración = máx(1, máx(base · 30 ÷ alcance, base · 40 %))
-consumo  = máx(1, (masa ÷ 40) · años luz ÷ (1 + eficiencia))
+duración = máx(1, 240 s por año luz · distancia de la puerta)
 ```
 
-donde `base` son 240 segundos por año luz. El **alcance de salto** de la nave
-divide el tiempo: una nave con mejor motor cruza la misma puerta más rápido. El
-piso del 40 % es la misma regla de siempre —[la regla del piso](#cuánto-tarda)—:
-por mucho que se mejore, nadie cruza en cero. Y el consumo nunca baja de una
-unidad, así que **saltar siempre cuesta**.
+La distancia de la puerta es lo único que entra en la cuenta. Es **un dato del
+universo y no de la nave**: montar un calibrador de salto no acorta el cruce ni
+un segundo, y lo que sí lo acorta es que la puerta esté más cerca. **Nada llega
+nunca a cero**: el tiempo tiene su piso de un segundo, igual que el viaje dentro
+del sistema.
 
-El motivo por el que un salto no se puede dar sale de una sola función pura,
-`jumpProblem`, que comparten la pantalla y el servicio: el botón que se apaga y
-el rechazo del servidor dicen exactamente lo mismo, y el jugador nunca aprieta
-algo que va a rebotar.
+Hasta acá el salto cobraba combustible por masa y distancia, exigía que el
+alcance del motor llegara, y dividía el tiempo por ese alcance. Las tres cosas se
+fueron juntas, y el razonamiento importa más que la regla:
 
-**El combustible se quema al resolver, no al ordenar.** Si al llegar el tanque no
-alcanza —porque algo lo vació en el medio—, el salto se aborta y la nave **no se
-mueve**: nadie queda partido a la mitad del camino. Cobrar por adelantado sería
-más simple y dejaría al jugador pagando por un viaje que después no ocurre.
+- **En EVE cruzar un stargate es gratis**, sin excepciones prácticas. Lo que
+  Vaxav cobraba —combustible proporcional a masa por distancia— es **la fórmula
+  del motor de salto de EVE aplicada a la puerta**: una fórmula fiel puesta en la
+  cosa equivocada.
+- **Allá el combustible paga por saltearse la red de puertas, no por usarla.** El
+  motor de salto va en línea recta e ignora la topología del mapa; eso es
+  proyección de fuerza, y por eso se cobra caro.
+- **Y el argumento que lo decidió es de este juego y no de aquél:** en EVE
+  quedarse sin isótopos te deja **lento**, porque la red de puertas gratis sigue
+  ahí; en Vaxav te dejaría **varado**, porque la puerta es el único camino. Es el
+  mismo argumento con el que [naves](SHIPS.md#movimiento-los-que-se-vuelven-tiempo)
+  ya había declarado gratis el viaje dentro del sistema: «una nave varada entre
+  dos planetas sin con qué encender el motor es una partida rota».
 
-Es la primera pieza de [la cadena](../DESIGN.md#la-cadena) que se cierra hasta
-el final: el verbo es saltar, el insumo el combustible, el aparato el motor de
-salto y el tanque, y la llave Astrogación y Eficiencia de combustible.
+Hay un dato de afuera que apunta al mismo lado: en septiembre de 2026 CCP le
+sacó el combustible al **Ansiblex Jump Bridge** —lo más parecido a una puerta que
+tenía consumible— y lo reemplazó por un presupuesto que se recarga solo. Es el
+mismo problema resuelto en la misma dirección.
+
+Lo que sí sigue en pie es que **el motivo por el que un salto no se puede dar
+sale de una sola función pura**, `jumpProblem`, que comparten la pantalla y el
+servicio: el botón que se apaga y el rechazo del servidor dicen exactamente lo
+mismo, y el jugador nunca aprieta algo que va a rebotar. Los tres motivos que
+quedan **no se arreglan comprando**: una nave que no está en condiciones de
+volar, una puerta que no lleva a ninguna parte todavía y un
+[paso cerrado](UNIVERSE.md#el-paso-cerrado). La puerta no se gana con equipo, y
+por eso el piloto nuevo llega a cualquier lado.
+
+### El combustible no se borró: se mudó
+
+Lo que va a costar combustible es **el motor de salto de las capitales**: el que
+cruza entre sistemas que no son vecinos y sin puerta. Ese verbo todavía no
+existe, así que hoy **el combustible no tiene ningún consumidor**.
+
+La maquinaria quedó escrita y dormida, con la anotación de qué verbo la
+despierta: el consumo por masa y su eficiencia en `jumps.ts`, el repostaje en el
+servicio de naves, el helio-3 como ítem del catálogo que el mercado no muestra.
+Lo que deja son huérfanos **declarados y con fecha** —Astrogación, Eficiencia de
+combustible, el tanque, el depósito auxiliar y el calibrador de salto—, y están
+contados uno por uno en
+[estado y huecos](../ROADMAP.md#saltar-sin-puerta). Es lo que
+[la cadena](../DESIGN.md#no-hace-falta-cerrarla-de-una-vez) permite: no cerrarla
+de una vez, pero saber dónde está cada hueco.
 
 ## Qué paga cada acción
 
@@ -166,9 +201,14 @@ forma de crecer.
 | Acción            | Rama       | Peso           | Dónde                       |
 | ----------------- | ---------- | -------------- | --------------------------- |
 | Viajar            | Pilotaje   | 1,0            | Entre cuerpos de un sistema |
+| Saltar            | Pilotaje   | 1,0            | Parado en una puerta        |
 | Escanear una roca | Ciencias   | 1,5            | En un cinturón              |
 | Minar una roca    | Extracción | 1,0            | En un cinturón              |
 | Acordar una orden | Comercio   | según el valor | Atracado con mostrador      |
+
+**Saltar paga lo mismo que viajar y en la misma rama**, que es lo coherente con
+que cruzar no pida nada: lo único que se pone es el rato, y el rato es lo que la
+experiencia mide.
 
 Escanear pesa por encima de uno porque es corta y exigente —se lee una roca en
 minuto y medio— y porque es la única fuente de su rama: si rindiera poco, Ciencias

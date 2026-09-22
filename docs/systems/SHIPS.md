@@ -104,29 +104,44 @@ de las dos es gratis, que es el punto.
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | **Masa** (t)             | Casco + módulos + carga. **Divide la velocidad y el alcance**, así que toda decisión de equipamiento cuesta tiempo |
 | **Velocidad de crucero** | Cuánto tarda ir de un cuerpo a otro. Sale del empuje ÷ masa                                                        |
-| **Alcance de salto**     | Cuán lejos llega un salto. Sale de la potencia de salto ÷ masa                                                     |
-| **Combustible**          | Cuántos saltos antes de repostar                                                                                   |
+| **Alcance de salto**     | Cuán lejos llegaría un salto **sin puerta**. Sale de la potencia de salto ÷ masa                                   |
+| **Combustible**          | Cuánto entra en el tanque                                                                                          |
 
 Que velocidad y alcance salgan los dos de dividir por la masa no es casualidad:
 es lo que hace que un módulo que sólo pesa —una placa de blindaje, que no
 consume nada— igual te cueste algo.
 
-_Cuántos_ saltos podés dar **no es un atributo**: es combustible sobre consumo, y
-el consumo es proporcional a la masa. Se calcula.
-
 **Y el atributo es el tanque, no lo que hay adentro.** «Combustible» en la ficha
-del casco es _cuánto entra_; lo que la nave lleva encima se guarda en la nave y se
-gasta al saltar. Son dos números distintos y la pantalla los muestra juntos
-—`113 / 120`— porque el que importa es la resta.
+del casco es _cuánto entra_; lo que la nave lleva encima se guarda en la nave. Son
+dos números distintos y la ficha los muestra juntos —`113 / 120`—, porque por
+separado ninguno de los dos dice nada.
 
 De ahí sale una regla chica que no es obvia: **lo que hay se acota a lo que
-entra** cada vez que se lee. Desmontar un tanque deja la nave con más combustible
-del que ahora le cabe, y mostrar `140 / 120` es mostrar un error.
+entra**, y se recorta al desmontar y no al mirar. Sacar un depósito auxiliar deja
+la nave con más combustible del que ahora le cabe, y lo que no entra se derrama:
+taparlo en la pantalla con un mínimo deja el número mal guardado hasta que alguien
+lo lea por otro lado.
 
-El combustible **sólo se gasta saltando**. Moverse dentro de un sistema es
-gratis, a propósito: una nave varada entre dos planetas sin con qué encender el
-motor es una partida rota, y el costo de evitarlo —rescates, remolques, un botón
-de auxilio— no compra nada que el juego necesite.
+### Moverse no cuesta combustible, y cruzar tampoco
+
+**Nada lo gasta hoy.** El viaje dentro del sistema es gratis a propósito: una nave
+varada entre dos planetas sin con qué encender el motor es una partida rota, y el
+costo de evitarlo —rescates, remolques, un botón de auxilio— no compra nada que el
+juego necesite. **Cruzar una puerta es gratis por el mismo argumento**, que está
+entero en [acciones](ACTIONS.md#cruzar-es-gratis): la puerta es el único camino
+entre sistemas, así que un tanque vacío no dejaría lento a nadie, lo dejaría
+varado.
+
+El tanque, el depósito auxiliar y el calibrador de salto quedan entonces **sin
+verbo, y con fecha**: son del motor de salto de las capitales, el que cruza sin
+puerta. Por eso **el alcance y la autonomía salieron de la ficha de la nave**, y
+el tanque salió de la credencial —donde estaba justamente porque decidía si el
+próximo salto se podía dar—. Es
+[la auditoría](#qué-consume-cada-número-la-auditoría) de este mismo documento
+aplicada a sí misma: un número que nada consume no se le muestra al jugador. Lo
+que queda en la ficha es el tanque, que sigue diciendo cuánto entra y cuánto hay;
+el alcance y la autonomía vuelven con el verbo y **sólo en los cascos que lo
+lleven**.
 
 ### Capacidad e información
 
@@ -672,6 +687,15 @@ es un blanco; guardada no sirve a nadie y no se la puede perder.
 Se cierra sola, y **depende entera de la cadena del hielo**: sin helio-3 no hay
 con qué sostenerla. Es otro argumento para que el hielo sea de las primeras etapas.
 
+**Y con ellas llega el otro verbo que quema lo mismo: el motor de salto.** Una
+capital no depende de la red de puertas: salta entre sistemas que no son vecinos,
+sin puerta y en línea recta, y eso —saltearse la topología del mapa— es lo que se
+cobra caro. Es el consumidor que el combustible está esperando desde que
+[cruzar una puerta pasó a ser gratis](ACTIONS.md#cruzar-es-gratis), y la cuenta
+del consumo por masa, su eficiencia y el repostaje ya están escritas y dormidas.
+Dos verbos distintos con el mismo insumo es exactamente lo que hace que valga la
+pena una cadena del hielo.
+
 ### Lo que hay que decidir antes de construirla
 
 1. ~~**¿Se puede destruir?**~~ **Sí**, como todo lo que vuela en este juego. Ver
@@ -826,17 +850,17 @@ Un módulo se gana su lugar si algo lee lo que produce. Esta tabla dice qué lee
 cada cosa, para que se vea de un vistazo qué es contenido vivo y qué todavía no
 lo es:
 
-| Lo que produce un módulo        | Quién lo lee                            | Estado  |
-| ------------------------------- | --------------------------------------- | ------- |
-| Masa y empuje                   | Viajar: la duración real                | **ya**  |
-| Potencia y cómputo              | El propio equipamiento: si entra o no   | **ya**  |
-| Bodega                          | Cuánto te traés de un cinturón          | Etapa 2 |
-| Rendimiento de extracción       | Minar                                   | Etapa 2 |
-| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | Etapa 2 |
-| Potencia de salto y combustible | Qué puertas podés usar, y cuántas veces | Etapa 6 |
-| Escudo, blindaje, daño por tipo | Combate                                 | Combate |
-| Alcance de sensores             | Explorar y prospectar                   | Después |
-| Firma                           | Qué tan fácil te encuentran             | Combate |
+| Lo que produce un módulo        | Quién lo lee                            | Estado        |
+| ------------------------------- | --------------------------------------- | ------------- |
+| Masa y empuje                   | Viajar: la duración real                | **ya**        |
+| Potencia y cómputo              | El propio equipamiento: si entra o no   | **ya**        |
+| Bodega                          | Cuánto te traés de un cinturón          | **ya**        |
+| Rendimiento de extracción       | Minar                                   | **ya**        |
+| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | **ya**        |
+| Alcance de sensores             | Escanear una roca                       | **ya**        |
+| Potencia de salto y combustible | **Nadie**: cruzar una puerta es gratis  | Las capitales |
+| Escudo, blindaje, daño por tipo | Combate                                 | Combate       |
+| Firma                           | Qué tan fácil te encuentran             | Combate       |
 
 **Lo que hoy no lee nadie se dice acá.** De los 25 números que devuelve la
 calculadora, sólo la velocidad y el permiso de volar cambian el resultado de una
@@ -867,4 +891,5 @@ gastar es una promesa escrita con cifras.
 - Cómo se consiguen: sólo compra en astillero, o también fabricación.
 - Cuántas naves puede tener un piloto a la vez, y dónde quedan las demás.
 - Si existe la ingeniería de módulos, y con qué costo.
-- Qué gasta el combustible además de los saltos.
+- Qué cascos llevan motor de salto sin puerta, y qué más gasta combustible además
+  de él.
