@@ -20,15 +20,20 @@
  * Corresponde a docs/systems/ADMIN.md y docs/systems/UNIVERSE.md.
  */
 
-import { and, asc, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, ne } from 'drizzle-orm';
 import {
+	asteroid,
+	asteroidSurvey,
 	beltDeposit,
 	body,
 	constellation,
 	corporation,
+	creditEntry,
 	galaxy,
 	gate,
 	pilot,
+	pilotAction,
+	pilotLog,
 	region,
 	station,
 	stationService,
@@ -489,6 +494,28 @@ export function systemBlockers(db: Db, systemId: number): readonly string[] {
 		);
 	}
 
+	// Lo mismo que retiene a un cuerpo retiene al sistema entero: un piloto puede
+	// estar viajando hacia acá desde afuera, y entonces no está «adentro» pero le
+	// borraríamos el destino igual.
+	const enCamino = ids.length
+		? db
+				.select()
+				.from(pilotAction)
+				.all()
+				.filter(
+					(una) =>
+						ids.includes(una.originBodyId) ||
+						(una.destinationBodyId !== null && ids.includes(una.destinationBodyId))
+				).length
+		: 0;
+	if (enCamino > 0) {
+		motivos.push(
+			enCamino === 1
+				? 'Hay una orden en curso hacia adentro.'
+				: `Hay ${enCamino} órdenes en curso hacia adentro.`
+		);
+	}
+
 	return motivos;
 }
 
@@ -739,6 +766,23 @@ export function bodyBlockers(db: Db, bodyId: number): readonly string[] {
 	const apuntan = db.select().from(gate).where(eq(gate.destinationId, bodyId)).all().length;
 	if (apuntan > 0) motivos.push('Hay una puerta que le apunta.');
 
+	// Una orden en curso hacia ahí retiene igual que un piloto parado: el piloto
+	// está en camino y borrarle el destino lo dejaría volando hacia una fila que
+	// ya no existe. Se avisa en vez de estrellarse contra la clave foránea, que es
+	// lo que pasaba.
+	const enCamino = db
+		.select()
+		.from(pilotAction)
+		.all()
+		.filter((una) => una.originBodyId === bodyId || una.destinationBodyId === bodyId).length;
+	if (enCamino > 0) {
+		motivos.push(
+			enCamino === 1
+				? 'Hay una orden en curso hacia ahí.'
+				: `Hay ${enCamino} órdenes en curso hacia ahí.`
+		);
+	}
+
 	return motivos;
 }
 
@@ -769,6 +813,36 @@ function deepestFirst(cuerpos: readonly Body[]): readonly Body[] {
 
 /** Borra un cuerpo con lo que cuelga de él **en la base**, no en el árbol. */
 function borrarCuerpo(db: Db, fila: Body): void {
+	// Las rocas y sus lecturas **se van con el cinturón**, igual que el depósito:
+	// no son cosas que lo retengan sino cosas que son suyas. Y hay que soltarlas a
+	// mano porque las dos apuntan con clave foránea —la lectura a la roca, la roca
+	// al cuerpo— y borrar el cinturón con rocas adentro se estrellaba contra la
+	// base. No se notaba porque el único cinturón con rocas era el del plano
+	// oficial, que nadie borra.
+	const rocas = db
+		.select({ id: asteroid.id })
+		.from(asteroid)
+		.where(eq(asteroid.bodyId, fila.id))
+		.all()
+		.map((una) => una.id);
+	if (rocas.length > 0) {
+		db.delete(asteroidSurvey).where(inArray(asteroidSurvey.asteroidId, rocas)).run();
+		db.delete(asteroid).where(eq(asteroid.bodyId, fila.id)).run();
+	}
+
+	// **La historia se suelta, no se borra.** La bitácora de un piloto y el libro
+	// mayor apuntan a dónde pasó cada cosa, y un informe que dice «viajaste a
+	// Bastión II» tiene que sobrevivir a que alguien borre Bastión II: el viaje
+	// ocurrió. Se les saca el puntero y se quedan con todo lo demás —el tipo, la
+	// duración, la experiencia, el monto—, que es lo que el jugador va a leer. Las
+	// vistas ya dibujan un informe sin lugar, así que no queda nada colgando.
+	db.update(pilotLog).set({ originBodyId: null }).where(eq(pilotLog.originBodyId, fila.id)).run();
+	db.update(pilotLog)
+		.set({ destinationBodyId: null })
+		.where(eq(pilotLog.destinationBodyId, fila.id))
+		.run();
+	db.update(creditEntry).set({ bodyId: null }).where(eq(creditEntry.bodyId, fila.id)).run();
+
 	db.delete(beltDeposit).where(eq(beltDeposit.bodyId, fila.id)).run();
 	db.delete(gate).where(eq(gate.bodyId, fila.id)).run();
 
