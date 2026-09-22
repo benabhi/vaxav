@@ -234,9 +234,9 @@
 			/>
 
 			<!--
-				Lo que cuesta el tramo. La distancia y el combustible sólo aparecen
-				cuando hay un salto detrás: un viaje dentro del sistema no quema nada, y
-				una fila en blanco miente más que una fila que no está.
+				Lo que el tramo recorre y lo que tarda. La distancia sólo aparece cuando hay
+				un salto detrás, porque un viaje dentro del sistema no tiene ninguna que
+				decir: una fila en blanco miente más que una fila que no está.
 			-->
 			<div class="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-border-soft pt-4">
 				{#if place.leg.distance}
@@ -244,15 +244,6 @@
 						<Label>Distancia</Label>
 						<span class="font-mono text-[0.88rem] whitespace-nowrap text-data">
 							{place.leg.distance}
-						</span>
-					</div>
-				{/if}
-
-				{#if place.leg.fuel}
-					<div class="flex flex-col items-start gap-1">
-						<Label>Combustible</Label>
-						<span class="font-mono text-[0.88rem] whitespace-nowrap text-data">
-							{place.leg.fuel}
 						</span>
 					</div>
 				{/if}

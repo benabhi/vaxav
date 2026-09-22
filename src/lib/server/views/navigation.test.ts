@@ -225,7 +225,6 @@ describe('la ficha del lugar', () => {
 		// Vacío y no cero: sólo los saltos queman, y una fila en blanco miente más
 		// que una fila que no está.
 		expect(tramo.distance).toBe('');
-		expect(tramo.fuel).toBe('');
 	});
 });
 
