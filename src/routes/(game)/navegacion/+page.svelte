@@ -439,11 +439,13 @@
 							{/if}
 
 							<!--
-						Con confirmación, como toda orden: cruzar no cuesta nada, pero
-						compromete tiempo real y mientras dure no hay otra orden que dar. El
-						diálogo repite lo que cuesta en vez de preguntar a secas, porque un
-						aviso que sólo pregunta se aprende a apretar sin leer.
-					-->
+								Con confirmación, aunque cruzar no cueste nada: lo que se confirma no es un
+								gasto, es quedarse sin la nave. El salto compromete tiempo real —mientras
+								dure no hay otra orden que dar— y deja al piloto en otro sistema, del que no
+								se vuelve sin volver a cruzar. Por eso el diálogo dice adónde llega y cuánto
+								tarda en vez de preguntar a secas: un aviso que sólo pregunta se aprende a
+								apretar sin leer.
+							-->
 							<ConfirmAction
 								formAction="?/saltar"
 								title="Saltar a {place.gate.destination}"

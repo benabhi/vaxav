@@ -51,11 +51,12 @@ export const TRAVEL_KIND: ActionKind = 'travel';
 /**
  * Cruzar una puerta hacia otro sistema.
  *
- * Es una acción aparte de viajar y no un viaje más largo: gasta combustible,
- * cambia de sistema y pide alcance. Viajar no hace ninguna de las tres cosas, y
- * meterlas en el mismo resolvedor obligaría a preguntarse en cada rama si esto es
- * un salto — que es exactamente el error que el despachador por clase existe para
- * evitar.
+ * Es una acción aparte de viajar y no un viaje más largo: cambia de sistema, su
+ * duración sale de la distancia de la puerta y no de la velocidad de la nave, y
+ * deja anotada esa distancia en el informe. Viajar no hace ninguna de las tres
+ * cosas, y meterlas en el mismo resolvedor obligaría a preguntarse en cada rama
+ * si esto es un salto — que es exactamente el error que el despachador por clase
+ * existe para evitar.
  */
 export const JUMP_KIND: ActionKind = 'jump';
 export const MINE_KIND: ActionKind = 'mine';

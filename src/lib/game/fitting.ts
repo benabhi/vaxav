@@ -135,9 +135,10 @@ export interface Readout {
 	/**
 	 * Cuánto le descuenta al consumo de un salto, en puntos de porcentaje.
 	 *
-	 * Viaja en la hoja y no se recalcula en cada lugar que quema combustible: la
-	 * ficha, el panel de la puerta y el motor de acciones tienen que decir el mismo
-	 * número, y la única forma de garantizarlo es que sea el mismo.
+	 * Viaja en la hoja y no se recalcula al lado de cada cuenta que lo use. Hoy no
+	 * hay ninguna —nada quema combustible desde que cruzar es gratis—, y el día que
+	 * lo gaste el motor de salto de las capitales, el número que muestre la ficha y
+	 * el que use el salto tienen que ser el mismo.
 	 */
 	readonly fuelEfficiency: number;
 
@@ -423,13 +424,12 @@ export function buildReadout(
 		jumpRange,
 		fuel,
 		// Cuántos saltos podés dar no es un atributo: es combustible sobre consumo,
-		// y el consumo de un salto es proporcional a la masa.
-		// La misma función que usa el salto de verdad: si se calcularan aparte, la
-		// ficha podría decir «te quedan tres saltos» y la nave quedarse sin
-		// combustible en el segundo.
-		// **Cuántos saltos aguanta el tanque no tiene hoy ningún salto que contar**:
-		// cruzar una puerta es gratis. La cifra sigue saliendo porque la ficha la
-		// dibuja, pero habla del motor de salto de las capitales, que no existe.
+		// y el consumo de un salto es proporcional a la masa. Sale de la misma
+		// función que usaría el salto de verdad, para que la hoja y el salto no
+		// puedan decir cosas distintas.
+		// **Hoy no cuenta ningún salto y no lo lee nadie**: cruzar una puerta es
+		// gratis y la ficha dejó de mostrar la autonomía. Se sigue calculando porque
+		// habla del motor de salto de las capitales, que todavía no existe.
 		jumps: jumpsWithFuel(fuel, mass, fuelEfficiency),
 		fuelEfficiency,
 		cargo,

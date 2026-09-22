@@ -140,9 +140,10 @@ const ORES = [
  * El código del combustible del salto.
  *
  * Se exporta como constante y no se escribe a mano en cada llamador porque hay
- * un solo combustible y va a haber más de un verbo que lo toque: repostar hoy,
- * abastecer una estructura mañana. Un literal repetido por el repositorio es el
- * que se olvida el día que el código cambie.
+ * un solo combustible y más de un verbo lo toca: el repostaje —escrito y dormido—
+ * ya lo nombra en media docena de líneas, y mañana lo va a nombrar abastecer una
+ * estructura. Un literal repetido por el repositorio es el que se olvida el día
+ * que el código cambie.
  */
 export const FUEL_ITEM = 'helium_3';
 
@@ -179,7 +180,7 @@ const HELIUM_3: Item = {
 	volumeTenths: 1,
 	basePrice: 15,
 	description:
-		'Isótopo del hielo, tan liviano que hay que guardarlo frío. Es lo que se quema al cruzar.'
+		'Isótopo del hielo, tan liviano que hay que guardarlo frío. Arde blanco y no deja ceniza.'
 };
 
 /**

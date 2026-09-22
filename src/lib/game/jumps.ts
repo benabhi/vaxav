@@ -41,9 +41,9 @@ export const TENTHS = 10;
  * Cuántas toneladas de nave gasta una unidad de combustible, por año luz.
  *
  * **Dormida hasta el motor de salto de las capitales.** Cruzar una puerta no
- * consume nada, así que hoy esto sólo lo lee `jumpFuel`, que tampoco tiene quién
- * lo llame: es el número que va a hacer que a una capital cargada le cueste más
- * saltar que a una vacía.
+ * consume nada, así que hoy esto sólo lo lee `jumpFuel`, cuya cuenta no termina
+ * en ninguna pantalla: es el número que va a hacer que a una capital cargada le
+ * cueste más saltar que a una vacía.
  */
 export const MASS_PER_FUEL_UNIT = 40;
 
@@ -109,13 +109,14 @@ export function jumpFuel(tenths: number, mass: number, fuelEfficiency = 0): numb
 /**
  * Cuántos saltos sin puerta —uno de un año luz— aguantaría un tanque.
  *
- * **Dormida por lo mismo que `jumpFuel`**, con una salvedad: la ficha de la nave
- * todavía la muestra como autonomía. Esa cifra habla del motor de salto que
- * todavía no existe, así que hasta que exista es un número sin verbo, y la
- * pantalla tendría que dejar de prometerlo.
+ * **Dormida por lo mismo que `jumpFuel`**, y hasta el final: la ficha de la nave
+ * dejó de mostrarla como autonomía, así que el único que la llama es el `readout`,
+ * que la calcula y no se la muestra a nadie. Es un número sin verbo hasta que
+ * exista el motor de salto de las capitales.
  *
- * Se calcula con la misma función que el gasto para que la cifra de la ficha y la
- * del salto no puedan decir cosas distintas.
+ * Se calcula con la misma función que el gasto y no con una cuenta propia: el día
+ * que la autonomía vuelva a una pantalla, lo que prometa y lo que el salto cobre
+ * no van a poder decir cosas distintas.
  */
 export function jumpsWithFuel(fuel: number, mass: number, fuelEfficiency = 0): number {
 	return floorDiv(fuel, jumpFuel(TENTHS, mass, fuelEfficiency));
