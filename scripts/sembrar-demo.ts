@@ -325,6 +325,23 @@ const CORPORACIONES: Record<string, readonly string[]> = {
 
 const SERVICIOS = ['shipyard', 'outfitting', 'storage', 'market', 'refinery'] as const;
 
+/**
+ * Cuánto se aparta del baricentro el segundo sol de un binario.
+ *
+ * Es la separación entre las dos estrellas: la primaria nace en el centro con su
+ * órbita en cero y la secundaria se corre esto. Con cero las dos estarían en el
+ * mismo punto y viajar de una a la otra no llevaría tiempo, que es la clase de
+ * dato que después se lee como un error. Cae en la banda de las primeras
+ * órbitas, para que el segundo sol quede adentro del sistema y no más lejos que
+ * las puertas.
+ *
+ * **Fijo y no sorteado** a propósito: cada tirada del dado corre todas las que
+ * vienen después, y este guión promete que la misma semilla dibuja siempre la
+ * misma galaxia. Un número al azar acá cambiaría el mapa entero de la próxima
+ * siembra limpia, que es justo lo que la semilla fija viene a evitar.
+ */
+const SEPARACION_BINARIA = 120;
+
 const conteo: Record<string, number> = {
 	regiones: 0,
 	constelaciones: 0,
@@ -627,7 +644,9 @@ for (const faccion of PLAN) {
 		);
 
 		// **Algunos binarios, pocos.** Una segunda estrella es raíz, no cuelga de la
-		// primera: un sistema binario tiene dos soles y cada uno lo suyo.
+		// primera: un sistema binario tiene dos soles y cada uno lo suyo. Su órbita
+		// no es a nadie sino al baricentro del sistema, que es lo que la aparta del
+		// otro sol.
 		if (dado() < 0.12) {
 			createBody(
 				db,
@@ -636,7 +655,7 @@ for (const faccion of PLAN) {
 					name: `${nombre} B`,
 					kind: 'star',
 					parentId: null,
-					orbitDistance: 0,
+					orbitDistance: SEPARACION_BINARIA,
 					explored: true,
 					...atributosDe('star')
 				},

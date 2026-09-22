@@ -316,8 +316,15 @@ export const system = sqliteTable(
 /**
  * Un cuerpo del sistema: estrella, planeta, luna, cinturón o estación.
  *
- * `parentId` apunta a otro cuerpo **del mismo sistema**. La estrella es la única
- * sin padre.
+ * `parentId` apunta a otro cuerpo **del mismo sistema**, y sólo una estrella
+ * puede no tener padre: una estrella no orbita nada (ver `BODY_CHILDREN`).
+ *
+ * De ahí que **un sistema pueda tener más de una raíz**: un binario tiene dos
+ * soles, la segunda no cuelga de la primera y cada una cuelga lo suyo. Lo que
+ * une esas ramas no es un cuerpo sino el **baricentro** del sistema, que no está
+ * en ninguna tabla; el `orbitDistance` de una raíz es su separación de ese
+ * punto, y cero cuando hay un solo sol, que entonces es el centro. Quien mida de
+ * un cuerpo a otro lo hace con `bodyDistance`, que sabe de eso.
  */
 export const body = sqliteTable(
 	'body',
@@ -334,6 +341,10 @@ export const body = sqliteTable(
 		/**
 		 * Distancia al cuerpo que orbita, en unidades de distancia del juego. De
 		 * acá sale el tiempo de viaje.
+		 *
+		 * En una **raíz** no hay cuerpo que orbitar: ahí mide la separación del
+		 * baricentro del sistema, que es lo que aparta un sol del otro en un
+		 * binario. Cero en un sistema de una sola estrella.
 		 */
 		orbitDistance: integer('orbit_distance').notNull().default(0),
 

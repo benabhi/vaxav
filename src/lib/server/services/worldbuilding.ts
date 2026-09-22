@@ -1275,12 +1275,21 @@ export function growFromGate(
 	return creado;
 }
 
-/** La estrella de un sistema: el cuerpo raíz. */
+/**
+ * La estrella **principal** de un sistema: la primera de sus raíces.
+ *
+ * Un sistema puede tener varias —un binario tiene dos soles y ninguno cuelga del
+ * otro—, así que hay que decir cuál se devuelve o se devuelve una al azar. Es la
+ * de identificador más bajo, que es la que se creó con el sistema: de ella
+ * cuelga lo que el constructor planta solo, como la puerta de vuelta de
+ * `growFromGate`. Quien necesite las dos, que las pida por separado.
+ */
 export function starOf(db: Db, systemId: number): Body {
 	const fila = db
 		.select()
 		.from(body)
 		.where(and(eq(body.systemId, systemId), isNull(body.parentId)))
+		.orderBy(asc(body.id))
 		.get();
 	if (!fila) throw new BuilderError('Ese sistema no tiene estrella.');
 	return fila;
