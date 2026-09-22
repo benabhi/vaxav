@@ -343,6 +343,9 @@ const SERVICIOS = ['shipyard', 'outfitting', 'storage', 'market', 'refinery'] as
  */
 const SEPARACION_BINARIA = 120;
 
+/** Cuántos pasos cerrados se plantan, si hay candidatos que no aíslen a nadie. */
+const PASOS_CERRADOS = 3;
+
 const conteo: Record<string, number> = {
 	regiones: 0,
 	constelaciones: 0,
@@ -901,19 +904,93 @@ for (let i = 0; plantoAlgo && i < 9 && todos.length > 4; i++) {
 	}
 }
 
-/** Tres pasos cerrados, para ver cómo se lee un bloqueo en el mapa. */
+/**
+ * De dónde arranca el recorrido: el sistema inicial, que es donde nace todo
+ * piloto. Se saca acá y no adentro de la función porque ahí `anfora` vuelve a
+ * ser opcional —el control de flujo no cruza a una función— y lo que importa es
+ * que quien mide alcance mida desde donde se empieza a jugar.
+ */
+const origenDelRecorrido = anfora.id;
+
+/**
+ * Los sistemas a los que se llega desde Ánfora, tratando como cerradas las
+ * puertas de `cerradas` además de las que ya lo están en la base.
+ *
+ * Se recorre por **sistema** y no por cuerpo porque la pregunta es si hay algún
+ * camino hasta ahí, no cuál: adentro del sistema siempre se puede viajar.
+ */
+function alcanzablesDesdeAnfora(cerradas: ReadonlySet<number>): Set<number> {
+	const sistemaDe = new Map(
+		db
+			.select()
+			.from(bodyTable)
+			.all()
+			.map((uno) => [uno.id, uno.systemId])
+	);
+
+	const vecinos = new Map<number, number[]>();
+	for (const una of db.select().from(gate).all()) {
+		if (una.destinationId === null || una.closed || cerradas.has(una.id)) continue;
+		const alla = sistemaDe.get(una.destinationId);
+		if (alla === undefined) continue;
+		vecinos.set(una.systemId, [...(vecinos.get(una.systemId) ?? []), alla]);
+	}
+
+	const vistos = new Set([origenDelRecorrido]);
+	const cola = [origenDelRecorrido];
+	while (cola.length > 0) {
+		const actual = cola.shift()!;
+		for (const vecino of vecinos.get(actual) ?? []) {
+			if (vistos.has(vecino)) continue;
+			vistos.add(vecino);
+			cola.push(vecino);
+		}
+	}
+	return vistos;
+}
+
+/**
+ * Unos pasos cerrados, para ver cómo se lee un bloqueo en el mapa.
+ *
+ * Cerrar una puerta **es una mecánica y no un error**: `jumpProblem` sabe decir
+ * que el paso está cerrado y el mapa lo marca. Lo que sí es un error es cerrar
+ * el **único** camino a un sistema, porque entonces el contenido está pero no
+ * hay forma de llegar, que es peor que no haberlo sembrado. Ya pasó: la tirada
+ * anterior eligió dos puentes y dejó Calafate y Sotavento incomunicados.
+ *
+ * Por eso cada candidato se prueba antes de cerrarlo, y sólo entra si después
+ * se sigue llegando a exactamente los mismos sistemas que antes.
+ *
+ * **La lista se mezcla entera aunque después se descarten candidatos.**
+ * `mezclar` gasta una tirada por elemento y este guión promete que la misma
+ * semilla dibuja siempre la misma galaxia: filtrar antes de mezclar correría el
+ * dado y movería todo lo que viene después.
+ */
 const conectadas = db
 	.select()
 	.from(gate)
 	.all()
-	.filter((una) => una.destinationId !== null);
-for (const una of mezclar(conectadas).slice(0, 3)) {
-	try {
-		setGateClosed(db, una.id, true, null);
-		conteo['pasos cerrados']++;
-	} catch {
-		// Ya estaba cerrada, o se desconectó. No importa.
-	}
+	.filter((una) => una.destinationId !== null && !una.closed);
+
+const candidatas = plantoAlgo ? mezclar(conectadas) : [];
+const alcanzablesAntes = alcanzablesDesdeAnfora(new Set()).size;
+for (const una of candidatas) {
+	if (conteo['pasos cerrados'] >= PASOS_CERRADOS) break;
+
+	// **Un paso, no una punta.** Cerrar cierra los dos extremos, así que si la
+	// gemela ya salió sorteada antes, ésta no cierra nada nuevo: contarla daría
+	// tres pasos cerrados donde en el mapa hay dos.
+	const ahora = db.select().from(gate).where(eq(gate.id, una.id)).get();
+	if (!ahora || ahora.closed) continue;
+
+	// Y por lo mismo la prueba tiene que tapar la gemela también, o diría que
+	// todavía se puede pasar por el otro lado.
+	const gemela = db.select().from(gate).where(eq(gate.bodyId, una.destinationId!)).get();
+	const prueba = new Set([una.id, ...(gemela ? [gemela.id] : [])]);
+	if (alcanzablesDesdeAnfora(prueba).size < alcanzablesAntes) continue;
+
+	setGateClosed(db, una.id, true, null);
+	conteo['pasos cerrados']++;
 }
 
 /** Y cuatro puertas plantadas sin conectar: obra a medio hacer, que el mapa marca. */
