@@ -6,6 +6,12 @@
  * ranura, cómo queda el anillo— sale de reglas puras que el navegador puede
  * calcular solo. Lo único que hay que ir a buscar es qué casco tiene, qué lleva
  * montado, cuánto sabe el piloto y dónde está parado.
+ *
+ * **El tanque viaja pero no se puede llenar**, y hasta que algo consuma
+ * combustible tiene que quedar así: `refuel` existe y anda, pero esta vista no
+ * manda con qué dibujar el botón porque ofrecerlo sería ofrecer gastar plata en
+ * algo que no se quema. Cuando aparezca el verbo que lo gaste, lo que vuelve acá
+ * es cuánto helio-3 hay en cada bodega y el motivo de `refuelBlocked`.
  */
 
 import type { Pilot } from '../db/schema';

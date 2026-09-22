@@ -371,9 +371,9 @@
 	Una salida, con las dos mitades de lo que cuesta usarla: el viaje hasta la
 	puerta —que es lo que este botón ordena— y el salto que viene después.
 
-	**El salto se muestra aunque no se pueda dar.** Saber que faltan doce de
-	combustible antes de cruzar medio sistema es la diferencia entre planear y
-	descubrir; enterarse recién al llegar a la puerta es un viaje perdido.
+	**El salto se muestra aunque no se pueda dar.** Saber cuánto tarda cruzar
+	antes de atravesar medio sistema hasta la puerta es la diferencia entre
+	planear y descubrir; enterarse al llegar es un viaje perdido.
 -->
 {#snippet filaSalida(salida: SalidaGalaxia)}
 	<div class="flex w-full flex-col gap-1 border-t border-border-soft pt-2">
@@ -397,7 +397,7 @@
 		</span>
 
 		<span class="font-mono text-[0.68rem] text-text-muted">
-			Salto {salida.duration} · {salida.fuel}
+			Salto {salida.duration}
 		</span>
 
 		{#if salida.blocked}

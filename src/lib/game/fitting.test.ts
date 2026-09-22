@@ -447,6 +447,62 @@ describe('el acumulador', () => {
 	});
 });
 
+/*
+ * El tanque y la autonomía, que **hoy no las gasta nadie**.
+ *
+ * Cruzar una puerta es gratis, así que el consumo quedó dormido esperando al
+ * motor de salto de las capitales. La ficha sigue calculando las dos cifras, y
+ * ése es justamente el riesgo: una cuenta que nadie mira se rompe en silencio y
+ * se descubre el día que vuelva a decidir algo. Estos tests la mantienen viva.
+ */
+describe('el tanque y la autonomía', () => {
+	/** La lanzadera inicial con un depósito auxiliar en su ranura baja grande. */
+	function conDeposito() {
+		const fit = [...defaultFit(inicial)];
+		const baja = inicial.slots.findIndex((slot) => slot.kind === 'low' && slot.size >= 2);
+		fit[baja] = getModule('fuel_tank_i2');
+		return fit;
+	}
+
+	it('un depósito auxiliar agranda el tanque y da más saltos', () => {
+		const pelada = buildReadout(inicial, defaultFit(inicial));
+		const conTanque = buildReadout(inicial, conDeposito());
+
+		expect(conTanque.fuel).toBeGreaterThan(pelada.fuel);
+		expect(conTanque.jumps).toBeGreaterThan(pelada.jumps);
+	});
+
+	/*
+	 * El número sale de SKILLS.md: **+5 % por nivel** es el bono por omisión, y
+	 * Eficiencia de combustible no tiene ninguna razón documentada para moverse de
+	 * ahí. Si alguien lo cambia, tiene que cambiar el documento en el mismo commit.
+	 */
+	it('Eficiencia de combustible al cinco son veinticinco puntos', () => {
+		const readout = buildReadout(inicial, defaultFit(inicial), {
+			fuel_efficiency: MAX_SKILL_LEVEL
+		});
+
+		expect(readout.fuelEfficiency).toBe(25);
+	});
+
+	it('y esos puntos estiran la autonomía que muestra la ficha', () => {
+		// La cifra sale de la misma función que cobraría el salto, así que probar
+		// que la habilidad la mueve es probar que la palanca sigue conectada.
+		const sinEntrenar = buildReadout(inicial, defaultFit(inicial));
+		const entrenado = buildReadout(inicial, defaultFit(inicial), {
+			fuel_efficiency: MAX_SKILL_LEVEL
+		});
+
+		expect(entrenado.jumps).toBeGreaterThan(sinEntrenar.jumps);
+	});
+
+	it('una nave sin entrenar nada llega a alguna parte', () => {
+		// Cero saltos con el tanque lleno sería una autonomía que no existe: la
+		// ficha estaría prometiendo un cero.
+		expect(buildReadout(inicial, defaultFit(inicial)).jumps).toBeGreaterThan(0);
+	});
+});
+
 describe('la supervivencia y el daño', () => {
 	it('no da escudo sin generador', () => {
 		// El escudo es el único que no viene con el casco.

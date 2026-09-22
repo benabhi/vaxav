@@ -20,11 +20,18 @@ import { activeShip, pilotSkillLevels, shipFit, shipReadout } from '../services/
 import { situation } from '../services/status';
 import { NADIE, pilotsAt } from '../services/presence';
 import { SURVEY_REFINE_SKILL, SURVEY_SKILL, depthLabel, surveyAge } from '$lib/game/prospecting';
-import { grantingModules, leversFor, type Fitted, type Lever, type Need } from '$lib/game/sourcing';
+import {
+	grantingModules,
+	hullGrant,
+	leversFor,
+	type Fitted,
+	type Lever,
+	type Need
+} from '$lib/game/sourcing';
 import { getSkill } from '$lib/game/skills';
 import { getProfession } from '$lib/game/professions';
 import type { SkillLevels } from '$lib/game/fitting';
-import type { BonusTarget } from '$lib/game/hulls';
+import type { BonusTarget, Hull } from '$lib/game/hulls';
 import {
 	bodyDetail,
 	bodyDistance,
@@ -43,7 +50,7 @@ import { FACTIONS } from '$lib/game/factions';
 import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
-import { jumpFuel, jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
+import { jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
 import { canBeHired, requiredReputation } from '$lib/game/reputation';
 import { NO_STANDINGS, pilotStandings, type PilotStandings } from '../services/reputation';
 import {
@@ -224,16 +231,14 @@ function transit(db: Db, row: Pilot): Ubicacion {
 	const origen = orden?.originBodyId ? getBodyById(db, orden.originBodyId) : null;
 	const destino = orden?.destinationBodyId ? getBodyById(db, orden.destinationBodyId) : null;
 
-	// La distancia y el combustible sólo existen si esto es un salto: un viaje
-	// dentro del sistema no quema nada y su distancia ya la dice el árbol. Se
-	// vuelven a calcular acá en vez de guardarse en la orden porque `resolveJump`
-	// también los recalcula al llegar, y dos cuentas que tienen que dar lo mismo
-	// es mejor que dos números que pueden desfasarse.
+	// La distancia sólo existe si esto es un salto: la de un viaje dentro del
+	// sistema ya la dice el árbol. Se vuelve a leer acá en vez de guardarse en la
+	// orden porque es un dato de la puerta y no del viaje, y guardarlo sería tener
+	// dos copias que pueden desfasarse.
 	const puerta =
 		orden?.kind === JUMP_KIND && origen
 			? db.select().from(gate).where(eq(gate.bodyId, origen.id)).get()
 			: undefined;
-	const readout = puerta ? shipReadout(db, row) : null;
 
 	const leg: Tramo | null = orden
 		? {
@@ -246,7 +251,11 @@ function transit(db: Db, row: Pilot): Ubicacion {
 				durationSeconds: orden.durationSeconds,
 				duration: remainingLabel(orden.durationSeconds),
 				distance: puerta ? lightYears(puerta.jumpDistance) : '',
-				fuel: puerta && readout ? `${jumpFuel(puerta.jumpDistance, readout.mass)} u` : ''
+				// **Vacío siempre**: cruzar una puerta no consume nada. El campo sigue
+				// en el tipo porque la pantalla lo dibuja bajo un `if`, así que con la
+				// cadena vacía el renglón no aparece; sacarlo del todo es una línea de
+				// marcado, que no es de esta columna.
+				fuel: ''
 			}
 		: null;
 
@@ -570,13 +579,13 @@ export function buildBodyRows(
 }
 
 /**
- * Lo que hay del otro lado de una puerta, y qué cuesta cruzarla.
+ * Lo que hay del otro lado de una puerta, cuánto tarda y si se puede cruzar.
  *
- * **Todo se calcula antes de apretar.** Un salto que se cobra después de
- * ordenarlo es un salto que nadie puede planear, y planear es la mitad de lo que
- * se hace en un juego de naves. El motivo por el que no se puede sale de
- * `jumpProblem`, que es puro y lo comparte el servicio: el botón apagado y el
- * rechazo del servidor dicen exactamente lo mismo.
+ * **Todo se calcula antes de apretar.** Cruzar no cuesta nada ni pide alcance
+ * —la puerta hace el trabajo y tarda lo mismo para cualquier nave—, así que lo
+ * que hay para saber antes es adónde lleva, cuánto lleva y por qué no se puede.
+ * El motivo sale de `jumpProblem`, que es puro y lo comparte el servicio: el
+ * botón apagado y el rechazo del servidor dicen exactamente lo mismo.
  */
 function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 	if (cuerpo.kind !== 'gate') return null;
@@ -590,26 +599,18 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 		: null;
 
 	const readout = shipReadout(db, row);
-	const nave = activeShip(db, row.id);
 
 	const tenths = gemela ? puerta.jumpDistance : null;
-	const alcance = readout?.jumpRange ?? 0;
-	const masa = readout?.mass ?? 0;
-	const tanque = nave?.fuel ?? 0;
 
 	const problema =
-		readout === null || nave === null
+		readout === null
 			? 'Necesitás una nave para saltar.'
-			: jumpProblem(
-					{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
-					tenths,
-					puerta.closed
-				);
+			: jumpProblem({ flyable: readout.flyable }, tenths, puerta.closed);
 
-	// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que
-	// faltan doce de combustible es lo que dice qué hacer, y un panel en blanco
-	// con un "no podés" no dice nada.
-	const segundos = tenths !== null && alcance > 0 ? jumpSeconds(tenths, alcance) : 0;
+	// El tiempo se muestra **aunque no se pueda cruzar**: es lo que dice si vale la
+	// pena arreglar lo que falta, y un panel en blanco con un «no podés» no dice
+	// nada. Sale de la distancia de la puerta y de nada más.
+	const segundos = tenths === null ? 0 : jumpSeconds(tenths);
 
 	return {
 		bearing: puerta.bearing,
@@ -620,28 +621,32 @@ function buildSalida(db: Db, row: Pilot, cuerpo: Body): SalidaPuerta | null {
 		distance: tenths === null ? '' : lightYears(tenths),
 		seconds: segundos,
 		duration: segundos > 0 ? remainingLabel(segundos) : '',
-		fuel: tenths === null ? 0 : jumpFuel(tenths, masa),
-		fuelInTank: tanque,
-		range: lightYears(alcance),
 		blocked: problema ?? '',
-		// El motor de salto es el requisito duro y Astrogación la palanca: sin el
-		// primero no hay verbo, con más de la segunda el mismo salto tarda menos.
-		// **Saltar pide dos piezas**, y es el caso que obligó a que esto sea una
-		// lista: sin motor no hay salto, y sin tanque no hay con qué pagarlo.
-		source: fuenteDeVerbo(
-			db,
-			row,
-			'Saltar',
-			[
-				{ grant: 'jumpPower', label: 'Motor de salto' },
-				{ grant: 'fuel', label: 'Tanque' }
-			],
-			'jump_range',
-			[{ label: 'Alcance', value: lightYears(alcance) }],
-			// El mismo motivo que apaga el botón, dicho una sola vez: sale de
-			// `jumpProblem`, que también usa el servicio para rechazar la orden.
-			problema ? [problema] : []
-		)
+		source: fuenteDeLaPuerta(problema)
+	};
+}
+
+/**
+ * De dónde sale cruzar una puerta: de la puerta.
+ *
+ * **No usa `fuenteDeVerbo` porque no hay nada que ese constructor pueda contar.**
+ * Cruzar no pide ningún módulo montado —la puerta hace el trabajo— y ninguna
+ * habilidad lo mejora: no hay aparato, no hay llave y no hay palanca. Un aviso
+ * que igual nombrara el motor de salto o Astrogación estaría mandando a comprar
+ * y a entrenar cosas que no cambian nada de este verbo, que es peor que no decir
+ * nada.
+ *
+ * Lo que sí queda es la mitad que importa cuando el botón está apagado: **por qué
+ * no se puede**.
+ */
+function fuenteDeLaPuerta(problema: string | null): Procedencia {
+	return {
+		verb: 'Saltar',
+		blockers: problema ? [problema] : [],
+		modules: [],
+		levers: [],
+		effects: [],
+		next: []
 	};
 }
 
@@ -667,24 +672,71 @@ function uncharted(): Sistema {
 }
 
 /**
- * Las rocas del cinturón, cada una con lo que el piloto sabe de ella.
+ * Lo que pide viajar, en un solo lugar.
  *
- * Una roca sin lectura vigente sale **sin identificar**: se ve el bulto pero no
- * de qué es ni cuánto tiene. Eso es lo que le da trabajo al escáner, y lo que
- * convierte llegar a un cinturón desconocido en algo que hacer en vez de una
- * lista que ya venía escrita.
+ * Está acá arriba y no escrito en cada constructor porque **las dos pantallas que
+ * ofrecen el verbo tienen que pedir lo mismo**: el árbol del sistema y el mapa.
+ * Dos copias de una lista de requisitos son dos que se desfasan, y la que se
+ * desfasa miente en una sola de las dos pantallas, que es la forma más cara de
+ * mentir.
  *
- * Cada roca identificada trae ya resuelto **cuánto traería y cuánto tardaría con
- * esta nave y esta bodega**, y no sólo cuánto queda en la piedra: "quedan 4.800
- * unidades" no dice nada; "traés 225 y tardás 38 minutos" dice si vale la pena.
+ * No es un requisito duro: los propulsores son un atributo del casco desde que
+ * los internos esenciales dejaron de ser módulos. Sigue declarado porque **la
+ * cadena se muestra igual cuando está completa**: el aviso dice de dónde sale el
+ * número y qué auxiliar lo mejora, que es lo que el piloto mira antes de comprar.
+ *
+ * Saltar no tiene lista: cruzar una puerta no pide ninguna pieza montada. Lo
+ * suyo lo arma `fuenteDeLaPuerta`.
  */
-/** Lo que un verbo pide, escrito: qué pieza y qué hay puesto en su lugar. */
-function aparatos(fitted: readonly Fitted[]): Aparato[] {
-	return fitted.map((uno) => ({
-		requirement: uno.need.label,
-		name: uno.module?.name ?? '',
-		fitted: uno.module !== null
-	}));
+const NEEDS_TRAVEL: readonly Need[] = [{ grant: 'thrust', label: 'Propulsores' }];
+
+/**
+ * Lo que un verbo pide, escrito: qué pieza, de dónde sale y qué la mejora.
+ *
+ * **Lo que el casco trae de fábrica no es una carencia.** Mientras esto resolvía
+ * los requisitos sólo contra los módulos montados, una nave recién salida del
+ * astillero leía «Falta: Propulsores» y —peor— se le escondían la velocidad y el
+ * alcance, porque los efectos sólo se prometen con todo puesto. Ahora la pieza
+ * dice de dónde sale: del casco, de un módulo, o de ninguno de los dos.
+ *
+ * El auxiliar viaja **aparte del casco** y no pisándolo: el propulsor auxiliar
+ * suma encima de los propulsores de fábrica, no los reemplaza, y decir sólo el
+ * módulo dejaría al piloto creyendo que sin él la nave no se mueve.
+ */
+function aparatos(hull: Hull, fitted: readonly Fitted[]): Aparato[] {
+	return fitted.map((uno) => {
+		const montado = uno.module?.name ?? '';
+		// Del casco: el módulo que haya, si hay alguno, es la mejora y no la fuente.
+		if (hullGrant(hull, uno.need.grant) > 0) {
+			return {
+				requirement: uno.need.label,
+				source: 'hull' as const,
+				name: hull.name,
+				upgrade: montado,
+				fitted: true
+			};
+		}
+		return aparatoDeModulo(uno.need.label, montado);
+	});
+}
+
+/**
+ * Una pieza que sólo puede venir de un módulo montado: el escáner, el láser.
+ *
+ * Ningún casco viene con uno puesto, así que acá sí «falta» quiere decir que hay
+ * que comprarlo. Es el caso contrario al de los propulsores y por eso se escribe
+ * aparte: mezclarlos en una función con un `if` de dos modos sería juntar dos
+ * reglas distintas en un archivo, y el que llegue después tendría que entender
+ * las dos para tocar una.
+ */
+function aparatoDeModulo(requirement: string, name: string): Aparato {
+	return {
+		requirement,
+		source: name === '' ? 'missing' : 'module',
+		name,
+		upgrade: '',
+		fitted: name !== ''
+	};
 }
 
 /**
@@ -759,7 +811,8 @@ function fuenteDeVerbo(
 		return {
 			verb,
 			blockers: ['Necesitás una nave.'],
-			modules: needs.map((need) => ({ requirement: need.label, name: '', fitted: false })),
+			// Sin nave no hay casco del que puedan salir: todo falta.
+			modules: needs.map((need) => aparatoDeModulo(need.label, '')),
 			levers: [],
 			effects: [],
 			next: []
@@ -767,20 +820,33 @@ function fuenteDeVerbo(
 	}
 
 	const llaves = leversFor(target, readout.hull, pilotSkillLevels(db, row.id));
-	const puestos = grantingModules(shipFit(db, nave), needs);
+	const piezas = aparatos(readout.hull, grantingModules(shipFit(db, nave), needs));
 
 	return {
 		verb,
 		blockers,
-		modules: aparatos(puestos),
+		modules: piezas,
 		levers: palancas(llaves),
-		// Lo que rinde sólo se promete si está todo puesto: una nave a la que le
-		// falta el tanque no salta, y decir su alcance sería prometer un salto.
-		effects: puestos.every((uno) => uno.module) ? effects : [],
+		// Lo que rinde sólo se promete si hay con qué, venga del casco o de un
+		// módulo: una nave a la que le falta el láser no extrae, y decir su
+		// rendimiento sería prometer una extracción.
+		effects: piezas.every((pieza) => pieza.fitted) ? effects : [],
 		next: siguientePalanca(llaves)
 	};
 }
 
+/**
+ * Las rocas del cinturón, cada una con lo que el piloto sabe de ella.
+ *
+ * Una roca sin lectura vigente sale **sin identificar**: se ve el bulto pero no
+ * de qué es ni cuánto tiene. Eso es lo que le da trabajo al escáner, y lo que
+ * convierte llegar a un cinturón desconocido en algo que hacer en vez de una
+ * lista que ya venía escrita.
+ *
+ * Cada roca identificada trae ya resuelto **cuánto traería y cuánto tardaría con
+ * esta nave y esta bodega**, y no sólo cuánto queda en la piedra: "quedan 4.800
+ * unidades" no dice nada; "traés 225 y tardás 38 minutos" dice si vale la pena.
+ */
 function buildBelt(
 	db: Db,
 	row: Pilot,
@@ -867,7 +933,7 @@ function buildBelt(
 			scanSource: {
 				verb: 'Escanear',
 				blockers: [orderBlocked, plan.blocked].filter(Boolean),
-				modules: [{ requirement: 'Escáner', name: plan.module, fitted: plan.module !== '' }],
+				modules: [aparatoDeModulo('Escáner', plan.module)],
 				levers: palancas(plan.levers),
 				effects: [{ label: 'Lectura', value: depthLabel(plan.depth) }],
 				next: siguienteLectura(niveles)
@@ -877,13 +943,7 @@ function buildBelt(
 				// Sólo lo que es de la nave: por qué **esta** roca no se puede picar lo
 				// dice la fila, que es donde vive esa razón.
 				blockers: [orderBlocked].filter(Boolean),
-				modules: [
-					{
-						requirement: 'Láser de extracción',
-						name: fuente.module,
-						fitted: fuente.module !== ''
-					}
-				],
+				modules: [aparatoDeModulo('Láser de extracción', fuente.module)],
 				levers: palancas(fuente.levers),
 				effects:
 					fuente.perHour > 0
@@ -958,7 +1018,7 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			db,
 			row,
 			'Viajar',
-			[{ grant: 'thrust', label: 'Propulsores' }],
+			NEEDS_TRAVEL,
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(readout?.speed ?? 0)} ud/h` }],
 			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
@@ -1060,10 +1120,6 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 	const nombres = new Map(cuerpos.map((uno) => [uno.id, uno]));
 
 	const readout = shipReadout(db, row);
-	const nave = activeShip(db, row.id);
-	const alcance = readout?.jumpRange ?? 0;
-	const masa = readout?.mass ?? 0;
-	const tanque = nave?.fuel ?? 0;
 	const velocidad = readout?.speed ?? REFERENCE_SPEED;
 
 	const salidas: SalidaGalaxia[] = [];
@@ -1077,15 +1133,11 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 		if (!alla || !cuerpo) continue;
 
 		const problema =
-			readout === null || nave === null
+			readout === null
 				? 'Necesitás una nave para saltar.'
-				: jumpProblem(
-						{ jumpRange: alcance, mass: masa, fuel: tanque, flyable: readout.flyable },
-						salida.jumpDistance,
-						salida.closed
-					);
+				: jumpProblem({ flyable: readout.flyable }, salida.jumpDistance, salida.closed);
 
-		const segundos = alcance > 0 ? jumpSeconds(salida.jumpDistance, alcance) : 0;
+		const segundos = jumpSeconds(salida.jumpDistance);
 		// Cuánto hay hasta la puerta, que es el viaje que esta pantalla sí ordena. La
 		// cuenta es la misma que la del árbol del sistema, con la misma velocidad, así
 		// que las dos pantallas no pueden prometer duraciones distintas.
@@ -1100,11 +1152,9 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 			travelDistance: `${thousands(hasta)} ud`,
 			travelDuration: remainingLabel(travelDurationSeconds(hasta, velocidad)),
 			distance: lightYears(salida.jumpDistance),
-			// El costo y el tiempo se muestran **aunque no se pueda cruzar**: saber que
-			// faltan doce de combustible es lo que dice qué hacer, y un renglón en
-			// blanco con un «no podés» no dice nada.
+			// El tiempo se muestra **aunque no se pueda cruzar**: un renglón en blanco
+			// con un «no podés» no dice nada.
 			duration: segundos > 0 ? remainingLabel(segundos) : '',
-			fuel: `${jumpFuel(salida.jumpDistance, masa)} u`,
 			standingThere: row.locationId === salida.bodyId,
 			blocked: problema ?? ''
 		});
@@ -1196,7 +1246,7 @@ export function buildGalaxia(
 			db,
 			row,
 			'Viajar',
-			[{ grant: 'thrust', label: 'Propulsores' }],
+			NEEDS_TRAVEL,
 			'speed',
 			[{ label: 'Velocidad', value: `${thousands(shipReadout(db, row)?.speed ?? 0)} ud/h` }],
 			ahora.orderBlocked ? [ahora.orderBlocked] : []
@@ -1205,20 +1255,13 @@ export function buildGalaxia(
 		// se cruza —el mapa manda a Ubicación, que es la pantalla del lugar— pero
 		// con una orden en curso aquella pantalla muestra el viaje y no la puerta:
 		// el camino no lleva a ninguna parte y hay que decirlo acá.
-		jumpSource: fuenteDeVerbo(
-			db,
-			row,
-			'Saltar',
-			[
-				{ grant: 'jumpPower', label: 'Motor de salto' },
-				{ grant: 'fuel', label: 'Tanque' }
-			],
-			'jump_range',
-			[{ label: 'Alcance', value: lightYears(shipReadout(db, row)?.jumpRange ?? 0) }],
-			// La orden en curso primero: con la nave en camino da igual que falte
-			// combustible, y «ya hay una orden» es lo que hay que leer para saber qué
-			// hacer. Es el mismo criterio que el del cinturón.
-			[ahora.orderBlocked, exits.find((una) => una.standingThere)?.blocked ?? ''].filter(Boolean)
+		//
+		// La orden en curso primero: es lo que hay que leer para saber qué hacer, y
+		// es el mismo criterio que el del cinturón.
+		jumpSource: fuenteDeLaPuerta(
+			[ahora.orderBlocked, exits.find((una) => una.standingThere)?.blocked ?? ''].filter(
+				Boolean
+			)[0] ?? null
 		)
 	};
 }

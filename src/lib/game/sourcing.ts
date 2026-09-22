@@ -8,8 +8,14 @@
  * decidiendo qué comprar o entrenar después— y es lo que
  * [«la cadena se muestra»](../../docs/DESIGN.md) manda arreglar.
  *
- * Acá vive la parte pura: dado un equipamiento y unas habilidades, **quién
- * habilita qué**. El texto lo arma la vista; esto sólo contesta la pregunta.
+ * Acá vive la parte pura: dado un casco, un equipamiento y unas habilidades,
+ * **quién habilita qué**. El texto lo arma la vista; esto sólo contesta la
+ * pregunta.
+ *
+ * Y la fuente son dos y no una: **el casco también habilita**. Los propulsores,
+ * el motor de salto y el tanque dejaron de ser módulos y pasaron a ser atributos
+ * del casco, así que preguntar sólo por las ranuras contesta que falta algo que
+ * ninguna nave puede tener.
  *
  * La distinción que ordena todo el archivo son dos relaciones que no se parecen:
  *
@@ -37,6 +43,24 @@ import { getSkill } from './skills';
 export type Grant = 'sensorRange' | 'miningYield' | 'jumpPower' | 'thrust' | 'fuel' | 'cargo';
 
 /**
+ * Cuánto de lo que un verbo pide lo trae el casco **de fábrica**.
+ *
+ * Es la otra mitad de la pregunta «de dónde sale esto», y faltaba: desde que los
+ * internos esenciales son atributos del casco, una nave de astillero tiene
+ * propulsores, motor de salto y tanque sin llevar un solo módulo puesto.
+ * Resolviendo la cadena sólo contra las ranuras, esa nave leía «Falta:
+ * Propulsores» mientras se movía perfectamente.
+ *
+ * **Extraer es el único verbo cuyo aparato no trae ningún casco**: no hay nave
+ * que venga con el láser puesto, y por eso `miningYield` contesta cero acá. El
+ * resto —sensores, bodega, empuje, salto y tanque— son columnas del casco, así
+ * que la cuenta es leer la que corresponda.
+ */
+export function hullGrant(hull: Hull, grant: Grant): number {
+	return grant === 'miningYield' ? 0 : hull[grant];
+}
+
+/**
  * Algo que un verbo necesita montado para existir.
  *
  * **Es una lista y no un módulo suelto** porque los verbos pisan más de una
@@ -47,7 +71,9 @@ export type Grant = 'sensorRange' | 'miningYield' | 'jumpPower' | 'thrust' | 'fu
  *
  * El rótulo va acá y no se saca del módulo encontrado por un motivo simple:
  * **cuando falta, no hay módulo del que sacarlo**, y «necesitás algo» es un aviso
- * que no dice nada.
+ * que no dice nada. Vale lo mismo cuando lo que lo cumple es el casco: el aviso
+ * dice «Propulsores» y al lado de qué salen, y el nombre de la pieza tiene que
+ * existir antes de saber quién la pone.
  */
 export interface Need {
 	readonly grant: Grant;

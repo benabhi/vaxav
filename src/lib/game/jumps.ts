@@ -1,21 +1,29 @@
 /**
- * Cruzar una puerta: cuánto tarda, cuánto combustible cuesta y si se llega.
+ * Cruzar una puerta: cuánto tarda y si se puede.
  *
- * Las tres cosas salen de **la distancia de la puerta**, que es un dato del
- * universo y no de la nave: dos sistemas están a lo que están, y lo que cambia de
- * un piloto a otro es con qué lo cruza.
+ * **Cruzar una puerta es gratis.** No cuesta combustible, no pide alcance y el
+ * tiempo sale de la distancia de la puerta y de nada más: cualquier nave cruza
+ * cualquier puerta, como en EVE. La puerta hace todo el trabajo, que es para lo
+ * que alguien la construyó.
  *
- * **Nada llega nunca a cero.** Ni el tiempo ni el consumo, por mejor equipado que
- * esté alguien: el techo de eficiencia es parte del balance y no un efecto
- * colateral. Es la misma regla que el viaje dentro del sistema, que nunca baja de
- * un segundo, y la que va a valer para toda actividad futura.
+ * Hasta acá esto cobraba combustible por masa y distancia, que es **la fórmula
+ * del motor de salto de EVE aplicada a la puerta**. Son dos cosas distintas: allá
+ * el combustible paga por *saltearse* la red de puertas, no por usarla. Y el
+ * argumento que lo decidió es de este juego y no de aquél: en EVE quedarse sin
+ * isótopos te deja lento, y acá te dejaría **varado**, porque la puerta es el
+ * único camino. Es el mismo razonamiento con el que el viaje dentro del sistema
+ * ya era gratis.
  *
- * Y **todo lo que mejora un salto ya está adentro de `jumpRange`**: el motor que
- * lleva montado, la masa que arrastra y Astrogación, que le da un 4 % por nivel.
- * Volver a aplicarlos acá sería contarlos dos veces, que es el error que el viaje
- * dentro del sistema ya evita apoyándose en la velocidad.
+ * Lo que sí va a costar combustible es **el motor de salto de las capitales**, el
+ * que cruza entre sistemas que no son vecinos y sin puerta. Ése es el verbo que
+ * este módulo todavía no tiene, y por eso la maquinaria del insumo —`jumpFuel`,
+ * `jumpsWithFuel`, el consumo por masa y su eficiencia— queda escrita y sin
+ * llamadores: está dormida, no muerta, y el día que aparezca ese verbo es lo
+ * único que no hay que volver a decidir.
  *
- * Corresponde a docs/systems/ACTIONS.md y docs/systems/UNIVERSE.md.
+ * **Nada llega nunca a cero**: el tiempo tiene su piso de un segundo, como el
+ * viaje dentro del sistema. Corresponde a docs/systems/ACTIONS.md y
+ * docs/systems/UNIVERSE.md.
  */
 
 import { floorDiv, roundHalfEven } from './math';
@@ -32,137 +40,114 @@ export const TENTHS = 10;
 /**
  * Cuántas toneladas de nave gasta una unidad de combustible, por año luz.
  *
- * Vive con el salto y no con el equipamiento porque es una regla del salto: es el
- * número que hace que cargar la bodega hasta el tope también acorte la autonomía,
- * y no sólo la velocidad. La ficha de la nave lo usa a través de `jumpsWithFuel`,
- * así que la autonomía que muestra y el gasto real no pueden contradecirse.
+ * **Dormida hasta el motor de salto de las capitales.** Cruzar una puerta no
+ * consume nada, así que hoy esto sólo lo lee `jumpFuel`, que tampoco tiene quién
+ * lo llame: es el número que va a hacer que a una capital cargada le cueste más
+ * saltar que a una vacía.
  */
 export const MASS_PER_FUEL_UNIT = 40;
 
 /**
- * Cuánto tarda cruzar un año luz con el alcance de referencia.
+ * Cuánto tarda cruzar un año luz de puerta.
  *
  * Es una constante de MVP, calibrada como la del viaje dentro del sistema: da
- * saltos de un par de minutos, largos comparados con moverse entre planetas
- * —cruzar a otro sistema tiene que sentirse como un viaje— pero cortos para poder
+ * cruces de un par de minutos, largos comparados con moverse entre planetas
+ * —cambiar de sistema tiene que sentirse como un viaje— pero cortos para poder
  * probar el flujo sin esperar una tarde.
+ *
+ * **Es lo único que decide el tiempo.** Antes se dividía por el alcance de la
+ * nave y se le ponía un piso, y las dos cosas se fueron con el cobro: la puerta
+ * tarda lo que tarda, y la misma puerta tarda lo mismo para todos.
  */
 export const SECONDS_PER_LIGHT_YEAR = 240;
 
-/**
- * El alcance contra el que se calibró: el de una lanzadera de astillero.
- *
- * Una nave con mejor motor de salto cruza antes y una cargada tarda más, **sin
- * mover los tiempos de hoy**.
- */
-export const REFERENCE_JUMP_RANGE = 30;
-
-/**
- * El piso del tiempo de salto, como fracción de la base.
- *
- * Por muchos bonos que junte nadie salta en cero segundos. Un cuarenta por ciento
- * quiere decir que el mejor equipo del juego llega, como mucho, en poco menos de
- * la mitad de lo que tarda una lanzadera — una diferencia que se nota y que no
- * borra el viaje.
- */
-export const JUMP_FLOOR_PERCENT = 40;
-
-/** Lo mínimo que consume un salto. Ninguno sale gratis. */
+/** Lo mínimo que consumiría un salto sin puerta. Ninguno saldría gratis. */
 export const MIN_JUMP_FUEL = 1;
 
 /**
- * Cuánto tarda un salto, en segundos.
+ * Cuánto tarda cruzar una puerta, en segundos.
  *
- * Sale de la distancia y del alcance de la nave, que es exactamente la forma del
- * viaje dentro del sistema: distancia sobre capacidad de moverse. Una nave sin
- * motor de salto no puede saltar, así que su alcance cero no entra acá: eso lo
- * atrapa `jumpProblem` antes.
+ * Sale de **la distancia de la puerta y nada más**: es un dato del universo, no
+ * de la nave. Dos sistemas están a lo que están, y montar un calibrador de salto
+ * no acorta el cruce ni un segundo — lo que acorta un cruce es que la puerta esté
+ * más cerca.
  */
-export function jumpSeconds(tenths: number, jumpRange: number): number {
+export function jumpSeconds(tenths: number): number {
 	if (tenths < 0) throw new RangeError('La distancia de salto no puede ser negativa');
-	if (jumpRange <= 0) throw new RangeError('Una nave sin alcance de salto no puede saltar');
 
-	const base = (tenths / TENTHS) * SECONDS_PER_LIGHT_YEAR;
-	const propio = (base * REFERENCE_JUMP_RANGE) / jumpRange;
-	const piso = (base * JUMP_FLOOR_PERCENT) / 100;
-
-	return Math.max(1, roundHalfEven(Math.max(propio, piso)));
+	return Math.max(1, roundHalfEven((tenths / TENTHS) * SECONDS_PER_LIGHT_YEAR));
 }
 
 /**
- * Cuánto combustible cuesta un salto, en unidades del tanque.
+ * Cuánto combustible costaría un salto **sin puerta**, en unidades del tanque.
+ *
+ * **Dormida: hoy no la llama nadie.** Cruzar una puerta es gratis, y el verbo que
+ * va a gastar combustible —el motor de salto de las capitales, que cruza entre
+ * sistemas no adyacentes— todavía no existe. Se queda escrita porque es la regla
+ * que ya está decidida y probada, y volver a derivarla más adelante sería pagar
+ * dos veces por la misma cuenta.
  *
  * Escala con **la distancia y con la masa**, y las dos cosas importan. Sin la
  * distancia, un salto corto costaría lo mismo que uno largo y convendría siempre
  * el más largo, que es lo contrario de tener una galaxia con geografía. Sin la
  * masa, cargar la bodega hasta el tope saldría gratis.
  *
- * El consumo de referencia —una tonelada cada cuarenta, por año luz— es el mismo
- * número con el que la ficha de la nave calcula cuántos saltos le entran en el
- * tanque, así que las dos cuentas no pueden contradecirse.
- *
  * Eficiencia de combustible baja el gasto pero **nunca por debajo de una unidad**:
  * un salto gratis convertiría el combustible en un adorno.
  */
-export function jumpFuel(tenths: number, mass: number, efficiencyPercent = 0): number {
+export function jumpFuel(tenths: number, mass: number, fuelEfficiency = 0): number {
 	if (tenths < 0) throw new RangeError('La distancia de salto no puede ser negativa');
 	if (mass < 0) throw new RangeError('La masa no puede ser negativa');
 
 	const porAnoLuz = mass / MASS_PER_FUEL_UNIT;
 	const bruto = (porAnoLuz * tenths) / TENTHS;
-	const neto = bruto / (1 + efficiencyPercent / 100);
+	const neto = bruto / (1 + fuelEfficiency / 100);
 
 	return Math.max(MIN_JUMP_FUEL, roundHalfEven(neto));
 }
 
 /**
- * Cuántos saltos de referencia —uno de un año luz— aguanta un tanque.
+ * Cuántos saltos sin puerta —uno de un año luz— aguantaría un tanque.
  *
- * Es lo que la ficha de la nave muestra como autonomía. Se calcula con la misma
- * función que el gasto real para que la cifra de la ficha y la del salto no
- * puedan decir cosas distintas.
+ * **Dormida por lo mismo que `jumpFuel`**, con una salvedad: la ficha de la nave
+ * todavía la muestra como autonomía. Esa cifra habla del motor de salto que
+ * todavía no existe, así que hasta que exista es un número sin verbo, y la
+ * pantalla tendría que dejar de prometerlo.
+ *
+ * Se calcula con la misma función que el gasto para que la cifra de la ficha y la
+ * del salto no puedan decir cosas distintas.
  */
-export function jumpsWithFuel(fuel: number, mass: number, efficiencyPercent = 0): number {
-	return floorDiv(fuel, jumpFuel(TENTHS, mass, efficiencyPercent));
+export function jumpsWithFuel(fuel: number, mass: number, fuelEfficiency = 0): number {
+	return floorDiv(fuel, jumpFuel(TENTHS, mass, fuelEfficiency));
 }
 
-/** Lo que hace falta saber de la nave para decidir si puede cruzar. */
+/**
+ * Lo que hace falta saber de la nave para decidir si puede cruzar.
+ *
+ * **Quedó en un solo campo**, y eso es exactamente la decisión: la puerta no
+ * pregunta por el motor, ni por la masa, ni por el tanque. Sigue siendo un objeto
+ * y no un booleano suelto porque el motor de salto de las capitales va a volver a
+ * preguntar por todo eso, y porque `jumpProblem(nave, ...)` se lee y
+ * `jumpProblem(true, 14, false)` no.
+ */
 export interface JumpShip {
-	/** Alcance máximo, en décimas de año luz. */
-	readonly jumpRange: number;
-	readonly mass: number;
-	/** Lo que tiene en el tanque ahora. */
-	readonly fuel: number;
 	/** Si la configuración se puede volar. */
 	readonly flyable: boolean;
-	readonly efficiencyPercent?: number;
 }
 
 /**
  * Por qué no se puede cruzar esta puerta, o `null` si se puede.
  *
  * Devuelve la frase lista para mostrar, como el resto de las validaciones del
- * proyecto. El orden importa: primero lo que no depende del salto —la nave no
- * vuela, la puerta no lleva a ningún lado—, después el alcance y al final el
- * combustible, que es lo único que se arregla comprando.
+ * proyecto. **Los tres motivos que quedan no se arreglan comprando**: una nave
+ * que no vuela, una puerta sin nada del otro lado y un paso cerrado. Eso es lo
+ * que queda cuando cruzar deja de costar: la puerta no se gana con equipo, y por
+ * eso el piloto nuevo llega a cualquier lado.
  */
 export function jumpProblem(ship: JumpShip, tenths: number | null, closed = false): string | null {
 	if (!ship.flyable) return 'La nave no está en condiciones de volar.';
 	if (tenths === null) return 'Esta puerta todavía no lleva a ninguna parte.';
-	// **Antes que el alcance y el combustible.** Una puerta cerrada no se cruza
-	// con mejor nave ni con más tanque, así que decir «te falta alcance» sería
-	// mandar al jugador a gastar en algo que no lo va a dejar pasar igual.
 	if (closed) return 'El paso por esta puerta está cerrado.';
-
-	if (ship.jumpRange <= 0) return 'La nave no tiene motor de salto.';
-	if (tenths > ship.jumpRange) {
-		return `El salto es de ${lightYears(tenths)} y la nave alcanza ${lightYears(ship.jumpRange)}.`;
-	}
-
-	const cuesta = jumpFuel(tenths, ship.mass, ship.efficiencyPercent ?? 0);
-	if (ship.fuel < cuesta) {
-		return `Hacen falta ${cuesta} de combustible y hay ${ship.fuel}.`;
-	}
 
 	return null;
 }

@@ -68,7 +68,12 @@ describe('dónde se puede operar', () => {
 });
 
 describe('el catálogo', () => {
-	it('trae los cuatro minerales y los treinta y cuatro módulos', async () => {
+	/*
+	 * El combustible **no entra**: existe en el catálogo de ítems pero nada lo
+	 * consume, y un renglón para algo que no se puede ni comprar ni vender es una
+	 * promesa de mecánica que no existe.
+	 */
+	it('trae los cuatro minerales y los treinta y cuatro módulos, y nada más', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 

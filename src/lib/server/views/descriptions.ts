@@ -50,29 +50,33 @@ export function systemDescriptions(db: Db, systemId: number): ReadonlyMap<number
 	if (filas.length === 0) return VACIO;
 
 	const porId = new Map(filas.map((fila) => [fila.id, fila]));
-	const aLaEstrella = starDistances(filas, porId);
+	const alcances = starReaches(filas, porId);
 
-	// La estrella da el clima, y la órbita más lejana define qué es «el borde».
+	// La órbita más lejana define qué es «el borde».
 	//
 	// **Las puertas no cuentan.** Se plantan a mano donde haga falta para que la
 	// línea salga por el rumbo que corresponde en el mapa de la galaxia, así que
 	// están más lejos que todo lo demás por construcción: en Ánfora, a 759 contra
 	// las 520 del cinturón más externo. Medir el borde contra ellas dejaría a todo
 	// el sistema en «el interior», que es justo lo contrario de lo que se ve.
-	const estrella = filas.find((fila) => fila.kind === 'star');
 	let borde = 0;
 	for (const fila of filas) {
 		if (fila.kind === 'gate') continue;
-		borde = Math.max(borde, aLaEstrella.get(fila.id) ?? 0);
+		borde = Math.max(borde, alcances.get(fila.id)?.distance ?? 0);
 	}
 
 	const capacidad = beltCapacities(db, filas);
 
 	const salida = new Map<number, Lectura>();
 	for (const fila of filas) {
+		// El clima lo da **su** estrella: la raíz de su rama. En un sistema de un
+		// solo sol es el de siempre, y en un binario es el que lo calienta a él y no
+		// el que le tocó primero a la consulta.
+		const alcance = alcances.get(fila.id);
+		const suEstrella = alcance ? porId.get(alcance.starId) : undefined;
 		const context: BodyContext = {
-			starClass: estrella?.starClass ?? '',
-			starDistance: aLaEstrella.get(fila.id) ?? 0,
+			starClass: suEstrella?.starClass ?? '',
+			starDistance: alcance?.distance ?? 0,
 			edgeDistance: borde,
 			beltCapacity: capacidad.get(fila.id) ?? 0
 		};
@@ -81,29 +85,48 @@ export function systemDescriptions(db: Db, systemId: number): ReadonlyMap<number
 	return salida;
 }
 
+/** De qué estrella cuelga un cuerpo, y cuánto hay hasta ella. */
+interface StarReach {
+	/** La raíz de su rama. En un binario, el sol que lo calienta a él. */
+	readonly starId: number;
+	/** Unidades hasta esa raíz, sumando el árbol. Cero en la raíz misma. */
+	readonly distance: number;
+}
+
 /**
- * Cuánto hay de cada cuerpo **a la estrella**, no a lo que orbita.
+ * A qué distancia está cada cuerpo **de su estrella**, y de cuál.
  *
  * Una luna está a seis unidades de su planeta y a doscientas de la estrella, y la
  * que manda en el clima es la segunda. Se acumula hacia arriba y se recuerda: un
  * planeta con ocho lunas se calcula una vez.
+ *
+ * Vuelve también con **cuál** es esa estrella, que en un sistema de un solo sol
+ * es la obvia y en un binario no: cada rama la calienta la suya, y preguntarle al
+ * sistema «cuál es la estrella» devuelve una de las dos al azar. La raíz no se
+ * suma a sí misma: su `orbitDistance` mide la separación del baricentro del
+ * sistema, que no es distancia a ninguna estrella.
  */
-function starDistances(
+function starReaches(
 	filas: readonly Body[],
 	porId: ReadonlyMap<number, Body>
-): Map<number, number> {
-	const hecho = new Map<number, number>();
+): Map<number, StarReach> {
+	const hecho = new Map<number, StarReach>();
 
-	function subir(fila: Body): number {
+	function subir(fila: Body): StarReach {
 		const guardado = hecho.get(fila.id);
 		if (guardado !== undefined) return guardado;
 		// Se marca antes de subir: un ciclo en los padres sería un dato corrupto,
 		// pero colgar la pantalla por eso sería peor.
-		hecho.set(fila.id, fila.orbitDistance);
+		hecho.set(fila.id, { starId: fila.id, distance: 0 });
+
 		const padre = fila.parentId === null ? undefined : porId.get(fila.parentId);
-		const total = fila.orbitDistance + (padre ? subir(padre) : 0);
-		hecho.set(fila.id, total);
-		return total;
+		const arriba = padre ? subir(padre) : null;
+		const alcance: StarReach = arriba
+			? { starId: arriba.starId, distance: fila.orbitDistance + arriba.distance }
+			: { starId: fila.id, distance: 0 };
+
+		hecho.set(fila.id, alcance);
+		return alcance;
 	}
 
 	for (const fila of filas) subir(fila);

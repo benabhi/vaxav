@@ -249,6 +249,17 @@ function seedBody(
 	systemId: number,
 	parentId: number | null = null
 ): number {
+	// **Toda raíz es una estrella.** Un sistema puede tener más de una —un binario
+	// tiene dos soles, y cada uno cuelga lo suyo—, pero de ahí para abajo todo
+	// orbita algo. El constructor ya lo exige en `checkBody`; el plano entra por
+	// acá sin pasar por ahí, y una raíz que no fuera una estrella dejaría una rama
+	// sin sol: las descripciones medirían el clima contra un centro que no existe.
+	if (parentId === null && blueprint.kind !== 'star') {
+		throw new UniverseError(
+			`El cuerpo raíz '${blueprint.code}' es de tipo ${blueprint.kind}: la raíz de un sistema tiene que ser una estrella.`
+		);
+	}
+
 	const existente = db.select().from(body).where(eq(body.code, blueprint.code)).get();
 
 	// El que ya está **no se toca en nada**: ni su nombre, ni su órbita, ni su
@@ -548,40 +559,98 @@ export function bodyDetail(db: Db, code: string): BodyDetail | null {
 }
 
 /**
+ * El baricentro de un sistema: el punto alrededor del que giran sus raíces.
+ *
+ * No es una fila de la base y no necesita serlo. Sólo hace falta como **punto de
+ * encuentro**: en un sistema binario las dos ramas no comparten ningún cuerpo, y
+ * sin un punto común no hay camino de un sol al otro. Cero no puede ser el
+ * identificador de ningún cuerpo —la columna es autoincremental y arranca en
+ * uno—, así que no se pisa con nadie.
+ */
+const BARYCENTER_ID = 0;
+
+/**
+ * El camino de un cuerpo hasta el baricentro de su sistema.
+ *
+ * Devuelve `[identificador, distancia acumulada]` por cada escalón, de abajo
+ * hacia arriba y terminando siempre en el baricentro. **El último paso es el de
+ * la raíz al centro**: el `orbitDistance` de una raíz no es una distancia a sí
+ * misma sino su separación del baricentro, cero cuando el sistema tiene un solo
+ * sol y ese sol *es* el centro.
+ *
+ * Se planta si la cadena se muerde la cola: un ciclo en los padres colgaría el
+ * pedido para siempre, que es bastante peor que un error.
+ */
+function pathToBarycenter(db: Db, start: Body): [number, number][] {
+	const path: [number, number][] = [];
+	const visited = new Set<number>();
+	let distance = 0;
+	let current: Body | undefined = start;
+
+	while (current) {
+		if (visited.has(current.id)) {
+			throw new UniverseError(
+				`El cuerpo ${current.id} termina colgando de sí mismo: el árbol del sistema tiene un ciclo.`
+			);
+		}
+		visited.add(current.id);
+		path.push([current.id, distance]);
+		distance += current.orbitDistance;
+		if (current.parentId === null) {
+			path.push([BARYCENTER_ID, distance]);
+			break;
+		}
+		current = db.select().from(body).where(eq(body.id, current.parentId)).get();
+	}
+
+	return path;
+}
+
+/**
  * Distancia entre dos cuerpos del mismo sistema, sumando el árbol.
  *
  * No hay distancia par-a-par en la base: cada cuerpo sólo conoce la suya al
  * padre (`orbitDistance`). Se sube desde cada extremo acumulando esa distancia
- * hasta encontrar un ancestro en común, y se suman los dos tramos — el camino
- * más corto en un árbol es siempre a través de ese ancestro.
+ * hasta el primer punto en común, y se suman los dos tramos — el camino más
+ * corto en un árbol es siempre a través de ese ancestro.
+ *
+ * **Un sistema puede tener más de una raíz.** Un binario tiene dos soles y cada
+ * uno cuelga lo suyo: una estrella no orbita nada (ver `BODY_CHILDREN`), así que
+ * la segunda no es hija de la primera sino otra raíz. Dos cuerpos de ramas
+ * distintas no comparten ningún cuerpo, y por eso el camino sigue un paso más
+ * allá de la raíz, hasta el baricentro. Sin eso, medir de un sol al planeta del
+ * otro era un 500 en la pantalla del sistema.
  */
 export function bodyDistance(db: Db, originId: number, destinationId: number): number {
 	if (originId === destinationId) return 0;
 
-	/** [id, distancia acumulada hasta acá] desde el cuerpo hasta la raíz. */
-	function pathToRoot(bodyId: number): [number, number][] {
-		const path: [number, number][] = [];
-		let distance = 0;
-		let current = db.select().from(body).where(eq(body.id, bodyId)).get();
-		while (current) {
-			path.push([current.id, distance]);
-			if (current.parentId === null) break;
-			distance += current.orbitDistance;
-			current = db.select().from(body).where(eq(body.id, current.parentId)).get();
-		}
-		return path;
+	const origin = getBodyById(db, originId);
+	if (!origin) throw new UniverseError(`No hay ningún cuerpo con el identificador ${originId}.`);
+	const destination = getBodyById(db, destinationId);
+	if (!destination) {
+		throw new UniverseError(`No hay ningún cuerpo con el identificador ${destinationId}.`);
 	}
 
-	const originPath = new Map(pathToRoot(originId));
-	for (const [ancestorId, destinationDistance] of pathToRoot(destinationId)) {
-		const originDistance = originPath.get(ancestorId);
+	// Entre sistemas no hay distancia orbital: se salta por una puerta y eso lo
+	// mide el mapa de la galaxia. Mejor fallar acá que devolver un número que
+	// nadie podría interpretar.
+	if (origin.systemId !== destination.systemId) {
+		throw new UniverseError(
+			`Los cuerpos ${originId} y ${destinationId} son de sistemas distintos: entre sistemas se salta, no se viaja.`
+		);
+	}
+
+	const fromOrigin = new Map(pathToBarycenter(db, origin));
+	for (const [pointId, destinationDistance] of pathToBarycenter(db, destination)) {
+		const originDistance = fromOrigin.get(pointId);
 		if (originDistance !== undefined) return originDistance + destinationDistance;
 	}
 
-	// No comparten raíz: no debería pasar dentro de un mismo sistema, pero si
-	// pasa, mejor decirlo con un número que decir cero por accidente.
+	// Con el árbol sano no pasa: los dos caminos terminan en el mismo baricentro.
+	// Si pasa, algún `parentId` apunta a un cuerpo que ya no está y lo que hay que
+	// arreglar es el dato, no la cuenta.
 	throw new UniverseError(
-		`Los cuerpos ${originId} y ${destinationId} no comparten un ancestro en el árbol del sistema.`
+		`Los cuerpos ${originId} y ${destinationId} no llegan al mismo baricentro: el árbol del sistema está roto.`
 	);
 }
 

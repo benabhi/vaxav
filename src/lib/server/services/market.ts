@@ -27,7 +27,7 @@ import { activeShip, pilotSkillLevels } from './ships';
 import { situation } from './status';
 import { recordTrade } from './trades';
 import { bodyDetail } from './universe';
-import { credit, debit } from './wallet';
+import { credit, debit, type CreditMove } from './wallet';
 import { getItem, type ContainerKind, type ItemKind } from '$lib/game/items';
 import {
 	HAGGLING_SKILL,
@@ -36,7 +36,9 @@ import {
 	bidPrice,
 	bidTotal,
 	marketServices,
+	isTraded,
 	spreadFor,
+	stationSells,
 	type MarketServices,
 	type Spread
 } from '$lib/game/market';
@@ -44,6 +46,31 @@ import type { CorporationKind } from '$lib/game/universe';
 
 /** No se puede comerciar. El mensaje se le muestra al jugador. */
 export class MarketError extends Error {}
+
+/**
+ * Con qué nombre entra al libro lo que se le vende a la estación.
+ *
+ * Es una tabla y no un par de ternarios porque **una clase de ítem nueva tiene
+ * que romper acá**: el asiento es lo que después explica el saldo, y el que se
+ * escribe con el nombre equivocado no se descubre hasta que alguien audita la
+ * economía. Con el `Record` completo, agregar una clase no compila hasta decidir
+ * cómo se llama su movimiento.
+ */
+const SALE_MOVES: Readonly<Record<ItemKind, CreditMove>> = {
+	ore: 'ore_sale',
+	module: 'module_sale',
+	fuel: 'fuel_sale'
+};
+
+/** Y con qué nombre entra lo que se le compra. */
+const PURCHASE_MOVES: Readonly<Record<ItemKind, CreditMove>> = {
+	// El mineral no se compra en el mostrador —`stationSells` lo rechaza antes—,
+	// pero la entrada existe igual para que la tabla sea exhaustiva.
+	ore: 'ore_sale',
+	module: 'module_purchase',
+	/** El huérfano más viejo del libro: estaba declarado y no lo escribía nadie. */
+	fuel: 'refuel'
+};
 
 /**
  * El mostrador de una estación, con todo lo que decide un precio.
@@ -172,6 +199,10 @@ export function sellToStation(
 ): Receipt {
 	const desk = requireDesk(db, row);
 	const item = getItem(itemCode);
+	// Lo que el mercado no comercia tampoco se recompra: si la estación pagara por
+	// combustible, habría un precio para algo que no se puede conseguir y una punta
+	// de arbitraje esperando a que alguien lo consiga.
+	if (!isTraded(item.kind)) throw new MarketError(`${desk.stationName} no comercia eso`);
 	requireDesk2(desk);
 	requireQuantity(quantity);
 
@@ -196,7 +227,7 @@ export function sellToStation(
 			fromStation: true
 		});
 		const entry = credit(tx, row.id, total, {
-			kind: item.kind === 'ore' ? 'ore_sale' : 'module_sale',
+			kind: SALE_MOVES[item.kind],
 			bodyId: desk.bodyId,
 			memo: `${quantity} × ${item.name}`
 		});
@@ -215,14 +246,19 @@ export function sellToStation(
 /**
  * Compra a la estación y paga.
  *
- * **Sólo módulos.** La estación no revende mineral: lo compra para procesarlo, y
- * un mostrador que lo devolviera al catálogo convertiría el circuito minero en
- * un botón que se aprieta sin salir del hangar.
+ * **Módulos y nada más.** Al mineral se lo vendés vos a ella, que lo compra para
+ * procesarlo, y un mostrador que lo devolviera al catálogo convertiría el
+ * circuito minero en un botón que se aprieta sin salir del hangar.
+ *
+ * El combustible estuvo acá un rato y se fue con el cobro del salto: hasta que
+ * algo lo consuma no se vende. Cuando vuelva, vuelve por esta puerta y no por un
+ * servicio de estación propio —es un ítem como cualquier otro—, y su asiento en
+ * el libro ya tiene nombre: `refuel`.
  */
 export function buyFromStation(db: Db, row: Pilot, itemCode: string, quantity: number): Receipt {
 	const desk = requireDesk(db, row);
 	const item = getItem(itemCode);
-	if (item.kind !== 'module') throw new MarketError(`${desk.stationName} no vende eso`);
+	if (!stationSells(item.kind)) throw new MarketError(`${desk.stationName} no vende eso`);
 	requireDesk2(desk);
 	requireQuantity(quantity);
 
@@ -234,7 +270,7 @@ export function buyFromStation(db: Db, row: Pilot, itemCode: string, quantity: n
 		// la bodega y el mensaje que sale es el de la billetera, que es el que el
 		// jugador necesita leer.
 		const entry = debit(tx, row.id, total, {
-			kind: 'module_purchase',
+			kind: PURCHASE_MOVES[item.kind],
 			bodyId: desk.bodyId,
 			memo: `${quantity} × ${item.name}`
 		});

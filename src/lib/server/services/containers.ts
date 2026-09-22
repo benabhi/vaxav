@@ -37,7 +37,16 @@ export const ITEM_MOVES = [
 	/** Salió de la bodega a quedar en garantía de una orden de venta. */
 	'listed',
 	/** Volvió de una orden de venta que se canceló. */
-	'unlisted'
+	'unlisted',
+	/**
+	 * Salió de la bodega al tanque de la nave.
+	 *
+	 * Es una salida sin destino: el combustible deja de ser carga y pasa a ser
+	 * autonomía, así que no hay contraparte a la que anotarle la entrada. Se llama
+	 * igual que el asiento de la billetera a propósito —el mismo hecho contado en
+	 * los dos libros— aunque el de acá mueva unidades y el otro créditos.
+	 */
+	'refuel'
 ] as const;
 export type ItemMove = (typeof ITEM_MOVES)[number];
 

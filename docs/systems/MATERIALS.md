@@ -67,9 +67,15 @@ de Extracción de hielo, y aparece en lunas y anillos helados y no en cinturones
 | **Hielo glaciar** | Baja      |  5,0 | 30 nitrógeno · 25 helio-3                  |
 | **Hielo oscuro**  | Nula      |  5,0 | 50 helio-3 · 15 oxígeno                    |
 
-**El helio-3 es el que importa**: es el combustible del salto. Hoy el combustible
-se compra en la estación y eso es un huérfano declarado en `DESIGN.md`; el hielo es
-su fuente, y con él la cadena del salto se cierra.
+**El helio-3 es el que importa**: es el combustible, y es **el único refinado que
+ya existe como ítem del catálogo**. No se compra en ninguna parte —el mercado no
+lo muestra— porque hoy **nada lo consume**: cruzar una puerta es gratis y el verbo
+que lo va a quemar es el motor de salto de las capitales, que todavía no existe.
+Ver [cruzar es gratis](ACTIONS.md#cruzar-es-gratis).
+
+El hielo sigue siendo su fuente, y el orden en que entran los tres es el de
+[la cadena](../DESIGN.md#no-hace-falta-cerrarla-de-una-vez): primero el verbo que
+gasta, después el insumo, y la fuente cuando haya qué alimentar.
 
 Notar el volumen: **cinco metros cúbicos por unidad**. El hielo es un problema de
 logística antes que de extracción, y eso es lo que le da sentido a las barcazas.
@@ -101,7 +107,7 @@ refinar donde pagan mejor.
 | **Iridio**      |  0,1 | Veta iridiada, núcleo | **Lo raro.** Todo módulo de escalón A lo pide |
 | **Platino**     |  0,1 | Brecha, núcleo        | Ópticas, sensores, armas de precisión         |
 | **Uranio**      |  0,1 | Núcleo uranífero      | Plantas de energía y motores de salto grandes |
-| **Helio-3**     |  0,1 | Hielo                 | **Combustible de salto**                      |
+| **Helio-3**     |  0,1 | Hielo                 | **Combustible del salto sin puerta**          |
 | **Agua pesada** |  0,1 | Hielo                 | Refrigerante y soporte vital                  |
 | **Nitrógeno**   |  0,1 | Hielo                 | Propelente y bloques de combustible           |
 | **Oxígeno**     |  0,1 | Hielo                 | Soporte vital                                 |

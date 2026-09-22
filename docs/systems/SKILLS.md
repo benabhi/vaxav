@@ -279,26 +279,36 @@ Las tablas salen de `game/skills.ts`. **Rango** es el multiplicador de costo,
 
 La familia de las **clases de nave**. Volar una clase que no se sabe volar es imposible, no penalizado: es el requisito duro más importante del juego.
 
-| Habilidad                 | Rango | Gobierna                                  | Pide                                |
-| ------------------------- | ----: | ----------------------------------------- | ----------------------------------- |
-| Manejo de lanzaderas      |    x1 | Requisito de la clase lanzadera           | —                                   |
-| Navegación                |    x1 | Velocidad de viaje dentro del sistema     | —                                   |
-| Maniobra                  |    x2 | Tiempo de alineación antes de salir       | Navegación 2                        |
-| Eficiencia de combustible |    x2 | Consumo por salto y por maniobra          | Navegación 2                        |
-| Naves ligeras             |    x2 | Requisito de la clase corbeta             | Manejo de lanzaderas 3              |
-| Astrogación               |    x3 | Saltos entre sistemas: tiempo y precisión | Navegación 3                        |
-| Naves industriales        |    x3 | Requisito de la clase industrial          | Naves ligeras 3                     |
-| Destructores              |    x3 | Requisito de la clase destructor          | Naves ligeras 3                     |
-| Cálculo de saltos         |    x4 | Alcance de salto                          | Astrogación 3                       |
-| Barcazas mineras          |    x4 | Requisito de la clase barcaza             | Naves industriales 3 · Minería 4    |
-| Pilotaje evasivo          |    x4 | Firma mientras se está en movimiento      | Maniobra 3                          |
-| Cruceros                  |    x5 | Requisito de la clase crucero             | Destructores 3                      |
-| Transportes rápidos       |    x6 | Requisito de la clase transporte          | Naves industriales 4 · Maniobra 4   |
-| Cargueros                 |    x6 | Requisito de la clase carguero            | Naves industriales 5                |
-| Naves de reconocimiento   |    x6 | Requisito de la clase explorador pesado   | Naves ligeras 5 · Escaneo 4         |
-| Exhumadoras               |    x6 | Requisito de la clase exhumadora          | Barcazas mineras 5                  |
-| Acorazados                |    x8 | Requisito de la clase acorazado           | Cruceros 5                          |
-| Naves capitales           |   x12 | Requisito de la clase capital             | Acorazados 5 · Vuelo en formación 4 |
+| Habilidad                 | Rango | Gobierna                                | Pide                                |
+| ------------------------- | ----: | --------------------------------------- | ----------------------------------- |
+| Manejo de lanzaderas      |    x1 | Requisito de la clase lanzadera         | —                                   |
+| Navegación                |    x1 | Velocidad de viaje dentro del sistema   | —                                   |
+| Maniobra                  |    x2 | Tiempo de alineación antes de salir     | Navegación 2                        |
+| Eficiencia de combustible |    x2 | Consumo del salto sin puerta            | Navegación 2                        |
+| Naves ligeras             |    x2 | Requisito de la clase corbeta           | Manejo de lanzaderas 3              |
+| Astrogación               |    x3 | Alcance del salto sin puerta            | Navegación 3                        |
+| Naves industriales        |    x3 | Requisito de la clase industrial        | Naves ligeras 3                     |
+| Destructores              |    x3 | Requisito de la clase destructor        | Naves ligeras 3                     |
+| Cálculo de saltos         |    x4 | Alcance de salto                        | Astrogación 3                       |
+| Barcazas mineras          |    x4 | Requisito de la clase barcaza           | Naves industriales 3 · Minería 4    |
+| Pilotaje evasivo          |    x4 | Firma mientras se está en movimiento    | Maniobra 3                          |
+| Cruceros                  |    x5 | Requisito de la clase crucero           | Destructores 3                      |
+| Transportes rápidos       |    x6 | Requisito de la clase transporte        | Naves industriales 4 · Maniobra 4   |
+| Cargueros                 |    x6 | Requisito de la clase carguero          | Naves industriales 5                |
+| Naves de reconocimiento   |    x6 | Requisito de la clase explorador pesado | Naves ligeras 5 · Escaneo 4         |
+| Exhumadoras               |    x6 | Requisito de la clase exhumadora        | Barcazas mineras 5                  |
+| Acorazados                |    x8 | Requisito de la clase acorazado         | Cruceros 5                          |
+| Naves capitales           |   x12 | Requisito de la clase capital           | Acorazados 5 · Vuelo en formación 4 |
+
+**Las tres habilidades del salto están dormidas, y no es un descuido.** Cruzar
+una puerta es gratis y no pide nada —ver
+[cruzar es gratis](ACTIONS.md#cruzar-es-gratis)—, así que Astrogación, Eficiencia
+de combustible y Cálculo de saltos gobiernan el **motor de salto sin puerta**, el
+de las capitales, que todavía no existe. Astrogación mueve hoy el alcance en la
+calculadora y ningún verbo lee ese número; Cálculo de saltos, que por nombre
+debería ser la que lo mueve, no la lee nadie. Es el mismo cruce de nombres que
+tienen Minería y Rendimiento de extracción, y se resuelve cuando entre el verbo,
+no antes.
 
 ### Ingeniería
 

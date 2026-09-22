@@ -39,21 +39,27 @@ import {
 	createGate,
 	createRegion,
 	createSystem,
+	deleteBody,
 	deleteSystem,
 	disconnectGate,
+	setDeposits,
 	setGateClosed,
 	setStation,
 	updateBody,
-	type BodyDraft
+	type BodyDraft,
+	type DepositDraft
 } from '../src/lib/server/services/worldbuilding';
+import { seedAsteroids } from '../src/lib/server/services/asteroids';
 import {
 	GATE_BEARINGS,
 	romanNumeral,
+	securityLevel,
 	type Atmosphere,
 	type BodyClass,
 	type BodyKind,
 	type GateBearing,
 	type Government,
+	type SecurityLevel,
 	type StarClass
 } from '../src/lib/game/universe';
 import { neighbourOf, type Hex } from '../src/lib/game/galaxy';
@@ -325,12 +331,76 @@ const CORPORACIONES: Record<string, readonly string[]> = {
 
 const SERVICIOS = ['shipyard', 'outfitting', 'storage', 'market', 'refinery'] as const;
 
+/**
+ * Cuánto se aparta del baricentro el segundo sol de un binario.
+ *
+ * Es la separación entre las dos estrellas: la primaria nace en el centro con su
+ * órbita en cero y la secundaria se corre esto. Con cero las dos estarían en el
+ * mismo punto y viajar de una a la otra no llevaría tiempo, que es la clase de
+ * dato que después se lee como un error. Cae en la banda de las primeras
+ * órbitas, para que el segundo sol quede adentro del sistema y no más lejos que
+ * las puertas.
+ *
+ * **Fijo y no sorteado** a propósito: cada tirada del dado corre todas las que
+ * vienen después, y este guión promete que la misma semilla dibuja siempre la
+ * misma galaxia. Un número al azar acá cambiaría el mapa entero de la próxima
+ * siembra limpia, que es justo lo que la semilla fija viene a evitar.
+ */
+const SEPARACION_BINARIA = 120;
+
+/**
+ * Los minerales de un cinturón, por cajón de seguridad del sistema.
+ *
+ * La regla es la de [los materiales](../docs/systems/MATERIALS.md): «lo común
+ * está en todos lados; lo valioso, sólo donde no hay quien te cuide». De ahí que
+ * la lista sea **acumulativa** y no excluyente: bajar de cajón agrega mineral,
+ * no lo reemplaza, y por eso un sistema sin ley sigue teniendo con qué llenar
+ * una bodega barata.
+ *
+ * El tope y la reposición de cada mineral **no se inventan acá**: son los del
+ * plano oficial —los Anillos de Ánfora para los dos comunes, el Cinturón
+ * Exterior para los dos raros—, así un cinturón de prueba rinde lo mismo que el
+ * que el jugador ya conoce y no hay dos balances midiendo lo mismo.
+ *
+ * `lawless` repite lo de `low` porque los dos minerales sin ley de la tabla
+ * —brecha platinífera y núcleo uranífero— todavía no existen en el catálogo.
+ */
+const COMUNES: readonly DepositDraft[] = [
+	{ ore: 'ferrous_silicate', capacity: 60_000, regenPerHour: 3_000 },
+	{ ore: 'carbon_chondrite', capacity: 40_000, regenPerHour: 2_000 }
+];
+const DE_SEGURIDAD_MEDIA: DepositDraft = { ore: 'pyroxene', capacity: 9_000, regenPerHour: 260 };
+const DE_SEGURIDAD_BAJA: DepositDraft = { ore: 'iridium_vein', capacity: 2_400, regenPerHour: 60 };
+
+const MINERALES_POR_SEGURIDAD: Readonly<Record<SecurityLevel, readonly DepositDraft[]>> = {
+	high: COMUNES,
+	medium: [...COMUNES, DE_SEGURIDAD_MEDIA],
+	low: [...COMUNES, DE_SEGURIDAD_MEDIA, DE_SEGURIDAD_BAJA],
+	lawless: [...COMUNES, DE_SEGURIDAD_MEDIA, DE_SEGURIDAD_BAJA]
+};
+
+/**
+ * Qué tan afuera del último planeta cae el cinturón, en unidades de distancia.
+ *
+ * Se mide desde la órbita del planeta más lejano y no desde la estrella, porque
+ * un cinturón metido entre los planetas se lee como un error de siembra: en el
+ * plano oficial el Cinturón Exterior está justamente afuera de todo. La banda es
+ * angosta para que siga quedando más cerca que las puertas, que es lo que hace
+ * que minar en casa sea más cómodo que cruzar.
+ */
+const CINTURON_TRAS_EL_ULTIMO_MIN = 60;
+const CINTURON_TRAS_EL_ULTIMO_MAX = 200;
+
+/** Cuántos pasos cerrados se plantan, si hay candidatos que no aíslen a nadie. */
+const PASOS_CERRADOS = 3;
+
 const conteo: Record<string, number> = {
 	regiones: 0,
 	constelaciones: 0,
 	sistemas: 0,
 	'estrellas dobles': 0,
 	cuerpos: 0,
+	cinturones: 0,
 	estaciones: 0,
 	puertas: 0,
 	atajos: 0,
@@ -471,18 +541,46 @@ function limpiar(): void {
 		.filter((uno) => ids.has(uno.systemId));
 	const cuerposId = new Set(cuerpos.map((uno) => uno.id));
 
+	// **Las puertas de afuera que esta herramienta plantó también son suyas.** El
+	// primer sistema de cada facción se cuelga de uno que ya estaba, y para eso se
+	// le abre una puerta al que ya estaba: si al limpiar se suelta el enlace pero
+	// se deja el cuerpo, Ánfora queda con salidas que no llevan a ningún lado y
+	// **con esos rumbos ocupados**. La siembra siguiente encuentra menos lugar
+	// libre alrededor del origen, elige otro rumbo, y a partir de ahí dibuja una
+	// galaxia distinta: la promesa de que la misma semilla da el mismo mapa se
+	// rompe en la segunda corrida. Ya pasó.
+	const puertasDeAfuera = db
+		.select()
+		.from(gate)
+		.all()
+		.filter((una) => !ids.has(una.systemId) && una.destinationId !== null)
+		.filter((una) => cuerposId.has(una.destinationId!))
+		.map((una) => una.bodyId);
+
 	// Un piloto parado adentro es motivo para no borrar: moverlo sin avisarle es
-	// peor que dejar la galaxia de prueba puesta.
+	// peor que dejar la galaxia de prueba puesta. Vale también para esas puertas
+	// de afuera, que es donde aparece el que acaba de volver.
+	const aBorrar = new Set([...cuerposId, ...puertasDeAfuera]);
 	const parados = db
 		.select()
 		.from(pilotTable)
 		.all()
-		.filter((uno) => cuerposId.has(uno.locationId));
+		.filter((uno) => aBorrar.has(uno.locationId));
 	if (parados.length > 0) {
-		throw new Error(
-			`Hay pilotos parados ahí: ${parados.map((uno) => uno.callsign).join(', ')}. ` +
-				'Movelos antes de limpiar.'
+		// **Se dice dónde está cada uno**, no sólo quiénes son: el que lee esto tiene
+		// que ir a moverlos, y con el nombre del lugar sabe adónde ir. Sin eso hay
+		// que salir a buscar a dos pilotos por sesenta sistemas.
+		const porNombre = new Map(
+			db
+				.select()
+				.from(bodyTable)
+				.all()
+				.map((uno) => [uno.id, uno.name])
 		);
+		const quienes = parados.map(
+			(uno) => `${uno.callsign} (${porNombre.get(uno.locationId) ?? 'quién sabe dónde'})`
+		);
+		throw new Error(`Hay pilotos parados ahí: ${quienes.join(', ')}. Movelos antes de limpiar.`);
 	}
 
 	// Primero se sueltan todas las puertas que tocan uno de estos sistemas, de
@@ -500,6 +598,12 @@ function limpiar(): void {
 	}
 
 	for (const uno of suyos) deleteSystem(db, uno.id, null);
+
+	// Y las puertas que quedaron colgando en los sistemas de afuera, ya sueltas y
+	// apuntando a un sistema que ya no está. Van con `deleteBody` por lo mismo que
+	// los sistemas van con `deleteSystem`: el servicio sabe qué hay que soltar
+	// antes y avisa si algo las retiene.
+	for (const bodyId of puertasDeAfuera) deleteBody(db, bodyId, null);
 
 	// Y las constelaciones y regiones que quedaron sin nada adentro.
 	const conSistemas = new Set(
@@ -627,7 +731,9 @@ for (const faccion of PLAN) {
 		);
 
 		// **Algunos binarios, pocos.** Una segunda estrella es raíz, no cuelga de la
-		// primera: un sistema binario tiene dos soles y cada uno lo suyo.
+		// primera: un sistema binario tiene dos soles y cada uno lo suyo. Su órbita
+		// no es a nadie sino al baricentro del sistema, que es lo que la aparta del
+		// otro sol.
 		if (dado() < 0.12) {
 			createBody(
 				db,
@@ -636,7 +742,7 @@ for (const faccion of PLAN) {
 					name: `${nombre} B`,
 					kind: 'star',
 					parentId: null,
-					orbitDistance: 0,
+					orbitDistance: SEPARACION_BINARIA,
 					explored: true,
 					...atributosDe('star')
 				},
@@ -778,8 +884,21 @@ for (const faccion of PLAN) {
 }
 
 // --- Los adornos que hacen que el mapa tenga todos sus estados ---------------
+//
+// **Los tres sólo se ponen si esta corrida plantó algo.** A diferencia de los
+// sistemas, que se reconocen por nombre y se saltean, un atajo y una puerta
+// suelta no tienen con qué reconocerse: correr el guión dos veces sobre la misma
+// galaxia sumaba nueve atajos más, tres pasos cerrados más y cuatro puertas
+// sueltas más en cada pasada, hasta convertir el mapa en una maraña. El
+// encabezado promete que correrlo dos veces no duplica nada, y esta guarda es lo
+// que faltaba para que sea verdad.
+//
+// Los cinturones, que van al final, **sí se ponen igual**: ésos se reconocen por
+// sistema, así que agregarlos a una galaxia que ya estaba es exactamente lo que
+// se quiere de una siembra aditiva.
 
 const todos = [...plantados.dominion, ...plantados.concord, ...plantados.pact];
+const plantoAlgo = conteo.sistemas > 0;
 
 /**
  * Unos cuantos atajos: puertas entre sistemas que **no** son vecinos.
@@ -787,7 +906,7 @@ const todos = [...plantados.dominion, ...plantados.concord, ...plantados.pact];
  * No son un error: es lo que impide que la galaxia sea una grilla prolija donde
  * todo cierra en espejo. El mapa los dibuja torcidos justamente para que se vean.
  */
-for (let i = 0; i < 9 && todos.length > 4; i++) {
+for (let i = 0; plantoAlgo && i < 9 && todos.length > 4; i++) {
 	const uno = alguno(todos);
 	const otro = alguno(todos);
 	if (!uno || !otro || uno === otro) continue;
@@ -834,23 +953,97 @@ for (let i = 0; i < 9 && todos.length > 4; i++) {
 	}
 }
 
-/** Tres pasos cerrados, para ver cómo se lee un bloqueo en el mapa. */
+/**
+ * De dónde arranca el recorrido: el sistema inicial, que es donde nace todo
+ * piloto. Se saca acá y no adentro de la función porque ahí `anfora` vuelve a
+ * ser opcional —el control de flujo no cruza a una función— y lo que importa es
+ * que quien mide alcance mida desde donde se empieza a jugar.
+ */
+const origenDelRecorrido = anfora.id;
+
+/**
+ * Los sistemas a los que se llega desde Ánfora, tratando como cerradas las
+ * puertas de `cerradas` además de las que ya lo están en la base.
+ *
+ * Se recorre por **sistema** y no por cuerpo porque la pregunta es si hay algún
+ * camino hasta ahí, no cuál: adentro del sistema siempre se puede viajar.
+ */
+function alcanzablesDesdeAnfora(cerradas: ReadonlySet<number>): Set<number> {
+	const sistemaDe = new Map(
+		db
+			.select()
+			.from(bodyTable)
+			.all()
+			.map((uno) => [uno.id, uno.systemId])
+	);
+
+	const vecinos = new Map<number, number[]>();
+	for (const una of db.select().from(gate).all()) {
+		if (una.destinationId === null || una.closed || cerradas.has(una.id)) continue;
+		const alla = sistemaDe.get(una.destinationId);
+		if (alla === undefined) continue;
+		vecinos.set(una.systemId, [...(vecinos.get(una.systemId) ?? []), alla]);
+	}
+
+	const vistos = new Set([origenDelRecorrido]);
+	const cola = [origenDelRecorrido];
+	while (cola.length > 0) {
+		const actual = cola.shift()!;
+		for (const vecino of vecinos.get(actual) ?? []) {
+			if (vistos.has(vecino)) continue;
+			vistos.add(vecino);
+			cola.push(vecino);
+		}
+	}
+	return vistos;
+}
+
+/**
+ * Unos pasos cerrados, para ver cómo se lee un bloqueo en el mapa.
+ *
+ * Cerrar una puerta **es una mecánica y no un error**: `jumpProblem` sabe decir
+ * que el paso está cerrado y el mapa lo marca. Lo que sí es un error es cerrar
+ * el **único** camino a un sistema, porque entonces el contenido está pero no
+ * hay forma de llegar, que es peor que no haberlo sembrado. Ya pasó: la tirada
+ * anterior eligió dos puentes y dejó Calafate y Sotavento incomunicados.
+ *
+ * Por eso cada candidato se prueba antes de cerrarlo, y sólo entra si después
+ * se sigue llegando a exactamente los mismos sistemas que antes.
+ *
+ * **La lista se mezcla entera aunque después se descarten candidatos.**
+ * `mezclar` gasta una tirada por elemento y este guión promete que la misma
+ * semilla dibuja siempre la misma galaxia: filtrar antes de mezclar correría el
+ * dado y movería todo lo que viene después.
+ */
 const conectadas = db
 	.select()
 	.from(gate)
 	.all()
-	.filter((una) => una.destinationId !== null);
-for (const una of mezclar(conectadas).slice(0, 3)) {
-	try {
-		setGateClosed(db, una.id, true, null);
-		conteo['pasos cerrados']++;
-	} catch {
-		// Ya estaba cerrada, o se desconectó. No importa.
-	}
+	.filter((una) => una.destinationId !== null && !una.closed);
+
+const candidatas = plantoAlgo ? mezclar(conectadas) : [];
+const alcanzablesAntes = alcanzablesDesdeAnfora(new Set()).size;
+for (const una of candidatas) {
+	if (conteo['pasos cerrados'] >= PASOS_CERRADOS) break;
+
+	// **Un paso, no una punta.** Cerrar cierra los dos extremos, así que si la
+	// gemela ya salió sorteada antes, ésta no cierra nada nuevo: contarla daría
+	// tres pasos cerrados donde en el mapa hay dos.
+	const ahora = db.select().from(gate).where(eq(gate.id, una.id)).get();
+	if (!ahora || ahora.closed) continue;
+
+	// Y por lo mismo la prueba tiene que tapar la gemela también, o diría que
+	// todavía se puede pasar por el otro lado.
+	const gemela = db.select().from(gate).where(eq(gate.bodyId, una.destinationId!)).get();
+	const prueba = new Set([una.id, ...(gemela ? [gemela.id] : [])]);
+	if (alcanzablesDesdeAnfora(prueba).size < alcanzablesAntes) continue;
+
+	setGateClosed(db, una.id, true, null);
+	conteo['pasos cerrados']++;
 }
 
 /** Y cuatro puertas plantadas sin conectar: obra a medio hacer, que el mapa marca. */
-for (let i = 0; i < 4; i++) {
+for (let i = 0; plantoAlgo && i < 4; i++) {
 	const donde = alguno(todos);
 	if (!donde) continue;
 	const tomadas = ocupadas();
@@ -875,6 +1068,62 @@ for (let i = 0; i < 4; i++) {
 	} catch {
 		// Otro rumbo ocupado. Se saltea.
 	}
+}
+
+/**
+ * Un cinturón por sistema, con lo que la seguridad deja haber.
+ *
+ * **Sin esto, sesenta sistemas no tienen dónde minar.** El único verbo de
+ * extracción que existe pide un cinturón y la galaxia de prueba no plantaba
+ * ninguno: el jugador cruzaba media galaxia para mirar planetas y volver. Un
+ * sistema al que se viaja para nada es peor que uno que no está.
+ *
+ * Qué mineral hay lo decide **la seguridad y no el dado**, que es la regla del
+ * documento de materiales. Así el número de seguridad ya significa algo antes de
+ * que exista el riesgo que lo justifica, y la galaxia se lee como un gradiente y
+ * no como sesenta cinturones iguales.
+ *
+ * **Va al final del guión a propósito.** Cada tirada corre todas las que vienen
+ * después, así que sembrar cinturones dentro del bucle de los sistemas habría
+ * redibujado la galaxia entera: otros gobiernos, otras órbitas, otros rumbos.
+ * Acá abajo no queda nada a lo que correrle el dado.
+ */
+for (const systemId of todos) {
+	const sistema = db.select().from(systemTable).where(eq(systemTable.id, systemId)).get();
+	if (!sistema) continue;
+
+	const cuerpos = db.select().from(bodyTable).where(eq(bodyTable.systemId, systemId)).all();
+	// Idempotente por sistema: el que ya tiene cinturón se saltea entero. Volver a
+	// sortearle la órbita no lo movería —`createBody` se negaría por el código
+	// repetido— pero sí correría el dado del resto.
+	if (cuerpos.some((uno) => uno.kind === 'belt')) continue;
+
+	const ultimaOrbita = cuerpos
+		.filter((uno) => uno.kind === 'planet')
+		.reduce((lejos, uno) => Math.max(lejos, uno.orbitDistance), 0);
+
+	const cinturon = createBody(
+		db,
+		systemId,
+		{
+			name: `Cinturón de ${sistema.name}`,
+			kind: 'belt',
+			parentId: estrellaDe(systemId),
+			orbitDistance: ultimaOrbita + entre(CINTURON_TRAS_EL_ULTIMO_MIN, CINTURON_TRAS_EL_ULTIMO_MAX),
+			explored: true,
+			...atributosDe('belt')
+		},
+		null
+	);
+
+	setDeposits(db, cinturon.id, MINERALES_POR_SEGURIDAD[securityLevel(sistema.security)], null);
+	// El cinturón nació sin plano —los depósitos llegan recién acá— así que la
+	// tanda que `createBody` le intentó dar salió vacía. Se le da ahora, o quedaría
+	// pelado hasta que pasara el tiempo de reposición.
+	seedAsteroids(db, cinturon.id);
+
+	conteo.cuerpos++;
+	conteo.cinturones++;
 }
 
 console.log('Galaxia de prueba sembrada:');

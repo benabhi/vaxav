@@ -44,10 +44,18 @@ import { aliveNow, ordersOf, tradingContext } from '../services/orders';
 import { activeShip, pilotSkillLevels, shipReadout } from '../services/ships';
 import { situation } from '../services/status';
 import { balance } from '../services/wallet';
-import { MODULES, type ShipModule } from '$lib/game/modules';
-import { ORE_LIST, getItem, type Item } from '$lib/game/items';
+import { getModule, type ShipModule } from '$lib/game/modules';
+import { ITEMS, getItem, type Item } from '$lib/game/items';
 import { SLOT_KINDS, type SlotKind } from '$lib/game/hulls';
-import { HAGGLING_SKILL, askPrice, bidPrice, durationsFor, spreadFor } from '$lib/game/market';
+import {
+	HAGGLING_SKILL,
+	askPrice,
+	bidPrice,
+	durationsFor,
+	isTraded,
+	spreadFor,
+	stationSells
+} from '$lib/game/market';
 import {
 	cubicMeters,
 	itemIcon,
@@ -69,7 +77,15 @@ import type {
 	OrdenPropia
 } from '$lib/tipos';
 
-/** Las tres ramas de primer nivel del árbol. */
+/**
+ * Las ramas de primer nivel del árbol.
+ *
+ * Las dos últimas son clases de ítem y se llaman igual que ellas a propósito: el
+ * grupo de un ítem que no es un módulo **es su clase**, y con los nombres
+ * distintos habría que mantener una traducción entre dos listas que dicen lo
+ * mismo. Por eso una clase que vuelva a comerciarse —el combustible, el día que
+ * algo lo consuma— necesita su rama acá y nada más.
+ */
 export const GROUP_HELD = 'held';
 export const GROUP_ORE = 'ore';
 export const GROUP_MODULE = 'module';
@@ -352,9 +368,10 @@ function stationBand(
 			hagglingLevel
 		});
 
-		// Sólo los módulos se compran en la estación: el mineral se lo vendés vos a
-		// ella, no al revés.
-		if (item.kind === 'module') {
+		// Lo que la estación vende. El mineral no: se lo vendés vos a ella, no al
+		// revés. La regla vive en `game/market.ts` para que la lista y el mostrador
+		// no puedan decir cosas distintas.
+		if (stationSells(item.kind)) {
 			const precio = askPrice(item.basePrice, spread.percent);
 			if (ask === null || precio < ask) {
 				ask = precio;
@@ -408,7 +425,7 @@ function line(
 		name: item.name,
 		icon: module ? moduleIcon(module) : itemIcon(item),
 		kindLabel: itemKindLabel(item.kind),
-		group: module ? module.kind : GROUP_ORE,
+		group: module ? module.kind : item.kind,
 		groupLabel: module ? slotKindLabel(module.kind) : itemKindLabel(item.kind),
 		// Clase y escalón juntos, como los escribe el equipamiento: "2E".
 		tier: module ? `${module.size}${module.tier}` : '',
@@ -459,7 +476,10 @@ function buildGroups(items: readonly FilaMercado[]): GrupoMercado[] {
 			label: 'Módulos',
 			icon: 'squares-four',
 			parent: '',
-			count: items.filter((item) => item.group !== GROUP_ORE).length
+			// Los módulos son los que cuelgan de una bandeja, y no "todo lo que no es
+			// mineral": con esa resta, el combustible entraba en la cuenta de los
+			// módulos el día que dejó de haber sólo dos clases de ítem.
+			count: items.filter((item) => SLOT_KINDS.includes(item.group as SlotKind)).length
 		},
 		...SLOT_KINDS.map((kind: SlotKind) => ({
 			code: kind,
@@ -592,30 +612,25 @@ export function buildMarketView(db: Db, row: Pilot): Mercado {
 	const niveles = pilotSkillLevels(db, row.id);
 	const regateo = niveles[HAGGLING_SKILL] ?? 0;
 
-	const items = [
-		...ORE_LIST.map((ore) =>
+	// Del catálogo entero y no de una lista por clase: armarlo sumando minerales y
+	// módulos dejaba afuera a cualquier clase nueva. Lo que no se comercia no
+	// entra: un renglón para algo que no se puede ni comprar ni vender es una
+	// promesa de mecánica que no existe.
+	const items = ITEMS.filter((item) => isTraded(item.kind))
+		.map((item) =>
 			line(
-				getItem(ore.code),
-				null,
-				resumen.get(ore.code),
+				item,
+				item.kind === 'module' ? getModule(item.code) : null,
+				resumen.get(item.code),
 				desk,
 				regateo,
-				tengo.get(ore.code) ?? 0,
-				porId
-			)
-		),
-		...MODULES.filter((module) => module.code !== '').map((module) =>
-			line(
-				getItem(module.code),
-				module,
-				resumen.get(module.code),
-				desk,
-				regateo,
-				tengo.get(module.code) ?? 0,
+				tengo.get(item.code) ?? 0,
 				porId
 			)
 		)
-	].sort((a, b) => a.size - b.size || a.name.localeCompare(b.name) || a.tier.localeCompare(b.tier));
+		.sort(
+			(a, b) => a.size - b.size || a.name.localeCompare(b.name) || a.tier.localeCompare(b.tier)
+		);
 
 	return {
 		regionName: lugar.region || (estaciones[0]?.regionName ?? ''),

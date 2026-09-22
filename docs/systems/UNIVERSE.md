@@ -529,9 +529,12 @@ Se guarda en **las dos puntas**, porque una puerta cerrada de un lado está cerr
 y punto: leer sólo la punta de acá dejaría entrar a quien viene de la otra, que es
 el peor modo de fallar —parece que anda hasta que alguien lo prueba al revés—.
 
-El motivo sale antes que el alcance y el combustible: una puerta cerrada no se
-cruza con mejor nave ni con más tanque, y decir «te falta alcance» sería mandar al
-jugador a gastar en algo que no lo va a dejar pasar igual.
+**Un paso cerrado es hoy uno de los tres motivos por los que un salto no se
+puede dar**, y los tres tienen en común que no se arreglan comprando: la nave no
+está en condiciones de volar, la puerta no lleva a ninguna parte todavía, o el
+paso está cerrado. Antes había dos más —que el alcance no llegara y que el tanque
+no alcanzara—, y se fueron con el cobro:
+[cruzar es gratis](ACTIONS.md#cruzar-es-gratis).
 
 ### El mapa
 
@@ -626,8 +629,9 @@ cada constelación crezca colgándose de los suyos.
 Todo lo que depende del piloto va **aparte del mapa y no adentro**, en
 `PilotoEnElMapa`: dónde está parado, a cuántos saltos le queda cada sistema y por
 qué no puede cruzar tal puerta. Dos pilotos abren la misma galaxia y ven cosas
-distintas —uno cruza una puerta que al otro no le alcanza el tanque—, y meter eso
-en el dato del mapa obligaría a rearmarlo entero por piloto.
+distintas —el mismo sistema le queda a uno a dos saltos y al otro a cinco, y el
+que dejó la nave sin poder volar no cruza ninguna—, y meter eso en el dato del
+mapa obligaría a rearmarlo entero por piloto.
 
 Los saltos se cuentan con un recorrido a lo ancho sobre el grafo de puertas, y con
 dos reglas que importan:
@@ -759,15 +763,16 @@ Qué cambia, y por qué:
 **Parado en una puerta, la pantalla es el salto.** No se dibuja la ficha del
 lugar: una puerta no es un sitio donde se hace algo, y describirla como a
 cualquier cuerpo —tipo, órbita, distancia al sol— contesta una pregunta que nadie
-hizo mientras tapa la que sí. Lo que hay es adónde lleva, cuánto tarda, cuánto
-cuesta y el botón de cruzar.
+hizo mientras tapa la que sí. Lo que hay es adónde lleva, qué distancia tiene,
+cuánto tarda y el botón de cruzar. **Cuánto cuesta ya no es una de las lecturas**:
+cruzar no cobra nada.
 
 **Desde el mapa no se salta.** Cruzar una puerta exige estar parado en ella, así
 que lo que el mapa ofrece es **viajar hasta la puerta** —una orden que ya existe—
 y el salto sigue ocurriendo en Ubicación. Cada salida dice las dos mitades de lo
-que cuesta: el viaje hasta la puerta y el salto de después, **aunque el salto no se
-pueda dar**. Enterarse de que faltan doce de combustible al llegar a la puerta es
-un viaje perdido.
+que tarda: el viaje hasta la puerta y el salto de después, **aunque el salto no se
+pueda dar**. Enterarse al llegar a la puerta de que el paso está cerrado es un
+viaje perdido.
 
 ## Cómo se agrega contenido
 

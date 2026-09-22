@@ -1,14 +1,39 @@
-/** El motor de acciones contra una base real: viajar, de punta a punta. */
+/**
+ * El motor de acciones contra una base real: viajar y cruzar una puerta, de punta
+ * a punta.
+ *
+ * Lo que el salto protege acá es **la garantía del cambio de regla**: cruzar una
+ * puerta no cuesta combustible. Es lo que evita que un piloto quede varado, y si
+ * se rompe no se nota en ninguna cuenta: se nota cuando alguien no puede volver.
+ */
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { body, pilot, pilotAction } from '../db/schema';
+import {
+	body,
+	constellation,
+	pilot,
+	pilotAction,
+	pilotLog,
+	system,
+	type Pilot
+} from '../db/schema';
 import { crearPiloto, desguazar, seededDb } from '../db/testing';
-import { travelDurationSeconds } from '$lib/game/actions';
-import { TRAVEL_KIND, ActionError, currentAction, resolveIfDue, startTravel } from './actions';
+import { JUMP_KIND, travelDurationSeconds } from '$lib/game/actions';
+import { jumpSeconds } from '$lib/game/jumps';
+import {
+	TRAVEL_KIND,
+	ActionError,
+	currentAction,
+	resolveIfDue,
+	startJump,
+	startTravel
+} from './actions';
 import { skillXp } from './pilots';
-import { activeShip, saveFit, shipFit, shipHull, shipReadout } from './ships';
+import { activeShip, saveFit, setFuel, shipFit, shipHull, shipReadout } from './ships';
 import { bodyDistance, getBody } from './universe';
+import { connectGates, createGate, createSystem } from './worldbuilding';
+import type { Db } from '../db/types';
 
 describe('la distancia', () => {
 	it('suma el árbol hasta el ancestro común', () => {
@@ -188,5 +213,204 @@ describe('resolver la orden', () => {
 
 		expect(primera).not.toBeNull();
 		expect(segunda).toBeNull();
+	});
+});
+
+/**
+ * Una puerta terminada en Ánfora, con un sistema del otro lado.
+ *
+ * El universo sembrado no trae puertas, así que el escenario del salto hay que
+ * construirlo: dos puertas conectadas es lo mínimo que `startJump` necesita para
+ * tener adónde mandar a alguien.
+ */
+function conPuerta(db: Db, decimas = 14) {
+	const cadena = db.select().from(constellation).get()!;
+	const anfora = db.select().from(system).where(eq(system.code, 'anfora')).get()!;
+	const estrella = getBody(db, 'anfora_estrella')!;
+
+	const otro = createSystem(
+		db,
+		{
+			name: 'Ocaso',
+			constellationId: cadena.id,
+			government: 'feudal',
+			security: 20,
+			controllingFaction: '',
+			capitalOf: ''
+		},
+		null
+	);
+
+	const draft = {
+		kind: 'gate',
+		orbitDistance: 400,
+		bodyClass: '',
+		atmosphere: '',
+		starClass: '',
+		explored: true
+	} as const;
+	const salida = createGate(
+		db,
+		anfora.id,
+		{ ...draft, name: 'Puerta Norte', parentId: estrella.id },
+		'n',
+		null
+	);
+	const llegada = createGate(
+		db,
+		otro.system.id,
+		{ ...draft, name: 'Puerta Sur', parentId: otro.star.id },
+		's',
+		null
+	);
+	connectGates(db, salida.gate.id, llegada.gate.id, decimas, null);
+
+	return { salida: salida.body, llegada: llegada.body, decimas };
+}
+
+/** Deja al piloto parado en un cuerpo, sin viajar hasta él. */
+function pararEn(db: Db, row: Pilot, bodyId: number): Pilot {
+	return db.update(pilot).set({ locationId: bodyId }).where(eq(pilot.id, row.id)).returning().get();
+}
+
+/** Corre el arranque hacia atrás para que la orden ya haya vencido. */
+function vencer(db: Db, orden: { id: number; startedAt: Date; durationSeconds: number }): void {
+	db.update(pilotAction)
+		.set({ startedAt: new Date(orden.startedAt.getTime() - (orden.durationSeconds + 1) * 1000) })
+		.where(eq(pilotAction.id, orden.id))
+		.run();
+}
+
+describe('cruzar una puerta', () => {
+	it('crea la orden con lo que tarda la puerta', async () => {
+		const db = seededDb();
+		const { salida, llegada, decimas } = conPuerta(db);
+		const piloto = pararEn(db, await crearPiloto(db), salida.id);
+
+		const orden = startJump(db, piloto);
+
+		expect(orden.kind).toBe(JUMP_KIND);
+		expect(orden.originBodyId).toBe(salida.id);
+		expect(orden.destinationBodyId).toBe(llegada.id);
+		expect(orden.durationSeconds).toBe(jumpSeconds(decimas));
+	});
+
+	/*
+	 * **La garantía central del cambio.** El tanque tiene que valer lo mismo antes
+	 * y después: si alguien vuelve a descontarlo acá, el piloto que se quedó sin
+	 * combustible deja de poder volver, que es exactamente lo que se sacó.
+	 */
+	it('no le toca el tanque al encargar', async () => {
+		const db = seededDb();
+		const { salida } = conPuerta(db);
+		const piloto = pararEn(db, await crearPiloto(db), salida.id);
+		const antes = activeShip(db, piloto.id)!.fuel;
+
+		startJump(db, piloto);
+
+		expect(activeShip(db, piloto.id)!.fuel).toBe(antes);
+		expect(antes).toBeGreaterThan(0);
+	});
+
+	it('tampoco al resolver: el tanque queda igual del otro lado', async () => {
+		const db = seededDb();
+		const { salida, llegada } = conPuerta(db);
+		const piloto = pararEn(db, await crearPiloto(db), salida.id);
+		const antes = activeShip(db, piloto.id)!.fuel;
+
+		vencer(db, startJump(db, piloto));
+		const parte = resolveIfDue(db, piloto);
+
+		expect(parte).not.toBeNull();
+		expect(db.select().from(pilot).where(eq(pilot.id, piloto.id)).get()!.locationId).toBe(
+			llegada.id
+		);
+		expect(activeShip(db, piloto.id)!.fuel).toBe(antes);
+	});
+
+	/*
+	 * El caso que decide todo: **una nave con el tanque en cero cruza y llega**.
+	 * Nadie queda varado, que es el argumento con el que el cobro se fue.
+	 */
+	it('una nave con el tanque vacío cruza igual y llega', async () => {
+		const db = seededDb();
+		const { salida, llegada } = conPuerta(db);
+		const piloto = pararEn(db, await crearPiloto(db), salida.id);
+		setFuel(db, activeShip(db, piloto.id)!, 0);
+
+		vencer(db, startJump(db, piloto));
+		resolveIfDue(db, piloto);
+
+		expect(db.select().from(pilot).where(eq(pilot.id, piloto.id)).get()!.locationId).toBe(
+			llegada.id
+		);
+		expect(activeShip(db, piloto.id)!.fuel).toBe(0);
+	});
+
+	/*
+	 * **La misma puerta tarda lo mismo para todos.** Una nave pelada y una con el
+	 * equipo del oficio pesan distinto, y antes eso movía el reloj: hoy el tiempo
+	 * es un dato del universo y montar cosas no lo cambia.
+	 */
+	it('la misma puerta tarda lo mismo para cualquier nave', async () => {
+		const db = seededDb();
+		const { salida } = conPuerta(db);
+
+		const equipado = pararEn(db, await crearPiloto(db, 'Equipado'), salida.id);
+		const pelado = pararEn(db, await crearPiloto(db, 'Pelado'), salida.id);
+
+		const nave = activeShip(db, pelado.id)!;
+		saveFit(
+			db,
+			nave,
+			shipFit(db, nave).map(() => '')
+		);
+
+		expect(shipReadout(db, pelado)!.mass).toBeLessThan(shipReadout(db, equipado)!.mass);
+		expect(startJump(db, pelado).durationSeconds).toBe(startJump(db, equipado).durationSeconds);
+	});
+
+	it('el informe cuenta la distancia y ningún costo', async () => {
+		const db = seededDb();
+		const { salida, decimas } = conPuerta(db);
+		const piloto = pararEn(db, await crearPiloto(db), salida.id);
+
+		vencer(db, startJump(db, piloto));
+		resolveIfDue(db, piloto);
+
+		const fila = db.select().from(pilotLog).where(eq(pilotLog.pilotId, piloto.id)).get()!;
+
+		// Lo que se guarda es lo que pasó: se cruzó tanta distancia y nada más. El
+		// campo del combustible no vuelve a escribirse nunca.
+		expect(JSON.parse(fila.result)).toEqual({ jump: { tenths: decimas } });
+	});
+
+	it('sin puerta donde estar parado no se salta', async () => {
+		const db = seededDb();
+		conPuerta(db);
+		const piloto = await crearPiloto(db);
+
+		// Atracado en el puerto: una estación no es una puerta.
+		expect(() => startJump(db, piloto)).toThrow(ActionError);
+	});
+
+	it('una nave sin condiciones de volar no cruza, por mucho tanque que lleve', async () => {
+		const db = seededDb();
+		const { salida } = conPuerta(db);
+		const piloto = pararEn(db, await crearPiloto(db), salida.id);
+
+		// Se le monta lo que no sabe usar: la nave queda clavada en tierra y el
+		// tanque no tiene nada que ver con eso.
+		const nave = activeShip(db, piloto.id)!;
+		const codes = shipFit(db, nave).map((module) => module.code);
+		const alta = shipHull(nave).slots.findIndex((slot) => slot.kind === 'high');
+		saveFit(
+			db,
+			nave,
+			codes.map((code, index) => (index === alta ? 'mining_laser_i2' : code))
+		);
+
+		expect(shipReadout(db, piloto)!.flyable).toBe(false);
+		expect(() => startJump(db, piloto)).toThrow(ActionError);
 	});
 });

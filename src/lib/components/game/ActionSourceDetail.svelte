@@ -25,11 +25,14 @@
 
 	let { source, heading = true }: Props = $props();
 
-	// Habilitado es **todo puesto**, no alguno: a una nave con motor y sin tanque
-	// le falta para saltar igual que si no tuviera ninguno de los dos.
-	let habilitado = $derived(
-		source.modules.length > 0 && source.modules.every((aparato) => aparato.fitted)
-	);
+	// Falta algo es **que falte alguna**, no que la lista esté vacía: a una nave con
+	// el escáner y sin láser le falta igual que si no tuviera ninguno de los dos.
+	//
+	// **Una lista vacía no es una carencia**, y mientras esto pidió «alguna montada»
+	// lo era: un verbo que no pide ninguna pieza —cruzar una puerta— y una nave de
+	// astillero, que corre con lo que el casco trae de fábrica, se quedaban sin ver
+	// lo que rinden.
+	let falta = $derived(source.modules.some((aparato) => !aparato.fitted));
 </script>
 
 <div class="flex w-full flex-col gap-[0.55rem]">
@@ -38,7 +41,7 @@
 			<span class="font-display text-1 font-bold tracking-label text-text-strong uppercase">
 				{source.verb}
 			</span>
-			{#if habilitado}
+			{#if !falta}
 				{#each source.effects as efecto (efecto.label)}
 					<span class="font-mono text-[0.78rem] whitespace-nowrap text-data">
 						{efecto.value}
@@ -62,32 +65,77 @@
 	{/if}
 
 	<!--
-		El módulo primero porque es el requisito duro; las habilidades después porque
+		La pieza primero porque es el requisito duro; las habilidades después porque
 		mejoran y no habilitan —mostrarlas iguales es lo que confundía—; y la mejora
 		al final, que es lo único de las tres que habla del futuro.
 
 		**Los rótulos son palabras del juego, no del diseño.** Acá decía «aparato» y
 		«llaves», que es el vocabulario con que `docs/DESIGN.md` piensa la cadena:
-		sirve para razonar y no lo entiende nadie que no haya leído el documento. El
-		jugador ya sabe qué es un módulo y qué es una habilidad.
+		sirve para razonar y no lo entiende nadie que no haya leído el documento.
+
+		Y decía «Módulo», que dejó de ser cierto: la mayoría de estas piezas las trae
+		el casco de fábrica, y un rótulo que promete un módulo al lado de un renglón
+		que dice «del casco» se contradice solo. «Pieza» es verdad para las dos
+		fuentes, y es la palabra con la que el resto del proyecto ya las nombra.
 	-->
 	<div class="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-[0.3rem]">
 		{#if source.modules.length > 0}
-			<Label>{source.modules.length > 1 ? 'Módulos' : 'Módulo'}</Label>
+			<Label>{source.modules.length > 1 ? 'Piezas' : 'Pieza'}</Label>
 			<!--
-				Uno por renglón, y **los que faltan salen igual**, en rojo y con el nombre
-				de la pieza que falta. Esconderlos dejaría el aviso diciendo qué tenés
-				justo cuando lo que se busca es qué te falta.
+				Una por renglón, y **cada una dice de dónde sale**: del casco, de un módulo
+				montado, o de ninguno de los dos. El renglón decía sólo un nombre, y con eso
+				una nave de astillero leía «Falta: Propulsores» por algo que ninguna nave
+				puede montar: los propulsores son del casco desde que los internos
+				esenciales dejaron de ser módulos.
+
+				**Y los que faltan salen igual**, en rojo y con el nombre de la pieza.
+				Esconderlos dejaría el aviso diciendo qué tenés justo cuando lo que se busca
+				es qué te falta.
 			-->
-			<div class="flex min-w-0 flex-col gap-[0.15rem]">
+			<div class="flex min-w-0 flex-col gap-[0.3rem]">
 				{#each source.modules as aparato (aparato.requirement)}
-					{#if aparato.fitted}
-						<span class="font-display text-1 tracking-label text-accent-dim uppercase">
-							{aparato.name}
-						</span>
-					{:else}
-						<span class="text-1 text-danger">Falta: {aparato.requirement}</span>
-					{/if}
+					<div class="flex min-w-0 flex-col gap-[0.1rem]">
+						{#if aparato.source === 'missing'}
+							<span class="text-1 text-danger">Falta: {aparato.requirement}</span>
+						{:else if aparato.source === 'hull'}
+							<span class="flex min-w-0 flex-wrap items-baseline gap-x-[0.35rem]">
+								<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+									{aparato.requirement}
+								</span>
+								<!--
+									El casco y su nombre son **un solo pedazo**: en dos, la caja angosta del
+									aviso parte «del casco» del modelo y deja el nombre solo en la línea de
+									abajo, como si fueran dos cosas distintas.
+								-->
+								<span class="text-[0.72rem] text-text-muted">
+									· del casco
+									<span class="font-display tracking-label text-accent-dim uppercase">
+										{aparato.name}
+									</span>
+								</span>
+							</span>
+							<!--
+								El auxiliar va **debajo y con un más**, no en lugar del casco: un
+								propulsor auxiliar suma encima de los propulsores de fábrica y no los
+								reemplaza. Escrito en un solo renglón se lee como que sin él la nave no
+								se mueve, que es justo lo contrario, y es la distinción que hace falta
+								para entender qué se gana montándolo.
+							-->
+							{#if aparato.upgrade}
+								<span class="flex min-w-0 flex-wrap items-baseline gap-x-[0.35rem]">
+									<span class="font-display text-1 tracking-label text-accent-bright uppercase">
+										<span class="font-mono">+</span>
+										{aparato.upgrade}
+									</span>
+									<span class="text-[0.72rem] text-text-muted">· suma encima</span>
+								</span>
+							{/if}
+						{:else}
+							<span class="font-display text-1 tracking-label text-accent-dim uppercase">
+								{aparato.name}
+							</span>
+						{/if}
+					</div>
 				{/each}
 			</div>
 		{/if}

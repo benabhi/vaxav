@@ -188,3 +188,59 @@ describe('el informe de una extracción', () => {
 		expect(informe.loot).toBeNull();
 	});
 });
+
+/*
+ * **Los informes ya emitidos no se reescriben.**
+ *
+ * Cruzar una puerta dejó de costar combustible, pero los saltos que sí costaron
+ * lo guardaron en su JSON y tienen que seguir contándolo: una bitácora que
+ * corrige el pasado para que coincida con las reglas de hoy deja de ser un
+ * registro. Por eso el renglón se dibuja mirando si el campo está, y no dándolo
+ * por seguro.
+ */
+describe('el informe de un salto', () => {
+	/** Escribe un salto con el resultado que se le pase, ya resuelto. */
+	function saltoCon(db: Db, pilotId: number, result: unknown) {
+		recordEntry(db, pilotId, {
+			kind: 'jump',
+			durationSeconds: 336,
+			originBodyId: getBody(db, 'puerto_anfora')!.id,
+			destinationBodyId: getBody(db, 'anfora_estrella')!.id,
+			deposit: deposito(56),
+			result
+		});
+		return buildBitacora(db, pilotId).entries[0];
+	}
+
+	it('uno viejo sigue mostrando el combustible que se le cobró', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const informe = saltoCon(db, piloto.id, { jump: { tenths: 14, fuel: 12 } });
+
+		// Con su unidad: una cifra pelada obliga a adivinar de qué habla, y el
+		// informe existe justamente para no tener que adivinar.
+		expect(informe.details).toContainEqual({ label: 'Distancia', value: '1,4 al' });
+		expect(informe.details).toContainEqual({ label: 'Combustible', value: '−12 u' });
+	});
+
+	it('uno de hoy dice la distancia y ningún costo', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const informe = saltoCon(db, piloto.id, { jump: { tenths: 14 } });
+
+		expect(informe.details).toContainEqual({ label: 'Distancia', value: '1,4 al' });
+		expect(informe.details.map((fila) => fila.label)).not.toContain('Combustible');
+	});
+
+	it('uno sin nada guardado no inventa renglones', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const informe = saltoCon(db, piloto.id, {});
+
+		expect(informe.details.map((fila) => fila.label)).not.toContain('Distancia');
+		expect(informe.details.map((fila) => fila.label)).not.toContain('Combustible');
+	});
+});

@@ -218,14 +218,17 @@ La respuesta es no fingir que sí. Mientras la nave está en camino:
   distancia, estado— salen en blanco o, peor, describen el lugar que se dejó
   atrás. Un panel que miente es peor que un panel que no está.
 - **En su lugar va el tramo**, que es lo único verdadero ahí: de dónde a dónde,
-  qué se quema, cuánto tarda.
+  qué distancia y cuánto tarda.
 - **Cada punta lleva su sistema**, con bandera, gobierno y nivel de ley. En un
   salto los dos sistemas son distintos y ésa es toda la gracia del salto; y como
   la ficha del lugar está apagada, **no hay ninguna otra pantalla** donde mirar a
   qué se está entrando justo cuando uno quiere saberlo.
-- La distancia y el combustible **sólo aparecen si hubo un salto detrás**. Un
-  viaje dentro del sistema no quema nada, y una fila en blanco miente más que una
-  fila que no está.
+- La distancia **sólo aparece si hubo un salto detrás**: un viaje dentro del
+  sistema ya la dice el árbol, y una fila en blanco miente más que una fila que no
+  está. Al lado iba lo que el salto quemaba y salió con el cobro; ver
+  [cruzar es gratis](ACTIONS.md#cruzar-es-gratis). La bitácora sí lo sigue
+  mostrando **en los informes viejos**: un informe cuenta lo que pasó el día que
+  pasó, y reescribirlo hacia atrás lo vuelve inútil.
 
 Es la misma idea que el indicador, un nivel más abajo: el título de la pantalla
 deja de ser dónde estás y pasa a ser **adónde vas**.
@@ -785,15 +788,17 @@ dice quién sos, y en un juego de progresión eso no es el nombre: es la silueta
 aquello a lo que le dedicaste el tiempo. La tarjeta contesta las dos preguntas de
 un vistazo, y un botón la abre en grande junto a las cifras exactas de cada rama.
 
-Abajo del todo, **la franja de la nave**: el casco, su rol, el tanque y las tres
-capas en el orden en que se las come el daño. El detalle entero está a una pestaña
-de distancia y no se repite acá —salvo el combustible, que viene igual porque es
-el único de esos números que **se gasta**, y el que decide si el próximo salto se
-puede dar—. Un dato así no puede costar dos pestañas mirarlo.
+Abajo del todo, **la franja de la nave**: el casco, su rol y las tres capas en el
+orden en que se las come el daño. El detalle entero está a una pestaña de
+distancia y no se repite acá.
 
-Es una regla, no una excepción: **lo que se agota se muestra donde se lo va a
-extrañar**, no sólo en su ficha. El combustible aparece en la nave, en la
-credencial, junto al botón de saltar y en el informe del viaje.
+La regla que decide qué se repite es **lo que se agota se muestra donde se lo va a
+extrañar**, no sólo en su ficha. Y tiene su reverso, que es el que se acaba de
+aplicar: **lo que no se agota no se repite en ningún lado**. Acá estaban el tanque
+y cuántos saltos quedaban, y salieron el día que
+[cruzar una puerta dejó de costar](ACTIONS.md#cruzar-es-gratis): las dos cifras
+prometían un límite que no existe. Vuelven con el verbo que las gaste, y **sólo en
+las naves que lo lleven**.
 
 #### No hay foto, hay sello
 
@@ -882,10 +887,10 @@ La regla es de diseño y está escrita entera en
 [«La cadena»](../DESIGN.md#la-cadena-se-muestra-o-no-existe). Acá está **cómo se
 dibuja**, que es lo que hay que copiar cuando se agrega un verbo nuevo.
 
-**Toda acción del juego lleva su procedencia**: qué módulos necesita montados,
-qué habilidades cambian su resultado, qué rinde hoy, qué daría el escalón
-siguiente y por qué no se puede ahora mismo. Vive en un solo tipo, `Procedencia`
-(`src/lib/tipos.ts`), y se dibuja con un solo componente.
+**Toda acción del juego lleva su procedencia**: con qué piezas funciona y de dónde
+sale cada una, qué habilidades cambian su resultado, qué rinde hoy, qué daría el
+escalón siguiente y por qué no se puede ahora mismo. Vive en un solo tipo,
+`Procedencia` (`src/lib/tipos.ts`), y se dibuja con un solo componente.
 
 **Dónde aparece, y por qué en dos lugares:**
 
@@ -916,24 +921,61 @@ sabe de cuál habla.
    scroll al que no se puede entrar es un recorte.
 
 **Todo lo que puede ser varios, es una lista.** No hay ni un campo singular en
-`Procedencia`, y es a propósito: saltar ya necesita **dos** módulos —motor y
-tanque—, viajar tiene dos habilidades que lo mueven, y un verbo puede estar
-bloqueado por más de una razón. Un campo que empieza en singular obliga a
-reescribir el tipo, las vistas y la pantalla el día que aparezca el segundo, que
-es siempre antes de lo que parece.
+`Procedencia`, y es a propósito: viajar ya tiene dos habilidades que lo mueven, un
+verbo puede estar bloqueado por más de una razón, y un verbo puede pedir más de
+una pieza —refinar va a pedir la refinería y una bodega donde poner lo que sale—.
+Un campo que empieza en singular obliga a reescribir el tipo, las vistas y la
+pantalla el día que aparezca el segundo, que es siempre antes de lo que parece.
 
-**Los rótulos son palabras del juego, no del diseño.** «Módulo», «Habilidades»,
+**Los rótulos son palabras del juego, no del diseño.** «Pieza», «Habilidades»,
 «Mejora». Acá decía «Aparato» y «Llaves», que es el vocabulario con que
 [la cadena](../DESIGN.md#la-cadena) se piensa: sirve para razonar y no lo
 entiende nadie que no haya leído el documento.
 
+Y decía «Módulo», que dejó de ser cierto: **la mayoría de estas piezas las trae el
+casco**, y un rótulo que promete un módulo arriba de un renglón que dice «del
+casco» se contradice solo. «Pieza» es verdad para las dos fuentes.
+
+#### De dónde sale cada pieza
+
+Son cuatro renglones distintos, y la diferencia no es cosmética: dicen si hay algo
+que comprar o no.
+
+| Caso                | Cómo se lee                                             | Ejemplo                      |
+| ------------------- | ------------------------------------------------------- | ---------------------------- |
+| Del casco           | La pieza, y al lado el modelo que la trae               | Propulsores · del casco Mula |
+| Del casco, mejorado | Debajo, con un más y «suma encima»                      | + Propulsor auxiliar         |
+| De un módulo        | El nombre del módulo montado, que es el único que puede | Láser de extracción          |
+| Falta               | En rojo, con el nombre de lo que hay que conseguir      | Falta: Escáner               |
+
+El renglón decía sólo un nombre, y con eso una nave recién salida del astillero
+leía **«Falta: Propulsores»** por algo que ninguna nave puede montar: los
+propulsores son un atributo del casco desde que
+[los internos esenciales dejaron de ser módulos](SHIPS.md#los-internos-esenciales-se-fueron-y-era-el-problema).
+Y fallaba peor de lo que parece, porque **el aviso escondía lo que la nave rinde
+mientras algo «faltaba»**: la velocidad no salía justo en la nave que no tenía
+ningún problema.
+
+Tres reglas sostienen los cuatro casos:
+
+- **Una lista vacía no es una carencia.** Un verbo que no pide ninguna pieza
+  —cruzar una puerta— no está incompleto: no pide nada, y muestra lo que rinde
+  como cualquier otro.
+- **El auxiliar suma, no reemplaza.** Va en su propio renglón debajo del casco.
+  Escrito en uno solo se lee como que sin él la nave no se mueve, que es lo
+  contrario de lo que pasa, y es la distinción que decide si conviene montarlo.
+- **«Falta» quiere decir que hay que comprarlo.** Los únicos verbos cuya pieza no
+  la trae ningún casco son escanear y extraer; ahí «falta» es verdad y es la lista
+  de compras.
+
 #### Al agregar un verbo nuevo
 
-1. El servicio que lo resuelve devuelve **qué módulo lo habilita y qué
-   habilidades lo mueven**, no sólo si se puede. El módulo sale de
-   `grantingModules` y las habilidades de `leversFor` (`src/lib/game/sourcing.ts`),
-   que leen la misma tabla que usa la calculadora: una lista escrita a mano al
-   lado se desfasa el día que nadie mira.
+1. El servicio que lo resuelve devuelve **qué pieza lo habilita, de dónde sale y
+   qué habilidades lo mueven**, no sólo si se puede. El módulo montado sale de
+   `grantingModules`, lo que el casco trae de fábrica de `hullGrant` y las
+   habilidades de `leversFor` (`src/lib/game/sourcing.ts`), que leen la misma
+   tabla que usa la calculadora: una lista escrita a mano al lado se desfasa el
+   día que nadie mira.
 2. La vista arma la `Procedencia`. Si el verbo se mueve por porcentajes, alcanza
    con `fuenteDeVerbo`; si tiene efectos que no son un porcentaje —como la lectura
    del escáner— se arma a mano.
@@ -945,22 +987,30 @@ entiende nadie que no haya leído el documento.
 
 #### Dónde está puesto
 
-| Verbo    | Módulos                     | Habilidades                                |
-| -------- | --------------------------- | ------------------------------------------ |
-| Viajar   | Propulsores                 | Navegación, y la del bono de rol del casco |
-| Saltar   | Motor de salto **y** tanque | Astrogación                                |
-| Escanear | Escáner                     | Escaneo, Prospección                       |
-| Extraer  | Láser de extracción         | Minería, y la del bono de rol del casco    |
+| Verbo    | Piezas                            | Habilidades                                |
+| -------- | --------------------------------- | ------------------------------------------ |
+| Viajar   | Propulsores, del casco            | Navegación, y la del bono de rol del casco |
+| Saltar   | **Ninguna**                       | **Ninguna**                                |
+| Escanear | Escáner, de un módulo             | Escaneo, Prospección                       |
+| Extraer  | Láser de extracción, de un módulo | Minería, y la del bono de rol del casco    |
 
 Los verbos del mercado —comprar, vender, acordar— todavía no la llevan: no
 dependen de un módulo de la nave, pero sí de habilidades como Regateo, que hoy no
 mueve ningún número. Entran cuando esa habilidad sea mecánica.
 
-Y hay un hueco anotado: **Eficiencia de combustible no mueve nada todavía**. El
-salto la nombra en la hoja de ruta pero `jumpFuel` recibe su bono en cero, así que
-no aparece entre las habilidades de saltar. Aparece el día que lo mueva, no antes:
-prometer una habilidad que no hace nada es el huérfano que la cadena existe para
-evitar.
+**Saltar con las dos columnas vacías es el caso que más enseña.** Nombraba el
+motor de salto, el tanque y Astrogación, y desde que
+[cruzar es gratis](ACTIONS.md#cruzar-es-gratis) ninguna de las tres cosas cambia
+nada del cruce: un aviso que las siguiera nombrando mandaría a comprar y a
+entrenar para nada, que es peor que no decir nada. Lo que le queda es la mitad que
+importa con el botón apagado —por qué no se puede—, y por eso su procedencia se
+arma a mano en vez de salir de `fuenteDeVerbo`.
+
+Y hay un hueco anotado: **Eficiencia de combustible sigue sin aparecer en ningún
+verbo**. Ya es una fila de la tabla de bonos y resuelve su porcentaje, pero nada
+lo lee, así que no tiene dónde mostrarse. Aparece el día que un verbo lo gaste, no
+antes: prometer una habilidad que no hace nada es el huérfano que la cadena existe
+para evitar.
 
 ## Reglas de diseño
 

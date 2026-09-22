@@ -45,7 +45,19 @@ export const SKILL_BONUSES: Readonly<
 	shield: { skill: 'shields', percentPerLevel: 5 },
 	armor: { skill: 'armor', percentPerLevel: 5 },
 	sensor_range: { skill: 'scanning', percentPerLevel: 6 },
-	capacitor_recharge: { skill: 'power_management', percentPerLevel: 4 }
+	capacitor_recharge: { skill: 'power_management', percentPerLevel: 4 },
+	/**
+	 * **Dormida**: cruzar una puerta no consume nada, así que hoy este porcentaje
+	 * no le descuenta gasto a ningún verbo. Sigue en la tabla porque el consumo por
+	 * salto sin puerta —el de las capitales— es lo que la habilidad gobierna, y
+	 * porque sacarla y volver a ponerla es la misma fila dos veces.
+	 *
+	 * El cinco por nivel es **el número por omisión de SKILLS.md**, que es el que
+	 * vale mientras el balance no le escriba uno propio: los otros ocho se movieron
+	 * de ahí a propósito y éste no tiene ninguna razón documentada para moverse.
+	 * Al 5 son un 25 % arriba, que en el consumo es un 20 % menos de gasto.
+	 */
+	fuel_efficiency: { skill: 'fuel_efficiency', percentPerLevel: 5 }
 };
 
 /** Nivel máximo de una habilidad, para el modo "con todo entrenado". */
@@ -120,6 +132,14 @@ export interface Readout {
 	readonly jumpRange: number;
 	readonly fuel: number;
 	readonly jumps: number;
+	/**
+	 * Cuánto le descuenta al consumo de un salto, en puntos de porcentaje.
+	 *
+	 * Viaja en la hoja y no se recalcula en cada lugar que quema combustible: la
+	 * ficha, el panel de la puerta y el motor de acciones tienen que decir el mismo
+	 * número, y la única forma de garantizarlo es que sea el mismo.
+	 */
+	readonly fuelEfficiency: number;
 
 	// Capacidad e información
 	readonly cargo: number;
@@ -331,6 +351,11 @@ export function buildReadout(
 	);
 
 	// --- Acumulador ---
+	// No multiplica nada acá: es el porcentaje que `jumps.ts` divide al calcular el
+	// gasto. Se resuelve igual que los demás para que Eficiencia de combustible sea
+	// una fila de la tabla de bonos y no un caso aparte.
+	const fuelEfficiency = bonusPercent('fuel_efficiency', hull, skills);
+
 	const recharge = withBonus(capacitorRecharge, bonusPercent('capacitor_recharge', hull, skills));
 	const rechargePerHour = recharge * SECONDS_PER_HOUR;
 	const stable = drainPerHour <= rechargePerHour;
@@ -402,7 +427,11 @@ export function buildReadout(
 		// La misma función que usa el salto de verdad: si se calcularan aparte, la
 		// ficha podría decir «te quedan tres saltos» y la nave quedarse sin
 		// combustible en el segundo.
-		jumps: jumpsWithFuel(fuel, mass),
+		// **Cuántos saltos aguanta el tanque no tiene hoy ningún salto que contar**:
+		// cruzar una puerta es gratis. La cifra sigue saliendo porque la ficha la
+		// dibuja, pero habla del motor de salto de las capitales, que no existe.
+		jumps: jumpsWithFuel(fuel, mass, fuelEfficiency),
+		fuelEfficiency,
 		cargo,
 		sensorRange,
 		signature: Math.max(1, signature),
