@@ -64,9 +64,12 @@ export function createStarterShip(db: Db, pilotId: number, hullCode = STARTING_H
 		.filter((row) => row.moduleCode !== '');
 	if (rows.length) db.insert(fittedModule).values(rows).run();
 
-	// **Sale del astillero con el tanque lleno.** Una nave nueva vacía sería un
-	// piloto que no puede saltar y no sabe por qué: el combustible no se ve hasta
-	// que se abre la ficha, y nadie abre la ficha antes del primer viaje.
+	// **Sale del astillero con el tanque lleno**, por lo mismo que sale con los
+	// internos puestos: se entrega entera, y un tanque en cero es una nave a medio
+	// entregar. Hoy no habilita nada —nada consume combustible desde que cruzar una
+	// puerta es gratis— pero es el único estado que el juego sabe producir: el
+	// mercado no comercia combustible y repostar está dormido, así que una nave que
+	// saliera vacía no tendría con qué llenarse.
 	return fill(db, created);
 }
 

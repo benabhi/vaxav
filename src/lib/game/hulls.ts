@@ -79,7 +79,8 @@ export const BONUS_TARGETS = [
 	'capacitor_recharge',
 	/**
 	 * El único que **baja** un número en vez de subirlo: cuanto más, menos
-	 * combustible quema un salto. La cuenta vive en `jumps.ts`, que divide por él;
+	 * combustible va a quemar un salto sin puerta. La cuenta vive en `jumps.ts`,
+	 * que divide por él y que hoy no llama nadie —cruzar una puerta es gratis—;
 	 * acá es un objetivo más para que la habilidad que lo mueve salga de la misma
 	 * tabla que las otras y aparezca sola en el aviso de procedencia.
 	 */

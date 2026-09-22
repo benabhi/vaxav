@@ -250,12 +250,7 @@ function transit(db: Db, row: Pilot): Ubicacion {
 				startedAt: orden.startedAt.getTime(),
 				durationSeconds: orden.durationSeconds,
 				duration: remainingLabel(orden.durationSeconds),
-				distance: puerta ? lightYears(puerta.jumpDistance) : '',
-				// **Vacío siempre**: cruzar una puerta no consume nada. El campo sigue
-				// en el tipo porque la pantalla lo dibuja bajo un `if`, así que con la
-				// cadena vacía el renglón no aparece; sacarlo del todo es una línea de
-				// marcado, que no es de esta columna.
-				fuel: ''
+				distance: puerta ? lightYears(puerta.jumpDistance) : ''
 			}
 		: null;
 

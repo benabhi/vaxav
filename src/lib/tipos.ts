@@ -652,8 +652,6 @@ export interface Tramo {
 	readonly duration: string;
 	/** La distancia del salto, ya escrita, o vacío si el viaje es interno. */
 	readonly distance: string;
-	/** Qué se quema al llegar, ya escrito, o vacío si no se quema nada. */
-	readonly fuel: string;
 }
 
 /**

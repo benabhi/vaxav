@@ -64,10 +64,11 @@ export function hullGrant(hull: Hull, grant: Grant): number {
  * Algo que un verbo necesita montado para existir.
  *
  * **Es una lista y no un módulo suelto** porque los verbos pisan más de una
- * pieza: saltar necesita motor y tanque, y mañana refinar va a necesitar la
- * refinería y una bodega donde poner lo que sale. Empezar con uno solo obligaría
- * a reescribir el tipo, las vistas y la pantalla el día que aparezca el segundo,
- * que es siempre antes de lo que parece.
+ * pieza: extraer necesita el láser que pica la roca y la bodega donde cae lo que
+ * sale —sin lugar libre no saca nada—, y mañana refinar va a sumarle la refinería
+ * a esa misma bodega. Empezar con uno solo obligaría a reescribir el tipo, las
+ * vistas y la pantalla el día que aparezca el segundo, que es siempre antes de lo
+ * que parece.
  *
  * El rótulo va acá y no se saca del módulo encontrado por un motivo simple:
  * **cuando falta, no hay módulo del que sacarlo**, y «necesitás algo» es un aviso
