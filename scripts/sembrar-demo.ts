@@ -39,6 +39,7 @@ import {
 	createGate,
 	createRegion,
 	createSystem,
+	deleteBody,
 	deleteSystem,
 	disconnectGate,
 	setGateClosed,
@@ -488,18 +489,46 @@ function limpiar(): void {
 		.filter((uno) => ids.has(uno.systemId));
 	const cuerposId = new Set(cuerpos.map((uno) => uno.id));
 
+	// **Las puertas de afuera que esta herramienta plantó también son suyas.** El
+	// primer sistema de cada facción se cuelga de uno que ya estaba, y para eso se
+	// le abre una puerta al que ya estaba: si al limpiar se suelta el enlace pero
+	// se deja el cuerpo, Ánfora queda con salidas que no llevan a ningún lado y
+	// **con esos rumbos ocupados**. La siembra siguiente encuentra menos lugar
+	// libre alrededor del origen, elige otro rumbo, y a partir de ahí dibuja una
+	// galaxia distinta: la promesa de que la misma semilla da el mismo mapa se
+	// rompe en la segunda corrida. Ya pasó.
+	const puertasDeAfuera = db
+		.select()
+		.from(gate)
+		.all()
+		.filter((una) => !ids.has(una.systemId) && una.destinationId !== null)
+		.filter((una) => cuerposId.has(una.destinationId!))
+		.map((una) => una.bodyId);
+
 	// Un piloto parado adentro es motivo para no borrar: moverlo sin avisarle es
-	// peor que dejar la galaxia de prueba puesta.
+	// peor que dejar la galaxia de prueba puesta. Vale también para esas puertas
+	// de afuera, que es donde aparece el que acaba de volver.
+	const aBorrar = new Set([...cuerposId, ...puertasDeAfuera]);
 	const parados = db
 		.select()
 		.from(pilotTable)
 		.all()
-		.filter((uno) => cuerposId.has(uno.locationId));
+		.filter((uno) => aBorrar.has(uno.locationId));
 	if (parados.length > 0) {
-		throw new Error(
-			`Hay pilotos parados ahí: ${parados.map((uno) => uno.callsign).join(', ')}. ` +
-				'Movelos antes de limpiar.'
+		// **Se dice dónde está cada uno**, no sólo quiénes son: el que lee esto tiene
+		// que ir a moverlos, y con el nombre del lugar sabe adónde ir. Sin eso hay
+		// que salir a buscar a dos pilotos por sesenta sistemas.
+		const porNombre = new Map(
+			db
+				.select()
+				.from(bodyTable)
+				.all()
+				.map((uno) => [uno.id, uno.name])
 		);
+		const quienes = parados.map(
+			(uno) => `${uno.callsign} (${porNombre.get(uno.locationId) ?? 'quién sabe dónde'})`
+		);
+		throw new Error(`Hay pilotos parados ahí: ${quienes.join(', ')}. Movelos antes de limpiar.`);
 	}
 
 	// Primero se sueltan todas las puertas que tocan uno de estos sistemas, de
@@ -517,6 +546,12 @@ function limpiar(): void {
 	}
 
 	for (const uno of suyos) deleteSystem(db, uno.id, null);
+
+	// Y las puertas que quedaron colgando en los sistemas de afuera, ya sueltas y
+	// apuntando a un sistema que ya no está. Van con `deleteBody` por lo mismo que
+	// los sistemas van con `deleteSystem`: el servicio sabe qué hay que soltar
+	// antes y avisa si algo las retiene.
+	for (const bodyId of puertasDeAfuera) deleteBody(db, bodyId, null);
 
 	// Y las constelaciones y regiones que quedaron sin nada adentro.
 	const conSistemas = new Set(
@@ -797,8 +832,21 @@ for (const faccion of PLAN) {
 }
 
 // --- Los adornos que hacen que el mapa tenga todos sus estados ---------------
+//
+// **Los tres sólo se ponen si esta corrida plantó algo.** A diferencia de los
+// sistemas, que se reconocen por nombre y se saltean, un atajo y una puerta
+// suelta no tienen con qué reconocerse: correr el guión dos veces sobre la misma
+// galaxia sumaba nueve atajos más, tres pasos cerrados más y cuatro puertas
+// sueltas más en cada pasada, hasta convertir el mapa en una maraña. El
+// encabezado promete que correrlo dos veces no duplica nada, y esta guarda es lo
+// que faltaba para que sea verdad.
+//
+// Los cinturones, que van al final, **sí se ponen igual**: ésos se reconocen por
+// sistema, así que agregarlos a una galaxia que ya estaba es exactamente lo que
+// se quiere de una siembra aditiva.
 
 const todos = [...plantados.dominion, ...plantados.concord, ...plantados.pact];
+const plantoAlgo = conteo.sistemas > 0;
 
 /**
  * Unos cuantos atajos: puertas entre sistemas que **no** son vecinos.
@@ -806,7 +854,7 @@ const todos = [...plantados.dominion, ...plantados.concord, ...plantados.pact];
  * No son un error: es lo que impide que la galaxia sea una grilla prolija donde
  * todo cierra en espejo. El mapa los dibuja torcidos justamente para que se vean.
  */
-for (let i = 0; i < 9 && todos.length > 4; i++) {
+for (let i = 0; plantoAlgo && i < 9 && todos.length > 4; i++) {
 	const uno = alguno(todos);
 	const otro = alguno(todos);
 	if (!uno || !otro || uno === otro) continue;
@@ -869,7 +917,7 @@ for (const una of mezclar(conectadas).slice(0, 3)) {
 }
 
 /** Y cuatro puertas plantadas sin conectar: obra a medio hacer, que el mapa marca. */
-for (let i = 0; i < 4; i++) {
+for (let i = 0; plantoAlgo && i < 4; i++) {
 	const donde = alguno(todos);
 	if (!donde) continue;
 	const tomadas = ocupadas();
