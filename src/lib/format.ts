@@ -534,6 +534,9 @@ export function cubicMeters(tenthsOfCubicMeter: number): string {
  */
 export function itemIcon(item: Pick<Item, 'code' | 'kind'>): IconName {
 	if (item.kind === 'module') return moduleIcon(getModule(item.code));
+	// El mismo bidón con el que el libro de la billetera anota un repostaje: es el
+	// mismo hecho visto de los dos lados, y dos dibujos lo contarían como dos.
+	if (item.kind === 'fuel') return 'gas-can';
 	return 'diamond';
 }
 
@@ -544,7 +547,8 @@ export function itemKindLabel(kind: ItemKind): string {
 
 const ITEM_KINDS: Record<ItemKind, string> = {
 	ore: 'Mineral',
-	module: 'Módulo'
+	module: 'Módulo',
+	fuel: 'Combustible'
 };
 
 /**
@@ -617,7 +621,8 @@ const BONUS_TARGETS: Record<BonusTarget, string> = {
 	shield: 'escudo',
 	armor: 'blindaje',
 	sensor_range: 'alcance de sensores',
-	capacitor_recharge: 'recarga del acumulador'
+	capacitor_recharge: 'recarga del acumulador',
+	fuel_efficiency: 'eficiencia de combustible'
 };
 
 /**

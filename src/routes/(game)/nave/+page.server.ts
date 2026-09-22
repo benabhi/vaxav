@@ -1,6 +1,13 @@
 /**
  * Pestaña Ficha: armar la nave y ver en qué se convierte.
  *
+ * **Acá vivía repostar y hoy no está**, a propósito: cruzar una puerta es gratis,
+ * así que nada consume combustible y ofrecer cargarlo sería ofrecer gastar plata
+ * en algo que no se puede quemar. El servicio (`refuel`) quedó escrito y anda; lo
+ * que se apagó es lo que el jugador ve. Cuando exista el motor de salto de las
+ * capitales, esta acción vuelve —son diez líneas— y con ella los datos que la
+ * ficha necesita para dibujar el botón.
+ *
  * **Se guarda en cada cambio, no hay botón de aplicar**: en un juego que se
  * juega de a ratos, una configuración a medias que se pierde al cerrar la
  * pestaña es peor que cualquier ahorro de escrituras. `refit` es la puerta con

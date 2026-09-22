@@ -76,7 +76,14 @@ export const BONUS_TARGETS = [
 	'shield',
 	'armor',
 	'sensor_range',
-	'capacitor_recharge'
+	'capacitor_recharge',
+	/**
+	 * El único que **baja** un número en vez de subirlo: cuanto más, menos
+	 * combustible quema un salto. La cuenta vive en `jumps.ts`, que divide por él;
+	 * acá es un objetivo más para que la habilidad que lo mueve salga de la misma
+	 * tabla que las otras y aparezca sola en el aviso de procedencia.
+	 */
+	'fuel_efficiency'
 ] as const;
 export type BonusTarget = (typeof BONUS_TARGETS)[number];
 

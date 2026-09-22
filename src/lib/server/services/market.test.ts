@@ -17,6 +17,7 @@ import { auditStacks, moveItem, quantityOf, shipContainer, stationContainer } fr
 import { MarketError, buyFromStation, deskFor, quote, sellToStation } from './market';
 import { activeShip } from './ships';
 import { auditBalance, balance, credit } from './wallet';
+import { FUEL_ITEM } from '$lib/game/items';
 import { SKILLS } from '$lib/game/skills';
 import { xpForLevel } from '$lib/game/progression';
 import type { Db } from '../db/types';
@@ -218,5 +219,43 @@ describe('comprar módulos', () => {
 		sellToStation(db, piloto, 'cargo_rack_i1', 1, 'station');
 
 		expect(balance(db, piloto.id)).toBeLessThan(antes);
+	});
+});
+
+/*
+ * El combustible quedó **fuera del mostrador** cuando cruzar una puerta pasó a
+ * ser gratis: nada lo consume, así que no se vende ni se recompra. Lo decide una
+ * sola línea pura —`isTraded`—, y estos tests son los que avisan si el servicio
+ * deja de consultarla: vender combustible sería cobrarle a alguien por algo que
+ * no puede usar, y comprarlo de vuelta sería ponerle precio a lo que no se
+ * consigue, que es una punta de arbitraje esperando.
+ */
+describe('el combustible, que hoy no se comercia', () => {
+	it('la estación no lo vende', async () => {
+		const db = seededDb();
+		const { piloto } = await conMineral(db, PUERTO, 0);
+		credit(db, piloto.id, 100_000, { kind: 'adjustment', memo: 'prueba' });
+		const antes = balance(db, piloto.id);
+
+		// Se pide con plata suficiente y en un mostrador que funciona: el rechazo
+		// tiene que ser por la regla y no por otra cosa.
+		expect(() => buyFromStation(db, piloto, FUEL_ITEM, 10)).toThrow(/no vende/);
+
+		// Y el rechazo no deja nada a medio hacer: ni plata movida ni carga puesta.
+		expect(balance(db, piloto.id)).toBe(antes);
+		expect(auditBalance(db, piloto.id)).toBeNull();
+	});
+
+	it('y tampoco lo recompra, por mucho que se lo lleven a la puerta', async () => {
+		const db = seededDb();
+		const { piloto, bodega } = await conMineral(db, PUERTO, 0);
+		moveItem(db, bodega.id, FUEL_ITEM, 50, 'bought');
+		const antes = balance(db, piloto.id);
+
+		expect(() => sellToStation(db, piloto, FUEL_ITEM, 50)).toThrow(/no comercia/);
+
+		expect(quantityOf(db, bodega.id, FUEL_ITEM)).toBe(50);
+		expect(balance(db, piloto.id)).toBe(antes);
+		expect(auditStacks(db, bodega.id)).toEqual([]);
 	});
 });

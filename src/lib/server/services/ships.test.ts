@@ -26,6 +26,7 @@ import {
 import { buildReadout, defaultFit, fitFromCodes } from '$lib/game/fitting';
 import { STARTING_HULL } from '$lib/game/hulls';
 import { EMPTY } from '$lib/game/modules';
+import { FUEL_ITEM } from '$lib/game/items';
 import {
 	ShipError,
 	activeShip,
@@ -37,6 +38,8 @@ import {
 	fuelCapacity,
 	pilotSkillLevels,
 	refit,
+	refuel,
+	refuelBlocked,
 	saveFit,
 	setFuel,
 	shipFit,
@@ -529,5 +532,118 @@ describe('el tanque', () => {
 
 		expect(ensureEveryShipHasFuel(db)).toBe(0);
 		expect(activeShip(db, piloto.id)!.fuel).toBe(usada.fuel);
+	});
+});
+
+/*
+ * **Repostar está dormido, no muerto.** Ninguna pantalla lo ofrece y nada lo
+ * llama desde que cruzar una puerta es gratis; el verbo que lo va a necesitar
+ * —el motor de salto de las capitales— todavía no existe.
+ *
+ * Por eso estos tests, que son los únicos lectores que le quedan: **código que
+ * nadie ejerce se rompe en silencio**, y se descubre el día que vuelva a hacer
+ * falta, que es el peor día para descubrirlo. Lo que cuidan es la parte difícil,
+ * que es la que se rompe: bodega y tanque moviéndose en la misma transacción, sin
+ * pasarse de la capacidad y dejando asiento.
+ */
+describe('repostar, que está dormido y tiene que seguir andando', () => {
+	/** Un piloto atracado con el tanque a medias y combustible en la bodega. */
+	async function conTanqueAMedias(db: ReturnType<typeof seededDb>, aBordo = 100) {
+		const piloto = await crearPiloto(db);
+		const nave = burnFuel(db, activeShip(db, piloto.id)!, 40);
+		const bodega = shipContainer(db, nave.id);
+		if (aBordo > 0) moveItem(db, bodega.id, FUEL_ITEM, aBordo, 'bought');
+		return { piloto, nave, bodega };
+	}
+
+	it('pasa combustible de la bodega al tanque, y la carga sale de la bodega', async () => {
+		const db = seededDb();
+		const { piloto, nave, bodega } = await conTanqueAMedias(db);
+
+		const recibo = refuel(db, piloto, 25);
+
+		expect(recibo.loaded).toBe(25);
+		expect(recibo.fuel).toBe(nave.fuel + 25);
+		expect(activeShip(db, piloto.id)!.fuel).toBe(nave.fuel + 25);
+		// Las dos escrituras van juntas: combustible que sale de la bodega y no
+		// llega al tanque es carga que se evaporó.
+		expect(quantityOf(db, bodega.id, FUEL_ITEM)).toBe(75);
+	});
+
+	it('carga lo que entra y no lo que se pide', async () => {
+		const db = seededDb();
+		const { piloto, nave, bodega } = await conTanqueAMedias(db);
+		const libre = fuelCapacity(db, nave) - nave.fuel;
+
+		// Rechazar el pedido entero obligaría al jugador a hacer una resta que el
+		// servidor ya sabe hacer. Lo que no entró se queda donde estaba.
+		const recibo = refuel(db, piloto, libre + 30);
+
+		expect(recibo.loaded).toBe(libre);
+		expect(recibo.fuel).toBe(recibo.capacity);
+		expect(quantityOf(db, bodega.id, FUEL_ITEM)).toBe(100 - libre);
+	});
+
+	it('no carga más de lo que hay a bordo', async () => {
+		const db = seededDb();
+		const { piloto, nave } = await conTanqueAMedias(db, 5);
+
+		expect(refuel(db, piloto, 40).loaded).toBe(5);
+		expect(activeShip(db, piloto.id)!.fuel).toBe(nave.fuel + 5);
+	});
+
+	it('también se carga de lo que está guardado en la estación', async () => {
+		const db = seededDb();
+		const { piloto, nave } = await conTanqueAMedias(db, 0);
+		const hangar = stationContainer(db, piloto.id, situation(db, piloto).stationId!);
+		moveItem(db, hangar.id, FUEL_ITEM, 30, 'bought');
+
+		// De cuál bodega sale lo elige quien reposta, como en el equipamiento: lo
+		// recién comprado está en tierra y lo de repuesto va a bordo.
+		expect(refuel(db, piloto, 30, 'station').loaded).toBe(30);
+		expect(quantityOf(db, hangar.id, FUEL_ITEM)).toBe(0);
+		expect(activeShip(db, piloto.id)!.fuel).toBe(nave.fuel + 30);
+	});
+
+	it('deja asiento del movimiento y no descuadra el montón', async () => {
+		const db = seededDb();
+		const { piloto, bodega } = await conTanqueAMedias(db);
+
+		refuel(db, piloto, 10);
+
+		expect(itemHistory(db, bodega.id)[0].kind).toBe('refuel');
+		expect(auditStacks(db, bodega.id)).toEqual([]);
+	});
+
+	it('con el tanque lleno no hay nada que cargar', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const bodega = shipContainer(db, activeShip(db, piloto.id)!.id);
+		moveItem(db, bodega.id, FUEL_ITEM, 50, 'bought');
+
+		// El botón apagado y el rechazo del servidor dicen lo mismo: es para eso
+		// que el motivo vive en una sola función.
+		expect(refuelBlocked(db, piloto)).toContain('lleno');
+		expect(() => refuel(db, piloto, 10)).toThrow(ShipError);
+		expect(quantityOf(db, bodega.id, FUEL_ITEM)).toBe(50);
+	});
+
+	it('sin combustible en ninguna de las dos bodegas, lo dice', async () => {
+		const db = seededDb();
+		const { piloto } = await conTanqueAMedias(db, 0);
+
+		// Mira las dos juntas: avisar «no llevás combustible» con el hangar lleno
+		// mandaría a comprar algo que ya se compró.
+		expect(refuelBlocked(db, piloto)).not.toBe('');
+		expect(() => refuel(db, piloto, 10)).toThrow(ShipError);
+	});
+
+	it('no acepta cantidades que no sean unidades enteras y positivas', async () => {
+		const db = seededDb();
+		const { piloto } = await conTanqueAMedias(db);
+
+		expect(() => refuel(db, piloto, 0)).toThrow(ShipError);
+		expect(() => refuel(db, piloto, -5)).toThrow(ShipError);
+		expect(() => refuel(db, piloto, 2.5)).toThrow(ShipError);
 	});
 });

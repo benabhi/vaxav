@@ -73,18 +73,50 @@ export const CORPORATION_EDGE: Readonly<
 	Record<CorporationKind, Readonly<Record<ItemKind, number>>>
 > = {
 	/** Compra mineral todo el día: es su negocio y lo paga mejor que nadie. */
-	mining: { ore: 6, module: 0 },
+	mining: { ore: 6, module: 0, fuel: 0 },
 	/** Los fabrica, así que los suelta más barato. */
-	industry: { ore: 0, module: 6 },
+	industry: { ore: 0, module: 6, fuel: 0 },
 	/** No produce nada y vive del volumen: un poco mejor en todo. */
-	trade: { ore: 3, module: 3 },
+	trade: { ore: 3, module: 3, fuel: 3 },
 	/** Mueve carga ajena; algo de eso se le pega al mostrador. */
-	logistics: { ore: 2, module: 2 },
+	logistics: { ore: 2, module: 2, fuel: 2 },
 	/** Pasa por los cinturones y trae mineral de vuelta. */
-	exploration: { ore: 2, module: 0 },
+	exploration: { ore: 2, module: 0, fuel: 0 },
 	/** No comercia: cobra por patrullar. */
-	security: { ore: 0, module: 0 }
+	security: { ore: 0, module: 0, fuel: 0 }
 };
+
+/**
+ * Qué clases de ítem se comercian hoy.
+ *
+ * **El combustible no, y es una decisión y no un olvido.** Nada lo consume desde
+ * que cruzar una puerta es gratis, así que venderlo sería cobrarle a alguien por
+ * algo que no puede usar: `docs/DESIGN.md` lo dice al revés y con todas las
+ * letras —«el insumo entra con el verbo que lo gasta, no antes»— y acá el verbo
+ * que lo va a gastar es el motor de salto de las capitales, que todavía no
+ * existe.
+ *
+ * Es **una línea para volver a encenderlo**, y cuando se encienda hay que
+ * acordarse de devolverle su rama al árbol de la mesa, que se fue con él.
+ */
+export function isTraded(kind: ItemKind): boolean {
+	return kind !== 'fuel';
+}
+
+/**
+ * Qué clases de ítem **vende** la estación.
+ *
+ * El mineral no: se lo vendés vos a ella, que lo compra para procesarlo. Un
+ * mostrador que lo devolviera al catálogo convertiría el circuito minero en un
+ * botón que se aprieta sin salir del hangar.
+ *
+ * Vive acá y no repetido en el servicio y en la lista del mercado, que es donde
+ * estaba: dos copias de la misma regla son dos que se desfasan, y ya se notó al
+ * sumar el combustible —la compra andaba y la lista no le mostraba precio—.
+ */
+export function stationSells(kind: ItemKind): boolean {
+	return kind === 'module';
+}
 
 /** Qué se puede hacer en el mostrador de una estación. */
 export interface MarketServices {

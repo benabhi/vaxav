@@ -24,7 +24,7 @@ import {
 	type SkillLevels
 } from '$lib/game/fitting';
 import { STARTING_HULL, getHull, type Hull } from '$lib/game/hulls';
-import { capacityTenths, type ContainerKind } from '$lib/game/items';
+import { FUEL_ITEM, capacityTenths, getItem, type ContainerKind } from '$lib/game/items';
 import { getModule, type ShipModule } from '$lib/game/modules';
 import { levelFromXp } from '$lib/game/progression';
 import { SKILLS, type SkillCode } from '$lib/game/skills';
@@ -104,9 +104,133 @@ export function setFuel(db: Db, row: Ship, units: number): Ship {
 	return db.update(ship).set({ fuel: puesto }).where(eq(ship.id, row.id)).returning().get();
 }
 
-/** Le saca combustible del tanque. Nunca lo deja en negativo. */
+/**
+ * Le saca combustible del tanque. Nunca lo deja en negativo.
+ *
+ * **Dormida con el resto del combustible**: la quemaba el salto por puerta, que
+ * ahora es gratis. La va a llamar el motor de salto de las capitales.
+ */
 export function burnFuel(db: Db, row: Ship, units: number): Ship {
 	return setFuel(db, row, row.fuel - Math.max(0, Math.trunc(units)));
+}
+
+/** Lo que dejó un repostaje: cuánto entró y cómo quedó el tanque. */
+export interface RefuelReceipt {
+	/** Lo que efectivamente se cargó, que puede ser menos de lo pedido. */
+	readonly loaded: number;
+	readonly fuel: number;
+	readonly capacity: number;
+}
+
+/**
+ * Pasa combustible de una bodega al tanque.
+ *
+ * **Dormido: ninguna pantalla lo ofrece y nada lo llama.** Cruzar una puerta es
+ * gratis, así que hoy el tanque no baja nunca y llenarlo no sirve para nada;
+ * ofrecerlo sería venderle al jugador un insumo que no puede quemar. Queda
+ * escrito porque el verbo que lo va a necesitar —el motor de salto de las
+ * capitales, el que cruza sin puerta— ya está decidido, y porque esto es la parte
+ * difícil: mover carga y tanque en una sola transacción, sin pasarse de la
+ * capacidad y dejando asiento.
+ *
+ * **De cuál bodega sale lo elige quien llama**, igual que en el equipamiento y en
+ * la venta: lo que se acaba de comprar está en el hangar y lo que se lleva de
+ * repuesto está a bordo, y las dos son cargas legítimas. La de la nave viaja con
+ * ella, así que repostar de la propia bodega se puede en cualquier parte —de eso
+ * se trata llevar combustible de repuesto—; la del hangar sólo estando atracado,
+ * porque es ahí donde está.
+ *
+ * Carga **lo que entra y no lo que se pide**: con el tanque casi lleno, rechazar
+ * el pedido entero obligaría al jugador a calcular la resta que el servidor ya
+ * sabe hacer. Lo que no entró se queda en la bodega, que es donde estaba.
+ */
+export function refuel(
+	db: Db,
+	row: Pilot,
+	units: number,
+	from: ContainerKind = 'ship'
+): RefuelReceipt {
+	if (!Number.isInteger(units)) throw new ShipError('Las unidades son enteras');
+	if (units <= 0) throw new ShipError('Hay que cargar al menos una unidad');
+
+	// El mismo motivo que apaga el botón, y no una segunda opinión: la pantalla ya
+	// lo mostró, pero entre que lo dibujó y llegó esto el tanque pudo llenarse en
+	// otra pestaña.
+	const motivo = refuelBlocked(db, row);
+	if (motivo) throw new ShipError(motivo);
+
+	// Existe y tiene lugar: las dos cosas las acaba de comprobar `refuelBlocked`.
+	const nave = activeShip(db, row.id)!;
+	const capacity = fuelCapacity(db, nave);
+	const libre = capacity - nave.fuel;
+
+	const containerId = fuelHoldId(db, row, nave, from);
+	const hay = quantityOf(db, containerId, FUEL_ITEM);
+	if (hay === 0) {
+		throw new ShipError(
+			from === 'ship'
+				? `No llevás ${getItem(FUEL_ITEM).name} a bordo.`
+				: `No tenés ${getItem(FUEL_ITEM).name} guardado acá.`
+		);
+	}
+
+	const carga = Math.min(units, libre, hay);
+
+	// Las dos escrituras van juntas: combustible que sale de la bodega y no llega
+	// al tanque es carga que se evaporó, y al revés es combustible de la nada.
+	return db.transaction((tx) => {
+		moveItem(tx, containerId, FUEL_ITEM, -carga, 'refuel');
+		const llena = setFuel(tx, nave, nave.fuel + carga);
+		return { loaded: carga, fuel: llena.fuel, capacity };
+	});
+}
+
+/**
+ * De qué bodega sale el combustible, con la única condición que cada una impone.
+ *
+ * La de la nave está siempre; la de la estación pide estar parado en una, que es
+ * de Perogrullo pero tiene que decirlo alguien antes de que `stationContainer`
+ * pida un número que no hay.
+ */
+function fuelHoldId(db: Db, row: Pilot, nave: Ship, from: ContainerKind): number {
+	if (from === 'ship') return shipContainer(db, nave.id).id;
+
+	const ahora = situation(db, row);
+	if (ahora.stationId === null) {
+		throw new ShipError('Hay que estar atracado para sacar algo del hangar.');
+	}
+	return stationContainer(db, row.id, ahora.stationId).id;
+}
+
+/**
+ * Por qué no se puede repostar acá y ahora, o vacío si se puede.
+ *
+ * **Dormido con `refuel`**, y por lo mismo: hoy no hay botón que apagar. Vuelve a
+ * tener lector el día que la ficha vuelva a ofrecer cargar el tanque.
+ *
+ * Existe para que **el botón apagado y el rechazo del servidor digan lo mismo**,
+ * que es la regla que ya cumplen el salto y el equipamiento: la vista lo llama
+ * para explicar, `refuel` lo llama para rechazar, y así no hay dos listas de
+ * motivos que se desfasen.
+ *
+ * Mira las dos bodegas juntas: de cuál sacar es una decisión de quien reposta, y
+ * un aviso que dijera «no llevás combustible» teniendo el hangar lleno mandaría a
+ * comprar algo que ya se compró.
+ */
+export function refuelBlocked(db: Db, row: Pilot): string {
+	const nave = activeShip(db, row.id);
+	if (!nave) return 'No tenés ninguna nave.';
+	if (nave.fuel >= fuelCapacity(db, nave)) return 'El tanque ya está lleno.';
+
+	const ahora = situation(db, row);
+	const aBordo = quantityOf(db, shipContainer(db, nave.id).id, FUEL_ITEM);
+	const enTierra =
+		ahora.stationId === null
+			? 0
+			: quantityOf(db, stationContainer(db, row.id, ahora.stationId).id, FUEL_ITEM);
+
+	if (aBordo + enTierra === 0) return `No tenés ${getItem(FUEL_ITEM).name} para cargar.`;
+	return '';
 }
 
 /** El casco de una nave, o un error que dice cuál falta del catálogo. */

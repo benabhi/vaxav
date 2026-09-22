@@ -29,6 +29,7 @@ const MOVES: Record<string, { label: string; icon: IconName }> = {
 	module_sale: { label: 'Venta de módulo', icon: 'wrench' },
 	injector_purchase: { label: 'Inyección', icon: 'atom' },
 	refuel: { label: 'Combustible', icon: 'gas-can' },
+	fuel_sale: { label: 'Venta de combustible', icon: 'gas-can' },
 	adjustment: { label: 'Ajuste', icon: 'scales' }
 };
 

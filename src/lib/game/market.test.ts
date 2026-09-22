@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { MAX_SKILL_LEVEL } from './fitting';
-import { getItem } from './items';
+import { ITEM_KINDS, getItem } from './items';
 import {
 	BASE_SPREAD_PERCENT,
 	MAX_OPEN_ORDERS,
@@ -31,8 +31,10 @@ import {
 	askTotal,
 	bidPrice,
 	bidTotal,
+	isTraded,
 	marketServices,
-	spreadFor
+	spreadFor,
+	stationSells
 } from './market';
 
 describe('la horquilla', () => {
@@ -165,6 +167,45 @@ describe('qué comercia una estación', () => {
 
 	it('sin mercado no se comercia nada', () => {
 		expect(marketServices(['storage', 'contacts']).trades).toBe(false);
+	});
+});
+
+/*
+ * Qué llega al mostrador y qué no.
+ *
+ * **El combustible quedó afuera cuando cruzar una puerta pasó a ser gratis**, y
+ * ésta es la única línea que lo decide: nada lo consume, así que venderlo sería
+ * cobrarle a alguien por algo que no puede usar. Sin una prueba, el día que
+ * alguien devuelva el `fuel` a la mesa —o se lo lleve por accidente— no se entera
+ * nadie hasta que el catálogo lo muestre en pantalla.
+ */
+describe('qué clases de ítem llegan a la mesa', () => {
+	it('el combustible no se comercia: todavía no hay verbo que lo queme', () => {
+		expect(isTraded('fuel')).toBe(false);
+	});
+
+	it('el mineral y los módulos sí', () => {
+		expect(isTraded('ore')).toBe(true);
+		expect(isTraded('module')).toBe(true);
+	});
+
+	it('la estación vende módulos y nada más', () => {
+		// Al mineral se lo vendés vos a ella: un mostrador que lo devolviera al
+		// catálogo convertiría el circuito minero en un botón que se aprieta sin
+		// salir del hangar.
+		expect(ITEM_KINDS.filter((kind) => stationSells(kind))).toEqual(['module']);
+	});
+
+	/*
+	 * La regla que tiene que valer siempre, con las clases que haya: **lo que la
+	 * estación vende, la estación lo recompra**. Si se separaran, habría un precio
+	 * de vitrina para algo que después nadie acepta de vuelta, que es una bodega
+	 * llena de cosas sin salida.
+	 */
+	it('nada se vende sin comerciarse', () => {
+		expect(ITEM_KINDS.filter((kind) => stationSells(kind)).every((kind) => isTraded(kind))).toBe(
+			true
+		);
 	});
 });
 

@@ -30,8 +30,16 @@ import { MODULES, type ShipModule } from './modules';
  */
 export const TENTHS_PER_CUBIC_METER = 10;
 
-/** Qué clase de cosa es. Define dónde se consigue y qué se hace con ella. */
-export const ITEM_KINDS = ['ore', 'module'] as const;
+/**
+ * Qué clase de cosa es. Define dónde se consigue y qué se hace con ella.
+ *
+ * `fuel` es la tercera. Se diferencia del mineral en las dos puntas —la estación
+ * lo vendería, y no se lleva a ningún lado: se carga en el tanque— y por eso no
+ * podía ser un mineral más. **Hoy está apagada**: `isTraded` la deja afuera del
+ * mercado mientras nada consuma combustible, que es lo que manda DESIGN.md —«el
+ * insumo entra con el verbo que lo gasta, no antes»—.
+ */
+export const ITEM_KINDS = ['ore', 'module', 'fuel'] as const;
 export type ItemKind = (typeof ITEM_KINDS)[number];
 
 /**
@@ -129,6 +137,52 @@ const ORES = [
 ] as const satisfies readonly Ore[];
 
 /**
+ * El código del combustible del salto.
+ *
+ * Se exporta como constante y no se escribe a mano en cada llamador porque hay
+ * un solo combustible y va a haber más de un verbo que lo toque: repostar hoy,
+ * abastecer una estructura mañana. Un literal repetido por el repositorio es el
+ * que se olvida el día que el código cambie.
+ */
+export const FUEL_ITEM = 'helium_3';
+
+/**
+ * El combustible, que es un ítem de mercado y nada más.
+ *
+ * **Hoy no se comercia**: cruzar una puerta es gratis y nada lo consume, así que
+ * `isTraded` lo deja afuera de la mesa. Sigue en el catálogo porque el ítem tiene
+ * que existir para que exista el montón —una bodega no puede guardar un código
+ * que el catálogo no conoce— y porque el verbo que lo va a quemar ya está
+ * decidido: el motor de salto de las capitales, el que cruza sin puerta.
+ *
+ * Cuando llegue, **se compra en el mostrador como cualquier cosa**, se lleva en
+ * la bodega y se carga en el tanque. Esa decisión es la que evita el servicio de
+ * estación paralelo —«repostar» como un botón con su propia economía— que habría
+ * que volver a atar el día que el helio-3 salga del hielo y lo venda un jugador.
+ *
+ * Los dos números salen de documentos y no del aire:
+ *
+ * - **0,1 m³ por unidad** es lo que MATERIALS.md le da a todo refinado. Un tanque
+ *   lleno de Pioner son 12 m³ de bodega, que es casi la mitad de la suya: llevar
+ *   autonomía de repuesto **cuesta carga**, que es exactamente lo que se busca.
+ * - **15 créditos** salen de la única conversión que los documentos dejan
+ *   calcular: cien de silicato ferroso valen 1.200 y MATERIALS.md los refina en
+ *   ochenta unidades, o sea quince por unidad refinada. Es un número de arranque
+ *   —el helio-3 es el más escaso de lo que deja el hielo y debería terminar por
+ *   encima—, y hasta que el balance le escriba el suyo, éste es el que no se
+ *   inventó.
+ */
+const HELIUM_3: Item = {
+	code: FUEL_ITEM,
+	name: 'Helio-3',
+	kind: 'fuel',
+	volumeTenths: 1,
+	basePrice: 15,
+	description:
+		'Isótopo del hielo, tan liviano que hay que guardarlo frío. Es lo que se quema al cruzar.'
+};
+
+/**
  * Lo que ocupa un módulo suelto en la bodega, por clase.
  *
  * Se deriva del tamaño y no se declara módulo por módulo: llevar un repuesto de
@@ -174,6 +228,7 @@ function moduleItem(module: ShipModule): Item {
  */
 export const ITEMS: readonly Item[] = [
 	...ORES,
+	HELIUM_3,
 	...MODULES.filter((module) => module.code !== '').map(moduleItem)
 ];
 

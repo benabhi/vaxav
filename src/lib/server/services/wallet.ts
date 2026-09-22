@@ -32,7 +32,17 @@ export const CREDIT_MOVES = [
 	'module_purchase',
 	'module_sale',
 	'injector_purchase',
+	/**
+	 * Combustible comprado en el mostrador, y el mismo devuelto.
+	 *
+	 * **Los dos esperan su verbo**: mientras cruzar una puerta sea gratis, el
+	 * mercado no comercia combustible y nadie escribe estos asientos. Siguen
+	 * declarados porque la tabla que traduce clase de ítem a movimiento es
+	 * exhaustiva —una clase nueva no compila hasta decidir con qué nombre entra al
+	 * libro— y porque los informes viejos que ya los tengan se siguen leyendo.
+	 */
 	'refuel',
+	'fuel_sale',
 	'adjustment',
 	// --- El mercado entre jugadores ---
 	/** Lo que reserva una orden de compra al publicarse. */
