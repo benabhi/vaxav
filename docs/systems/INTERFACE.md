@@ -921,9 +921,11 @@ sabe de cuál habla.
    scroll al que no se puede entrar es un recorte.
 
 **Todo lo que puede ser varios, es una lista.** No hay ni un campo singular en
-`Procedencia`, y es a propósito: viajar ya tiene dos habilidades que lo mueven, un
-verbo puede estar bloqueado por más de una razón, y un verbo puede pedir más de
-una pieza —refinar va a pedir la refinería y una bodega donde poner lo que sale—.
+`Procedencia`, y es a propósito: extraer ya tiene dos habilidades que lo mueven,
+un verbo puede estar bloqueado por más de una razón, y un verbo puede pedir más
+de una pieza —refinar va a pedir la refinería y una bodega donde poner lo que
+sale—. Viajar hoy tiene una sola palanca y la lista igual es lista: el día que un
+casco traiga bono de agilidad, no hay nada que migrar.
 Un campo que empieza en singular obliga a reescribir el tipo, las vistas y la
 pantalla el día que aparezca el segundo, que es siempre antes de lo que parece.
 
@@ -941,12 +943,12 @@ casco» se contradice solo. «Pieza» es verdad para las dos fuentes.
 Son cuatro renglones distintos, y la diferencia no es cosmética: dicen si hay algo
 que comprar o no.
 
-| Caso                | Cómo se lee                                             | Ejemplo                      |
-| ------------------- | ------------------------------------------------------- | ---------------------------- |
-| Del casco           | La pieza, y al lado el modelo que la trae               | Propulsores · del casco Mula |
-| Del casco, mejorado | Debajo, con un más y «suma encima»                      | + Propulsor auxiliar         |
-| De un módulo        | El nombre del módulo montado, que es el único que puede | Láser de extracción          |
-| Falta               | En rojo, con el nombre de lo que hay que conseguir      | Falta: Escáner               |
+| Caso                | Cómo se lee                                             | Ejemplo                        |
+| ------------------- | ------------------------------------------------------- | ------------------------------ |
+| Del casco           | La pieza, y al lado el modelo que la trae               | Motor de warp · del casco Mula |
+| Del casco, mejorado | Debajo, con un más y «suma encima»                      | + Optimizador de warp          |
+| De un módulo        | El nombre del módulo montado, que es el único que puede | Láser de extracción            |
+| Falta               | En rojo, con el nombre de lo que hay que conseguir      | Falta: Escáner                 |
 
 El renglón decía sólo un nombre, y con eso una nave recién salida del astillero
 leía **«Falta: Propulsores»** por algo que ninguna nave puede montar: los
@@ -955,6 +957,14 @@ propulsores son un atributo del casco desde que
 Y fallaba peor de lo que parece, porque **el aviso escondía lo que la nave rinde
 mientras algo «faltaba»**: la velocidad no salía justo en la nave que no tenía
 ningún problema.
+
+**Viajar nombra el motor de warp y ya no los propulsores.** Cuando la duración de
+un viaje pasó a ser alineación más warp
+—[cómo](SHIPS.md#viajar-es-alinearse-y-cruzar)— el empuje dejó de mover el reloj,
+y un aviso que siguiera nombrando una pieza dormida manda a comprar por nada. Por
+lo mismo el verbo muestra **dos lecturas y no una**: «Warp» y «Alineación», porque
+un solo número escondía que la mitad del viaje no escala con la distancia y que
+sólo una de las dos mitades se arregla entrenando.
 
 Tres reglas sostienen los cuatro casos:
 
@@ -1042,12 +1052,12 @@ regresiva y el panel de la puerta.
 
 #### Dónde está puesto
 
-| Verbo    | Piezas                            | Habilidades                                |
-| -------- | --------------------------------- | ------------------------------------------ |
-| Viajar   | Propulsores, del casco            | Navegación, y la del bono de rol del casco |
-| Saltar   | **Ninguna**                       | **Ninguna**                                |
-| Escanear | Escáner, de un módulo             | Escaneo, Prospección                       |
-| Extraer  | Láser de extracción, de un módulo | Minería, y la del bono de rol del casco    |
+| Verbo    | Piezas                            | Habilidades                             |
+| -------- | --------------------------------- | --------------------------------------- |
+| Viajar   | Motor de warp, del casco          | Maniobra, y ninguna más                 |
+| Saltar   | **Ninguna**                       | **Ninguna**                             |
+| Escanear | Escáner, de un módulo             | Escaneo, Prospección                    |
+| Extraer  | Láser de extracción, de un módulo | Minería, y la del bono de rol del casco |
 
 Los verbos del mercado —comprar, vender, acordar— todavía no la llevan: no
 dependen de un módulo de la nave, pero sí de habilidades como Regateo, que hoy no

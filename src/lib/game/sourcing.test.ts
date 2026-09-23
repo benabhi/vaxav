@@ -62,6 +62,13 @@ describe('lo que el casco aporta sin llevar nada montado', () => {
 		expect(hullGrant(pioner, 'jumpPower')).toBe(pioner.jumpPower);
 		expect(hullGrant(pioner, 'fuel')).toBe(pioner.fuel);
 		expect(hullGrant(pioner, 'sensorRange')).toBe(pioner.sensorRange);
+
+		// El warp es la columna que estrenó viajar cuando la duración pasó a ser
+		// alineación más crucero. En la Pioner vale lo mismo que los sensores, así
+		// que la cruzada de esta columna la descarta un casco donde no coincidan.
+		expect(hullGrant(pioner, 'warpSpeed')).toBe(pioner.warpSpeed);
+		const vencejo = getHull('vencejo');
+		expect(hullGrant(vencejo, 'warpSpeed')).toBe(vencejo.warpSpeed);
 	});
 
 	/*
@@ -78,9 +85,20 @@ describe('lo que el casco aporta sin llevar nada montado', () => {
 	 * hace que una nave recién salida del astillero se mueva, salte, cargue y vea
 	 * sin que el piloto monte una sola pieza.
 	 */
-	it('todo casco trae propulsores, motor, tanque, bodega y sensores', () => {
+	it('todo casco trae warp, propulsores, motor, tanque, bodega y sensores', () => {
+		// **El warp es el que habilita viajar**, así que un cero acá no sería sólo un
+		// número faltante: la pantalla leería «Falta: Motor de warp» y —lo caro— le
+		// escondería al piloto los dos tiempos, porque los efectos sólo se prometen
+		// con todo puesto.
 		for (const hull of HULLS) {
-			for (const grant of ['thrust', 'jumpPower', 'fuel', 'cargo', 'sensorRange'] as const) {
+			for (const grant of [
+				'warpSpeed',
+				'thrust',
+				'jumpPower',
+				'fuel',
+				'cargo',
+				'sensorRange'
+			] as const) {
 				expect(hullGrant(hull, grant)).toBeGreaterThan(0);
 			}
 		}

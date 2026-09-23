@@ -41,10 +41,24 @@
 			<span class="font-display text-1 font-bold tracking-label text-text-strong uppercase">
 				{source.verb}
 			</span>
+			<!--
+				**Cada lectura con su rótulo.** Mientras el verbo prometía una sola cifra,
+				la unidad alcanzaba para saber de qué hablaba; desde que viajar dice dos
+				—cuánto corre en warp y cuánto tarda en salir—, dos números sueltos uno al
+				lado del otro se leen como un solo dato partido. El rótulo va con la misma
+				letra chica que los nombres de las habilidades de abajo, así que el
+				encabezado y las filas se leen igual: nombre apagado, cifra en cian.
+
+				Cada par no se corta: envuelve el renglón entero, nunca el número lejos de
+				su rótulo.
+			-->
 			{#if !falta}
 				{#each source.effects as efecto (efecto.label)}
-					<span class="font-mono text-[0.78rem] whitespace-nowrap text-data">
-						{efecto.value}
+					<span class="flex items-baseline gap-[0.3rem] whitespace-nowrap">
+						<span class="font-display text-[0.62rem] tracking-label text-accent-dim uppercase">
+							{efecto.label}
+						</span>
+						<span class="font-mono text-[0.78rem] text-data">{efecto.value}</span>
 					</span>
 				{/each}
 			{/if}

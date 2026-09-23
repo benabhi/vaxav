@@ -30,8 +30,8 @@ import {
 } from '$lib/game/sourcing';
 import { getSkill } from '$lib/game/skills';
 import { getProfession } from '$lib/game/professions';
-import type { SkillLevels } from '$lib/game/fitting';
-import type { BonusTarget, Hull } from '$lib/game/hulls';
+import { bonusPercent, type Readout, type SkillLevels } from '$lib/game/fitting';
+import type { Hull } from '$lib/game/hulls';
 import {
 	bodyDetail,
 	bodyDistance,
@@ -56,6 +56,7 @@ import { baseValueOf, getOre } from '$lib/game/items';
 import { roundHalfEven } from '$lib/game/math';
 import { MAX_LEVEL } from '$lib/game/progression';
 import { jumpProblem, jumpSeconds, lightYears } from '$lib/game/jumps';
+import { agility, alignSeconds } from '$lib/game/warp';
 import { canBeHired, requiredReputation } from '$lib/game/reputation';
 import { NO_STANDINGS, pilotStandings, type PilotStandings } from '../services/reputation';
 import {
@@ -88,6 +89,7 @@ import {
 	securityLabel,
 	serviceIcon,
 	serviceLabel,
+	tenths,
 	thousands
 } from '$lib/format';
 import type {
@@ -684,15 +686,38 @@ function uncharted(): Sistema {
  * desfasa miente en una sola de las dos pantallas, que es la forma más cara de
  * mentir.
  *
- * No es un requisito duro: los propulsores son un atributo del casco desde que
- * los internos esenciales dejaron de ser módulos. Sigue declarado porque **la
- * cadena se muestra igual cuando está completa**: el aviso dice de dónde sale el
- * número y qué auxiliar lo mejora, que es lo que el piloto mira antes de comprar.
+ * No es un requisito duro: el motor de warp es un atributo del casco y no hay
+ * nave que no lo traiga. Sigue declarado porque **la cadena se muestra igual
+ * cuando está completa**: el aviso dice de dónde sale el número y qué
+ * optimizador lo mejora, que es lo que el piloto mira antes de comprar.
+ *
+ * **Dice el warp y no los propulsores**, que es lo que decía hasta que el viaje
+ * cambió de modelo: el empuje quedó dormido con la velocidad sub-warp, y nombrar
+ * una pieza que ya no mueve el reloj sería mandar a comprar por nada.
  *
  * Saltar no tiene lista: cruzar una puerta no pide ninguna pieza montada. Lo
  * suyo lo arma `fuenteDeLaPuerta`.
  */
-const NEEDS_TRAVEL: readonly Need[] = [{ grant: 'thrust', label: 'Propulsores' }];
+const NEEDS_TRAVEL: readonly Need[] = [{ grant: 'warpSpeed', label: 'Motor de warp' }];
+
+/**
+ * Lo que promete viajar: los dos números que deciden el reloj.
+ *
+ * **Son dos y no uno a propósito.** Un solo número —«velocidad»— escondía que la
+ * mitad del viaje no escala con la distancia: con el warp y la alineación al lado
+ * se lee de un vistazo por qué la carguera tarda, y cuál de las dos cosas se
+ * arregla entrenando.
+ *
+ * Vive acá y no en cada constructor por lo mismo que la lista de piezas: el árbol
+ * del sistema y el mapa ofrecen el mismo verbo y no pueden prometer distinto.
+ */
+function lecturasDeViaje(readout: Readout | null): readonly Lectura[] {
+	if (readout === null) return [];
+	return [
+		{ label: 'Warp', value: `${tenths(readout.warpSpeed)} ud/s` },
+		{ label: 'Alineación', value: `${readout.alignSeconds} s` }
+	];
+}
 
 /**
  * Lo que un verbo pide, escrito: qué pieza, de dónde sale y qué la mejora.
@@ -792,23 +817,67 @@ function siguienteLectura(levels: SkillLevels): string[] {
 }
 
 /**
- * De dónde sale un verbo movido por un módulo y unos porcentajes.
+ * Qué alineación dejaría el próximo nivel de cada palanca, en segundos.
  *
- * Es el caso corriente —viajar, saltar— y por eso se arma una vez: el módulo que
- * lo habilita, las habilidades que lo mueven y qué daría la siguiente. Escanear y
- * extraer no lo usan porque tienen efectos que no son un porcentaje; todo lo
- * demás debería entrar acá, y si no entra conviene preguntarse por qué antes de
- * escribir otro constructor.
+ * **En segundos y no en porcentaje**, que es lo que escribe `siguientePalanca`.
+ * «Maniobra I → +5 %» no dice de qué es el cinco por ciento, y en la alineación
+ * más porcentaje es **menos** tiempo, así que el único sentido que el jugador le
+ * puede dar está invertido. Dicho en la misma magnitud y unidad que la lectura de
+ * arriba —«alineación 13 s» contra los 15 s que dice la ficha— no hay nada que
+ * interpretar.
+ *
+ * **Y la que no baja el segundo redondeado no se muestra.** En la lanzadera,
+ * Maniobra I deja la alineación en cuatro segundos igual: prometer una mejora que
+ * no llega es peor que callarla, y callarla dice algo cierto y útil —entrenar
+ * Maniobra paga en la carguera y no en la lanzadera—.
+ *
+ * Vive al lado de `siguientePalanca` y no adentro: extraer sigue usando aquélla,
+ * donde el `+N %` se lee bien, y un `if` que eligiera entre las dos formas sería
+ * dos funciones peleando por un archivo.
  */
-function fuenteDeVerbo(
-	db: Db,
-	row: Pilot,
-	verb: string,
-	needs: readonly Need[],
-	target: BonusTarget,
-	effects: readonly Lectura[],
-	blockers: readonly string[]
-): Procedencia {
+function siguienteAlineacion(
+	readout: Readout,
+	levers: readonly Lever[],
+	skills: SkillLevels
+): string[] {
+	// El bono que el piloto ya tiene sobre la agilidad. Sumarle el de un nivel más
+	// y volver a pasar por la misma cuenta que la hoja es lo que garantiza que el
+	// segundo prometido sea el segundo que se va a cobrar.
+	const actual = bonusPercent('agility', readout.hull, skills);
+
+	return levers
+		.filter((lever) => lever.percentPerLevel > 0 && lever.level < MAX_LEVEL)
+		.sort((a, b) => a.level - b.level)
+		.map((lever) => ({
+			lever,
+			seconds: alignSeconds(
+				agility(readout.mass, readout.hull.inertia, actual + lever.percentPerLevel)
+			)
+		}))
+		.filter(({ seconds }) => seconds < readout.alignSeconds)
+		.map(
+			({ lever, seconds }) => `${lever.name} ${roman(lever.level + 1)} → alineación ${seconds} s`
+		);
+}
+
+/**
+ * De dónde sale **viajar**: el motor de warp, lo que lo mueve y qué daría
+ * entrenar el próximo nivel.
+ *
+ * **Se arma una sola vez para las dos pantallas que ofrecen el verbo** —el árbol
+ * del sistema y el mapa—, que hasta acá repetían los mismos cuatro argumentos y
+ * pedían la hoja de la nave cada una por su lado. Dos copias de lo que un verbo
+ * pide son dos que se desfasan, y la que se desfasa miente en una sola de las dos
+ * pantallas.
+ *
+ * Era el constructor genérico de «un verbo movido por un módulo y unos
+ * porcentajes» y **dejó de serlo a propósito**: viajar escribe su próximo paso en
+ * segundos de alineación y no en porcentaje, y meter esa elección adentro de una
+ * pieza compartida sería darle dos modos a una sola función. Escanear y extraer
+ * arman el suyo, que tampoco se parece.
+ */
+function fuenteDeViaje(db: Db, row: Pilot, blockers: readonly string[]): Procedencia {
+	const verb = 'Viajar';
 	const nave = activeShip(db, row.id);
 	const readout = shipReadout(db, row);
 	if (!nave || !readout) {
@@ -816,15 +885,16 @@ function fuenteDeVerbo(
 			verb,
 			blockers: ['Necesitás una nave.'],
 			// Sin nave no hay casco del que puedan salir: todo falta.
-			modules: needs.map((need) => aparatoDeModulo(need.label, '')),
+			modules: NEEDS_TRAVEL.map((need) => aparatoDeModulo(need.label, '')),
 			levers: [],
 			effects: [],
 			next: []
 		};
 	}
 
-	const llaves = leversFor(target, readout.hull, pilotSkillLevels(db, row.id));
-	const piezas = aparatos(readout.hull, grantingModules(shipFit(db, nave), needs));
+	const niveles = pilotSkillLevels(db, row.id);
+	const llaves = leversFor('agility', readout.hull, niveles);
+	const piezas = aparatos(readout.hull, grantingModules(shipFit(db, nave), NEEDS_TRAVEL));
 
 	return {
 		verb,
@@ -834,8 +904,8 @@ function fuenteDeVerbo(
 		// Lo que rinde sólo se promete si hay con qué, venga del casco o de un
 		// módulo: una nave a la que le falta el láser no extrae, y decir su
 		// rendimiento sería prometer una extracción.
-		effects: piezas.every((pieza) => pieza.fitted) ? effects : [],
-		next: siguientePalanca(llaves)
+		effects: piezas.every((pieza) => pieza.fitted) ? lecturasDeViaje(readout) : [],
+		next: siguienteAlineacion(readout, llaves, niveles)
 	};
 }
 
@@ -1016,15 +1086,11 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 		),
 		hasShip: activeShip(db, row.id) !== null,
 		actionInProgress: currentAction(db, row.id) !== null,
-		// Uno solo para todo el árbol: los propulsores son de la nave, no del cuerpo
-		// al que se va. La duración de cada fila ya sale de esta misma velocidad.
-		travelSource: fuenteDeVerbo(
+		// Uno solo para todo el árbol: el motor de warp es de la nave, no del cuerpo
+		// al que se va. La duración de cada fila ya sale de estos mismos números.
+		travelSource: fuenteDeViaje(
 			db,
 			row,
-			'Viajar',
-			NEEDS_TRAVEL,
-			'speed',
-			[{ label: 'Velocidad', value: `${thousands(readout?.speed ?? 0)} ud/h` }],
 			situation(db, row).orderBlocked ? [situation(db, row).orderBlocked] : []
 		)
 	};
@@ -1246,15 +1312,7 @@ export function buildGalaxia(
 		// Desde el mapa no se salta: `startJump` exige estar parado en la puerta. Lo
 		// que el mapa ofrece es **viajar hasta la puerta**, que es una orden que ya
 		// existe, y por eso la fuente que se muestra es la de viajar.
-		travelSource: fuenteDeVerbo(
-			db,
-			row,
-			'Viajar',
-			NEEDS_TRAVEL,
-			'speed',
-			[{ label: 'Velocidad', value: `${thousands(shipReadout(db, row)?.speed ?? 0)} ud/h` }],
-			ahora.orderBlocked ? [ahora.orderBlocked] : []
-		),
+		travelSource: fuenteDeViaje(db, row, ahora.orderBlocked ? [ahora.orderBlocked] : []),
 		// Y la de **saltar**, para cuando ya estás parado en la puerta. Desde acá no
 		// se cruza —el mapa manda a Ubicación, que es la pantalla del lugar— pero
 		// con una orden en curso aquella pantalla muestra el viaje y no la puerta:
