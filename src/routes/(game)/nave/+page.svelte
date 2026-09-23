@@ -389,10 +389,22 @@
 			lowerIsBetter: true
 		},
 		{
-			label: 'Velocidad',
-			value: thousands(hoja.speed),
-			unit: 'u/s',
-			delta: cambio(readout.speed, hoja.speed),
+			// Lo que se paga por salir, gane o no el viaje: no depende de la distancia.
+			// Menos es mejor, como la masa de la que sale.
+			label: 'Alineación',
+			value: String(hoja.alignSeconds),
+			unit: 's',
+			delta: cambio(readout.alignSeconds, hoja.alignSeconds),
+			lowerIsBetter: true
+		},
+		{
+			// Lo único que escala con la distancia. Va en décimas, así que su
+			// diferencia también.
+			label: 'Warp',
+			value: tenths(hoja.warpSpeed),
+			unit: 'ud/s',
+			delta: cambio(readout.warpSpeed, hoja.warpSpeed),
+			decimal: true,
 			lowerIsBetter: false
 		}
 	]);
@@ -1212,7 +1224,15 @@
 				<div class="grid w-full gap-x-5 gap-y-4 {plegado ? 'sm:grid-cols-2' : 'grid-cols-1'}">
 					{@render celda('Aguante', `flojo: ${damageTypeShort(hoja.weakSpot)}`, defensa)}
 					{@render celda('Capacidad', '', capacidad)}
-					{@render celda('Movilidad', '', movilidad)}
+					<!--
+						La agilidad va **en el encabezado y no en un renglón**: es de dónde sale
+						la alineación —masa por inercia, con Maniobra descontada—, no algo que se
+						lea aparte. Como renglón repetiría a la masa con otra escala, porque la
+						inercia del casco no cambia: dos cifras que se mueven siempre juntas son
+						una sola contada dos veces. Acá dice de dónde viene el segundo de más sin
+						cobrarle una fila a una columna que en un teléfono es angosta.
+					-->
+					{@render celda('Movilidad', `agilidad ${thousands(hoja.agility)}`, movilidad)}
 					{@render celda('Presupuestos', '', presupuestos)}
 				</div>
 			</div>
