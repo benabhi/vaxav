@@ -164,9 +164,25 @@
 				<span class="w-[4.25rem] overflow-hidden">
 					<Label class="overflow-hidden text-ellipsis whitespace-nowrap">{body.kind}</Label>
 				</span>
-				<span class="w-[2.75rem] overflow-hidden">
+				<!--
+						**Cuatro rem porque la distancia más larga son cuatro cifras**: «1.406
+						ud», el tramo más largo que hay. Con los 2,75 de antes entraban seis
+						caracteres y el resto se perdía **sin elipsis**, así que «1.406 ud» se
+						leía como «1.406 u», y un número cortado en silencio se lee como un
+						número: peor que cortarse.
+
+						Y la cifra se apoya a la derecha, que es como se apila una columna de
+						números: así la unidad y la última cifra caen siempre en el mismo lugar y
+						la columna se barre de un vistazo. Con la caja empujándola desde afuera y
+						el recorte adentro, lo que entra queda alineado y lo que no entrara
+						mostraría sus tres puntos —que con `text-align: right` a secas se pierden—.
+					-->
+				<span class="flex w-[4rem] justify-end">
 					{#if body.distance}
-						<span class="font-mono text-[0.72rem] whitespace-nowrap text-data">
+						<span
+							class="min-w-0 overflow-hidden font-mono text-[0.72rem] text-ellipsis
+									whitespace-nowrap text-data"
+						>
 							{body.distance}
 						</span>
 					{/if}
