@@ -2,11 +2,15 @@
 
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { body, constellation, pilot, system } from '../db/schema';
+import { body, constellation, pilot, pilotSkill, system } from '../db/schema';
 import { crearPiloto, moverPiloto, seededDb } from '../db/testing';
 import type { Db } from '../db/types';
+import type { Pilot } from '../db/schema';
+import { SKILLS } from '$lib/game/skills';
+import { xpForLevel } from '$lib/game/progression';
 import { startTravel } from '../services/actions';
 import { bodyDetail, getBody, systemTree } from '../services/universe';
+import { activeShip, saveFit, shipHull } from '../services/ships';
 import { SERVICES, allBodies } from '$lib/game/universe';
 import { MAX_REPUTATION, REPUTATION_SCALE } from '$lib/game/reputation';
 import { connectGates, createGate, createSystem, setGateClosed } from '../services/worldbuilding';
@@ -20,6 +24,7 @@ import {
 	readGalaxyQuery
 } from './navigation';
 import { NO_STANDINGS, type PilotStandings } from '../services/reputation';
+import { REFERENCE_SHIP } from '$lib/game/actions';
 
 describe('el mosaico de módulos', () => {
 	it('muestra los ocho siempre, marcando los que la estación tiene', () => {
@@ -310,7 +315,7 @@ describe('el árbol del sistema', () => {
 
 	it('no salta niveles: cada fila cuelga de la anterior o de un ancestro', () => {
 		const db = seededDb();
-		const vista = buildBodyRows(db, systemTree(db, 'anfora'), '', null, 190);
+		const vista = buildBodyRows(db, systemTree(db, 'anfora'), '', null, REFERENCE_SHIP);
 
 		for (let i = 1; i < vista.length; i++) {
 			// Bajar de a un nivel por vez; subir, los que haga falta.
@@ -320,7 +325,7 @@ describe('el árbol del sistema', () => {
 
 	it('lleva una guía por columna de ancestro, sin contar la estrella', () => {
 		const db = seededDb();
-		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, 190);
+		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, REFERENCE_SHIP);
 
 		for (const fila of filas) {
 			// La columna de la estrella se descarta: no tiene hermanos ni columna
@@ -331,7 +336,7 @@ describe('el árbol del sistema', () => {
 
 	it('la guía de un ancestro sigue bajando sólo si le quedan hermanos', () => {
 		const db = seededDb();
-		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, 190);
+		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, REFERENCE_SHIP);
 
 		// Para cada fila con guías, la marca de la columna k dice si el ancestro de
 		// profundidad k+1 todavía tiene algo por debajo en la lista.
@@ -361,8 +366,26 @@ describe('el árbol del sistema', () => {
 		// Y todas las demás sí.
 		for (const body of vista.bodies.filter((b) => !b.isHere)) {
 			expect(body.distance).not.toBe('');
-			expect(body.travelLabel).toMatch(/^\d+s$/);
+			expect(body.travelLabel).toMatch(/^(\d+ m \d{2} s|\d+ s)$/);
 		}
+	});
+
+	it('escribe la duración como el resto del juego, con minutos cuando los hay', async () => {
+		// «2 m 48 s» se entiende de una y «168s» hay que dividirlo mentalmente. Es el
+		// mismo número que el cartel de confirmación muestra al lado, y **dos
+		// formatos para el mismo dato se leen como dos datos distintos**.
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const etiquetas = buildSystemView(db, piloto)
+			.bodies.filter((body) => !body.isHere)
+			.map((body) => body.travelLabel);
+
+		// Ánfora tiene cuerpos cerca y cuerpos lejos, así que las dos formas salen.
+		expect(etiquetas.some((label) => /^\d+ s$/.test(label))).toBe(true);
+		expect(etiquetas.some((label) => /^\d+ m \d{2} s$/.test(label))).toBe(true);
+		// Y ninguna queda con el formato crudo de antes, que era «168s».
+		expect(etiquetas.some((label) => /\d+s/.test(label))).toBe(false);
 	});
 
 	it('con una orden en curso el árbol lo dice, que es lo que apaga los botones', async () => {
@@ -494,6 +517,37 @@ describe('lo que el mapa de la galaxia lee de la URL', () => {
 		expect(query.territory).toBe('');
 	});
 });
+
+/**
+ * Un piloto en una Pioner pelada, con Maniobra al nivel que se pida.
+ *
+ * **La nave se vacía a propósito.** El kit del oficio suma masa, y la masa
+ * empeora la agilidad: con él puesto los segundos no son los del cuadro de
+ * SHIPS.md y el caso dejaría de decir lo que dice. Una nave de astillero es
+ * además el *mejor* caso —cuanto más liviana, antes sale—, así que lo que no se
+ * ofrece acá tampoco se ofrece cargado.
+ *
+ * Se escribe la experiencia del nivel en vez de pasar por el entrenamiento
+ * porque lo que se prueba es la pantalla y no cómo se llegó al nivel.
+ */
+async function enLaPioner(db: Db, level: number): Promise<Pilot> {
+	const piloto = await crearPiloto(db);
+
+	const nave = activeShip(db, piloto.id)!;
+	saveFit(
+		db,
+		nave,
+		shipHull(nave).slots.map(() => '')
+	);
+
+	const xp = xpForLevel(level, SKILLS.maneuvering.difficulty);
+	db.insert(pilotSkill)
+		.values({ pilotId: piloto.id, skill: 'maneuvering', xp })
+		.onConflictDoUpdate({ target: [pilotSkill.pilotId, pilotSkill.skill], set: { xp } })
+		.run();
+
+	return piloto;
+}
 
 describe('la pestaña Galaxia', () => {
 	it('se para donde está el piloto', async () => {
@@ -652,30 +706,78 @@ describe('la pestaña Galaxia', () => {
 	});
 
 	/*
-	 * Los propulsores **son del casco** desde que los internos esenciales dejaron
-	 * de ser módulos, así que una nave de astillero los tiene sin llevar nada
-	 * puesto. Mientras la procedencia los resolvía sólo contra las ranuras, esa
-	 * nave leía «Falta: Propulsores» y —lo caro— se le escondía la velocidad,
+	 * El motor de warp **es del casco**, como lo eran los propulsores que este aviso
+	 * nombraba antes de que el viaje cambiara de modelo: una nave de astillero lo
+	 * tiene sin llevar nada puesto. Mientras la procedencia lo resolvía sólo contra
+	 * las ranuras, esa nave leía «Falta» y —lo caro— se le escondían los números,
 	 * porque los efectos sólo se prometen con todo puesto.
 	 */
-	it('el verbo del mapa es viajar, y dice que los propulsores son del casco', async () => {
+	it('el verbo del mapa es viajar, y dice que el motor de warp es del casco', async () => {
 		const db = seededDb();
 		const piloto = await crearPiloto(db);
 
 		const vista = buildGalaxia(db, piloto);
 
 		expect(vista.travelSource.verb).toBe('Viajar');
-		expect(vista.travelSource.modules.map((uno) => uno.requirement)).toEqual(['Propulsores']);
+		expect(vista.travelSource.modules.map((uno) => uno.requirement)).toEqual(['Motor de warp']);
 
-		const [propulsores] = vista.travelSource.modules;
-		expect(propulsores.source).toBe('hull');
-		expect(propulsores.fitted).toBe(true);
-		// El nombre que se muestra es el del casco, y no hay auxiliar montado.
-		expect(propulsores.name).toBe('Pioner');
-		expect(propulsores.upgrade).toBe('');
+		const [motor] = vista.travelSource.modules;
+		expect(motor.source).toBe('hull');
+		expect(motor.fitted).toBe(true);
+		// El nombre que se muestra es el del casco, y no hay optimizador montado.
+		expect(motor.name).toBe('Pioner');
+		expect(motor.upgrade).toBe('');
 
-		// Y por lo tanto la velocidad se ve: es el dato por el que alguien abre esto.
-		expect(vista.travelSource.effects.map((efecto) => efecto.label)).toEqual(['Velocidad']);
+		// Y por lo tanto los dos números del reloj se ven, que es el dato por el que
+		// alguien abre esto: cuánto cuesta salir y cuánto cuesta cruzar.
+		expect(vista.travelSource.effects.map((efecto) => efecto.label)).toEqual([
+			'Warp',
+			'Alineación'
+		]);
+	});
+
+	/*
+	 * **La palanca que no baja el segundo redondeado no se muestra**, y es una regla
+	 * fácil de romper sin darse cuenta: el porcentaje siempre mejora algo, pero lo
+	 * único que el jugador ve es el entero. Prometer una mejora que no llega es peor
+	 * que callarla, y callarla dice algo cierto —entrenar Maniobra paga en la
+	 * carguera y no en la lanzadera—.
+	 */
+	it('no le ofrece a la lanzadera una Maniobra que no le baja el reloj', async () => {
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		// El minero arranca sin Maniobra, y en la Pioner los dos primeros niveles
+		// dejan la alineación en los mismos cuatro segundos. Desde qué nivel le paga
+		// a cada casco está en `game/warp.test.ts`, con los números a mano.
+		expect(buildGalaxia(db, piloto).travelSource.next).toEqual([]);
+	});
+
+	it('ni con Maniobra I, que en la Pioner tampoco cambia el entero', async () => {
+		// El nivel de en medio: ya entrenó algo y el reloj sigue diciendo lo mismo.
+		// Es el caso que más fácil se rompe, porque el porcentaje sí subió.
+		const db = seededDb();
+		const piloto = await enLaPioner(db, 1);
+
+		expect(buildGalaxia(db, piloto).travelSource.next).toEqual([]);
+	});
+
+	it('y con Maniobra II sí, escrita en segundos y no en porcentaje', async () => {
+		// «Maniobra III → +5 %» no dice de qué es el cinco por ciento, y en la
+		// alineación más porcentaje es **menos** tiempo: el único sentido que el
+		// jugador le puede dar está invertido. Dicho en la misma unidad que la
+		// lectura de al lado —«alineación 3 s» contra los 4 que dice la ficha— no
+		// hay nada que interpretar.
+		const db = seededDb();
+		const piloto = await enLaPioner(db, 2);
+
+		expect(buildGalaxia(db, piloto).travelSource.next).toEqual(['Maniobra III → alineación 3 s']);
+
+		// Y el árbol promete lo mismo que el mapa, porque lo arma un solo lugar: dos
+		// copias de lo que un verbo pide son dos que se desfasan.
+		expect(buildSystemView(db, piloto).travelSource.next).toEqual(
+			buildGalaxia(db, piloto).travelSource.next
+		);
 	});
 
 	/*

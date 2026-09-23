@@ -73,11 +73,11 @@ describe('el catálogo', () => {
 	 * consume, y un renglón para algo que no se puede ni comprar ni vender es una
 	 * promesa de mecánica que no existe.
 	 */
-	it('trae los cuatro minerales y los treinta y cuatro módulos, y nada más', async () => {
+	it('trae los cuatro minerales y los treinta y seis módulos, y nada más', async () => {
 		const db = seededDb();
 		const piloto = await parado(db, 'puerto_anfora');
 
-		expect(buildMarketView(db, piloto).items).toHaveLength(38);
+		expect(buildMarketView(db, piloto).items).toHaveLength(40);
 	});
 
 	it('cada rama del árbol cuenta lo que tiene debajo', async () => {
@@ -88,9 +88,9 @@ describe('el catálogo', () => {
 		const rama = (code: string) => vista.groups.find((grupo) => grupo.code === code)!;
 
 		expect(rama('ore').count).toBe(4);
-		expect(rama('module').count).toBe(34);
+		expect(rama('module').count).toBe(36);
 		const ranuras = ['high', 'mid', 'low'].map((code) => rama(code).count);
-		expect(ranuras.reduce((total, cuantos) => total + cuantos, 0)).toBe(34);
+		expect(ranuras.reduce((total, cuantos) => total + cuantos, 0)).toBe(36);
 	});
 
 	it('cuenta lo que el piloto tiene en toda la galaxia, no sólo acá', async () => {

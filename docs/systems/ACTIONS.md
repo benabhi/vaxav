@@ -2,8 +2,8 @@
 
 > **Implementado en parte.** El motor de acciones existe: se encola una orden por
 > vez, se resuelve de forma perezosa e idempotente y deja su informe en la
-> bitácora. Hay cuatro acciones: **viajar**, **escanear**, **minar** y **acordar
-> una orden** del mercado. Los números están para discutirse.
+> bitácora. Hay cinco acciones: **viajar**, **saltar**, **escanear**, **minar** y
+> **acordar una orden** del mercado. Los números están para discutirse.
 
 > **La experiencia ya no se reparte entre habilidades**: una acción deposita en el
 > pozo de su familia. Ver [habilidades](SKILLS.md).
@@ -58,11 +58,17 @@ una nave con +10 % y un módulo de extracción con +20 % acumula 0,45 de bono:
 Los bonos se suman, no se multiplican: es más fácil de explicar al jugador, más
 fácil de balancear, y evita que apilar seis fuentes chicas rompa el juego.
 
-**Y un bono se aplica una sola vez.** Viajar es el caso testigo: su duración sale
-de la distancia y de la **velocidad de la nave**, y Navegación no vuelve a entrar
-en la cuenta porque ya está adentro de esa velocidad —junto con el bono de rol
-del casco y los propulsores montados—. Contarla dos veces para el mismo efecto es
-la forma más fácil de romper el balance sin que se note.
+**Y un bono se aplica una sola vez.** Viajar es el caso testigo: su duración son
+dos sumandos —la alineación de la nave más la distancia dividida por su velocidad
+de warp— y **Maniobra no vuelve a entrar en la cuenta**, porque ya está adentro de
+la alineación que calcula la hoja de la nave. Contarla dos veces para el mismo
+efecto es la forma más fácil de romper el balance sin que se note.
+
+**Viajar es además el único verbo con forma propia**, y no por capricho: la mitad
+de su reloj no depende de la distancia, así que no hay una duración base que
+dividir. La fórmula entera, de dónde sale cada uno de sus dos números y qué se
+durmió al cambiarla están en
+[viajar es alinearse y cruzar](SHIPS.md#viajar-es-alinearse-y-cruzar).
 
 ## Cómo se resuelve
 
@@ -105,8 +111,9 @@ adorno: es el relato de tu partida.
 
 El caso que define el bucle. Un piloto está en Puerto Ánfora y quiere minar.
 
-1. **Ordena viajar** a los Anillos de Ánfora III. La duración sale de la
-   distancia, de Navegación, de la nave y de sus módulos: 12 minutos.
+1. **Ordena viajar** a los Anillos de Ánfora III. La duración sale de lo que su
+   nave tarda en alinearse más la distancia dividida por su velocidad de warp:
+   12 minutos.
 2. **El contador corre.** El piloto cierra la pestaña y se va a hacer otra cosa.
 3. **Al volver**, la acción ya venció: informe de viaje, posición nueva y
    +120 XP al pozo de Pilotaje.
@@ -198,17 +205,54 @@ inalcanzable**. Por eso escanear paga **Ciencias** y no Extracción, aunque quie
 más escanee sea un minero: es lo único que la paga, y sin eso la rama no tendría
 forma de crecer.
 
-| Acción            | Rama       | Peso           | Dónde                       |
-| ----------------- | ---------- | -------------- | --------------------------- |
-| Viajar            | Pilotaje   | 1,0            | Entre cuerpos de un sistema |
-| Saltar            | Pilotaje   | 1,0            | Parado en una puerta        |
-| Escanear una roca | Ciencias   | 1,5            | En un cinturón              |
-| Minar una roca    | Extracción | 1,0            | En un cinturón              |
-| Acordar una orden | Comercio   | según el valor | Atracado con mostrador      |
+| Acción            | Rama       | Peso           | Paga por         | Dónde                       |
+| ----------------- | ---------- | -------------- | ---------------- | --------------------------- |
+| Viajar            | Pilotaje   | **0,5**        | **La distancia** | Entre cuerpos de un sistema |
+| Saltar            | Pilotaje   | 1,0            | La duración      | Parado en una puerta        |
+| Escanear una roca | Ciencias   | 1,5            | La duración      | En un cinturón              |
+| Minar una roca    | Extracción | 1,0            | La duración      | En un cinturón              |
+| Acordar una orden | Comercio   | según el valor | El valor         | Atracado con mostrador      |
 
-**Saltar paga lo mismo que viajar y en la misma rama**, que es lo coherente con
-que cruzar no pida nada: lo único que se pone es el rato, y el rato es lo que la
-experiencia mide.
+#### Viajar paga por lo recorrido, y es el único
+
+**Pagar por duración premiaba exactamente lo contrario de lo que el juego quiere
+premiar.** La misma ruta daba **21 de Pilotaje en la exploradora y 64 en la
+carguera**, y montarle a la nave el optimizador de warp —la mejora que existe para
+acortar el viaje— le sacaba al piloto el **41 %** de lo que ese viaje pagaba.
+**Mejorar la nave castigaba**, que es un incentivo al revés y de los que se
+descubren tarde.
+
+Con la distancia, la misma ruta paga lo mismo en cualquier casco: lo que se
+recorrió es lo que se aprendió, y con qué nave se hizo es problema del piloto.
+Los minutos que entran a la fórmula del pozo son los de la **nave de referencia**
+—la lanzadera de astillero contra la que está calibrado el universo—, así que la
+cuenta documentada en [habilidades](SKILLS.md) sigue siendo la misma y no hace
+falta inventarle una segunda al lado.
+
+**Y viajar se lleva el peso 0,5, que es el piso del rango**: no arriesga nada, no
+gasta nada y no hay forma de hacerlo mal. El número no se inventó: es el extremo
+de abajo de la escala de 0,5 a 3 que [habilidades](SKILLS.md) ya tenía escrita.
+
+| Recorrido | Deposita |
+| --------- | -------: |
+| 135 ud    |     2 XP |
+| 738 ud    |    12 XP |
+| 1.041 ud  |    17 XP |
+
+Para la escala: **minar una hora deposita 600**. Viajar es el verbo más barato
+del juego y tiene que serlo, o mover la nave en círculos sería una forma de
+entrenar.
+
+Dos consecuencias buscadas:
+
+- **La alineación no entra.** Arrancar el motor no es distancia recorrida, y si
+  entrara, una nave torpe volvería a cobrar más por la misma ruta.
+- **Un salto entre dos cuerpos muy cercanos deposita cero**, porque el pozo
+  trunca. Es deliberado: corta el farmeo de saltitos entre una luna y su planeta.
+
+**Cruzar una puerta sigue pagando por duración, y es correcto.** Desde que cruzar
+es gratis, el tiempo de una puerta es un dato del universo y no de la nave: todos
+tardan lo mismo, así que la duración ya no premia al que tiene la peor nave.
 
 Escanear pesa por encima de uno porque es corta y exigente —se lee una roca en
 minuto y medio— y porque es la única fuente de su rama: si rindiera poco, Ciencias

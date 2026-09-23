@@ -26,6 +26,7 @@ import { HULLS, type BonusTarget, type Hull, type SlotSpec } from './hulls';
 import { floorDiv, roundHalfEven } from './math';
 import { EMPTY, type ShipModule, getModule } from './modules';
 import { getSkill, unmetFrom, type Requirement } from './skills';
+import { agility, alignSeconds } from './warp';
 
 /**
  * Qué habilidad mejora cada cosa, y cuánto por nivel.
@@ -38,7 +39,34 @@ export const SKILL_BONUSES: Readonly<
 	Record<BonusTarget, { readonly skill: string; readonly percentPerLevel: number }>
 > = {
 	cargo: { skill: 'cargo_engineering', percentPerLevel: 5 },
+	/**
+	 * **Dormida hasta el combate**, con el empuje del que sale.
+	 *
+	 * Movía el reloj de los viajes dentro del sistema hasta que ese reloj pasó a
+	 * ser alineación más warp, y ninguna de las dos cosas mira la velocidad
+	 * sub-warp. Sigue en la tabla porque maniobrar cerca de otra nave —acercarse,
+	 * abrir distancia, orbitar— es todo sub-warp, y ése es el verbo que la
+	 * despierta.
+	 *
+	 * Lo que Navegación gobierna mientras tanto es **el acceso**: es la llave de
+	 * los dos optimizadores de warp, que sí acortan un viaje.
+	 */
 	speed: { skill: 'navigation', percentPerLevel: 3 },
+	/**
+	 * Maniobra, que **estrena verbo con esta tabla**: hasta acá prometía «tiempo
+	 * de alineación antes de salir» y no movía nada, porque no había alineación.
+	 *
+	 * El cinco por nivel es **el número por omisión de SKILLS.md**, que es el que
+	 * vale mientras el balance no le escriba uno propio. Al 5 son un 25 % de
+	 * agilidad, que como la agilidad se divide se siente como un 20 % menos de
+	 * alineación: en la carguera son tres segundos menos en cada salida.
+	 *
+	 * **Es lo único que el piloto puede mejorar del viaje**, y es la mitad fija:
+	 * la parte que escala con la distancia es de la nave y ninguna habilidad la
+	 * toca. Es la división de EVE y es la que hace que el casco siga importando
+	 * con todo entrenado.
+	 */
+	agility: { skill: 'maneuvering', percentPerLevel: 5 },
 	jump_range: { skill: 'astrogation', percentPerLevel: 4 },
 	mining_yield: { skill: 'mining', percentPerLevel: 5 },
 	damage: { skill: 'gunnery', percentPerLevel: 4 },
@@ -127,7 +155,35 @@ export interface Readout {
 
 	// Movimiento
 	readonly mass: number;
+	/**
+	 * Velocidad sub-warp, en unidades por hora.
+	 *
+	 * **Dormida hasta el combate**: ningún viaje la mira desde que la duración es
+	 * alineación más warp. Se sigue calculando porque es la velocidad de maniobrar
+	 * cerca de otra nave, que es el verbo que la despierta.
+	 */
 	readonly speed: number;
+	/**
+	 * Velocidad de warp, en décimas de unidad de distancia por segundo.
+	 *
+	 * La del casco más lo que sumen los optimizadores. Es la que decide el tramo
+	 * largo de un viaje, y **ninguna habilidad la mueve**.
+	 */
+	readonly warpSpeed: number;
+	/**
+	 * Agilidad: masa por inercia, ya con Maniobra descontada. **Menos es mejor.**
+	 *
+	 * Redondeada, y **sólo sirve para mostrarla**: la alineación de acá al lado se
+	 * calculó con la exacta, para no redondear dos veces la misma cuenta.
+	 *
+	 * Viaja en la hoja además de la alineación que sale de ella porque es el
+	 * número que explica *por qué* esta nave sale tarde: la alineación dice cuánto
+	 * y la agilidad dice de dónde, que es lo que se mira antes de sacarle una
+	 * placa de blindaje.
+	 */
+	readonly agility: number;
+	/** Cuánto tarda en alinearse antes de entrar en warp, en segundos. */
+	readonly alignSeconds: number;
 	/** En décimas de año luz. */
 	readonly jumpRange: number;
 	readonly fuel: number;
@@ -204,8 +260,10 @@ export function bonusPercent(target: BonusTarget, hull: Hull, skills: SkillLevel
 	const source = SKILL_BONUSES[target];
 	if (source) total += (skills[source.skill] ?? 0) * source.percentPerLevel;
 
-	// El bono de rol del casco, que escala con su propia habilidad.
-	if (hull.bonus.target === target) {
+	// El bono de rol del casco, que escala con su propia habilidad. **Puede no
+	// haber**: la lanzadera inicial no tiene ninguno a propósito, para no empujar
+	// al piloto hacia una especialidad antes de que la elija.
+	if (hull.bonus && hull.bonus.target === target) {
 		total += (skills[hull.bonus.skill] ?? 0) * hull.bonus.percentPerLevel;
 	}
 
@@ -290,6 +348,7 @@ export function buildReadout(
 	let powerOutput = hull.power;
 	let thrust = hull.thrust;
 	let jumpPower = hull.jumpPower;
+	let warpSpeed = hull.warpSpeed;
 	let capacitor = hull.capacitor;
 	let capacitorRecharge = hull.capacitorRecharge;
 	let cargo = hull.cargo;
@@ -316,6 +375,7 @@ export function buildReadout(
 		powerOutput += module.powerOutput;
 		thrust += module.thrust;
 		jumpPower += module.jumpPower;
+		warpSpeed += module.warpSpeed;
 		capacitor += module.capacitor;
 		capacitorRecharge += module.capacitorRecharge;
 
@@ -350,6 +410,22 @@ export function buildReadout(
 		mass ? floorDiv(jumpPower * TENTHS, mass) : 0,
 		bonusPercent('jump_range', hull, skills)
 	);
+
+	// --- Lo que se paga al salir ---
+	//
+	// La masa entra otra vez, y por otra puerta: acá decide **cuánto tarda en
+	// arrancar** en vez de cuánto tarda en llegar. Son dos castigos distintos de
+	// la misma decisión, y el de la alineación lo paga igual el viaje más corto
+	// del sistema, que es lo que hace que un salto de una luna a su planeta ya no
+	// sea gratis.
+	//
+	// Maniobra **divide** la agilidad, que es la forma de que mejorarla sea bajar
+	// el número. La velocidad de warp no lleva bono ninguno a propósito: es de la
+	// nave, como en EVE.
+	// **Exacta**, que es como la devuelve `agility`: la alineación redondea una
+	// sola vez y lo hace al final. Lo que se guarda en la hoja para mostrar es la
+	// redondeada, unas líneas más abajo.
+	const shipAgility = agility(mass, hull.inertia, bonusPercent('agility', hull, skills));
 
 	// --- Acumulador ---
 	// No multiplica nada acá: es el porcentaje que `jumps.ts` divide al calcular el
@@ -421,6 +497,11 @@ export function buildReadout(
 		calibration,
 		mass,
 		speed,
+		warpSpeed,
+		// Redondeada **sólo para mostrarla**: la que decide los segundos es la
+		// exacta, y pasa entera a `alignSeconds`.
+		agility: roundHalfEven(shipAgility),
+		alignSeconds: alignSeconds(shipAgility),
 		jumpRange,
 		fuel,
 		// Cuántos saltos podés dar no es un atributo: es combustible sobre consumo,
@@ -460,6 +541,8 @@ export function buildReadout(
  */
 export function maxedSkills(): Record<string, number> {
 	const codes = new Set(Object.values(SKILL_BONUSES).map((bonus) => bonus.skill));
-	for (const hull of HULLS) codes.add(hull.bonus.skill);
+	// El casco sin bono de rol no aporta ninguna habilidad a la lista, que es
+	// exactamente lo que significa no tenerlo.
+	for (const hull of HULLS) if (hull.bonus) codes.add(hull.bonus.skill);
 	return Object.fromEntries([...codes].map((code) => [code, MAX_SKILL_LEVEL]));
 }

@@ -17,8 +17,8 @@ import {
 	fitFromCodes,
 	maxedSkills
 } from './fitting';
-import { HULLS, SLOT_KINDS, STARTING_HULL, getHull } from './hulls';
-import { EMPTY, MODULES, TIERS, getModule, modulesForSlot } from './modules';
+import { HULLS, SLOT_KINDS, STARTING_HULL, getHull, type Hull } from './hulls';
+import { EMPTY, MODULES, TIERS, getModule, modulesForSlot, type ShipModule } from './modules';
 import { SKILLS, getSkill } from './skills';
 import { PLAYABLE_PROFESSIONS, startingLevels } from './professions';
 import { TRAINABLE_FAMILIES } from './actions';
@@ -75,6 +75,18 @@ describe('el catálogo de cascos', () => {
 		}
 	});
 
+	it('le da a todo casco con qué cruzar y con qué salir', () => {
+		// Las dos columnas que son suyas y de nadie más. Un cero en cualquiera de
+		// las dos es una nave que no viaja: sin velocidad de warp la cuenta del
+		// crucero se niega a dividir, y sin inercia no hay agilidad de la que sacar
+		// la alineación. Hoy son cinco cascos; el día que entre el sexto y a alguien
+		// se le olvide una de las dos, esto lo atrapa antes que el jugador.
+		for (const hull of HULLS) {
+			expect(hull.warpSpeed, hull.name).toBeGreaterThan(0);
+			expect(hull.inertia, hull.name).toBeGreaterThan(0);
+		}
+	});
+
 	it('da a toda ranura una clase válida', () => {
 		for (const hull of HULLS) {
 			for (const slot of hull.slots) {
@@ -85,9 +97,11 @@ describe('el catálogo de cascos', () => {
 	});
 
 	it('apunta a habilidades que existen', () => {
-		// Un bono o un requisito sobre una habilidad inventada no haría nada.
+		// Un bono o un requisito sobre una habilidad inventada no haría nada. El bono
+		// puede no estar —es `null` y no un cero—, y eso no es un dato faltante: es
+		// un casco que no empuja al piloto hacia ninguna especialidad.
 		for (const hull of HULLS) {
-			expect(Object.hasOwn(SKILLS, hull.bonus.skill), hull.name).toBe(true);
+			if (hull.bonus) expect(Object.hasOwn(SKILLS, hull.bonus.skill), hull.name).toBe(true);
 			for (const requisito of hull.requirements) {
 				expect(Object.hasOwn(SKILLS, requisito.skill), hull.name).toBe(true);
 			}
@@ -136,9 +150,23 @@ describe('el catálogo de cascos', () => {
 	});
 
 	it('hace a cada casco bueno en algo distinto', () => {
-		// Dos cascos con el mismo bono serían el mismo casco con otro nombre.
-		const objetivos = HULLS.map((hull) => hull.bonus.target);
+		// Dos cascos con el mismo bono serían el mismo casco con otro nombre. Los que
+		// no tienen ninguno no compiten por nada y quedan afuera de la cuenta.
+		const objetivos = HULLS.flatMap((hull) => (hull.bonus ? [hull.bonus.target] : []));
 		expect(new Set(objetivos).size).toBe(objetivos.length);
+	});
+
+	it('y deja al casco de partida sin bono de rol, que es la decisión', () => {
+		// **La ausencia es un valor y por eso es `null` y no un cero.** El casco que
+		// el astillero le entrega a cualquiera no puede empujar al piloto hacia una
+		// especialidad antes de que la elija: un bono de partida decide por él en la
+		// primera hora, cuando todavía no sabe qué quiere ser.
+		//
+		// La decisión la tomó benabhi al sacar el bono de agilidad que la Pioner
+		// tenía. **docs/systems/SHIPS.md todavía la describe como abierta** en «La
+		// regla del bono de rol» y en el cuadro de los cinco cascos: es el documento
+		// el que está atrasado, no esto.
+		expect(getHull(STARTING_HULL).bonus).toBeNull();
 	});
 
 	it('falla claro si el casco no existe', () => {
@@ -222,6 +250,55 @@ describe('el catálogo de módulos', () => {
 		const maxima = Math.max(...MODULES.map((module) => module.powerOutput));
 		for (const module of MODULES) {
 			expect(module.powerDraw, module.code).toBeLessThanOrEqual(maxima);
+		}
+	});
+
+	it('sube la escalera del escalón entre los dos optimizadores de warp', () => {
+		// **Lo que los separa es el escalón, y tiene que separarlos en todo.** El II
+		// rinde más y aprieta más en las cuatro cosas que un equipamiento reparte
+		// —ranura, presupuesto, bodega y habilidad—, que es la regla de
+		// docs/systems/SHIPS.md §«El escalón: I y II». Si una sola de las cuatro se
+		// invirtiera, uno de los dos sería estrictamente peor y elegir dejaría de
+		// decidir algo.
+		const chico = getModule('warp_optimizer_i2');
+		const grande = getModule('warp_optimizer_ii3');
+
+		expect(chico.warpSpeed).toBe(3);
+		expect(grande.warpSpeed).toBe(5);
+
+		expect(grande.size).toBeGreaterThan(chico.size);
+		expect(grande.powerDraw).toBeGreaterThan(chico.powerDraw);
+		expect(grande.computingDraw).toBeGreaterThan(chico.computingDraw);
+		expect(-grande.cargo).toBeGreaterThan(-chico.cargo);
+
+		const navegacion = (module: ShipModule) =>
+			module.requirements.find((requisito) => requisito.skill === 'navigation')?.level ?? 0;
+		expect(navegacion(grande)).toBeGreaterThan(navegacion(chico));
+	});
+
+	it('y le cobra en una divisa que algún verbo lea', () => {
+		// **Cobrar en firma es no cobrar.** La firma, el blindaje, el escudo y el
+		// daño no los mira ningún verbo todavía —están marcados como «Combate»—, así
+		// que un optimizador que pagara ahí saldría gratis en la práctica. La bodega
+		// sí se lee: la llena el mineral y la vacía la venta.
+		const conWarp = MODULES.filter((module) => module.warpSpeed > 0);
+		expect(conWarp.length).toBeGreaterThan(0);
+
+		for (const module of conWarp) {
+			expect(module.cargo, module.code).toBeLessThan(0);
+		}
+	});
+
+	it('y presupuesto, que es lo que limita cuántos entran', () => {
+		// **El cierre del agujero que encontró la auditoría.** La ranura sola no
+		// alcanzaba: las bajas sobran justo en los cascos grandes, así que una nave
+		// podía llevar cinco y comprarse el warp de una clase que no es la suya. Lo
+		// que lo limita es el presupuesto —cómputo y potencia—, que es como lo
+		// resuelve EVE. Un optimizador que no gastara ninguno de los dos volvería a
+		// abrirlo.
+		for (const module of MODULES.filter((uno) => uno.warpSpeed > 0)) {
+			expect(module.computingDraw, module.code).toBeGreaterThan(0);
+			expect(module.powerDraw, module.code).toBeGreaterThan(0);
 		}
 	});
 });
@@ -364,21 +441,257 @@ describe('lo que se divide por la masa', () => {
 	});
 });
 
+describe('lo que cuesta salir y lo que cuesta cruzar', () => {
+	/*
+	 * El reloj de un viaje son dos sumandos que no se parecen, y la hoja de la nave
+	 * los lleva por separado a propósito. Lo que se protege acá es que cada cosa
+	 * entre por su puerta: la masa empeora la alineación y **no toca** la velocidad
+	 * de warp, un optimizador estira el warp y **no acorta** la alineación, y el
+	 * equipamiento no puede comprar ninguna de las dos sin pagarla en otra divisa.
+	 */
+	const carguera = getHull('mula');
+
+	/** La misma configuración, con todas las ranuras bajas llenas de lo que se pida. */
+	function conLasBajasLlenas(hull: Hull, code: string) {
+		const fit = [...defaultFit(hull)];
+		hull.slots.forEach((slot, i) => {
+			if (slot.kind === 'low') fit[i] = getModule(code);
+		});
+		return fit;
+	}
+
+	/** La configuración de fábrica con un módulo en la primera ranura baja. */
+	function conUnaBaja(hull: Hull, code: string) {
+		const fit = [...defaultFit(hull)];
+		fit[hull.slots.findIndex((slot) => slot.kind === 'low')] = getModule(code);
+		return fit;
+	}
+
+	/**
+	 * El warp más alto que un casco alcanza con un equipamiento que **igual vuela**.
+	 *
+	 * Prueba todas las combinaciones de optimizadores en las ranuras bajas y se
+	 * queda con la mejor que no se pasa de presupuesto, con todo entrenado. Son
+	 * pocas —tres opciones por ranura baja— y la fuerza bruta dice mucho más que un
+	 * número escrito a mano: si mañana entra un optimizador nuevo o un casco con
+	 * más bajas, esto lo tiene en cuenta solo.
+	 */
+	function mejorWarp(hull: Hull): number {
+		const optimizadores = MODULES.filter((module) => module.warpSpeed > 0);
+		const bajas = hull.slots.flatMap((slot, i) => (slot.kind === 'low' ? [i] : []));
+		const skills = maxedSkills();
+
+		let mejor = hull.warpSpeed;
+		const probar = (cual: number, fit: readonly ShipModule[]) => {
+			if (cual === bajas.length) {
+				const readout = buildReadout(hull, fit, skills);
+				if (readout.flyable) mejor = Math.max(mejor, readout.warpSpeed);
+				return;
+			}
+			const ranura = hull.slots[bajas[cual]];
+			for (const module of [EMPTY, ...optimizadores]) {
+				if (module !== EMPTY && module.size > ranura.size) continue;
+				const siguiente = [...fit];
+				siguiente[bajas[cual]] = module;
+				probar(cual + 1, siguiente);
+			}
+		};
+		probar(0, defaultFit(hull));
+
+		return mejor;
+	}
+
+	it('sube la agilidad, y con ella la alineación', () => {
+		// La placa de blindaje no pide energía: sólo pesa. Y pesar ahora también es
+		// salir más tarde, no sólo llegar más tarde. Es la segunda puerta por la que
+		// entra la masa, y es la que se paga hasta en el viaje más corto del sistema.
+		const pelada = buildReadout(carguera, defaultFit(carguera));
+		const cargada = buildReadout(carguera, conLasBajasLlenas(carguera, 'armor_plate_i1'));
+
+		expect(cargada.mass).toBeGreaterThan(pelada.mass);
+		expect(cargada.agility).toBeGreaterThan(pelada.agility);
+		expect(cargada.alignSeconds).toBeGreaterThan(pelada.alignSeconds);
+	});
+
+	it('y deja la velocidad de warp donde estaba', () => {
+		// **La otra mitad del reloj no se entera de lo que pesa la nave.** Es lo que
+		// hace que la carguera cruce igual de lento vacía que llena, y lo que separa
+		// este número de la velocidad sub-warp, que sí se hunde con cada tonelada.
+		const pelada = buildReadout(carguera, defaultFit(carguera));
+		const cargada = buildReadout(carguera, conLasBajasLlenas(carguera, 'armor_plate_i1'));
+
+		expect(cargada.warpSpeed).toBe(carguera.warpSpeed);
+		expect(cargada.speed).toBeLessThan(pelada.speed);
+	});
+
+	it('el optimizador chico estira el warp y lo saca de la bodega', () => {
+		// El que quiere llegar antes carga menos, y en una lanzadera de treinta metros
+		// cúbicos quince son la mitad del viaje: la decisión se siente en la primera
+		// hora. Cobrarlo en velocidad sería cobrar dos veces lo mismo, y cobrarlo en
+		// firma sería no cobrarlo, porque hoy no la lee ningún verbo.
+		const pelada = buildReadout(inicial, defaultFit(inicial));
+		const con = buildReadout(inicial, conUnaBaja(inicial, 'warp_optimizer_i2'));
+
+		expect(con.warpSpeed).toBe(pelada.warpSpeed + 3);
+		expect(con.cargo).toBe(pelada.cargo - 15);
+		expect(con.signature).toBe(pelada.signature);
+	});
+
+	it('y el grande estira más y cobra más, en la misma bodega', () => {
+		// La misma divisa y más caro por décima: lo que lo justifica es que da más en
+		// una sola ranura, y eso vale en un casco al que le sobran bajos.
+		const pelada = buildReadout(carguera, defaultFit(carguera));
+		const con = buildReadout(carguera, conUnaBaja(carguera, 'warp_optimizer_ii3'));
+
+		expect(con.warpSpeed).toBe(pelada.warpSpeed + 5);
+		expect(con.cargo).toBe(pelada.cargo - 40);
+		expect(con.signature).toBe(pelada.signature);
+	});
+
+	it('y ninguno de los dos acorta la alineación', () => {
+		// Lo que se compra es el tramo que escala. El arranque no se compra: se
+		// entrena. Y como además pesan, si mueven la alineación es para arriba.
+		const pelada = buildReadout(inicial, defaultFit(inicial));
+		const con = buildReadout(inicial, conUnaBaja(inicial, 'warp_optimizer_i2'));
+
+		expect(con.alignSeconds).toBeGreaterThanOrEqual(pelada.alignSeconds);
+	});
+
+	/*
+	 * **El agujero que encontró la auditoría, y el caso que lo mantiene cerrado.**
+	 *
+	 * Nada limitaba cuántos optimizadores llevaba una nave: una Mula con las cinco
+	 * bajas llenas pasaba de 2,0 a 3,5 de warp —más rápida que una Alabarda de
+	 * fábrica— por ocho mil créditos y sin pedir ninguna habilidad, y el abanico de
+	 * warp del catálogo se comprimía de 3,0× a 1,47×. Cuando cualquiera puede
+	 * comprar la velocidad de la clase de arriba, elegir casco deja de decidir.
+	 *
+	 * Lo que se fija acá **no es cuántos entran** —ése es un número de balance que
+	 * se va a mover— sino la consecuencia: que la jerarquía de cascos no se compre.
+	 */
+	it('no deja llenar la nave de optimizadores', () => {
+		const carguera = getHull('mula');
+		const llena = buildReadout(
+			carguera,
+			conLasBajasLlenas(carguera, 'warp_optimizer_i2'),
+			maxedSkills()
+		);
+
+		// Ni con todo entrenado: lo que la frena es el presupuesto, no la habilidad.
+		expect(llena.flyable).toBe(false);
+	});
+
+	it('y no deja comprar la clase de un casco que no es el tuyo', () => {
+		// El mejor equipamiento **que igual vuela** no llega al warp de fábrica del
+		// casco de combate. La carguera sigue siendo la carguera.
+		const carguera = getHull('mula');
+
+		// Algo sí se puede montar, y decirlo importa: si no entrara ninguno, el
+		// caso pasaría por no encontrar fit y no por el límite que viene a cuidar.
+		expect(mejorWarp(carguera)).toBeGreaterThan(carguera.warpSpeed);
+		expect(mejorWarp(carguera)).toBeLessThan(getHull('alabarda').warpSpeed);
+	});
+
+	it('y deja el abanico del catálogo abierto, no aplastado', () => {
+		// La medida entera, que es la que importa: de fábrica hay 3,0× entre el
+		// casco más rápido y el más lento. Con todo lo comprable montado tiene que
+		// seguir siendo un abanico; el exploit lo dejaba en 1,47×.
+		const mejores = HULLS.map((hull) => mejorWarp(hull));
+		expect(Math.max(...mejores) / Math.min(...mejores)).toBeGreaterThan(2);
+	});
+
+	it('ninguna habilidad mueve la velocidad de warp', () => {
+		// Es de la clase del casco, como en EVE: **con todo entrenado sigue siendo la
+		// misma**. Es lo que hace que elegir casco siga decidiendo algo cuando el
+		// piloto ya lo entrenó todo, y lo primero que se rompería si a alguien se le
+		// ocurriera darle una habilidad.
+		for (const hull of HULLS) {
+			const readout = buildReadout(hull, defaultFit(hull), maxedSkills());
+			expect(readout.warpSpeed, hull.name).toBe(hull.warpSpeed);
+		}
+	});
+});
+
+describe('Maniobra, lo único del reloj que el piloto entrena', () => {
+	const carguera = getHull('mula');
+
+	it('baja la alineación de la hoja, y en cuánto lo dice el documento', () => {
+		// Estrena verbo con el modelo nuevo: prometía «tiempo de alineación antes de
+		// salir» desde que existe el catálogo y no movía nada. Los dos números salen
+		// de docs/systems/SHIPS.md, «Qué mueve el piloto, y qué no»: al nivel V la
+		// Pioner pasa de 4 a 3 segundos y la Mula de 15 a 12.
+		expect(buildReadout(inicial, defaultFit(inicial)).alignSeconds).toBe(4);
+		expect(
+			buildReadout(inicial, defaultFit(inicial), { maneuvering: MAX_SKILL_LEVEL }).alignSeconds
+		).toBe(3);
+
+		expect(buildReadout(carguera, defaultFit(carguera)).alignSeconds).toBe(15);
+		expect(
+			buildReadout(carguera, defaultFit(carguera), { maneuvering: MAX_SKILL_LEVEL }).alignSeconds
+		).toBe(12);
+	});
+
+	it('divide la agilidad, no se la resta', () => {
+		// +5 % por nivel hasta +25 % en el cinco, que es el bono por omisión de
+		// docs/systems/SKILLS.md. La Mula tiene 2.180 de agilidad en el cuadro de
+		// SHIPS.md: dividida por 1,25 da 1.744, que es el 80 %. Restarle el 25 %
+		// daría 1.635, que es el otro número y es el que no tiene que salir.
+		// Mejorar la agilidad es bajarla, como la eficiencia de combustible.
+		const sinEntrenar = buildReadout(carguera, defaultFit(carguera));
+		const entrenado = buildReadout(carguera, defaultFit(carguera), {
+			maneuvering: MAX_SKILL_LEVEL
+		});
+
+		expect(sinEntrenar.agility).toBe(2180);
+		expect(entrenado.agility).toBe(1744);
+		expect(entrenado.agility).not.toBe(1635);
+	});
+
+	it('sale de la tabla de bonos, y con el porcentaje del documento', () => {
+		// La habilidad y el porcentaje, dichos una sola vez: 5 % por nivel, que es el
+		// bono por omisión de docs/systems/SKILLS.md y lo que SHIPS.md repite en «Qué
+		// mueve el piloto, y qué no».
+		expect(SKILL_BONUSES.agility.skill).toBe('maneuvering');
+		expect(SKILL_BONUSES.agility.percentPerLevel).toBe(5);
+
+		const nivel = 3;
+		expect(bonusPercent('agility', carguera, { maneuvering: nivel })).toBe(nivel * 5);
+	});
+
+	it('y es la única habilidad que toca la agilidad de la hoja', () => {
+		// **La agilidad tiene un solo sumando del lado del piloto.** Con todo
+		// entrenado, la carguera queda en el mismo número que con Maniobra sola: si
+		// otra habilidad se colara en la misma bolsa, se vería acá. El día que un
+		// casco estrene un bono de rol de agilidad va a haber dos fuentes, y lo que
+		// hay que probar entonces es que **se sumen antes de dividir** y no que se
+		// apliquen una tras otra, como ya prueba «se suman entre habilidad y casco».
+		const soloManiobra = buildReadout(carguera, defaultFit(carguera), {
+			maneuvering: MAX_SKILL_LEVEL
+		});
+		const todo = buildReadout(carguera, defaultFit(carguera), maxedSkills());
+
+		expect(todo.agility).toBe(soloManiobra.agility);
+	});
+});
+
 describe('los bonos', () => {
 	it('no dan nada sin habilidades', () => {
 		expect(bonusPercent('cargo', inicial, {})).toBe(0);
 	});
 
 	it('se suman entre habilidad y casco', () => {
-		// Se suman y no se multiplican, como fija ACTIONS.md.
+		// Se suman y no se multiplican, como fija ACTIONS.md. La minera es el caso
+		// testigo desde que la lanzadera no tiene bono de rol: es de los cascos que
+		// sí lo tienen, así que acá el bono no puede ser nulo.
 		const hull = getHull('percal');
-		expect(hull.bonus.target).toBe('mining_yield');
+		const rol = hull.bonus!;
+		expect(rol.target).toBe('mining_yield');
 
 		const { skill, percentPerLevel } = SKILL_BONUSES.mining_yield;
-		expect(skill).toBe(hull.bonus.skill); // la minera premia a quien sabe minar
+		expect(skill).toBe(rol.skill); // la minera premia a quien sabe minar
 
 		const nivel = 3;
-		const esperado = nivel * percentPerLevel + nivel * hull.bonus.percentPerLevel;
+		const esperado = nivel * percentPerLevel + nivel * rol.percentPerLevel;
 		expect(bonusPercent('mining_yield', hull, { [skill]: nivel })).toBe(esperado);
 	});
 
@@ -398,7 +711,7 @@ describe('los bonos', () => {
 			expect(maximas[bonus.skill], objetivo).toBe(MAX_SKILL_LEVEL);
 		}
 		for (const hull of HULLS) {
-			expect(maximas[hull.bonus.skill]).toBe(MAX_SKILL_LEVEL);
+			if (hull.bonus) expect(maximas[hull.bonus.skill], hull.name).toBe(MAX_SKILL_LEVEL);
 		}
 	});
 

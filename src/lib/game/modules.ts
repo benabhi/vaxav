@@ -94,10 +94,25 @@ export interface ShipModule {
 
 	// --- Qué aporta por estar puesto ---
 	readonly powerOutput: number;
-	/** Empuje. La velocidad sale de dividirlo por la masa total. */
+	/**
+	 * Empuje. La velocidad sub-warp sale de dividirlo por la masa total.
+	 *
+	 * **Dormido con el `thrust` del casco, y hasta el mismo verbo**: el combate.
+	 * Moverse entre dos cuerpos es alineación más warp desde que el viaje cambió
+	 * de modelo, así que hoy esto no acorta ningún reloj.
+	 */
 	readonly thrust: number;
 	/** Potencia de salto. El alcance sale de dividirla por la masa total. */
 	readonly jumpPower: number;
+	/**
+	 * Velocidad de warp de más, en **décimas de unidad de distancia por segundo**.
+	 *
+	 * Suma encima de la del casco, que es de dónde sale casi toda: un módulo
+	 * estira el número, no lo reemplaza. Y **cobra en otra divisa** —firma o
+	 * bodega, nunca velocidad otra vez— porque un módulo que mejora lo suyo sin
+	 * costarle nada a nada no es una decisión, es un impuesto a no comprarlo.
+	 */
+	readonly warpSpeed: number;
 	readonly capacitor: number;
 	readonly capacitorRecharge: number;
 	readonly shield: number;
@@ -129,6 +144,7 @@ const NOTHING = {
 	powerOutput: 0,
 	thrust: 0,
 	jumpPower: 0,
+	warpSpeed: 0,
 	capacitor: 0,
 	capacitorRecharge: 0,
 	shield: 0,
@@ -179,13 +195,21 @@ export const MODULES: readonly ShipModule[] = [
 	// toda nave tenía que llevar uno y elegir cuál era una compra, no una
 	// decisión. Ahora el casco los trae de fábrica y esto es la mejora, que
 	// cuesta una ranura. Eso es lo que separa mejorar de comprar.
+	//
+	// **Los tres propulsores auxiliares están dormidos.** Lo único que mueven es
+	// la velocidad sub-warp, y viajar dentro del sistema dejó de mirarla cuando
+	// pasó a ser alineación más warp. Siguen en el catálogo, con su descripción
+	// cambiada para que ninguno prometa un viaje más corto, porque **el verbo que
+	// los despierta es el combate**: maniobrar cerca de otra nave —acercarse,
+	// abrir distancia, orbitar— es todo sub-warp. Lo que sí acorta un viaje hoy
+	// es el optimizador de warp, que es un módulo bajo y está más abajo.
 	defineModule({
 		code: 'thruster_i2',
 		name: 'Propulsor auxiliar',
 		kind: 'mid',
 		size: 2,
 		tier: 'I',
-		description: 'Empuje de más, encendido cuando hace falta.',
+		description: 'Empuje de más para maniobrar de cerca.',
 		mass: 14,
 		powerDraw: 6,
 		thrust: 14_000
@@ -197,7 +221,7 @@ export const MODULES: readonly ShipModule[] = [
 		kind: 'mid',
 		size: 2,
 		tier: 'II',
-		description: 'Caro y sediento, pero acorta cada viaje.',
+		description: 'Caro y sediento. Responde apenas se lo pide.',
 		mass: 22,
 		powerDraw: 12,
 		thrust: 26_000
@@ -307,6 +331,69 @@ export const MODULES: readonly ShipModule[] = [
 		mass: 34,
 		powerDraw: 7,
 		jumpPower: 600
+	}),
+	// Los dos que estiran la velocidad de warp. Son **módulos bajos y no
+	// refuerzos** a propósito: la bandeja de refuerzos está vacía y estrenarla es
+	// otra tanda. Cobrarles velocidad sería cobrar dos veces lo mismo, que es lo
+	// que EVE no hace nunca.
+	//
+	// **Los dos cobran bodega, y eso no es falta de imaginación: es la única
+	// divisa que hoy lee alguien.** El chico cobraba firma, que es el equivalente
+	// de EVE —el optimizador hiperespacial cobra perfil—, y acá resultaba un
+	// módulo que daba warp de verdad a cambio de nada, porque ningún verbo mira la
+	// firma hasta que haya combate. Con el blindaje pasa lo mismo. Un costo que
+	// nadie cobra no es un costo: es un módulo que se monta siempre y deja de ser
+	// una decisión.
+	//
+	// Lo que los separa no es la divisa sino **el precio por décima y la ranura**:
+	// el chico pide 5 m³ por décima de warp y entra en una ranura de clase 2; el
+	// grande pide 8, sólo entra en clase 3 y pide Navegación III. Al que tiene una
+	// nave chica le conviene el barato porque es el único que le entra; al que
+	// tiene bodega de sobra le conviene el caro porque le da más de una vez. Y
+	// pesan, que desde que el arranque se paga en agilidad **también es un costo**.
+	//
+	// **Lo que impide apilarlos es el cómputo, y es la solución de EVE.** Sin él
+	// una Mula llenaba sus cinco ranuras bajas con el chico —ocho mil créditos, sin
+	// pedir una sola habilidad, y le sobraba la mitad de la potencia—, se ponía en
+	// 3,5 de warp y el abanico entero del catálogo se achicaba de 3,0× a 1,5×: la
+	// jerarquía de cascos se compraba con plata. Allá estos módulos se limitan
+	// solos porque cuestan procesador y grilla, y acá los dos presupuestos ya
+	// existen y ya dejan una nave en tierra cuando se pasan.
+	//
+	// Los números están puestos para que **en ningún casco entren dos del grande ni
+	// del grande con el chico**, y para que dos del chico sólo entren donde sobra
+	// cómputo —la exploradora, que para eso lo tiene— a cambio de quedarse sin con
+	// qué escanear. El cómputo de cada uno está en la banda de lo electrónico de su
+	// clase: 28 es lo que pide un escáner de clase 2, 40 lo que pide una refinería
+	// grande. Y el chico **pasó a pedir Navegación II**: un módulo que mejora lo
+	// tuyo sin pedirte nada es un impuesto a no comprarlo.
+	defineModule({
+		code: 'warp_optimizer_i2',
+		requirements: [{ skill: 'navigation', level: 2 }],
+		name: 'Optimizador de warp',
+		kind: 'low',
+		size: 2,
+		tier: 'I',
+		description: 'Un empujón al campo de warp. Ocupa poco, pero ocupa.',
+		mass: 10,
+		powerDraw: 9,
+		computingDraw: 28,
+		warpSpeed: 3,
+		cargo: -15
+	}),
+	defineModule({
+		code: 'warp_optimizer_ii3',
+		requirements: [{ skill: 'navigation', level: 3 }],
+		name: 'Optimizador de warp',
+		kind: 'low',
+		size: 3,
+		tier: 'II',
+		description: 'Acorta el tramo largo. Lo que ocupa sale de la bodega.',
+		mass: 18,
+		powerDraw: 17,
+		computingDraw: 40,
+		warpSpeed: 5,
+		cargo: -40
 	}),
 
 	// --- Anclajes: lo que apunta hacia afuera ---

@@ -210,16 +210,36 @@
 			>
 				{#snippet trigger(abrir)}
 					<ActionSource source={system.travelSource}>
+						<!--
+							**El botón mide lo que mide la duración más larga**, y la más larga
+							es `NN m NN s` — doce minutos largos, que es lo que tarda la nave más
+							pesada en cruzar el sistema más grande. Con los 4,5 rem de antes
+							entraban tres caracteres: apenas el viaje pasó del minuto, el botón
+							decía «14…» y la única cifra que trae quedaba ilegible. El ancho es
+							fijo y no `w-fit` a propósito: son catorce botones en catorce filas, y
+							uno por fila de ancho distinto deja de ser una columna.
+
+							Y la cifra va en **mono, sin el interletrado del rótulo y sin la caja
+							alta**: es una lectura, no una palabra. El interletrado de 0,22 em es
+							para «VIAJAR» y estiraba nueve caracteres casi un centímetro de más;
+							las mayúsculas del botón convertían la unidad en «1 M 06 S», y en
+							todo el resto del juego una unidad va en minúscula. Así cae igual que
+							la distancia de al lado y que el «Duración» del cartel, que dicen el
+							mismo dato con las mismas letras.
+						-->
 						<HudButton
 							type="button"
 							variant="outline"
 							size="1"
 							disabled={!canTravel}
 							onclick={abrir}
-							class="w-[4.5rem]"
+							class="w-[7.5rem]"
 						>
 							<Icon name="rocket-launch" weight="bold" size="0.75rem" />
-							<span class="overflow-hidden text-[0.7rem] text-ellipsis whitespace-nowrap">
+							<span
+								class="overflow-hidden font-mono text-[0.7rem] tracking-[0em] text-ellipsis
+									whitespace-nowrap normal-case"
+							>
 								{body.travelLabel}
 							</span>
 						</HudButton>
@@ -264,12 +284,13 @@
 			<!--
 				En pantalla angosta el árbol **se desliza** en lugar de romperse, igual
 				que la barra de pestañas. Las cuatro columnas de la derecha son de ancho
-				fijo y suman casi diecisiete rem: comprimirlas desalinearía todo, que es
-				justo lo que esta pantalla no puede permitirse. Que se desplace deja el
-				resto de la página quieta.
+				fijo y suman algo más de veintiuna rem —la del botón y la de la distancia
+				crecieron para que la duración y el tramo entren enteros—: comprimirlas
+				desalinearía todo, que es justo lo que esta pantalla no puede permitirse.
+				Que se desplace deja el resto de la página quieta.
 			-->
 			<div class="w-full overflow-x-auto overscroll-x-contain">
-				<div class="flex w-full min-w-[34rem] flex-col">
+				<div class="flex w-full min-w-[38.25rem] flex-col">
 					{#each visible as fila (fila.body.code)}
 						<BodyRow
 							body={fila.body}

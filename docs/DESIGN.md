@@ -224,8 +224,8 @@ Tres reglas, y ninguna es opcional:
    que estás sobrado es parte de decidir qué mejorar después.
 2. **Toda acción que exista gracias a una pieza la nombra, y dice de dónde
    sale.** Minar aparece porque hay un láser montado y prospectar porque hay un
-   escáner; viajar, en cambio, corre con los propulsores que **trae el casco**, y
-   un auxiliar montado suma encima en vez de reemplazarlos. Son tres cosas
+   escáner; viajar, en cambio, corre con el motor de warp que **trae el casco**, y
+   un optimizador montado suma encima en vez de reemplazarlo. Son tres cosas
    distintas —del casco, de un módulo, o falta— y el aviso las distingue: decir
    «falta» de algo que ninguna nave puede montar manda a comprar lo que no
    existe. El verbo tiene que llevar encima **de qué aparato salió**, o el
@@ -242,7 +242,7 @@ mostrarlas iguales fue lo que confundió desde el principio:
 |                | Qué es                                       | Qué pasa sin ella             |
 | -------------- | -------------------------------------------- | ----------------------------- |
 | **La llave**   | Habilita. El escáner, el láser de extracción | El verbo **no existe**        |
-| **La palanca** | Mejora. Escaneo, Navegación, Minería         | El verbo existe y rinde menos |
+| **La palanca** | Mejora. Escaneo, Maniobra, Minería           | El verbo existe y rinde menos |
 
 Una es un requisito y la otra una recompensa. Un aviso que las mezcla deja al
 jugador sin saber si le falta comprar algo o le falta entrenar, que son dos días

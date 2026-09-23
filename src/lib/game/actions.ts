@@ -2,39 +2,74 @@
  * El motor de acciones: cuánto tarda una acción y qué la habilita.
  *
  * Funciones puras sobre números, sin base de datos — la misma separación que ya
- * usa `progression`. La fórmula es la que fija docs/systems/ACTIONS.md: duración
- * base dividida por uno más la bolsa de bonos.
+ * usa `progression`. La fórmula general es la que fija docs/systems/ACTIONS.md:
+ * duración base dividida por uno más la bolsa de bonos.
+ *
+ * **Viajar tiene forma propia y es el único que la tiene**: no hay una duración
+ * base que dividir, porque la mitad del reloj no depende de la distancia. Son
+ * dos sumandos —alineación más crucero— y la regla de "un bono se aplica una
+ * sola vez" se cumple igual: cada uno está adentro de un número distinto de la
+ * hoja de la nave.
  *
  * Corresponde a docs/systems/ACTIONS.md y docs/systems/UNIVERSE.md.
  */
 
+import { STARTING_HULL, getHull } from './hulls';
 import { MINING_FAMILY } from './mining';
 import { SURVEY_FAMILY } from './prospecting';
 import type { SkillFamily } from './skills';
-
-import { roundHalfEven } from './math';
+import { actionXpPool } from './progression';
+import { agility, alignSeconds, warpSeconds } from './warp';
 
 /**
- * Segundos que tarda un viaje por cada unidad de distancia (suma de
- * `orbitDistance` a través del árbol), volando a la velocidad de referencia.
+ * Lo que hace falta saber de la nave para calcular un viaje.
  *
- * Es una constante de MVP: con los valores sembrados del sistema Ánfora da
- * viajes de ~10 a ~110 segundos reales, pensados para poder probar el flujo sin
- * esperar.
+ * **Dos números y no uno**, que es todo el modelo: cuánto tarda en salir y cuán
+ * rápido cruza. Los calcula `fitting` —la misma hoja que ve la pantalla— así que
+ * una `Readout` entra acá tal cual, y lo prometido y lo cobrado no pueden
+ * separarse.
+ *
+ * Es un objeto y no dos parámetros sueltos por lo mismo que `JumpShip`:
+ * `travelDurationSeconds(distancia, nave)` se lee, y `(distancia, 50, 4)` no.
  */
-export const SECONDS_PER_DISTANCE_UNIT = 0.2;
+export interface TravelShip {
+	/** Décimas de unidad de distancia por segundo. */
+	readonly warpSpeed: number;
+	/** Segundos de alineación antes de entrar en warp. */
+	readonly alignSeconds: number;
+}
 
 /**
- * La velocidad contra la que se calibró esa constante: la de una lanzadera
- * recién salida del astillero. Una nave más rápida llega antes y una más cargada
- * tarda más, **sin mover los tiempos de hoy**.
+ * La nave contra la que está calibrado el universo sembrado: **la lanzadera de
+ * astillero**, sin nada montado y sin nadie entrenado.
+ *
+ * Sale del catálogo y no de dos literales copiados: el día que la Pioner cambie
+ * de clase, las duraciones que muestran las pantallas sin nave cambian con ella.
+ * Se usa donde todavía no hay nave de la que sacar los números —un piloto que
+ * mira el mapa antes de que le entreguen la suya—, que es el único caso en el
+ * que hay que inventar una.
+ *
+ * **Los cinco décimos de segundo por unidad de distancia siguen siendo los
+ * mismos de antes**: la constante vieja era `0,2 s/ud`, que es exactamente una
+ * nave de 5,0 de warp. Lo que se sumó encima es la alineación, y es todo lo que
+ * cambió de escala.
  */
-export const REFERENCE_SPEED = 190;
+export const REFERENCE_SHIP: TravelShip = referenceShip();
 
-// Navegación **no** entra acá: ya está adentro de la velocidad de la nave, que
-// la calcula `fitting` junto con el bono de rol del casco. Aplicarla otra vez
-// sería contar el mismo bono dos veces para el mismo efecto, que es exactamente
-// lo que la regla de "una sola bolsa" de ACTIONS.md quiere evitar.
+/** La terna de viaje de un casco recién salido del astillero, sin módulos. */
+function referenceShip(): TravelShip {
+	const hull = getHull(STARTING_HULL);
+	return {
+		warpSpeed: hull.warpSpeed,
+		alignSeconds: alignSeconds(agility(hull.mass, hull.inertia))
+	};
+}
+
+// Ni Navegación ni Maniobra entran acá: la primera está dormida con la velocidad
+// sub-warp y la segunda ya está adentro de la alineación, que la calcula
+// `fitting` junto con el bono de rol del casco. Aplicarlas otra vez sería contar
+// el mismo bono dos veces para el mismo efecto, que es exactamente lo que la
+// regla de "una sola bolsa" de ACTIONS.md quiere evitar.
 
 /**
  * Las clases de acción que el juego sabe resolver.
@@ -107,24 +142,69 @@ export const TRAINABLE_FAMILIES: readonly SkillFamily[] = [
 /**
  * Duración de un viaje entre dos cuerpos del mismo sistema, en segundos.
  *
- * Sale de la distancia y de la **velocidad de la nave**, y nada más. Todo lo que
- * acelera un viaje —Navegación, el bono de rol del casco, unos propulsores
- * mejores— ya está adentro de esa velocidad; volver a aplicarlo acá sería
- * contarlo dos veces.
+ * **Son dos sumandos que no se parecen**, y ésa es toda la mecánica:
  *
- * Que la velocidad mande es lo que hace que la masa de los módulos cueste tiempo
- * de verdad: una placa de blindaje que no consume energía igual te frena, y
- * frenar es llegar más tarde.
+ * ```
+ * duración = alineación + distancia ÷ velocidad de warp
+ * ```
  *
- * Nunca da menos de un segundo, para que una distancia mínima no resuelva
- * instantáneamente.
+ * La alineación es fija: se paga igual para ir a la luna de al lado que al otro
+ * extremo del sistema, y sale de la agilidad de la nave —masa por inercia—, así
+ * que una carguera con el bastidor lleno de placas la paga cara. El crucero es lo
+ * único que escala con la distancia, y sale de la velocidad de warp del casco.
+ *
+ * Que estén separados es lo que hace que **dos viajes de distinto largo con la
+ * misma nave se diferencien sólo en el segundo sumando**, y que un casco rápido
+ * no salga antes: son dos números distintos y se mejoran por caminos distintos
+ * —el piloto entrena Maniobra, la nave se elige—.
+ *
+ * Antes era `distancia ÷ velocidad` y nada más, con lo que un trayecto corto y
+ * uno largo se sentían iguales y la única palanca era el empuje.
+ *
+ * Nunca da menos de un segundo: lo garantiza la alineación, que nunca es cero.
  */
-export function travelDurationSeconds(distance: number, speed: number = REFERENCE_SPEED): number {
+export function travelDurationSeconds(distance: number, ship: TravelShip = REFERENCE_SHIP): number {
 	if (distance < 0) throw new RangeError('La distancia no puede ser negativa');
-	if (speed <= 0) throw new RangeError('Una nave sin velocidad no puede viajar');
 
-	return Math.max(
-		1,
-		roundHalfEven((distance * SECONDS_PER_DISTANCE_UNIT * REFERENCE_SPEED) / speed)
-	);
+	return Math.max(1, ship.alignSeconds + warpSeconds(distance, ship.warpSpeed));
+}
+
+/** Segundos de un minuto, que es la unidad en la que se reparte experiencia. */
+const SECONDS_PER_MINUTE = 60;
+
+/**
+ * Cuánto pesa viajar a la hora de repartir experiencia: **el piso de la escala**.
+ *
+ * SKILLS.md fija la dificultad de una acción entre 0,5 y 3, y viajar se lleva el
+ * mínimo documentado porque es **el verbo más barato que hay**: no arriesga nada,
+ * no gasta nada y no hay forma de hacerlo mal. El número no se inventó acá: es el
+ * extremo de abajo del rango que el documento ya tenía escrito.
+ */
+export const TRAVEL_DIFFICULTY = 0.5;
+
+/**
+ * La experiencia que deposita un viaje, **por lo recorrido y no por lo que tardó**.
+ *
+ * Hasta acá salía de la duración, y eso premiaba exactamente lo contrario de lo
+ * que el juego quiere premiar: la misma ruta pagaba 21 de Pilotaje en la
+ * exploradora y 64 en la carguera, y montar un optimizador —la mejora que existe
+ * para acortar el viaje— le sacaba al piloto el 41 % de lo que ese viaje pagaba.
+ * **Mejorar la nave castigaba**, que es un incentivo al revés y de los que se
+ * descubren tarde.
+ *
+ * Con la distancia, la misma ruta paga lo mismo para todos: lo que se recorrió es
+ * lo que se aprendió, y con qué nave se hizo es problema del piloto.
+ *
+ * Los minutos que entran a la fórmula del pozo son **los de la nave de
+ * referencia**, no los de la que viajó. Así la cuenta documentada de SKILLS.md
+ * —`10 × minutos × dificultad`— sigue siendo la misma y no hace falta inventarle
+ * una segunda al lado: los minutos son los que tardaría la lanzadera de astillero
+ * contra la que está calibrado todo el universo. **Y sin la alineación**, que no
+ * es distancia recorrida: arrancar el motor no enseña nada.
+ */
+export function travelXp(distance: number): number {
+	if (distance < 0) throw new RangeError('La distancia no puede ser negativa');
+
+	const minutos = warpSeconds(distance, REFERENCE_SHIP.warpSpeed) / SECONDS_PER_MINUTE;
+	return actionXpPool(minutos, TRAVEL_DIFFICULTY);
 }

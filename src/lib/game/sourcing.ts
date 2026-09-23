@@ -40,7 +40,21 @@ import { getSkill } from './skills';
  * una tabla aparte evita el desfase clásico —agregar una capacidad y olvidarse de
  * registrarla—: si el campo no existe en `ShipModule`, esto no compila.
  */
-export type Grant = 'sensorRange' | 'miningYield' | 'jumpPower' | 'thrust' | 'fuel' | 'cargo';
+export type Grant =
+	| 'sensorRange'
+	| 'miningYield'
+	| 'jumpPower'
+	/** El que habilita viajar: lo trae el casco y lo estiran los optimizadores. */
+	| 'warpSpeed'
+	/**
+	 * El empuje, que **ya no habilita ningún verbo**: viajar pasó a mirar el warp
+	 * cuando la duración se volvió alineación más warp. Queda en la unión porque
+	 * es el que va a pedir maniobrar en combate, y porque sacarlo y volver a
+	 * ponerlo es la misma línea dos veces.
+	 */
+	| 'thrust'
+	| 'fuel'
+	| 'cargo';
 
 /**
  * Cuánto de lo que un verbo pide lo trae el casco **de fábrica**.
@@ -53,8 +67,8 @@ export type Grant = 'sensorRange' | 'miningYield' | 'jumpPower' | 'thrust' | 'fu
  *
  * **Extraer es el único verbo cuyo aparato no trae ningún casco**: no hay nave
  * que venga con el láser puesto, y por eso `miningYield` contesta cero acá. El
- * resto —sensores, bodega, empuje, salto y tanque— son columnas del casco, así
- * que la cuenta es leer la que corresponda.
+ * resto —sensores, bodega, empuje, warp, salto y tanque— son columnas del casco,
+ * así que la cuenta es leer la que corresponda.
  */
 export function hullGrant(hull: Hull, grant: Grant): number {
 	return grant === 'miningYield' ? 0 : hull[grant];
@@ -154,13 +168,15 @@ export function leversFor(target: BonusTarget, hull: Hull, skills: SkillLevels):
 
 	// El bono de rol del casco mueve lo mismo con otra habilidad, y es de las cosas
 	// que hacen que elegir casco importe: si no se nombra, parece que la nave
-	// rinde distinto porque sí.
-	if (hull.bonus.target === target && !palancas.some((p) => p.skill === hull.bonus.skill)) {
+	// rinde distinto porque sí. **Un casco puede no tener ninguno** —la lanzadera
+	// inicial—, y entonces la única palanca es la de la tabla.
+	const rol = hull.bonus;
+	if (rol && rol.target === target && !palancas.some((p) => p.skill === rol.skill)) {
 		palancas.push({
-			skill: hull.bonus.skill,
-			name: getSkill(hull.bonus.skill).name,
-			level: skills[hull.bonus.skill] ?? 0,
-			percentPerLevel: hull.bonus.percentPerLevel
+			skill: rol.skill,
+			name: getSkill(rol.skill).name,
+			level: skills[rol.skill] ?? 0,
+			percentPerLevel: rol.percentPerLevel
 		});
 	}
 

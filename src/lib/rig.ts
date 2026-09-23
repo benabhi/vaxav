@@ -11,7 +11,7 @@
 import { getHull, type Hull, type SlotKind } from '$lib/game/hulls';
 import { fitFromCodes } from '$lib/game/fitting';
 import type { ShipModule } from '$lib/game/modules';
-import { moduleIcon, slotKindHint, slotKindIcon, slotKindLabel } from '$lib/format';
+import { moduleIcon, slotKindHint, slotKindIcon, slotKindLabel, tenths } from '$lib/format';
 import type { FilaRanura, GrupoRanuras } from '$lib/tipos';
 
 /**
@@ -133,6 +133,18 @@ export function moduleSummary(module: ShipModule): string {
 		if (!valor) continue;
 		partes.push(`${etiqueta} ${valor > 0 ? '+' : ''}${valor}${unidad}`);
 	}
+
+	// El warp va aparte de la tabla de enteros: se guarda en décimas, así que
+	// pasarlo por el mismo molde lo mostraría como «+3» cuando son tres décimas.
+	if (module.warpSpeed) partes.push(`Warp +${tenths(module.warpSpeed)} ud/s`);
+
+	// **El empuje está dormido y el renglón lo dice.** La velocidad sub-warp no
+	// mueve ningún reloj desde que viajar es alineación más warp, así que los tres
+	// propulsores auxiliares son, hoy, tres compras que no hacen nada. Escribir
+	// «Empuje +14 kN» y callar eso es vender una mejora que no llega — el mismo
+	// error que el helio-3 tenía en su descripción. Va en esta línea porque es
+	// donde el jugador está mirando cuando decide comprarlo.
+	if (module.thrust) partes.push('sin efecto hasta el combate');
 
 	const costos: string[] = [];
 	if (module.powerDraw) costos.push(`${module.powerDraw} MW`);

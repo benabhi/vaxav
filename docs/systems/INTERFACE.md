@@ -921,9 +921,11 @@ sabe de cuál habla.
    scroll al que no se puede entrar es un recorte.
 
 **Todo lo que puede ser varios, es una lista.** No hay ni un campo singular en
-`Procedencia`, y es a propósito: viajar ya tiene dos habilidades que lo mueven, un
-verbo puede estar bloqueado por más de una razón, y un verbo puede pedir más de
-una pieza —refinar va a pedir la refinería y una bodega donde poner lo que sale—.
+`Procedencia`, y es a propósito: extraer ya tiene dos habilidades que lo mueven,
+un verbo puede estar bloqueado por más de una razón, y un verbo puede pedir más
+de una pieza —refinar va a pedir la refinería y una bodega donde poner lo que
+sale—. Viajar hoy tiene una sola palanca y la lista igual es lista: el día que un
+casco traiga bono de agilidad, no hay nada que migrar.
 Un campo que empieza en singular obliga a reescribir el tipo, las vistas y la
 pantalla el día que aparezca el segundo, que es siempre antes de lo que parece.
 
@@ -941,12 +943,12 @@ casco» se contradice solo. «Pieza» es verdad para las dos fuentes.
 Son cuatro renglones distintos, y la diferencia no es cosmética: dicen si hay algo
 que comprar o no.
 
-| Caso                | Cómo se lee                                             | Ejemplo                      |
-| ------------------- | ------------------------------------------------------- | ---------------------------- |
-| Del casco           | La pieza, y al lado el modelo que la trae               | Propulsores · del casco Mula |
-| Del casco, mejorado | Debajo, con un más y «suma encima»                      | + Propulsor auxiliar         |
-| De un módulo        | El nombre del módulo montado, que es el único que puede | Láser de extracción          |
-| Falta               | En rojo, con el nombre de lo que hay que conseguir      | Falta: Escáner               |
+| Caso                | Cómo se lee                                             | Ejemplo                        |
+| ------------------- | ------------------------------------------------------- | ------------------------------ |
+| Del casco           | La pieza, y al lado el modelo que la trae               | Motor de warp · del casco Mula |
+| Del casco, mejorado | Debajo, con un más y «suma encima»                      | + Optimizador de warp          |
+| De un módulo        | El nombre del módulo montado, que es el único que puede | Láser de extracción            |
+| Falta               | En rojo, con el nombre de lo que hay que conseguir      | Falta: Escáner                 |
 
 El renglón decía sólo un nombre, y con eso una nave recién salida del astillero
 leía **«Falta: Propulsores»** por algo que ninguna nave puede montar: los
@@ -955,6 +957,14 @@ propulsores son un atributo del casco desde que
 Y fallaba peor de lo que parece, porque **el aviso escondía lo que la nave rinde
 mientras algo «faltaba»**: la velocidad no salía justo en la nave que no tenía
 ningún problema.
+
+**Viajar nombra el motor de warp y ya no los propulsores.** Cuando la duración de
+un viaje pasó a ser alineación más warp
+—[cómo](SHIPS.md#viajar-es-alinearse-y-cruzar)— el empuje dejó de mover el reloj,
+y un aviso que siguiera nombrando una pieza dormida manda a comprar por nada. Por
+lo mismo el verbo muestra **dos lecturas y no una**: «Warp» y «Alineación», porque
+un solo número escondía que la mitad del viaje no escala con la distancia y que
+sólo una de las dos mitades se arregla entrenando.
 
 Tres reglas sostienen los cuatro casos:
 
@@ -967,6 +977,61 @@ Tres reglas sostienen los cuatro casos:
 - **«Falta» quiere decir que hay que comprarlo.** Los únicos verbos cuya pieza no
   la trae ningún casco son escanear y extraer; ahí «falta» es verdad y es la lista
   de compras.
+
+#### Una pieza dormida lo dice en su renglón
+
+El resumen de un módulo en la ficha de equipamiento lista lo que aporta —«Empuje
++14 kN»— y los tres propulsores auxiliares agregan **«sin efecto hasta el
+combate»**. Sin eso son tres compras que no hacen nada y ningún renglón lo dice:
+el número es cierto y la promesa es falsa, que es la peor combinación posible en
+la pantalla donde el jugador decide gastar.
+
+Va **en esa línea y no en una ayuda aparte** porque es donde está mirando cuando
+decide. Es la misma regla que [la voz](../DESIGN.md#la-voz) pide para el texto
+que el juego genera solo: no esconder una advertencia adentro de un párrafo.
+
+#### La mejora se escribe en la unidad que el jugador mira
+
+El renglón «Mejora» dice qué daría entrenar el próximo nivel, y **viajar lo dice
+en segundos de alineación y no en porcentaje**: «Maniobra I → alineación 14 s».
+
+El porcentaje funciona para extraer —«+5 %» de rendimiento es más mineral— y
+**se lee al revés en la alineación**, porque ahí más porcentaje es menos tiempo.
+«Maniobra I → +5 %» le pide al jugador dos cosas que no tiene: de qué número es
+ese cinco por ciento, y que se acuerde de que en esta magnitud subir es mejorar.
+Dicho en la misma unidad que la lectura de al lado —«alineación 14 s» contra los
+15 s que dice la ficha— no queda nada que interpretar.
+
+**Y la palanca que no baja el segundo redondeado no se muestra.** Prometer una
+mejora que no llega es peor que callarla, y callarla dice algo cierto: entrenar
+Maniobra paga en la carguera y no en la lanzadera. Desde qué nivel aparece en cada
+casco:
+
+| Casco    | Alinea | La primera mejora que promete              |
+| -------- | -----: | ------------------------------------------ |
+| Mula     |   15 s | Maniobra I, ya desde cero                  |
+| Alabarda |    9 s | Maniobra I, ya desde cero                  |
+| Percal   |   11 s | Recién Maniobra II                         |
+| Pioner   |    4 s | Recién Maniobra III                        |
+| Vencejo  |    3 s | **Nunca**: ningún nivel le baja el segundo |
+
+El segundo prometido sale de pasar el bono de un nivel más por **la misma cuenta
+que la hoja de la nave**, no por una regla de tres aparte: así el segundo que se
+promete es el segundo que se cobra.
+
+Esto **no vale para todos los verbos**, y por eso el constructor de la procedencia
+de viajar dejó de ser el genérico. Extraer sigue escribiendo su `+N %`, donde se
+lee bien. Un `if` que eligiera entre las dos formas adentro de una pieza
+compartida serían dos funciones peleando por un archivo.
+
+#### Una duración se escribe como en el resto del juego
+
+Un viaje dice **«2 m 48 s»** y ya no `168s`. Era el único texto del juego que
+escribía un tiempo crudo, y una pantalla con dos formatos de la misma magnitud
+—el contador de arriba en minutos y la fila de abajo en segundos— obliga a
+convertir de cabeza para comparar dos destinos, que es justo lo que la tabla
+viene a evitar. Lo resuelve `remainingLabel`, que es la que ya usaban la cuenta
+regresiva y el panel de la puerta.
 
 #### Al agregar un verbo nuevo
 
@@ -987,12 +1052,12 @@ Tres reglas sostienen los cuatro casos:
 
 #### Dónde está puesto
 
-| Verbo    | Piezas                            | Habilidades                                |
-| -------- | --------------------------------- | ------------------------------------------ |
-| Viajar   | Propulsores, del casco            | Navegación, y la del bono de rol del casco |
-| Saltar   | **Ninguna**                       | **Ninguna**                                |
-| Escanear | Escáner, de un módulo             | Escaneo, Prospección                       |
-| Extraer  | Láser de extracción, de un módulo | Minería, y la del bono de rol del casco    |
+| Verbo    | Piezas                            | Habilidades                             |
+| -------- | --------------------------------- | --------------------------------------- |
+| Viajar   | Motor de warp, del casco          | Maniobra, y ninguna más                 |
+| Saltar   | **Ninguna**                       | **Ninguna**                             |
+| Escanear | Escáner, de un módulo             | Escaneo, Prospección                    |
+| Extraer  | Láser de extracción, de un módulo | Minería, y la del bono de rol del casco |
 
 Los verbos del mercado —comprar, vender, acordar— todavía no la llevan: no
 dependen de un módulo de la nave, pero sí de habilidades como Regateo, que hoy no

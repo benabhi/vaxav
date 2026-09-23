@@ -37,6 +37,7 @@ import {
 	SURVEY_KIND,
 	TRADE_FAMILY,
 	travelDurationSeconds,
+	travelXp,
 	type ActionKind
 } from '$lib/game/actions';
 import { getOre, type ContainerKind } from '$lib/game/items';
@@ -140,10 +141,22 @@ type Resolver = (tx: Db, row: Pilot, claimed: PilotAction) => Resolution;
  * que convierte especializarse en una decisión: el que viaja junta Pilotaje y
  * después elige si lo gasta en Navegación o en abrir otra cosa. Ver
  * docs/systems/SKILLS.md.
+ *
+ * **Y sale de la distancia, no de la duración**, que es lo único de este
+ * resolvedor que no se parece a los otros cuatro. La regla y el porqué están en
+ * `travelXp`; acá sólo se le pasa cuánto había de un cuerpo al otro. Se mide al
+ * resolver y no se guarda en la orden: la distancia entre dos cuerpos no cambia
+ * mientras la nave viaja, así que preguntarla ahora da lo mismo que haberla
+ * anotado, y un campo menos en la tabla es un campo menos que puede mentir.
  */
-const resolveTravel: Resolver = (_tx, _row, claimed) => ({
+const resolveTravel: Resolver = (tx, row, claimed) => ({
 	family: TRAVEL_FAMILY,
-	xp: actionXpPool(claimed.durationSeconds / 60),
+	xp:
+		claimed.destinationBodyId === null
+			? 0
+			: travelXp(
+					bodyDistance(tx, claimed.originBodyId ?? row.locationId, claimed.destinationBodyId)
+				),
 	movesTo: claimed.destinationBodyId
 });
 
@@ -308,9 +321,10 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 	const now = situation(db, row);
 	if (!now.canOrder) throw new ActionError(now.orderBlocked);
 
-	// La hoja de rendimiento de su nave: de ahí sale la velocidad, y de paso dice
-	// si tiene nave. Es la misma calculadora que muestra la pantalla, así que el
-	// viaje tarda exactamente lo que la ficha promete.
+	// La hoja de rendimiento de su nave: de ahí salen la velocidad de warp y la
+	// alineación, y de paso dice si tiene nave. Es la misma calculadora que
+	// muestra la pantalla, así que el viaje tarda exactamente lo que la ficha
+	// promete.
 	const readout = shipReadout(db, row);
 	if (readout === null) throw new ActionError('Necesitás una nave para viajar.');
 	if (!readout.flyable) throw new ActionError('Tu nave no está en condiciones de volar.');
@@ -326,7 +340,9 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 	}
 
 	const distance = bodyDistance(db, row.locationId, destination.id);
-	const duration = travelDurationSeconds(distance, readout.speed);
+	// La hoja entera entra como nave de viaje: trae los dos números que la
+	// duración necesita y ninguno se copia por el camino.
+	const duration = travelDurationSeconds(distance, readout);
 
 	return db
 		.insert(pilotAction)
