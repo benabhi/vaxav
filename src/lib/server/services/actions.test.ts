@@ -15,6 +15,7 @@ import {
 	pilot,
 	pilotAction,
 	pilotLog,
+	pilotSkill,
 	system,
 	type Pilot
 } from '../db/schema';
@@ -41,9 +42,30 @@ import {
 	shipReadout
 } from './ships';
 import { situation } from './status';
+import { SKILLS } from '$lib/game/skills';
+import { xpForLevel } from '$lib/game/progression';
 import { bodyDistance, getBody } from './universe';
 import { connectGates, createGate, createSystem } from './worldbuilding';
 import type { Db } from '../db/types';
+
+/** Le pone a una habilidad la experiencia justa para ese nivel. */
+function entrenar(db: Db, row: Pilot, code: keyof typeof SKILLS, level: number): void {
+	const xp = xpForLevel(level, SKILLS[code].difficulty);
+	db.insert(pilotSkill)
+		.values({ pilotId: row.id, skill: code, xp })
+		.onConflictDoUpdate({ target: [pilotSkill.pilotId, pilotSkill.skill], set: { xp } })
+		.run();
+}
+
+/** Deja la nave del piloto pelada, que es el estado con los números del cuadro. */
+function pelar(db: Db, row: Pilot): void {
+	const nave = activeShip(db, row.id)!;
+	saveFit(
+		db,
+		nave,
+		shipHull(nave).slots.map(() => '')
+	);
+}
 
 describe('la distancia', () => {
 	it('suma el árbol hasta el ancestro común', () => {
@@ -210,6 +232,51 @@ describe('resolver la orden', () => {
 		// todas y no una: cuáles trae cada profesión es contenido, y este test no
 		// tiene por qué romperse cuando ese contenido cambie.
 		expect(skillXp(db, piloto.id)).toEqual(xpPrevio);
+	});
+
+	/*
+	 * **Mejorar la nave no puede castigar**, y hasta este cambio castigaba: la
+	 * experiencia salía de la duración, así que montar el optimizador —la mejora
+	 * que existe para acortar el viaje— le sacaba al piloto parte de lo que ese
+	 * viaje pagaba. Ahora paga la distancia, que es la misma para todos.
+	 *
+	 * Se prueba con la misma ruta dos veces y no con dos cascos porque no hay
+	 * astillero: lo que se puede cambiar de una nave hoy es lo que lleva puesto, y
+	 * alcanza para que el reloj se mueva y la experiencia no.
+	 */
+	it('paga lo mismo por la misma ruta con la nave mejorada que sin ella', async () => {
+		const recorrer = async (optimizador: string | null) => {
+			const db = seededDb();
+			const piloto = await crearPiloto(db);
+			entrenar(db, piloto, 'navigation', 2);
+			pelar(db, piloto);
+
+			if (optimizador) {
+				const nave = activeShip(db, piloto.id)!;
+				const codigos = shipFit(db, nave).map((module) => module.code);
+				codigos[shipHull(nave).slots.findIndex((slot) => slot.kind === 'low')] = optimizador;
+				saveFit(db, nave, codigos);
+			}
+
+			const orden = startTravel(db, piloto, getBody(db, 'anfora_i')!);
+			db.update(pilotAction)
+				.set({
+					startedAt: new Date(orden.startedAt.getTime() - (orden.durationSeconds + 1) * 1000)
+				})
+				.where(eq(pilotAction.id, orden.id))
+				.run();
+
+			return { duracion: orden.durationSeconds, xp: resolveIfDue(db, piloto)!.deposit.xp };
+		};
+
+		const pelada = await recorrer(null);
+		const mejorada = await recorrer('warp_optimizer_i2');
+
+		// El viaje sí se acorta —para eso existe el módulo—...
+		expect(mejorada.duracion).toBeLessThan(pelada.duracion);
+		// ...y sin embargo el pozo recibe exactamente lo mismo.
+		expect(pelada.xp).toBeGreaterThan(0);
+		expect(mejorada.xp).toBe(pelada.xp);
 	});
 
 	it('una clase de acción desconocida no mueve al piloto ni le paga', async () => {

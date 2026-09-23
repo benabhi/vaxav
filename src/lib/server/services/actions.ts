@@ -37,6 +37,7 @@ import {
 	SURVEY_KIND,
 	TRADE_FAMILY,
 	travelDurationSeconds,
+	travelXp,
 	type ActionKind
 } from '$lib/game/actions';
 import { getOre, type ContainerKind } from '$lib/game/items';
@@ -140,10 +141,22 @@ type Resolver = (tx: Db, row: Pilot, claimed: PilotAction) => Resolution;
  * que convierte especializarse en una decisión: el que viaja junta Pilotaje y
  * después elige si lo gasta en Navegación o en abrir otra cosa. Ver
  * docs/systems/SKILLS.md.
+ *
+ * **Y sale de la distancia, no de la duración**, que es lo único de este
+ * resolvedor que no se parece a los otros cuatro. La regla y el porqué están en
+ * `travelXp`; acá sólo se le pasa cuánto había de un cuerpo al otro. Se mide al
+ * resolver y no se guarda en la orden: la distancia entre dos cuerpos no cambia
+ * mientras la nave viaja, así que preguntarla ahora da lo mismo que haberla
+ * anotado, y un campo menos en la tabla es un campo menos que puede mentir.
  */
-const resolveTravel: Resolver = (_tx, _row, claimed) => ({
+const resolveTravel: Resolver = (tx, row, claimed) => ({
 	family: TRAVEL_FAMILY,
-	xp: actionXpPool(claimed.durationSeconds / 60),
+	xp:
+		claimed.destinationBodyId === null
+			? 0
+			: travelXp(
+					bodyDistance(tx, claimed.originBodyId ?? row.locationId, claimed.destinationBodyId)
+				),
 	movesTo: claimed.destinationBodyId
 });
 

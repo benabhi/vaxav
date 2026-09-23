@@ -130,7 +130,11 @@ Cada acción define una **habilidad principal** y una lista de **secundarias**,
 para representar que casi nada se hace con una sola destreza.
 
 - El **pozo de XP** de la acción es `10 × minutos de duración × dificultad de la
-acción`, donde la dificultad va de 0,5 a 3.
+acción`, donde la dificultad va de 0,5 a 3. **Viajar es la excepción y usa la
+  misma fórmula**: los minutos no son los que tardó sino los que habría tardado la
+  nave de referencia recorriendo esa distancia, para que mejorar la nave no le
+  baje la experiencia al piloto. Ver
+  [qué paga cada acción](ACTIONS.md#qué-paga-cada-acción).
 - La **habilidad principal se lleva el pozo completo**.
 - **Cada secundaria recibe el 15 % del pozo.** No se reparte entre ellas: se le
   da ese 15 % a cada una. Así una acción con muchas secundarias no castiga a
