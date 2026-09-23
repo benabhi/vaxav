@@ -140,9 +140,29 @@
 		return futuro && simulado !== actual ? simulado - actual : null;
 	}
 
-	/** Un cambio escrito con su signo: «+120», «−4». */
-	function firmado(valor: number): string {
-		return `${valor > 0 ? '+' : '−'}${thousands(Math.abs(valor))}`;
+	/**
+	 * Un cambio escrito con su signo: «+120», «−4», «+0,3».
+	 *
+	 * Con `decimal` la cifra viene en **décimas** y se escribe con su coma, que es
+	 * como se muestra al lado. Sin eso, montar un optimizador que sube el warp tres
+	 * décimas decía «+3» debajo de un «5,0»: el mismo número contado en dos escalas
+	 * distintas, y la diferencia entre una mejora chica y una enorme.
+	 */
+	function firmado(valor: number, decimal = false): string {
+		const magnitud = Math.abs(valor);
+		return `${valor > 0 ? '+' : '−'}${decimal ? tenths(magnitud) : thousands(magnitud)}`;
+	}
+
+	/**
+	 * La recarga en décimas de unidad por segundo, que es como se lee.
+	 *
+	 * La hoja la lleva por hora porque así la gastan las reglas, y el renglón la
+	 * dice por segundo. La cuenta vive acá y no adentro de la fila para que la cifra
+	 * y su diferencia salgan **de la misma escala**: mientras el valor se convertía
+	 * y el cambio no, un módulo mostraba «+3.600» al lado de un «1,0 u/s».
+	 */
+	function rechargePerSecond(perHour: number): number {
+		return Math.round((perHour / 3600) * 10);
 	}
 
 	/** Cómo se llama lo que se está simulando, para el aviso de la hoja. */
@@ -325,23 +345,38 @@
 			label: `Daño ${damageTypeShort(tipo)}`,
 			value: tenths(hoja.dps[tipo]),
 			percent: roundHalfEven((hoja.dps[tipo] * 100) / techo),
-			delta: cambio(readout.dps[tipo], hoja.dps[tipo])
+			// El daño se lleva en décimas, así que su diferencia también: sin esto un
+			// cañón que suma 4,5 anunciaba «+45».
+			delta: cambio(readout.dps[tipo], hoja.dps[tipo]),
+			decimal: true
 		}));
 	});
 
 	/**
-	 * Movilidad: lo que la nave **usa hoy** para moverse.
+	 * Movilidad: los dos números que deciden el reloj, y la masa que los explica.
 	 *
 	 * Acá había dos renglones más, «Saltos» y «Alcance», y los dos prometían un
 	 * límite que ya no existe: cruzar una puerta es gratis, no pide alcance y tarda
 	 * lo mismo para cualquier nave. **Un dato se muestra en las naves que lo usan,
 	 * no en todas.**
 	 *
-	 * No es un descarte, es una espera: cuando exista el motor de salto de las
-	 * capitales —el que cruza sin puerta y quema combustible— el alcance y la
-	 * autonomía vuelven acá, y vuelven **sólo en los cascos que lo tengan**. Hoy no
-	 * lo tiene ninguno, y escribir esa condición antes que el verbo es hacer la ruta
-	 * antes que el camino.
+	 * Y había un tercero, «Velocidad», que era la sub-warp: **desde que un viaje es
+	 * alineación más warp, esa cifra no mueve ningún reloj.** Se sigue calculando
+	 * —es la de maniobrar cerca de otra nave— pero mostrarla en la hoja era
+	 * prometer que subirla acorta un viaje, que es la clase de mentira que el
+	 * jugador descubre midiendo.
+	 *
+	 * Las dos que quedan **no van juntas, y ése es el punto**: la Alabarda cruza
+	 * más rápido que la Percal y alinea peor que el Vencejo. Una nave se elige
+	 * contra el trayecto, no contra un único número de movilidad.
+	 *
+	 * La masa encabeza porque es la causa: pegada a la alineación, montar una placa
+	 * mueve las dos cifras una debajo de la otra y se ve de dónde salió el segundo
+	 * de más. El warp va último porque casi nada lo toca — sólo el optimizador.
+	 *
+	 * Nada de esto vuelve por capricho: cuando exista el motor de salto de las
+	 * capitales, el alcance y la autonomía vuelven acá, y **sólo en los cascos que
+	 * lo tengan**.
 	 */
 	let mobility = $derived([
 		{
@@ -471,11 +506,11 @@
 	El color no dice el signo, dice **si conviene**: más masa es peor y menos firma
 	es mejor, así que pintar por el signo mentiría en la mitad de los renglones.
 -->
-{#snippet chip(delta: number | null, lowerIsBetter = false)}
+{#snippet chip(delta: number | null, lowerIsBetter = false, decimal = false)}
 	{#if delta !== null}
 		{@const mejora = lowerIsBetter ? delta < 0 : delta > 0}
 		<span class="shrink-0 font-mono text-[0.7rem] {mejora ? 'text-success' : 'text-danger'}">
-			{firmado(delta)}
+			{firmado(delta, decimal)}
 		</span>
 	{/if}
 {/snippet}
@@ -499,6 +534,8 @@
 	unit?: string;
 	delta?: number | null;
 	lowerIsBetter?: boolean;
+	/** La cifra y su diferencia vienen en décimas: se escriben con coma. */
+	decimal?: boolean;
 	percent?: number;
 	over?: boolean;
 })}
@@ -506,7 +543,7 @@
 		<div class="flex w-full items-baseline gap-2">
 			<Label>{row.label}</Label>
 			<div class="grow"></div>
-			{@render chip(row.delta ?? null, row.lowerIsBetter ?? false)}
+			{@render chip(row.delta ?? null, row.lowerIsBetter ?? false, row.decimal ?? false)}
 			<!--
 				Sin cortar: un valor de dos partes —`120 / 120`, `12 / 40`— parte en dos
 				renglones apenas las cifras crecen, y la fila deja de leerse como una
@@ -592,9 +629,13 @@
 	})}
 	{@render linea({
 		label: 'Recarga',
-		value: tenths(Math.round((hoja.rechargePerHour / 3600) * 10)),
+		value: tenths(rechargePerSecond(hoja.rechargePerHour)),
 		unit: 'u/s',
-		delta: cambio(readout.rechargePerHour, hoja.rechargePerHour)
+		delta: cambio(
+			rechargePerSecond(readout.rechargePerHour),
+			rechargePerSecond(hoja.rechargePerHour)
+		),
+		decimal: true
 	})}
 	{#if !hoja.stable}
 		<p class="text-1 text-warning">
