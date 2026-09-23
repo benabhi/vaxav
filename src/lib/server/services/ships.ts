@@ -457,6 +457,21 @@ export function refit(
 		}
 
 		const despues = buildReadout(hull, fitFromCodes(hull, codes), skills);
+
+		// **Y que la nave resultante se pueda volar.** La hoja ya sabe decir por qué
+		// no —la planta que no alcanza, el cómputo que se pasó, un módulo que no
+		// entra en su ranura— y hasta acá el servicio miraba de todo eso una sola
+		// columna, la bodega. Los cinco verbos preguntan `flyable` antes de arrancar,
+		// así que hoy no se gana nada; pero el único candado está tres capas más
+		// allá, y el día que entre un verbo que se olvide de preguntar, ésta es la
+		// puerta por la que va a pasar una nave que no vuela.
+		//
+		// Se dice **qué** problema, que es lo que se puede arreglar: «no se puede
+		// volar» manda a adivinar.
+		if (!despues.flyable) {
+			throw new ShipError(`Así no se puede volar: ${despues.problems[0]}.`);
+		}
+
 		if (usedVolume(tx, bodega.id) > capacityTenths(despues.cargo)) {
 			throw new ShipError('Con eso desmontado no te entra la carga que llevás.');
 		}

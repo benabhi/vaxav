@@ -1001,6 +1001,13 @@ motivo: desmontar no puede ser una forma silenciosa de tirar una pieza. El cálc
 del lugar usa la capacidad que la nave va a tener **después**, porque bajar una
 bodega adicional achica el espacio justo cuando esa misma bodega necesita entrar.
 
+**Y la operación se niega si el resultado no sería volable**, no sólo si no entra
+en la bodega. Miraba únicamente el lugar, y el candado de verdad estaba tres capas
+más allá, en cada verbo: se podía dejar la nave sin potencia o sin cómputo y
+enterarse recién al querer hacer algo con ella. **El rechazo tiene que estar donde
+se comete el error**, con el motivo a la vista, y no donde se paga la
+consecuencia.
+
 Lo que la estación sigue decidiendo es **si podés tocar la nave**: hace falta estar
 atracado y que el lugar tenga el módulo de Equipamiento.
 
