@@ -24,9 +24,9 @@ La leyenda mide **una sola cosa: si el juego lo hace**.
 Dos aclaraciones, que es donde un mapa como éste se vuelve mentira si se afloja:
 
 - **Una llave es ✅ cuando la habilidad mueve un número o abre una puerta**, no
-  cuando está en el catálogo. Las 111 habilidades existen; **quince** mueven
-  algún número y las otras 96 son 🔨. Y hay un escalón intermedio que la marca no
-  distingue y conviene decir: **cinco de esas quince mueven un número que ningún
+  cuando está en el catálogo. Las 111 habilidades existen; **dieciséis** mueven
+  algún número y las otras 95 son 🔨. Y hay un escalón intermedio que la marca no
+  distingue y conviene decir: **seis de esas dieciséis mueven un número que ningún
   verbo lee**, así que la cadena que las nombra sigue abierta igual.
 - **Un eslabón con dos mitades en distinto estado va en dos filas.** No se
   promedia: una fuente a medias no es media fuente, es una que anda por un lado y
@@ -34,7 +34,7 @@ Dos aclaraciones, que es donde un mapa como éste se vuelve mentira si se afloja
 
 ## El mapa de los huecos
 
-Nueve actividades y 73 eslabones: **21 ✅, 32 🔨 y 11 ❌**, más nueve que no
+Nueve actividades y 74 eslabones: **22 ✅, 32 🔨 y 11 ❌**, más nueve que no
 aplican. **Ninguna cadena está entera.** La que más se acerca es comerciar, que
 tiene todos sus eslabones andando y una sola llave muerta colgando.
 
@@ -222,7 +222,11 @@ y eso llega con la puerta.
 
 **Y su reverso, que es la misma cadena:** el **Amortiguador de firma** ya está
 montable y baja catorce puntos de una firma **que no lee ningún verbo**, y
-**Perfil de firma** sigue sin efecto. Es un aparato construido antes que la
+**Perfil de firma** sigue sin efecto. Y la deuda ya cobró una vez: el optimizador
+de warp de escalón I nació cobrando doce puntos de firma, o sea **dando velocidad
+a cambio de nada**, y hubo que cambiarle la divisa a bodega antes de que el
+precio quedara escrito en el balance. **Mientras la firma no la lea ningún verbo,
+cobrar en firma es regalar el módulo.** Es un aparato construido antes que la
 mecánica que lo justifica; diseñar los dos lados juntos es lo que evita terminar
 con dos sistemas parecidos que no se hablan.
 
@@ -254,6 +258,7 @@ catálogo y no hace nada: la comisión del corredor la mueve Regateo. Ver
 | El insumo  | Cargas cinéticas, iónicas y térmicas        | 🔨  |
 | La fuente  | Fabricación                                 | 🔨  |
 | El aparato | Cañón de masa, emisor iónico, lanza térmica | ✅  |
+| El aparato | Los tres propulsores auxiliares, sub-warp   | ✅  |
 | La llave   | Las trece habilidades de Combate            | 🔨  |
 | La llave   | Un pozo del que sacarles la experiencia     | ❌  |
 | La fábrica | Taller                                      | 🔨  |
@@ -269,6 +274,17 @@ Y hay un ❌ que no es del combate sino de más arriba: **la familia no tiene po
 de experiencia**, así que sus trece habilidades no se pueden entrenar ni aunque
 el verbo apareciera mañana.
 
+**Y acá se mudó el movimiento sub-warp**, el día que viajar dentro de un sistema
+dejó de salir del empuje y pasó a ser alineación más warp. Lo que se durmió son
+cuatro cosas con el mismo dueño: el **empuje** del casco, los **tres propulsores
+auxiliares** —que se montan y suman, y por eso van ✅ como las armas—, el bono de
+**Navegación** sobre la velocidad y la habilidad **Ingeniería de propulsión**.
+Ninguna mueve un reloj hoy, y el verbo que las despierta es éste: maniobrar cerca
+de otra nave —acercarse, abrir distancia, orbitar— es todo sub-warp. Es el mismo
+reparto que hizo el salto cuando cruzar pasó a ser gratis: el eslabón no se borra,
+se muda a la actividad que lo va a usar. Ver
+[viajar es alinearse y cruzar](systems/SHIPS.md#viajar-es-alinearse-y-cruzar).
+
 ### Los huérfanos más grandes
 
 Ordenados por lo que cuesta dejarlos abiertos, no por lo que cuesta cerrarlos:
@@ -280,20 +296,39 @@ Ordenados por lo que cuesta dejarlos abiertos, no por lo que cuesta cerrarlos:
    regla que condiciona todo lo que venga: **sólo se gatea con habilidades que se
    puedan entrenar**, porque pedir una de una rama sin fuente es cerrar la puerta
    con la llave adentro.
-2. **De las 111 habilidades, quince mueven algo**, y cinco de ésas —Puntería,
-   Escudos, Blindaje, Astrogación y Eficiencia de combustible— mueven números que
-   ningún verbo lee.
-3. **La bandeja de refuerzos está vacía.** Los cinco cascos tienen sus ranuras de
+2. **De las 111 habilidades, dieciséis mueven algo**, y seis de ésas —Puntería,
+   Escudos, Blindaje, Astrogación, Eficiencia de combustible y ahora **Navegación**—
+   mueven números que ningún verbo lee. La que se sumó a la cuenta es **Maniobra**,
+   que estrenó efecto: divide la agilidad y con eso acorta la alineación, que es la
+   mitad fija del reloj de un viaje. La que salió es **Manejo de lanzaderas**, que
+   perdió el bono de rol de la Pioner cuando se decidió que la nave de alta no
+   lleva ninguno: vuelve a ser sólo llave, y la despierta la segunda lanzadera del
+   catálogo.
+3. **Veintinueve de los 36 módulos no piden ninguna habilidad.** La regla dice
+   que todo módulo pide algo —[el escalón](systems/SHIPS.md#el-escalón-i-y-ii)—
+   y hoy sólo **7** la cumplen: los cinco de escalón II, el láser de extracción
+   de escalón II y el optimizador de warp chico. Los otros 29 heredan la lista
+   vacía de la base. **Es una tanda de catálogo, no un olvido**: hay que elegirle
+   habilidad y nivel a cada uno, y cuidar que lo que entra en el kit de partida
+   siga siendo gratis, porque nadie empieza el juego con habilidades.
+4. **La bandeja de refuerzos está vacía.** Los cinco cascos tienen sus ranuras de
    refuerzo y su presupuesto de calibración, y el catálogo no tiene **un solo
    refuerzo**: es la única bandeja que no se puede llenar.
-4. **La reputación no tiene fuente.** Está guardada como libro, se dibuja en la
+5. **La reputación no tiene fuente.** Está guardada como libro, se dibuja en la
    escalera, decide hasta qué nivel de agente se llega, y **nada la escribe**: la
    fuente declarada son las misiones y las misiones no existen. Todo piloto está
    en cero para siempre.
-5. **El universo oficial es un sistema sin puertas.**
-6. **Cuatro aparatos prometen verbos que no existen**: la Refinería de a bordo,
+6. **El universo oficial es un sistema sin puertas.**
+7. **Cuatro aparatos prometen verbos que no existen**: la Refinería de a bordo,
    el Amortiguador de firma, el calibrador de salto y el depósito auxiliar.
-7. **El combustible no tiene consumidor.** Bajó del primer puesto al último y no
+8. **El empuje se quedó sin verbo, y con él cuatro piezas.** Movía la duración de
+   los viajes dentro del sistema hasta que ésa pasó a ser alineación más warp.
+   Duermen el empuje del casco, los tres propulsores auxiliares, el bono de
+   Navegación e Ingeniería de propulsión. **Es un huérfano declarado y con fecha**
+   —lo despierta el combate, porque maniobrar de cerca es sub-warp— y lo que lo
+   mantiene honesto es que las descripciones de los tres propulsores se cambiaron
+   el mismo día: ninguno promete ya un viaje más corto.
+9. **El combustible no tiene consumidor.** Bajó del primer puesto al último y no
    por haberse arreglado: cruzar una puerta dejó de gastarlo, así que ya no deja
    a nadie varado y pasó a ser un huérfano tranquilo, con su verbo anotado —el
    motor de salto de las capitales— y sin nada que se rompa mientras tanto. Sigue
@@ -311,7 +346,7 @@ inventario.
 | Interfaz              | El HUD de Elite Dangerous, el Neocom, las pestañas y 97 componentes propios                                 |
 | El universo           | Región, constelación, sistema, cuerpo, cinturón, puerta y estación como filas; Ánfora sembrado              |
 | El mapa de la galaxia | Grilla de hexágonos en lienzo, con arrastre, zoom y filtros, en el cuartel y en la cabina                   |
-| Naves                 | Cinco cascos, 34 módulos, cuatro bandejas y cuatro presupuestos                                             |
+| Naves                 | Cinco cascos, 36 módulos, cuatro bandejas y cuatro presupuestos                                             |
 | Equipamiento          | La ficha de la nave como herramienta: tres columnas y los presupuestos siempre a la vista                   |
 | Bodega                | Bahías con la barra partida por contenido, búsqueda, filtro, orden, paginado y créditos por m³              |
 | Motor de acciones     | Encolar, resolver perezoso e idempotente, informar. Cinco clases: viajar, saltar, minar, acordar y escanear |
@@ -333,10 +368,10 @@ inventario.
 
 | Catálogo           | Hoy                                                                     |
 | ------------------ | ----------------------------------------------------------------------- |
-| Habilidades        | 111 en ocho familias; **quince** mueven algo                            |
+| Habilidades        | 111 en ocho familias; **dieciséis** mueven algo                         |
 | Familias con pozo  | Cuatro de ocho                                                          |
 | Cascos             | 5, ninguno con clase declarada                                          |
-| Módulos            | 34 —27 de escalón I y 7 de II—, **ningún refuerzo**                     |
+| Módulos            | 36 —28 de escalón I y 8 de II—; **7 piden habilidad**, ningún refuerzo  |
 | Bandejas           | Altos, medios, bajos y refuerzos                                        |
 | Ítems              | Minerales, módulos y un refinado: el helio-3, que el mercado no muestra |
 | Minerales          | 4 de los 8 previstos                                                    |
@@ -377,6 +412,7 @@ hora de elegir.
 | **El salto sin puerta**       | El consumidor que le falta al combustible: el tanque, el depósito, el calibrador y sus dos habilidades | Las capitales           |
 | **El hielo**                  | La fuente del combustible: cosechador, cuatro hielos, helio-3                                          | Refinar y un consumidor |
 | **Los refuerzos**             | La bandeja vacía: catálogo, calibración que se gasta, siete habilidades de Ingeniería                  | Nada                    |
+| **Las llaves del catálogo**   | Los 29 módulos que no piden ninguna habilidad, con su kit de partida a salvo                           | Nada                    |
 | **Las clases de nave**        | `Hull.class` y las habilidades de clase como requisito duro                                            | Nada                    |
 | **Componentes y fabricar**    | El verbo, los ocho componentes y las recetas por módulo                                                | Refinar                 |
 | **El generador de módulos**   | Familias más fórmula de clase y escalón, para no escribirlos a mano                                    | Fabricar                |
@@ -394,7 +430,9 @@ Los enganches que importan más que la lista:
   generar la mitad de cada uno.
 - **Los refuerzos no dependen de nada y cierran una bandeja entera.** La ranura y
   el presupuesto ya están en los cinco cascos; falta el catálogo. Se pueden
-  fabricar con material refinado hasta que existan los restos.
+  fabricar con material refinado hasta que existan los restos. Los dos
+  optimizadores de warp **no cuentan**: entraron como módulos bajos a propósito,
+  para no estrenar la bandeja de refuerzos de costado y con dos piezas sueltas.
 - **El hielo ya no cierra nada solo.** Era la que más impacto tenía mientras el
   combustible se gastaba; ahora sería darle una fuente a un insumo que nadie
   consume, que es el mismo huérfano con un eslabón más. Primero el verbo que
