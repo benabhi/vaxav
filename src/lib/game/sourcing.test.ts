@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { grantingModule, grantingModules, hullGrant, leverOf, leversFor } from './sourcing';
 import { SKILL_BONUSES } from './fitting';
-import { HULLS, STARTING_HULL, getHull } from './hulls';
+import { HULLS, STARTING_HULL, getHull, type Hull } from './hulls';
 import { EMPTY, MODULES } from './modules';
 
 describe('el módulo que habilita un verbo', () => {
@@ -138,21 +138,45 @@ describe('las habilidades que mueven una magnitud', () => {
 	it('suma el bono de rol del casco, que es otra habilidad sobre lo mismo', () => {
 		// Si no se nombra, la nave parece rendir distinto porque sí, y elegir casco
 		// deja de significar algo.
-		const conRol = HULLS.find(
-			(hull) => SKILL_BONUSES[hull.bonus.target]?.skill !== hull.bonus.skill
-		);
-		if (!conRol) return;
+		// **El casco se arma acá y no se elige del catálogo.** Desde que la Pioner se
+		// quedó sin bono de rol, ninguno de los cinco tiene uno que apunte a una
+		// habilidad distinta de la de la tabla, así que este camino se quedó sin caso
+		// real. Se arma uno para que la cuenta siga probada hasta que entre el casco
+		// que la use de verdad.
+		const conRol: Hull = {
+			...getHull('mula'),
+			bonus: { target: 'cargo', skill: 'shuttle_handling', percentPerLevel: 3 }
+		};
 
-		const palancas = leversFor(conRol.bonus.target, conRol, {});
+		const codigos = leversFor('cargo', conRol, {}).map((lever) => lever.skill);
 
-		expect(palancas.map((lever) => lever.skill)).toContain(conRol.bonus.skill);
+		expect(codigos).toContain('shuttle_handling');
+		expect(codigos).toContain(SKILL_BONUSES.cargo.skill);
+	});
+
+	it('y no inventa ninguna cuando el casco no tiene bono de rol', () => {
+		// La lanzadera inicial no tiene: el casco que el astillero le entrega a
+		// cualquiera no empuja al piloto hacia una especialidad. La lista tiene que
+		// salir igual —con la habilidad de la tabla y nada más— y no romperse
+		// leyendo un bono que no está.
+		const pioner = getHull(STARTING_HULL);
+		expect(pioner.bonus).toBeNull();
+
+		const palancas = leversFor('agility', pioner, { maneuvering: 2 });
+
+		expect(palancas.map((lever) => lever.skill)).toEqual([SKILL_BONUSES.agility.skill]);
+		expect(palancas[0].level).toBe(2);
 	});
 
 	it('no repite la habilidad cuando el casco mejora lo mismo que la tabla', () => {
 		const repetida = HULLS.find(
-			(hull) => SKILL_BONUSES[hull.bonus.target]?.skill === hull.bonus.skill
+			(hull) => hull.bonus && SKILL_BONUSES[hull.bonus.target]?.skill === hull.bonus.skill
 		);
-		if (!repetida) return;
+		// La Mula es el caso: su bono de rol es la bodega, y la tabla la mueve con la
+		// misma habilidad. Si un día ninguno lo hiciera, esto lo avisa en vez de
+		// dejar el caso pasando de largo sin probar nada.
+		expect(repetida?.bonus, 'ningún casco mejora lo mismo que la tabla').toBeDefined();
+		if (!repetida?.bonus) return;
 
 		const palancas = leversFor(repetida.bonus.target, repetida, {});
 		const codigos = palancas.map((lever) => lever.skill);

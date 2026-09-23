@@ -154,13 +154,15 @@ export function leversFor(target: BonusTarget, hull: Hull, skills: SkillLevels):
 
 	// El bono de rol del casco mueve lo mismo con otra habilidad, y es de las cosas
 	// que hacen que elegir casco importe: si no se nombra, parece que la nave
-	// rinde distinto porque sí.
-	if (hull.bonus.target === target && !palancas.some((p) => p.skill === hull.bonus.skill)) {
+	// rinde distinto porque sí. **Un casco puede no tener ninguno** —la lanzadera
+	// inicial—, y entonces la única palanca es la de la tabla.
+	const rol = hull.bonus;
+	if (rol && rol.target === target && !palancas.some((p) => p.skill === rol.skill)) {
 		palancas.push({
-			skill: hull.bonus.skill,
-			name: getSkill(hull.bonus.skill).name,
-			level: skills[hull.bonus.skill] ?? 0,
-			percentPerLevel: hull.bonus.percentPerLevel
+			skill: rol.skill,
+			name: getSkill(rol.skill).name,
+			level: skills[rol.skill] ?? 0,
+			percentPerLevel: rol.percentPerLevel
 		});
 	}
 

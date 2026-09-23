@@ -260,8 +260,10 @@ export function bonusPercent(target: BonusTarget, hull: Hull, skills: SkillLevel
 	const source = SKILL_BONUSES[target];
 	if (source) total += (skills[source.skill] ?? 0) * source.percentPerLevel;
 
-	// El bono de rol del casco, que escala con su propia habilidad.
-	if (hull.bonus.target === target) {
+	// El bono de rol del casco, que escala con su propia habilidad. **Puede no
+	// haber**: la lanzadera inicial no tiene ninguno a propósito, para no empujar
+	// al piloto hacia una especialidad antes de que la elija.
+	if (hull.bonus && hull.bonus.target === target) {
 		total += (skills[hull.bonus.skill] ?? 0) * hull.bonus.percentPerLevel;
 	}
 
@@ -539,6 +541,8 @@ export function buildReadout(
  */
 export function maxedSkills(): Record<string, number> {
 	const codes = new Set(Object.values(SKILL_BONUSES).map((bonus) => bonus.skill));
-	for (const hull of HULLS) codes.add(hull.bonus.skill);
+	// El casco sin bono de rol no aporta ninguna habilidad a la lista, que es
+	// exactamente lo que significa no tenerlo.
+	for (const hull of HULLS) if (hull.bonus) codes.add(hull.bonus.skill);
 	return Object.fromEntries([...codes].map((code) => [code, MAX_SKILL_LEVEL]));
 }

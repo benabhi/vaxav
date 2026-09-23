@@ -242,10 +242,19 @@
 			: ''
 	);
 
-	/** El bono de rol, escrito como se lee: «+5 % … por nivel de Minería». */
+	/**
+	 * El bono de rol, escrito como se lee: «+5 % … por nivel de Minería».
+	 *
+	 * **Un casco puede no tener ninguno** —la Pioner, para no empujar al piloto
+	 * hacia una especialidad antes de que la elija— y entonces lo dice con todas
+	 * las letras, como el renglón de al lado dice «no pide nada». Dejarlo vacío
+	 * pondría un ícono solo al lado de la nada.
+	 */
 	let hullBonus = $derived(
-		`+${hull.bonus.percentPerLevel} % de ${bonusTargetLabel(hull.bonus.target)} ` +
-			`por nivel de ${getSkill(hull.bonus.skill).name}`
+		hull.bonus
+			? `+${hull.bonus.percentPerLevel} % de ${bonusTargetLabel(hull.bonus.target)} ` +
+					`por nivel de ${getSkill(hull.bonus.skill).name}`
+			: 'sin bono de rol'
 	);
 
 	/** Cuánto de la recarga se está gastando. */
@@ -872,9 +881,27 @@
 		</span>
 	</span>
 
+	<!--
+		El bono de rol, **y también cuando no hay ninguno**: la Pioner no tiene.
+
+		El renglón se queda, con la misma forma en todos los cascos: comparar dos
+		naves es leer los mismos tres datos en el mismo orden, y un dato que aparece
+		en una ficha y desaparece en la otra obliga a buscarlo de nuevo cada vez.
+
+		Pero se apaga. **Una estrella llena anunciando que no hay nada se contradice
+		sola**: en este HUD el relleno es lo encendido. Sin bono va la estrella en
+		`light` —el mismo dibujo en reposo, que además queda hueca— y el texto en
+		gris, igual que el «no pide nada» del renglón de al lado. Los dos son la
+		misma clase de respuesta y se escriben igual.
+	-->
 	<span class="flex items-center gap-[0.35rem]">
-		<Icon name="star" weight="fill" size="0.7rem" class="shrink-0 text-accent" />
-		<span class="text-1 text-text-body">{hullBonus}</span>
+		<Icon
+			name="star"
+			weight={hull.bonus ? 'fill' : 'light'}
+			size="0.7rem"
+			class="shrink-0 {hull.bonus ? 'text-accent' : 'text-text-muted'}"
+		/>
+		<span class="text-1 {hull.bonus ? 'text-text-body' : 'text-text-muted'}">{hullBonus}</span>
 	</span>
 
 	<!--

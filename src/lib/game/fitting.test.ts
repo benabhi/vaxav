@@ -97,9 +97,11 @@ describe('el catálogo de cascos', () => {
 	});
 
 	it('apunta a habilidades que existen', () => {
-		// Un bono o un requisito sobre una habilidad inventada no haría nada.
+		// Un bono o un requisito sobre una habilidad inventada no haría nada. El bono
+		// puede no estar —es `null` y no un cero—, y eso no es un dato faltante: es
+		// un casco que no empuja al piloto hacia ninguna especialidad.
 		for (const hull of HULLS) {
-			expect(Object.hasOwn(SKILLS, hull.bonus.skill), hull.name).toBe(true);
+			if (hull.bonus) expect(Object.hasOwn(SKILLS, hull.bonus.skill), hull.name).toBe(true);
 			for (const requisito of hull.requirements) {
 				expect(Object.hasOwn(SKILLS, requisito.skill), hull.name).toBe(true);
 			}
@@ -148,9 +150,23 @@ describe('el catálogo de cascos', () => {
 	});
 
 	it('hace a cada casco bueno en algo distinto', () => {
-		// Dos cascos con el mismo bono serían el mismo casco con otro nombre.
-		const objetivos = HULLS.map((hull) => hull.bonus.target);
+		// Dos cascos con el mismo bono serían el mismo casco con otro nombre. Los que
+		// no tienen ninguno no compiten por nada y quedan afuera de la cuenta.
+		const objetivos = HULLS.flatMap((hull) => (hull.bonus ? [hull.bonus.target] : []));
 		expect(new Set(objetivos).size).toBe(objetivos.length);
+	});
+
+	it('y deja al casco de partida sin bono de rol, que es la decisión', () => {
+		// **La ausencia es un valor y por eso es `null` y no un cero.** El casco que
+		// el astillero le entrega a cualquiera no puede empujar al piloto hacia una
+		// especialidad antes de que la elija: un bono de partida decide por él en la
+		// primera hora, cuando todavía no sabe qué quiere ser.
+		//
+		// La decisión la tomó benabhi al sacar el bono de agilidad que la Pioner
+		// tenía. **docs/systems/SHIPS.md todavía la describe como abierta** en «La
+		// regla del bono de rol» y en el cuadro de los cinco cascos: es el documento
+		// el que está atrasado, no esto.
+		expect(getHull(STARTING_HULL).bonus).toBeNull();
 	});
 
 	it('falla claro si el casco no existe', () => {
@@ -695,7 +711,7 @@ describe('los bonos', () => {
 			expect(maximas[bonus.skill], objetivo).toBe(MAX_SKILL_LEVEL);
 		}
 		for (const hull of HULLS) {
-			expect(maximas[hull.bonus.skill]).toBe(MAX_SKILL_LEVEL);
+			if (hull.bonus) expect(maximas[hull.bonus.skill], hull.name).toBe(MAX_SKILL_LEVEL);
 		}
 	});
 

@@ -112,6 +112,11 @@ export type BonusTarget = (typeof BONUS_TARGETS)[number];
  * Es lo que evita que la nave reemplace al piloto: una minera en manos sin
  * entrenar es una nave con bodega y nada más. Y hace que dos pilotos con el
  * mismo casco rindan distinto, que es la mitad de la progresión.
+ *
+ * **Puede no haber**, y por eso todo el que lo lee pregunta antes. La ausencia se
+ * escribe `null` y no un bono de cero por ciento: un cero obligaría a inventarle
+ * una especialidad al casco que justamente no tiene ninguna, y la pantalla lo
+ * leería igual —«+0 % de agilidad»— que es peor que no decir nada.
  */
 export interface RoleBonus {
 	readonly target: BonusTarget;
@@ -243,7 +248,8 @@ export interface Hull {
 	readonly signature: number;
 
 	readonly slots: readonly SlotSpec[];
-	readonly bonus: RoleBonus;
+	/** Su bono de rol, o `null` si el casco no tiene ninguno. */
+	readonly bonus: RoleBonus | null;
 	readonly requirements: readonly Requirement[];
 }
 
@@ -345,13 +351,17 @@ export const HULLS: readonly Hull[] = [
 			...slots('low', 2, 2),
 			...slots('rig', 1, 1)
 		],
-		// El bono de rol pasó de Navegación a Manejo de lanzaderas. Navegación ya
-		// empuja la velocidad de toda nave desde el bono general, y sumarla otra vez
-		// acá era contar dos veces lo mismo — lo que ACTIONS.md prohíbe por escrito—.
-		// Con el cambio, la Pioner queda como las otras cuatro: su bono de rol es la
-		// habilidad de su especialidad, y Manejo de lanzaderas pasa a gobernar algo
-		// de verdad en vez de ser el requisito de un casco que no puede pedir nada.
-		bonus: { target: 'speed', skill: 'shuttle_handling', percentPerLevel: 2 },
+		// **La Pioner no tiene bono de rol, y es la única**: lo dice SHIPS.md en dos
+		// lugares y con el argumento escrito. Un bono de rol empuja hacia una
+		// especialidad —la minera premia minar, la exploradora escanear— y la nave
+		// inicial es justo donde eso no tiene que pasar: el piloto todavía no eligió
+		// a qué se va a dedicar, y la nave con la que empieza no puede elegir por él.
+		//
+		// Tuvo uno de velocidad por Manejo de lanzaderas, y se fue con esta línea. El
+		// costo está anotado donde corresponde: **Manejo de lanzaderas vuelve a no
+		// gobernar ningún número** —ver su entrada en `skills.ts`— y eso es una deuda
+		// del catálogo, no un olvido de acá.
+		bonus: null,
 		requirements: []
 	},
 	{

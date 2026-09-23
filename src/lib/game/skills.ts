@@ -110,6 +110,13 @@ export interface Skill {
  */
 const CATALOG = [
 	// --- Pilotaje: dónde y cómo se mueve la nave ---
+	// **No gobierna ningún número, y es a propósito.** Tuvo el bono de rol de la
+	// Pioner y se lo sacamos: la nave inicial no lleva bono de rol porque empujaría
+	// al piloto hacia una especialidad antes de que la elija —SHIPS.md lo dice dos
+	// veces—. Lo que le queda es ser **llave**: el escalón hacia Naves ligeras, y el
+	// requisito que va a pedir la segunda lanzadera del catálogo, que sí puede
+	// pedirlo sin dejar en tierra a nadie. Ese casco es el que la despierta, igual
+	// que el combate despierta a Ingeniería de propulsión.
 	{
 		code: 'shuttle_handling',
 		name: 'Manejo de lanzaderas',

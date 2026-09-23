@@ -446,11 +446,15 @@ crece.
 | Vencejo  | Escaneo II              |
 | Alabarda | Puntería II             |
 
-**La Pioner no pide nada por la misma razón que el escalón E**: es el casco que el
+**La Pioner no pide nada por la misma razón que el kit de partida**: es el casco que el
 astillero le entrega a cualquiera que se dé de alta. Manejo de lanzaderas, que era
-su requisito, pasó a ser su **bono de rol** —donde antes estaba Navegación, que ya
-empuja la velocidad de toda nave desde el bono general y se estaba contando dos
-veces—.
+su requisito, dejó de serlo para que la nave de alta no exigiera nada.
+
+**Y tampoco quedó como su bono de rol.** Lo fue un tiempo —primero sobre la
+velocidad, después sobre la agilidad— y se sacó: un bono de rol empuja hacia una
+especialidad, y la nave con la que se empieza es justo donde eso no tiene que
+pasar. El argumento entero está en
+[la regla del bono de rol](#la-regla-del-bono-de-rol), con lo que costó.
 
 Los otros cuatro piden habilidades de ramas que todavía no tienen fuente, y eso
 está bien hoy por una razón temporal: **no hay astillero**, así que el único casco
@@ -459,13 +463,13 @@ tiene fuente o el requisito cambia; un test lo recuerda.
 
 ## Los cinco cascos
 
-| Casco        | Rol               |   Terna | Refuerzos | Bono de rol                         |
-| ------------ | ----------------- | ------: | --------: | ----------------------------------- |
-| **Pioner**   | Lanzadera inicial | `1·2·2` |         1 | Velocidad, por Manejo de lanzaderas |
-| **Mula**     | Carguera          | `1·3·5` |         3 | Bodega, por Ingeniería de bodega    |
-| **Percal**   | Minera            | `2·4·3` |         3 | Extracción, por Minería             |
-| **Vencejo**  | Exploradora       | `1·5·2` |         3 | Sensores, por Escaneo               |
-| **Alabarda** | Combate           | `4·3·4` |         3 | Daño, por Puntería                  |
+| Casco        | Rol               |   Terna | Refuerzos | Bono de rol                      |
+| ------------ | ----------------- | ------: | --------: | -------------------------------- |
+| **Pioner**   | Lanzadera inicial | `1·2·2` |         1 | **Ninguno, a propósito**         |
+| **Mula**     | Carguera          | `1·3·5` |         3 | Bodega, por Ingeniería de bodega |
+| **Percal**   | Minera            | `2·4·3` |         3 | Extracción, por Minería          |
+| **Vencejo**  | Exploradora       | `1·5·2` |         3 | Sensores, por Escaneo            |
+| **Alabarda** | Combate           | `4·3·4` |         3 | Daño, por Puntería               |
 
 **La terna es lo primero que se lee de una nave.** La Mula lleva casi todo en el
 bastidor —bodega y chapa, que son pasivos— y el Vencejo casi todo en consolas
@@ -518,9 +522,9 @@ casco exige. Trae cuatro consecuencias que valen más que la lista de naves:
 
 ### La regla del bono de rol
 
-**Cada casco tiene exactamente un bono, y escala con una habilidad.** Nunca un
-valor fijo. Es lo que impide que la nave reemplace al piloto: una barcaza en manos
-sin entrenar es una nave con bodega y nada más.
+**Un casco tiene a lo sumo un bono, y escala con una habilidad.** Nunca un valor
+fijo. Es lo que impide que la nave reemplace al piloto: una barcaza en manos sin
+entrenar es una nave con bodega y nada más.
 
 Y una excepción que es una regla:
 
@@ -528,6 +532,23 @@ Y una excepción que es una regla:
 > que se dé de alta. Si tuviera bono, el primer casco del juego ya estaría
 > empujando al piloto hacia una especialidad antes de que la elija. Todo lo que
 > rinda de más tiene que venir de lo que le monte y de lo que sepa.
+
+**La ausencia es un valor y se declara como tal**: `Hull.bonus` es
+`RoleBonus | null`, no un bono de 0 % sobre una especialidad inventada. Un cero
+obliga a elegirle una especialidad a la nave que justamente no tiene ninguna, y
+después hay que acordarse de no mostrarlo; un `null` lo dice una vez y la
+calculadora, el aviso de procedencia y la ficha lo respetan solos.
+
+**Tuvo bono dos veces y las dos se deshicieron**, que es lo que le da peso a la
+regla: primero sobre la velocidad y después sobre la agilidad, cuando el viaje
+pasó a ser alineación más warp y la velocidad sub-warp se durmió. El argumento en
+contra ganó las dos veces.
+
+**Y tiene un costo anotado**: Manejo de lanzaderas vuelve a no gobernar ningún
+número. Le queda ser **llave** —el escalón hacia Naves ligeras, y el requisito que
+va a pedir la segunda lanzadera del catálogo, que sí puede pedirlo sin dejar a
+nadie en tierra—. Es un huérfano declarado y con fecha, igual que Ingeniería de
+propulsión: lo despierta ese segundo casco.
 
 ### El catálogo de cascos
 
