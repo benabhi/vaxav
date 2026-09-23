@@ -254,18 +254,43 @@ módulo sino como insignia al lado.
 
 ### El escalón: I y II
 
-La **puerta de habilidad**. El **I** no pide nada y es con el que sale una nave del
-astillero; el **II** rinde más, cuesta más, pide habilidades entrenadas y aprieta
-más la potencia y el cómputo.
+La **puerta de habilidad**. El **I** es el escalón de entrada y el **II** rinde
+más, cuesta más, pide más nivel y aprieta más la potencia y el cómputo.
 
-| Escalón          | Requisito                     |
-| ---------------- | ----------------------------- |
-| **I**            | Nada, en ninguna clase        |
-| **II** clase 1-2 | Su habilidad al **nivel II**  |
-| **II** clase 3   | Su habilidad al **nivel III** |
+| Escalón          | Requisito                                      |
+| ---------------- | ---------------------------------------------- |
+| **I**            | **Algo**, y el nivel se fija módulo por módulo |
+| **II** clase 1-2 | Su habilidad al **nivel II**                   |
+| **II** clase 3   | Su habilidad al **nivel III**                  |
 
-Que el I no pida nada **nunca** no es generosidad: un requisito ahí dejaría a un
-piloto nuevo con una nave que no despega.
+**Todo módulo pide algo, y el escalón I no es la excepción.** Es la regla general
+y viene de EVE, donde no hay nada gratis en cuanto a habilidades: un módulo que
+no pide nada es un módulo que el jugador compra sin decidir, y el catálogo pasa a
+premiar tener créditos en vez de tener entrenamiento.
+
+**La regla anterior decía lo contrario —«nada, en ninguna clase»— y su porqué
+sigue siendo válido, sólo que acotado.** El miedo era real: un requisito en un
+escalón I dejaría a un piloto nuevo con una nave que no despega. Lo que se
+descubrió es que eso no depende del escalón sino **de si la pieza viene en el kit
+de partida**. Un módulo que el astillero entrega no puede pedir nada, porque nadie
+entra al juego con habilidades; una mejora opcional que se compra en el mercado sí
+puede pedir, y **tiene que**, o no es una mejora sino una compra.
+
+**Hoy la regla está escrita y casi no está aplicada, y conviene decirlo con el
+número:** de los 36 módulos del catálogo **sólo 7 piden una habilidad**; los otros
+29 heredan la lista vacía de la base y no piden nada. Ponerle llave a 29 módulos
+es una tanda de catálogo y de balance —hay que elegir habilidad y nivel uno por
+uno, y respetar que lo del kit inicial siga siendo gratis—, así que queda como
+**hueco declarado y con fecha**. Lo único que ya la cumple es el optimizador de
+warp chico, que es de escalón I y pide Navegación II.
+
+**Lo que todavía no está decidido es la escala del escalón I**, y no conviene
+deducirla del único ejemplo que hay. El escalón II tiene su escalera por clase
+—clase 1-2 pide nivel II, clase 3 pide nivel III—, y la simétrica de abajo
+—clase 1-2 pide nivel I, clase 3 pide nivel II— la contradice el único módulo de
+escalón I con llave, que es de clase 2 y pide nivel II. Hasta que alguien la fije,
+**el nivel se elige módulo por módulo** y este documento no promete una fórmula
+que no existe.
 
 Corre **hacia adelante** y queda lugar para un III. Antes era una letra de la E a
 la A que corría **para atrás** —la A era el tope— y había que aprenderse que la
@@ -1056,6 +1081,10 @@ gastar es una promesa escrita con cifras.
 
 ## Por decidir
 
+- **Qué nivel pide un módulo de escalón I**, ahora que la regla dice que todos
+  piden algo. El escalón II tiene su escalera por clase; el I no tiene ninguna y
+  el único con llave no encaja en la simétrica. Sin eso, la tanda que le ponga
+  llave a los 29 módulos sin requisito se decide uno por uno.
 - Si las naves se pierden al ser destruidas o se reparan, y con qué seguro.
 - Si el equipamiento se daña con el uso.
 - Cómo se consiguen: sólo compra en astillero, o también fabricación.
