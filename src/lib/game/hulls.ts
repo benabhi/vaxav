@@ -5,13 +5,16 @@
  * chasis, sus ranuras y sus límites. Lo que la nave *hace* sale de los módulos
  * que se le monten, y de eso se ocupa `fitting`.
  *
- * Qué provee el casco y qué no, que es la parte que se olvida:
+ * Qué provee el casco, que es la parte que se olvida: **todo lo que antes venía
+ * de los siete internos esenciales**. Masa vacía, bodega, blindaje, cómputo,
+ * potencia, empuje, motor de salto, acumulador, combustible, sensores, firma, y
+ * las ranuras. Una nave de astillero vuela pelada porque el chasis ya trae con
+ * qué; lo que se monta encima mejora, no habilita.
  *
- * - **Provee**: masa vacía, bodega, blindaje, casco, cómputo, combustible,
- *   sensores, firma, y las ranuras.
- * - **No provee**: potencia, velocidad, alcance de salto ni acumulador. Todo eso
- *   viene de los internos esenciales, que por eso son esenciales — un chasis sin
- *   propulsores no se mueve.
+ * Y dos que son suyas y de nadie más: **la velocidad de warp y la inercia**. No
+ * hay habilidad que suba la primera ni módulo que baje la segunda sin pagar en
+ * otra divisa, y eso es lo que hace que elegir casco siga decidiendo algo cuando
+ * el piloto ya entrenó todo.
  *
  * Corresponde a docs/systems/SHIPS.md.
  */
@@ -69,7 +72,22 @@ export type SlotKind = (typeof SLOT_KINDS)[number];
  */
 export const BONUS_TARGETS = [
 	'cargo',
+	/**
+	 * Velocidad **sub-warp**: la que sale de dividir el empuje por la masa.
+	 *
+	 * **Dormida hasta el combate.** Moverse entre dos cuerpos ya no la usa —eso lo
+	 * deciden la velocidad de warp y la alineación— y lo que queda por debajo del
+	 * warp es maniobrar cerca de otra nave, que es un verbo que todavía no existe.
+	 */
 	'speed',
+	/**
+	 * Agilidad: masa por inercia, y **el único objetivo donde menos es mejor**.
+	 *
+	 * Es lo que decide cuánto tarda la nave en alinearse antes de entrar en warp.
+	 * Un bono acá **divide** el número en vez de multiplicarlo, igual que la
+	 * eficiencia de combustible: mejorar la agilidad es bajarla.
+	 */
+	'agility',
 	'jump_range',
 	'mining_yield',
 	'damage',
@@ -162,10 +180,42 @@ export interface Hull {
 	readonly power: number;
 
 	/**
-	 * Empuje de sus propulsores. La velocidad sale de dividirlo por la masa total,
-	 * así que **todo lo que se monta frena**, aunque no consuma nada.
+	 * Empuje de sus propulsores. La velocidad sub-warp sale de dividirlo por la
+	 * masa total, así que **todo lo que se monta frena**, aunque no consuma nada.
+	 *
+	 * **Dormido hasta el combate.** Movía el reloj de los viajes dentro del
+	 * sistema hasta que ese reloj pasó a ser alineación más warp, y ninguna de las
+	 * dos cosas lo mira. Queda escrito porque la velocidad sub-warp es la de
+	 * maniobrar cerca de otra nave —acercarse, abrir distancia, orbitar— y ése es
+	 * el verbo que lo despierta.
 	 */
 	readonly thrust: number;
+
+	/**
+	 * Velocidad de warp, en **décimas de unidad de distancia por segundo**.
+	 *
+	 * Es el número que decide el tramo largo de un viaje, y **es de la clase del
+	 * casco**: en EVE la fija el tipo de nave y no hay módulo ni habilidad que la
+	 * reemplace —los módulos bajos le suman un poco y cobran en otra divisa—. Los
+	 * valores son los de EVE comprimidos a los cinco cascos que hay, y se leen
+	 * igual que allá: `50` son 5,0 y es una lanzadera.
+	 *
+	 * Que sea un atributo del casco y no una cuenta de equipamiento es lo que hace
+	 * que la carguera sea lenta **siempre**, vacía o llena, y que no haya forma de
+	 * comprarle la diferencia a una exploradora.
+	 */
+	readonly warpSpeed: number;
+
+	/**
+	 * Inercia, en **décimas**: cuánto le cuesta a cada tonelada tomar vector.
+	 *
+	 * La agilidad es `masa × inercia` y de ahí sale la alineación, así que **más
+	 * inercia es más torpe**. En EVE el modificador de inercia baja a medida que la
+	 * nave crece, porque allá la masa sube mil veces y es la que manda; acá las
+	 * masas están comprimidas —de 250 a 585 toneladas— así que la diferencia de
+	 * clase la lleva este número, y se lee al derecho.
+	 */
+	readonly inertia: number;
 
 	/** Fuerza de su motor de salto. El alcance sale de dividirla por la masa. */
 	readonly jumpPower: number;
@@ -213,6 +263,35 @@ function slots(kind: SlotKind, size: number, count: number): SlotSpec[] {
  * Cinco cascos, uno por forma de jugar más la lanzadera inicial. Los números son
  * de balance y se van a mover; lo que no se mueve es que cada uno sea bueno en
  * una cosa y flojo en el resto. Una nave que sirve para todo no hace elegir.
+ *
+ * **De dónde salen la velocidad de warp y la inercia**, que son las dos nuevas:
+ * de qué clase de nave es cada casco en EVE, no del aire. Allá el rango entero va
+ * de 1,5 UA/s —carguero, titán— a 8 —interceptor, covert ops—, pasando por 5 la
+ * lanzadera, 3 el crucero y 2 el acorazado. Acá los cinco cascos son chicos y
+ * medianos, así que ocupan el tramo del medio de ese rango y no lo estiran:
+ *
+ * | Casco    | Clase de EVE          | Warp  | Agilidad | Alinea |
+ * | -------- | --------------------- | ----- | -------- | ------ |
+ * | Vencejo  | Explorador encubierto | 6,0   |      495 |    3 s |
+ * | Pioner   | Lanzadera             | 5,0   |      575 |    4 s |
+ * | Alabarda | Destructor de combate | 3,5   |    1.287 |    9 s |
+ * | Percal   | Barcaza minera        | 2,5   |    1.616 |   11 s |
+ * | Mula     | Carguera              | 2,0   |    2.180 |   15 s |
+ *
+ * Dos cosas que ese cuadro decide a propósito:
+ *
+ * - **El 1,5 del carguero de verdad no está**, y el 8 del interceptor tampoco. La
+ *   Mula es la más lenta de lo que hay hoy, no la más lenta que va a haber: la
+ *   clase carguero pesado todavía no existe en el catálogo y llegar al piso ahora
+ *   dejaría sin lugar a lo que falta. Lo mismo arriba con el Vencejo.
+ * - **El orden de las dos columnas no es el mismo.** La Alabarda alinea peor que
+ *   el Vencejo por pesada, no por lenta, y la Percal cruza más despacio que la
+ *   Alabarda sin ser mucho más torpe. Un casco rápido no sale antes, y ésa es la
+ *   decisión entera.
+ *
+ * Las alineaciones caen donde las de EVE para esas clases —fragata de 3 a 5
+ * segundos, crucero 8, industrial de 10 a 15— que es el tramo que le corresponde
+ * a un catálogo sin capitales.
  */
 export const HULLS: readonly Hull[] = [
 	{
@@ -251,6 +330,8 @@ export const HULLS: readonly Hull[] = [
 		computing: 45,
 		power: 30,
 		thrust: 48_000,
+		warpSpeed: 50,
+		inertia: 23,
 		jumpPower: 720,
 		capacitor: 240,
 		capacitorRecharge: 8,
@@ -288,6 +369,8 @@ export const HULLS: readonly Hull[] = [
 		computing: 55,
 		power: 45,
 		thrust: 88_000,
+		warpSpeed: 20,
+		inertia: 40,
 		jumpPower: 1360,
 		capacitor: 380,
 		capacitorRecharge: 13,
@@ -319,6 +402,8 @@ export const HULLS: readonly Hull[] = [
 		computing: 65,
 		power: 50,
 		thrust: 88_000,
+		warpSpeed: 25,
+		inertia: 32,
 		jumpPower: 1360,
 		capacitor: 400,
 		capacitorRecharge: 15,
@@ -350,6 +435,8 @@ export const HULLS: readonly Hull[] = [
 		computing: 115,
 		power: 40,
 		thrust: 88_000,
+		warpSpeed: 60,
+		inertia: 18,
 		jumpPower: 1360,
 		capacitor: 360,
 		capacitorRecharge: 16,
@@ -381,6 +468,8 @@ export const HULLS: readonly Hull[] = [
 		computing: 60,
 		power: 55,
 		thrust: 96_000,
+		warpSpeed: 35,
+		inertia: 22,
 		jumpPower: 1360,
 		capacitor: 440,
 		capacitorRecharge: 14,

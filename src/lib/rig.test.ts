@@ -83,6 +83,28 @@ describe('el resumen de un módulo', () => {
 		expect(resumen).toContain('MW');
 	});
 
+	it('escribe el warp en décimas y no como un entero suelto', () => {
+		// La velocidad de warp se guarda en décimas, así que pasarla por el molde de
+		// los enteros la mostraría como «+3» cuando son tres décimas: diez veces más
+		// de lo que el módulo da. Es la clase de error que nadie ve hasta que compara
+		// el tiempo prometido con el que la orden tarda.
+		const optimizador = MODULES.find((module) => module.code === 'warp_optimizer_i2')!;
+		expect(moduleSummary(optimizador)).toContain('Warp +0,3 ud/s');
+	});
+
+	it('avisa que el empuje no mueve ningún reloj todavía', () => {
+		// **Los tres propulsores auxiliares son hoy tres compras que no hacen nada**:
+		// la velocidad sub-warp no mueve ningún reloj desde que viajar es alineación
+		// más warp. Escribir el empuje y callar eso es vender una mejora que no llega,
+		// y el renglón se lee justo cuando el jugador está decidiendo comprarlo.
+		const dormidos = MODULES.filter((module) => module.thrust > 0);
+		expect(dormidos.length).toBeGreaterThan(0);
+
+		for (const module of dormidos) {
+			expect(moduleSummary(module), module.code).toContain('sin efecto hasta el combate');
+		}
+	});
+
 	it('una ranura vacía no tiene nada que resumir', () => {
 		const vacio = { ...MODULES[0] };
 		for (const clave of Object.keys(vacio) as (keyof typeof vacio)[]) {

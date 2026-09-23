@@ -30,7 +30,17 @@ import {
 	startTravel
 } from './actions';
 import { skillXp } from './pilots';
-import { activeShip, saveFit, setFuel, shipFit, shipHull, shipReadout } from './ships';
+import {
+	ShipError,
+	activeShip,
+	refit,
+	saveFit,
+	setFuel,
+	shipFit,
+	shipHull,
+	shipReadout
+} from './ships';
+import { situation } from './status';
 import { bodyDistance, getBody } from './universe';
 import { connectGates, createGate, createSystem } from './worldbuilding';
 import type { Db } from '../db/types';
@@ -63,14 +73,14 @@ describe('dar la orden de viajar', () => {
 		expect(orden.originBodyId).toBe(piloto.locationId);
 		expect(orden.destinationBodyId).toBe(destino.id);
 
-		// La duración sale de la distancia y de la **velocidad real de su nave**,
-		// que ya trae adentro el bono de Navegación con el que el minero arranca.
-		// Se calcula acá en vez de asumir un número, para no depender ni de la XP
-		// inicial de la profesión ni de los propulsores que traiga la Pioner el
-		// día que cambien.
+		// La duración sale de la distancia y de **la hoja real de su nave**: la
+		// alineación, que ya trae adentro el bono de Maniobra con el que el minero
+		// arranca, más el crucero a la velocidad de warp de su casco. Se calcula acá
+		// en vez de asumir un número, para no depender ni de la XP inicial de la
+		// profesión ni del casco que entregue el astillero el día que cambie.
 		const distancia = bodyDistance(db, orden.originBodyId, destino.id);
 		const readout = shipReadout(db, piloto)!;
-		expect(orden.durationSeconds).toBe(travelDurationSeconds(distancia, readout.speed));
+		expect(orden.durationSeconds).toBe(travelDurationSeconds(distancia, readout));
 	});
 
 	it('acorta el mismo viaje con una nave más rápida', async () => {
@@ -82,16 +92,40 @@ describe('dar la orden de viajar', () => {
 
 		const nave = activeShip(db, piloto.id)!;
 		const hull = shipHull(nave);
-		const deFabrica = travelDurationSeconds(distancia, shipReadout(db, piloto)!.speed);
+		const deFabrica = travelDurationSeconds(distancia, shipReadout(db, piloto)!);
 
-		// Un propulsor auxiliar empuja más y pesa un poco más. Ahora cuesta una
-		// consola: antes era un interno esencial que la nave llevaba igual.
+		// Un optimizador de warp estira el tramo que escala y cobra en firma. Cuesta
+		// una ranura baja: no hay forma de mejorar el viaje sin pagarla.
 		const codigos = shipFit(db, nave).map((module) => module.code);
-		codigos[hull.slots.findIndex((slot) => slot.kind === 'mid')] = 'thruster_i2';
+		codigos[hull.slots.findIndex((slot) => slot.kind === 'low')] = 'warp_optimizer_i2';
 		saveFit(db, nave, codigos);
 
-		const conMejores = travelDurationSeconds(distancia, shipReadout(db, piloto)!.speed);
+		const conMejores = travelDurationSeconds(distancia, shipReadout(db, piloto)!);
 		expect(conMejores).toBeLessThan(deFabrica);
+	});
+
+	it('y la duración ya no se puede mover: con el viaje encargado no se equipa', async () => {
+		// **El exploit clásico, y este proyecto ya lo tuvo una vez en el salto**:
+		// encargar el viaje con la nave como está y montar el optimizador después,
+		// para que el reloj siga corriendo con la duración vieja mientras la nave
+		// llega mejorada. No se puede, y no por casualidad: la orden deja al piloto
+		// **en tránsito desde el primer segundo** —aunque siga físicamente atracado en
+		// la estación— y equipar exige estar atracado.
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+		const orden = startTravel(db, piloto, getBody(db, 'anfora_i')!);
+
+		const ahora = situation(db, piloto);
+		expect(ahora.status).toBe('in_transit');
+		expect(ahora.canRefit).toBe(false);
+
+		// Ni siquiera volver a guardar lo mismo: el servicio no confía en que un
+		// pedido que dice no cambiar nada no cambie nada.
+		const codigos = shipFit(db, activeShip(db, piloto.id)!).map((module) => module.code);
+		expect(() => refit(db, piloto, codigos)).toThrow(ShipError);
+
+		// Y lo guardado sigue siendo lo que se cobró al encargar.
+		expect(currentAction(db, piloto.id)!.durationSeconds).toBe(orden.durationSeconds);
 	});
 
 	it('se niega sin nave', async () => {

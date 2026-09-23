@@ -308,9 +308,10 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 	const now = situation(db, row);
 	if (!now.canOrder) throw new ActionError(now.orderBlocked);
 
-	// La hoja de rendimiento de su nave: de ahí sale la velocidad, y de paso dice
-	// si tiene nave. Es la misma calculadora que muestra la pantalla, así que el
-	// viaje tarda exactamente lo que la ficha promete.
+	// La hoja de rendimiento de su nave: de ahí salen la velocidad de warp y la
+	// alineación, y de paso dice si tiene nave. Es la misma calculadora que
+	// muestra la pantalla, así que el viaje tarda exactamente lo que la ficha
+	// promete.
 	const readout = shipReadout(db, row);
 	if (readout === null) throw new ActionError('Necesitás una nave para viajar.');
 	if (!readout.flyable) throw new ActionError('Tu nave no está en condiciones de volar.');
@@ -326,7 +327,9 @@ export function startTravel(db: Db, row: Pilot, destination: Body): PilotAction 
 	}
 
 	const distance = bodyDistance(db, row.locationId, destination.id);
-	const duration = travelDurationSeconds(distance, readout.speed);
+	// La hoja entera entra como nave de viaje: trae los dos números que la
+	// duración necesita y ninguno se copia por el camino.
+	const duration = travelDurationSeconds(distance, readout);
 
 	return db
 		.insert(pilotAction)

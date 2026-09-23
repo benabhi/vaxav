@@ -2,8 +2,8 @@
 
 > **Implementado en parte.** El motor de acciones existe: se encola una orden por
 > vez, se resuelve de forma perezosa e idempotente y deja su informe en la
-> bitácora. Hay cuatro acciones: **viajar**, **escanear**, **minar** y **acordar
-> una orden** del mercado. Los números están para discutirse.
+> bitácora. Hay cinco acciones: **viajar**, **saltar**, **escanear**, **minar** y
+> **acordar una orden** del mercado. Los números están para discutirse.
 
 > **La experiencia ya no se reparte entre habilidades**: una acción deposita en el
 > pozo de su familia. Ver [habilidades](SKILLS.md).
@@ -58,11 +58,17 @@ una nave con +10 % y un módulo de extracción con +20 % acumula 0,45 de bono:
 Los bonos se suman, no se multiplican: es más fácil de explicar al jugador, más
 fácil de balancear, y evita que apilar seis fuentes chicas rompa el juego.
 
-**Y un bono se aplica una sola vez.** Viajar es el caso testigo: su duración sale
-de la distancia y de la **velocidad de la nave**, y Navegación no vuelve a entrar
-en la cuenta porque ya está adentro de esa velocidad —junto con el bono de rol
-del casco y los propulsores montados—. Contarla dos veces para el mismo efecto es
-la forma más fácil de romper el balance sin que se note.
+**Y un bono se aplica una sola vez.** Viajar es el caso testigo: su duración son
+dos sumandos —la alineación de la nave más la distancia dividida por su velocidad
+de warp— y **Maniobra no vuelve a entrar en la cuenta**, porque ya está adentro de
+la alineación que calcula la hoja de la nave. Contarla dos veces para el mismo
+efecto es la forma más fácil de romper el balance sin que se note.
+
+**Viajar es además el único verbo con forma propia**, y no por capricho: la mitad
+de su reloj no depende de la distancia, así que no hay una duración base que
+dividir. La fórmula entera, de dónde sale cada uno de sus dos números y qué se
+durmió al cambiarla están en
+[viajar es alinearse y cruzar](SHIPS.md#viajar-es-alinearse-y-cruzar).
 
 ## Cómo se resuelve
 
@@ -105,8 +111,9 @@ adorno: es el relato de tu partida.
 
 El caso que define el bucle. Un piloto está en Puerto Ánfora y quiere minar.
 
-1. **Ordena viajar** a los Anillos de Ánfora III. La duración sale de la
-   distancia, de Navegación, de la nave y de sus módulos: 12 minutos.
+1. **Ordena viajar** a los Anillos de Ánfora III. La duración sale de lo que su
+   nave tarda en alinearse más la distancia dividida por su velocidad de warp:
+   12 minutos.
 2. **El contador corre.** El piloto cierra la pestaña y se va a hacer otra cosa.
 3. **Al volver**, la acción ya venció: informe de viaje, posición nueva y
    +120 XP al pozo de Pilotaje.

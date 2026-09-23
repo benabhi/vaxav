@@ -193,8 +193,13 @@
 						—empujado con `ml-auto`— se corre y desalinea las demás filas. Que sea
 						un mínimo y no un ancho fijo es lo que deja crecer el bloque el día
 						que haya más de una acción.
+
+						**La medida es la del botón que se le pone adentro**, y por eso son
+						siete rem y medio: la que entra es la duración del viaje, y la más larga es
+						`NN m NN s`. Reservar menos que el botón deja la fila del piloto
+						corrida contra todas las demás.
 					-->
-				<div class="flex min-w-[4.5rem] shrink-0 items-center gap-2">
+				<div class="flex min-w-[7.5rem] shrink-0 items-center gap-2">
 					{#if actions}{@render actions(body)}{/if}
 				</div>
 			</div>

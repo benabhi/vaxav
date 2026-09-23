@@ -118,14 +118,24 @@ const CATALOG = [
 		governs: 'Requisito de la clase lanzadera',
 		requirements: []
 	},
+	// **Navegación cambió de qué gobierna, y no por gusto.** Movía el reloj de los
+	// viajes dentro del sistema hasta que ese reloj pasó a ser alineación más warp:
+	// la alineación es de Maniobra y la velocidad de warp es del casco, como en EVE,
+	// donde ninguna habilidad la sube. Lo que le queda es la velocidad sub-warp
+	// —dormida hasta el combate— y **el acceso al equipo de warp**, que es lo que
+	// sigue haciendo que entrenarla valga hoy.
 	{
 		code: 'navigation',
 		name: 'Navegación',
 		family: 'piloting',
 		difficulty: 1,
-		governs: 'Velocidad de viaje dentro del sistema',
+		governs: 'Velocidad sub-warp y acceso al equipo de warp',
 		requirements: []
 	},
+	// Maniobra **estrena verbo**: prometía esto desde que existe el catálogo y no
+	// movía nada, porque no había alineación que acortar. Ahora divide la agilidad
+	// —masa por inercia— desde la tabla de bonos de `fitting`, y es lo único del
+	// reloj de un viaje que el piloto puede mejorar entrenando.
 	{
 		code: 'maneuvering',
 		name: 'Maniobra',
@@ -343,6 +353,12 @@ const CATALOG = [
 		governs: 'Rendimiento de los módulos de reparación',
 		requirements: [{ skill: 'mechanics', level: 3 }]
 	},
+	// **Dormida, y de las más dormidas que hay**: no tiene fila en la tabla de bonos
+	// y hasta hoy aparecía una sola vez en todo el proyecto, que es esta definición.
+	// Lo que gobierna es el empuje, que es velocidad sub-warp, así que **la despierta
+	// el combate** junto con los propulsores auxiliares. Se queda en el árbol porque
+	// es lo que le dice al jugador en qué se puede convertir, que es media función
+	// del catálogo.
 	{
 		code: 'propulsion_engineering',
 		name: 'Ingeniería de propulsión',

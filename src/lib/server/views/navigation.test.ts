@@ -20,6 +20,7 @@ import {
 	readGalaxyQuery
 } from './navigation';
 import { NO_STANDINGS, type PilotStandings } from '../services/reputation';
+import { REFERENCE_SHIP } from '$lib/game/actions';
 
 describe('el mosaico de módulos', () => {
 	it('muestra los ocho siempre, marcando los que la estación tiene', () => {
@@ -310,7 +311,7 @@ describe('el árbol del sistema', () => {
 
 	it('no salta niveles: cada fila cuelga de la anterior o de un ancestro', () => {
 		const db = seededDb();
-		const vista = buildBodyRows(db, systemTree(db, 'anfora'), '', null, 190);
+		const vista = buildBodyRows(db, systemTree(db, 'anfora'), '', null, REFERENCE_SHIP);
 
 		for (let i = 1; i < vista.length; i++) {
 			// Bajar de a un nivel por vez; subir, los que haga falta.
@@ -320,7 +321,7 @@ describe('el árbol del sistema', () => {
 
 	it('lleva una guía por columna de ancestro, sin contar la estrella', () => {
 		const db = seededDb();
-		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, 190);
+		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, REFERENCE_SHIP);
 
 		for (const fila of filas) {
 			// La columna de la estrella se descarta: no tiene hermanos ni columna
@@ -331,7 +332,7 @@ describe('el árbol del sistema', () => {
 
 	it('la guía de un ancestro sigue bajando sólo si le quedan hermanos', () => {
 		const db = seededDb();
-		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, 190);
+		const filas = buildBodyRows(db, systemTree(db, 'anfora'), '', null, REFERENCE_SHIP);
 
 		// Para cada fila con guías, la marca de la columna k dice si el ancestro de
 		// profundidad k+1 todavía tiene algo por debajo en la lista.
@@ -361,8 +362,26 @@ describe('el árbol del sistema', () => {
 		// Y todas las demás sí.
 		for (const body of vista.bodies.filter((b) => !b.isHere)) {
 			expect(body.distance).not.toBe('');
-			expect(body.travelLabel).toMatch(/^\d+s$/);
+			expect(body.travelLabel).toMatch(/^(\d+ m \d{2} s|\d+ s)$/);
 		}
+	});
+
+	it('escribe la duración como el resto del juego, con minutos cuando los hay', async () => {
+		// «2 m 48 s» se entiende de una y «168s» hay que dividirlo mentalmente. Es el
+		// mismo número que el cartel de confirmación muestra al lado, y **dos
+		// formatos para el mismo dato se leen como dos datos distintos**.
+		const db = seededDb();
+		const piloto = await crearPiloto(db);
+
+		const etiquetas = buildSystemView(db, piloto)
+			.bodies.filter((body) => !body.isHere)
+			.map((body) => body.travelLabel);
+
+		// Ánfora tiene cuerpos cerca y cuerpos lejos, así que las dos formas salen.
+		expect(etiquetas.some((label) => /^\d+ s$/.test(label))).toBe(true);
+		expect(etiquetas.some((label) => /^\d+ m \d{2} s$/.test(label))).toBe(true);
+		// Y ninguna queda con el formato crudo de antes, que era «168s».
+		expect(etiquetas.some((label) => /\d+s/.test(label))).toBe(false);
 	});
 
 	it('con una orden en curso el árbol lo dice, que es lo que apaga los botones', async () => {

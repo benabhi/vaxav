@@ -42,7 +42,12 @@ import {
 	type BodyDetail,
 	type SystemNode
 } from '../services/universe';
-import { JUMP_KIND, REFERENCE_SPEED, travelDurationSeconds } from '$lib/game/actions';
+import {
+	JUMP_KIND,
+	REFERENCE_SHIP,
+	travelDurationSeconds,
+	type TravelShip
+} from '$lib/game/actions';
 import { hopsFrom } from '$lib/game/galaxy';
 import { buildGalaxyMap, neighbourhood } from './galaxy';
 import { FREE_SPACE } from '$lib/filters';
@@ -522,7 +527,8 @@ export function buildBodyRows(
 	nodes: readonly SystemNode[],
 	here: string,
 	originId: number | null,
-	speed: number,
+	/** La nave del piloto, de la que salen la alineación y el warp de cada fila. */
+	ship: TravelShip,
 	/** El cuerpo al que va la nave, si va a alguno de este sistema. */
 	destinationId: number | null = null
 ): readonly FilaCuerpo[] {
@@ -542,7 +548,10 @@ export function buildBodyRows(
 		if (!esAqui && originId !== null) {
 			const unidades = bodyDistance(db, originId, node.body.id);
 			distance = `${thousands(unidades)} ud`;
-			travelLabel = `${travelDurationSeconds(unidades, speed)}s`;
+			// Con el mismo formato que el resto del juego: «2 m 48 s» y no «168s». Es
+			// el mismo número que el cartel de confirmación muestra al lado, y dos
+			// formatos para el mismo dato se leen como dos datos distintos.
+			travelLabel = remainingLabel(travelDurationSeconds(unidades, ship));
 		}
 
 		filas.push({
@@ -999,7 +1008,7 @@ export function buildSystemView(db: Db, row: Pilot): Sistema {
 			systemTree(db, system.code),
 			here?.code ?? '',
 			row.locationId,
-			readout?.speed ?? REFERENCE_SPEED,
+			readout ?? REFERENCE_SHIP,
 			// Adónde va la nave, para que el árbol lo marque. Sale de la orden en
 			// curso: el árbol es la pantalla en la que uno mira adónde está yendo, y
 			// hasta acá el destino vivía solamente en la barra de arriba.
@@ -1115,7 +1124,7 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 	const nombres = new Map(cuerpos.map((uno) => [uno.id, uno]));
 
 	const readout = shipReadout(db, row);
-	const velocidad = readout?.speed ?? REFERENCE_SPEED;
+	const nave = readout ?? REFERENCE_SHIP;
 
 	const salidas: SalidaGalaxia[] = [];
 	for (const salida of puertas) {
@@ -1145,7 +1154,7 @@ function buildSalidas(db: Db, row: Pilot, here: Body): readonly SalidaGalaxia[] 
 			gateCode: cuerpo.code,
 			bearing: bearingLabel(salida.bearing),
 			travelDistance: `${thousands(hasta)} ud`,
-			travelDuration: remainingLabel(travelDurationSeconds(hasta, velocidad)),
+			travelDuration: remainingLabel(travelDurationSeconds(hasta, nave)),
 			distance: lightYears(salida.jumpDistance),
 			// El tiempo se muestra **aunque no se pueda cruzar**: un renglón en blanco
 			// con un «no podés» no dice nada.

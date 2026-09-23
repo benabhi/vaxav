@@ -100,16 +100,26 @@ de las dos es gratis, que es el punto.
 
 ### Movimiento: los que se vuelven tiempo
 
-| Atributo                 | Qué decide                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| **Masa** (t)             | Casco + módulos + carga. **Divide la velocidad y el alcance**, así que toda decisión de equipamiento cuesta tiempo |
-| **Velocidad de crucero** | Cuánto tarda ir de un cuerpo a otro. Sale del empuje ÷ masa                                                        |
-| **Alcance de salto**     | Cuán lejos llegaría un salto **sin puerta**. Sale de la potencia de salto ÷ masa                                   |
-| **Combustible**          | Cuánto entra en el tanque                                                                                          |
+| Atributo                     | Qué decide                                                                                                        |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Masa** (t)                 | Casco + módulos + carga. **Empeora la agilidad y divide el alcance**: toda decisión de equipamiento cuesta tiempo |
+| **Inercia** (décimas)        | Cuánto le cuesta a cada tonelada tomar vector. Es del casco, y **ningún módulo la baja**                          |
+| **Agilidad**                 | Masa × inercia, y **menos es mejor**. De acá sale la alineación                                                   |
+| **Alineación** (s)           | Cuánto tarda en salir antes de entrar en warp. **Fijo: no depende de la distancia**                               |
+| **Velocidad de warp** (ud/s) | Cuánto tarda el tramo largo. Es de la **clase del casco** y ninguna habilidad la sube                             |
+| **Velocidad sub-warp**       | Empuje ÷ masa. **Dormida hasta el combate**: hoy no la lee ningún verbo                                           |
+| **Alcance de salto**         | Cuán lejos llegaría un salto **sin puerta**. Sale de la potencia de salto ÷ masa                                  |
+| **Combustible**              | Cuánto entra en el tanque                                                                                         |
 
-Que velocidad y alcance salgan los dos de dividir por la masa no es casualidad:
-es lo que hace que un módulo que sólo pesa —una placa de blindaje, que no
-consume nada— igual te cueste algo.
+**La masa entra dos veces y por dos puertas.** Divide el alcance de salto y
+multiplica la agilidad, así que una placa de blindaje que no consume nada igual te
+hace **salir más tarde**. Es lo que hace que un módulo que sólo pesa cueste algo.
+
+**Y el reloj de un viaje son dos mitades que no se parecen en nada**: la
+alineación, que se paga igual para ir a la luna de al lado que al otro extremo del
+sistema, y el warp, que es lo único que escala con la distancia. Cómo se suman y
+de dónde salen los dos números está en
+[viajar es alinearse y cruzar](#viajar-es-alinearse-y-cruzar).
 
 **Y el atributo es el tanque, no lo que hay adentro.** «Combustible» en la ficha
 del casco es _cuánto entra_; lo que la nave lleva encima se guarda en la nave. Son
@@ -218,23 +228,23 @@ llenar esas siete ranuras**. La mitad del catálogo no era una elección.
 Ahora los siete son **atributos del casco**. Una nave _tiene_ planta de energía,
 igual que tiene masa; no se elige tenerla:
 
-| Interno        | Dónde vive ahora                                 |
-| -------------- | ------------------------------------------------ |
-| Planta         | `power` del casco — **ya era el presupuesto**    |
-| Sensores       | `sensorRange` del casco — **ya era un atributo** |
-| Tanque         | `fuel` del casco — **ya era un atributo**        |
-| Distribuidor   | `capacitor` y su recarga, del casco              |
-| Propulsores    | La velocidad base del casco                      |
-| Motor de salto | `jumpRange` del casco                            |
-| Soporte vital  | **Se fue.** No gobernaba nada                    |
+| Interno        | Dónde vive ahora                                  |
+| -------------- | ------------------------------------------------- |
+| Planta         | `power` del casco — **ya era el presupuesto**     |
+| Sensores       | `sensorRange` del casco — **ya era un atributo**  |
+| Tanque         | `fuel` del casco — **ya era un atributo**         |
+| Distribuidor   | `capacitor` y su recarga, del casco               |
+| Propulsores    | `thrust` del casco — **dormido hasta el combate** |
+| Motor de salto | `jumpRange` del casco                             |
+| Soporte vital  | **Se fue.** No gobernaba nada                     |
 
 Cuatro de los siete ya eran atributos del casco _además_ de módulos: se estaba
 cobrando dos veces por lo mismo.
 
-Y lo que esos módulos daban de más —más potencia, más empuje, más alcance de
-salto— **vuelve como módulo opcional que cuesta una ranura**. Querés más empuje:
-montás un propulsor en una consola y perdés la consola. Ésa sí es una decisión, y
-es toda la diferencia entre mejorar y comprar.
+Y lo que esos módulos daban de más —más potencia, más alcance de salto, más
+velocidad de warp— **vuelve como módulo opcional que cuesta una ranura**. Querés
+llegar antes: montás un optimizador de warp en un bajo y perdés el bajo. Ésa sí es
+una decisión, y es toda la diferencia entre mejorar y comprar.
 
 ### La clase: si entra
 
@@ -263,9 +273,9 @@ escalera iba al revés; ésa era la mitad de por qué no se entendía. La otra m
 era que mezclaba dos cosas en una letra: el escalón tecnológico y el compromiso de
 diseño, que ahora van separados.
 
-Cuál es «su habilidad» sale del sistema: los propulsores piden **Navegación**, los
-calibradores de salto **Astrogación**, los amplificadores de sensores **Escaneo** y
-el láser de extracción **Minería**.
+Cuál es «su habilidad» sale del sistema: los propulsores y el optimizador de warp
+piden **Navegación**, los calibradores de salto **Astrogación**, los
+amplificadores de sensores **Escaneo** y el láser de extracción **Minería**.
 
 > **Sólo se gatea con habilidades que se puedan entrenar.** La experiencia se
 > deposita por rama, así que una rama sin ninguna acción que la pague es una rama
@@ -753,21 +763,178 @@ que es la misma que usa la pantalla y la que resuelve las acciones.
 La bandera `is_active` en vez de una nave única por piloto: tener varias sigue
 siendo "por decidir", y una bandera deja la puerta abierta sin costar nada hoy.
 
-### Viajar usa la velocidad de la nave
+### Viajar es alinearse y cruzar
 
 ```
-duración = distancia × segundos_por_unidad × (velocidad_de_referencia ÷ velocidad)
+duración = alineación(masa × inercia) + distancia ÷ velocidad de warp
 ```
 
-Y nada más. **Navegación no entra en esta cuenta**: ya está adentro de la
-velocidad, junto con el bono de rol del casco y los propulsores que tenga puestos.
-Aplicarla otra vez sería contar el mismo bono dos veces para el mismo efecto, que
-es exactamente lo que la regla de "una sola bolsa" quiere evitar.
+**Son dos sumandos que no se parecen en nada**, y ésa es toda la mecánica. La
+alineación es un costo fijo de arranque —la nave tiene que apuntar y tomar vector
+antes de entrar en warp, y eso tarda lo mismo para ir a la luna de al lado que al
+otro extremo del sistema—; el crucero es lo único que escala con la distancia.
 
-Con la velocidad de referencia igual a la de una lanzadera de astillero, los
-tiempos calibrados del sistema inicial no se movieron. Lo que cambió es que ahora
-**la masa cuesta tiempo de verdad**: montarle una placa de blindaje a la Pioner la
-frena de 200 a 192 u/s, y ese trayecto pasa a tardar más.
+Antes era `distancia × constante × (velocidad_de_referencia ÷ velocidad)`, con la
+velocidad saliendo de `empuje ÷ masa`. **El defecto era que un trayecto corto se
+sentía igual que uno largo**: los dos costaban proporcionalmente lo mismo, y la
+única palanca del piloto era montar más empuje.
+
+**El reparto es deliberado: la nave decide la parte que escala con la distancia y
+el piloto sólo mejora el arranque.** La velocidad de warp la fija la clase del
+casco y **no se entrena** —es lo que hace EVE, y a propósito: hay una capa del
+movimiento que no depende del que la vuela, así que elegir casco sigue decidiendo
+algo cuando el piloto ya lo entrenó todo—.
+
+#### Los dos atributos nuevos, y de dónde salen
+
+Los dos se guardan en **décimas**, como todo lo que en este juego necesita
+fracción:
+
+| Casco        | Clase de EVE          | Warp (ud/s) | Inercia | Agilidad | Alinea |
+| ------------ | --------------------- | ----------: | ------: | -------: | -----: |
+| **Vencejo**  | Explorador encubierto |         6,0 |     1,8 |      495 |    3 s |
+| **Pioner**   | Lanzadera             |         5,0 |     2,3 |      575 |    4 s |
+| **Alabarda** | Destructor de combate |         3,5 |     2,2 |    1.287 |    9 s |
+| **Percal**   | Barcaza minera        |         2,5 |     3,2 |    1.616 |   11 s |
+| **Mula**     | Carguera              |         2,0 |     4,0 |    2.180 |   15 s |
+
+**La velocidad de warp sale de qué clase de nave es cada casco en EVE**, no del
+aire: allá el rango entero va de 1,5 UA/s —carguero pesado, titán— a 8
+—interceptor, explorador encubierto—. Acá los cinco cascos son chicos y medianos,
+así que ocupan **el tramo del medio y no lo estiran**: el 1,5 y el 8 quedan libres
+a propósito para las clases que faltan. La Mula es la más lenta de lo que hay hoy,
+no la más lenta que va a haber.
+
+**La inercia va al derecho: más inercia, más torpe.** Es al revés que el
+modificador de EVE, y el porqué es consecuencia de otra decisión de acá. Allá el
+modificador baja a medida que la nave crece porque la masa sube mil veces y es la
+que manda; acá **las masas están comprimidas** —de 250 a 585 toneladas— así que la
+diferencia de clase la tiene que llevar la inercia.
+
+**Las dos columnas no se ordenan igual, y ése es el punto.** La Alabarda alinea
+peor que el Vencejo por pesada, no por lenta; la Percal cruza más despacio que la
+Alabarda sin ser mucho más torpe. Un casco rápido no sale antes.
+
+#### La única constante de calibración
+
+`AGILITY_PER_ALIGN_SECOND = 100`, en `src/lib/game/warp.ts`, y es **el único
+número que se movió al cambiar de modelo**. EVE divide por 500.000 sobre masas en
+kilos, que sobre las toneladas de Vaxav equivale a dividir por 500: con eso la
+lanzadera inicial alinearía en menos de un segundo y el sumando fijo no se notaría
+contra un viaje de medio minuto, que es justamente lo que el modelo nuevo viene a
+que se note.
+
+**La alineación se redondea una sola vez, al final.** Se redondeaba dos veces
+—una al calcular la agilidad y otra al pasarla a segundos— y en 28 de 21.030
+combinaciones de casco, módulos y niveles eso movía un segundo entero. Un segundo
+de diferencia entre lo que promete la ficha y lo que cobra la orden es de los
+errores que el jugador descubre justo cuando lo perjudica.
+
+**La escala del crucero no hizo falta tocarla.** La constante vieja
+—`SECONDS_PER_DISTANCE_UNIT = 0,2 s/ud`— resultó ser exactamente una nave de 5,0
+de warp, así que **la Pioner reproduce el ritmo viejo por construcción**: en el
+trayecto más largo de Ánfora pasa de 111 a 116 segundos, y los cinco de diferencia
+son la alineación.
+
+**Los cascos lentos se frenaron a propósito**, con el número sobre la mesa al
+aprobarlo: en ese mismo trayecto la Mula pasa de 132 a 295 segundos y la Percal de
+122 a 235. Es el efecto buscado —la nave decide la parte que escala— y el factor
+de 2,5 contra la lanzadera está dentro del rango que EVE tiene entre sus propias
+clases.
+
+#### Qué mueve el piloto, y qué no
+
+| Fuente                 | Qué toca                       | Cuánto                     |
+| ---------------------- | ------------------------------ | -------------------------- |
+| **Maniobra**           | La agilidad, **dividiendo**    | 5 % por nivel              |
+| Optimizador de warp I  | La velocidad de warp           | +0,3 ud/s, y cobra 15 m³   |
+| Optimizador de warp II | La velocidad de warp           | +0,5 ud/s, y cobra 40 m³   |
+| Cualquier módulo       | La agilidad, **empeorándola**  | Su masa, sin pedir permiso |
+| **Ninguna habilidad**  | La velocidad de warp del casco | **Cero, a propósito**      |
+
+**Maniobra divide en vez de multiplicar**, igual que la eficiencia de
+combustible: mejorar la agilidad es bajarla. Al nivel V son un 25 % de agilidad,
+que se siente como un 20 % menos de alineación —la Pioner pasa de 4 a 3 segundos y
+la Mula de 15 a 12—.
+
+**Y es la única palanca del piloto, una sola**: ningún casco tiene bono de rol
+sobre la agilidad. La fila de abajo es la contraria y no se entrena: cada módulo
+montado suma masa, la masa entra en la agilidad, y **desde esta tanda el peso se
+cobra en alineación**. Una placa de blindaje que no consume nada igual te hace
+salir más tarde, y los dos optimizadores también pesan: el que compraste para
+llegar antes te hace salir un poco después.
+
+Con eso **la cadena de viajar cierra sobre sí misma**: viajar paga experiencia al
+pozo de Pilotaje, Pilotaje entrena Maniobra, Maniobra acorta el arranque y viajar
+tarda menos. Maniobra prometía ese efecto desde que existe el catálogo y no movía
+nada, porque no había alineación que acortar.
+
+**Y nada se aplica dos veces.** Maniobra ya está adentro de la agilidad que
+calcula la hoja de la nave, y Navegación no entra en la cuenta: gobierna la
+velocidad sub-warp, que está dormida. Sumarlas otra vez en la duración sería
+contar el mismo bono dos veces para el mismo efecto, que es lo que la regla de
+«una sola bolsa» de [acciones](ACTIONS.md#cuánto-tarda) quiere evitar.
+
+#### Los dos optimizadores de warp
+
+Son **módulos bajos y no refuerzos** a propósito: la bandeja de refuerzos sigue
+vacía y estrenarla es otra tanda.
+
+| Módulo                  | Clase | Escalón | Pide         | Da        | Bodega | Potencia | Cómputo |
+| ----------------------- | ----: | ------- | ------------ | --------- | -----: | -------: | ------: |
+| **Optimizador de warp** |     2 | I       | Navegación 2 | +0,3 ud/s |  15 m³ |     9 MW |    28 u |
+| **Optimizador de warp** |     3 | II      | Navegación 3 | +0,5 ud/s |  40 m³ |    17 MW |    40 u |
+
+**Los dos cobran en bodega, y no se separan por la divisa sino por el precio.** Es
+la corrección de un error que vale la pena dejar escrito para que nadie lo
+«arregle» de vuelta: el chico cobraba **firma**, que parecía la regla de EVE de
+que cada módulo pague en una moneda distinta, y era no cobrar nada. Escudo,
+blindaje, daño y firma están los cuatro marcados **Combate** en
+[la auditoría](#qué-consume-cada-número-la-auditoría) de este mismo documento:
+ningún verbo los lee. **Cobrar en una divisa muerta es regalar el módulo**, y para
+un módulo bajo la bodega es hoy la única divisa viva.
+
+Sin la divisa, lo que los separa son dos cosas que alcanzan:
+
+- **El precio por décima de warp**: 5 m³ el chico, 8 m³ el grande. El caro rinde
+  menos por metro cúbico, y por eso no gana siempre.
+- **La ranura y la llave**: el chico entra en una clase 2 y pide Navegación II; el
+  grande sólo entra en una clase 3 y pide Navegación III.
+
+**Y cobran presupuesto, que es lo que de verdad los limita.** Nacieron sin pedir
+potencia ni cómputo, y la auditoría encontró que entonces **se apilaban sin
+tope**: una Mula con cinco optimizadores chicos pasaba de 2,0 a **3,5 de warp**
+—más rápido que una Alabarda de fábrica— por 8.000 CR y sin entrenar nada. El
+daño no era el número suelto sino la forma del catálogo: **el abanico de warp se
+comprimía de 3,0× a 1,47×**, o sea que la jerarquía de cascos se podía comprar, y
+la velocidad de warp dejaba de ser lo que es —de la clase del casco— para volver a
+ser una cuenta de equipamiento.
+
+**Se cerró como lo resuelve EVE, y no con un tope inventado**: montar cinco de
+algo tiene que ser posible y tiene que ser caro. Con 9 MW y 28 u el chico, y 17 MW
+y 40 u el grande, la Mula con las cinco ranuras bajas llenas **no vuela ni con
+todo entrenado**. Un límite «hasta tres por nave» habría hecho lo mismo diciendo
+menos: los presupuestos ya existen, ya se entienden y ya son la respuesta a esta
+clase de problema en todo el resto de la ficha.
+
+Y con eso la decisión se invierte según la nave, que es lo que se buscaba. **Al de
+nave chica le sirve el barato porque es el único que le entra** —y en la Pioner
+esos 15 m³ son la mitad de la bodega, así que igual duele—; al que tiene bodega de
+sobra le conviene el caro, que cuesta proporcionalmente más y no se nota.
+
+**Suman encima de la del casco, no la reemplazan**: casi toda la velocidad de warp
+de una nave viene del chasis. Y **los dos pesan**, así que lo que ganan en el
+tramo largo lo devuelven un poco en el arranque.
+
+#### Qué se durmió, y qué lo despierta
+
+El empuje del casco, los tres propulsores auxiliares, el bono de **Navegación**
+sobre la velocidad y la habilidad **Ingeniería de propulsión** dejaron de mover
+ningún reloj. No es un olvido y tiene fecha: **postquemador y microimpulsor son
+sub-warp, o sea combate**. La velocidad sub-warp es la de maniobrar cerca de otra
+nave —acercarse, abrir distancia, orbitar—, y ése es el verbo que los despierta.
+Las descripciones de los tres propulsores se cambiaron el mismo día para que
+ninguno siguiera prometiendo un viaje más corto.
 
 ## De dónde sale un módulo
 
@@ -850,23 +1017,26 @@ Un módulo se gana su lugar si algo lee lo que produce. Esta tabla dice qué lee
 cada cosa, para que se vea de un vistazo qué es contenido vivo y qué todavía no
 lo es:
 
-| Lo que produce un módulo        | Quién lo lee                            | Estado        |
-| ------------------------------- | --------------------------------------- | ------------- |
-| Masa y empuje                   | Viajar: la duración real                | **ya**        |
-| Potencia y cómputo              | El propio equipamiento: si entra o no   | **ya**        |
-| Bodega                          | Cuánto te traés de un cinturón          | **ya**        |
-| Rendimiento de extracción       | Minar                                   | **ya**        |
-| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos | **ya**        |
-| Alcance de sensores             | Escanear una roca                       | **ya**        |
-| Potencia de salto y combustible | **Nadie**: cruzar una puerta es gratis  | Las capitales |
-| Escudo, blindaje, daño por tipo | Combate                                 | Combate       |
-| Firma                           | Qué tan fácil te encuentran             | Combate       |
+| Lo que produce un módulo        | Quién lo lee                                 | Estado        |
+| ------------------------------- | -------------------------------------------- | ------------- |
+| Masa e inercia                  | Viajar: cuánto tarda la nave en salir        | **ya**        |
+| Velocidad de warp               | Viajar: el tramo que escala con la distancia | **ya**        |
+| Empuje                          | **Nadie**: la velocidad sub-warp duerme      | Combate       |
+| Potencia y cómputo              | El propio equipamiento: si entra o no        | **ya**        |
+| Bodega                          | Cuánto te traés de un cinturón               | **ya**        |
+| Rendimiento de extracción       | Minar                                        | **ya**        |
+| Acumulador y su recarga         | Si el trabajo se sostiene o rinde menos      | **ya**        |
+| Alcance de sensores             | Escanear una roca                            | **ya**        |
+| Potencia de salto y combustible | **Nadie**: cruzar una puerta es gratis       | Las capitales |
+| Escudo, blindaje, daño por tipo | Combate                                      | Combate       |
+| Firma                           | Qué tan fácil te encuentran                  | Combate       |
 
-**Lo que hoy no lee nadie se dice acá.** De los 25 números que devuelve la
-calculadora, sólo la velocidad y el permiso de volar cambian el resultado de una
-acción; el resto todavía se dibuja nada más. Eso es una deuda, no una
-característica, y esta tabla es la lista de lo que hay que pagar. **El día que una
-fila se quede sin nadie que la lea, el número sobra.**
+**Lo que hoy no lee nadie se dice acá.** La calculadora devuelve treinta campos y
+buena parte todavía se dibuja nada más: el escudo, el blindaje, el daño por tipo,
+la firma, el alcance de salto, la autonomía y la velocidad sub-warp no cambian el
+resultado de ninguna acción. Eso es una deuda, no una característica, y esta tabla
+es la lista de lo que hay que pagar. **El día que una fila se quede sin nadie que
+la lea, el número sobra.**
 
 Mientras tanto, un número que nada consume **no se le muestra al jugador**: la
 ficha enseña lo que algo usa. Un panel de aguante que ninguna mecánica puede

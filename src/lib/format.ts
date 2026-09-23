@@ -614,7 +614,8 @@ export function thousands(value: number): string {
 
 const BONUS_TARGETS: Record<BonusTarget, string> = {
 	cargo: 'capacidad de bodega',
-	speed: 'velocidad',
+	speed: 'velocidad sub-warp',
+	agility: 'agilidad',
 	jump_range: 'alcance de salto',
 	mining_yield: 'rendimiento de extracción',
 	damage: 'daño',
